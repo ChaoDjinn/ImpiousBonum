@@ -7,6 +7,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Shell;
+using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
@@ -19,6 +20,7 @@ namespace ImpiousBonum.App;
 ///   --data-dir &lt;dir&gt;     use a different settings/layout folder (default %AppData%\ImpiousBonum)
 ///   --snapshot &lt;file.png&gt; render the layout to a PNG after a short warm-up, then exit
 ///   --warmup &lt;seconds&gt;    how long to sample before a snapshot (default 3)
+///   --widget-docs &lt;file&gt;  write the widget reference (docs/widgets.md) and exit
 /// </summary>
 public partial class App : Application
 {
@@ -36,6 +38,13 @@ public partial class App : Application
         var args = ParseArgs(e.Args);
         if (args.TryGetValue("data-dir", out var dataDir))
             AppPaths.UseDataDirectory(dataDir);
+
+        if (args.TryGetValue("widget-docs", out var docsPath))
+        {
+            File.WriteAllText(docsPath, WidgetDocs.ToMarkdown());
+            Shutdown();
+            return;
+        }
 
         if (args.TryGetValue("snapshot", out var snapshotPath))
         {
@@ -128,6 +137,10 @@ public partial class App : Application
                 return;
             layout = LayoutStore.LoadDefault();
         }
+
+        var issues = LayoutValidator.Validate(layout);
+        if (issues.Count > 0)
+            _tray?.ShowError($"layout.json: {issues.Count} problem{(issues.Count == 1 ? "" : "s")}", string.Join("\n", issues.Take(3)));
 
         _window.Background = Theme.From(layout.Theme).Background;
         _window.Dashboard.Build(layout);

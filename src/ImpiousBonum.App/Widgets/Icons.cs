@@ -27,6 +27,8 @@ public static class Icons
         ["fps"] = Parse("M4,17 A9,9 0 1 1 20,17 M12,14 L16,8"),
     };
 
+    public static IReadOnlyList<string> Names { get; } = [.. Geometries.Keys];
+
     public static Geometry? Get(string? name) => name is not null && Geometries.TryGetValue(name, out var geometry) ? geometry : null;
 
     private static Geometry Parse(string data)

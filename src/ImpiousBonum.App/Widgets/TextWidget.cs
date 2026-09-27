@@ -1,4 +1,3 @@
-using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using ImpiousBonum.App.Layout;
@@ -6,24 +5,33 @@ using ImpiousBonum.Core.Metrics;
 
 namespace ImpiousBonum.App.Widgets;
 
-/// <summary>
-/// A line of text with metric placeholders.
-/// Settings: <c>text</c> (template), <c>fontSize</c>, <c>align</c> (left/center/right), <c>color</c>, <c>uppercase</c>.
-/// </summary>
+/// <summary>A line of text with metric placeholders.</summary>
 public sealed class TextWidget : Widget
 {
+    public static WidgetDescriptor Descriptor { get; } = new(
+        "text", "Text", "A line of text with live values, e.g. \"{gpu.load}\" or \"{cpu.temp:nounit} °C\".",
+        400, 80,
+        [
+            Setting.Template("text", "Text", "{cpu.load}"),
+            Setting.Number("fontSize", "Font size", 48, 6, 400),
+            Setting.Choice("align", "Alignment", "left", Setting.HorizontalAlignments),
+            Setting.Toggle("uppercase", "Uppercase", false),
+            Setting.Color("color", "Colour", "foreground"),
+        ],
+        (settings, theme) => new TextWidget(settings, theme));
+
     private readonly ValueTemplate _template;
     private readonly TextBlock _text;
     private readonly bool _uppercase;
 
-    public TextWidget(JsonObject definition, Theme theme) : base(definition, theme)
+    public TextWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
-        _template = ValueTemplate.Parse(definition.GetString("text"));
-        _uppercase = definition.GetBool("uppercase", false);
+        _template = ValueTemplate.Parse(settings.String("text"));
+        _uppercase = settings.Bool("uppercase");
         _text = CreateText(
-            definition.GetDouble("fontSize", 48),
-            theme.Resolve(definition.GetString("color"), theme.Foreground),
-            ParseAlignment(definition.GetString("align")));
+            settings.Number("fontSize"),
+            theme.Resolve(settings.String("color"), theme.Foreground),
+            ParseAlignment(settings.String("align")));
         _text.VerticalAlignment = VerticalAlignment.Center;
         Children.Add(_text);
     }

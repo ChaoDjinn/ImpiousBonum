@@ -17,7 +17,8 @@
 | `disk.<L>.free/used/total/usedPct/label` | `DriveInfo`, follows drives as they come and go |
 | `net.down`, `net.up` | Adapters with a default gateway |
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
-| `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan`, `fps` | Sensor service (below). `fps` currently comes from AMD's driver for fullscreen apps |
+| `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
+| `fps`, `fps.app` | Sensor service counts DirectX frames per app (like PresentMon/HWiNFO); the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
 
@@ -55,7 +56,7 @@ The canvas has a design size (default 1920×480) and scales to fit the window. E
 
 `{id}` formats automatically (`18.7 GB`, `11.8 %`, `79.7 KB/s`). After a colon you can add a number format (`0.0`, `N0`), force a byte unit (`MB`, `GB`, …) or write `nounit`. Readings that aren't available show as `—`.
 
-Widget types: `text`, `graph` (line or area history with a header), `icon` (accent icon + value), `clock`, `drives`, `rows`.
+Widget types: `text`, `graph` (line or area history with a header), `icon` (accent icon + value), `clock`, `drives`, `rows`. Every setting, its default and its range is in the [widget reference](docs/widgets.md). If `layout.json` has a typo or an out-of-range value, the tray shows a notification saying what and where, e.g. *unknown setting 'fontsize' (did you mean 'fontSize'?)*.
 
 To use a font you don't want to install, point the theme at the file: `"fontFile": "C:\\Fonts\\SomeFont-Light.otf"`.
 
@@ -66,6 +67,7 @@ To use a font you don't want to install, point the theme at the file: `"fontFile
 | `--data-dir <dir>` | Use a different settings folder |
 | `--snapshot <file.png>` | Render the layout with live data to a PNG and exit |
 | `--warmup <seconds>` | Sampling time before a snapshot (default 3) |
+| `--widget-docs <file>` | Regenerate the widget reference from the widget descriptors |
 
 ## Roadmap
 
@@ -81,7 +83,8 @@ To use a font you don't want to install, point the theme at the file: `"fontFile
 src/ImpiousBonum.Core    metric store, formatting/templates, providers, sampler (no UI)
 src/ImpiousBonum.App     WPF dashboard, widgets, tray, monitor placement
 src/ImpiousBonum.Sensors elevated sensor service (LibreHardwareMonitor) serving the named pipe
-tests/                   unit tests for the core
+tests/                   unit tests for the core and the app (widgets, layout validation)
+docs/widgets.md          widget reference, generated from the widget descriptors
 ```
 
 ## License

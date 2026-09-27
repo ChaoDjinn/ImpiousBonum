@@ -1,4 +1,3 @@
-using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using ImpiousBonum.App.Layout;
@@ -6,36 +5,46 @@ using ImpiousBonum.Core.Metrics;
 
 namespace ImpiousBonum.App.Widgets;
 
-/// <summary>
-/// A stack of label/value rows, e.g. Download / Upload / Ping.
-/// Settings: <c>rows</c> (array of { label, text }), <c>fontSize</c>, <c>valueFontSize</c>, <c>align</c> (bottom stacks from the bottom).
-/// </summary>
+/// <summary>A stack of label/value rows, e.g. Download / Upload / Ping.</summary>
 public sealed class RowsWidget : Widget
 {
+    public static WidgetDescriptor Descriptor { get; } = new(
+        "rows", "Rows", "A stack of label and value rows, e.g. Download / Upload / Ping.",
+        425, 110,
+        [
+            Setting.Items("rows", "Rows",
+            [
+                Setting.PlainText("label", "Label", "Download"),
+                Setting.Template("text", "Value", "{net.down}"),
+            ]),
+            Setting.Number("fontSize", "Label size", 28, 6, 200),
+            Setting.Number("valueFontSize", "Value size", null, 6, 200, help: "Empty uses 85% of the label size."),
+            Setting.Choice("align", "Stack from", "top", ["top", "bottom"], group: Setting.Appearance),
+        ],
+        (settings, theme) => new RowsWidget(settings, theme));
+
     private readonly List<(ValueTemplate Template, TextBlock Value)> _rows = [];
 
-    public RowsWidget(JsonObject definition, Theme theme) : base(definition, theme)
+    public RowsWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
-        var fontSize = definition.GetDouble("fontSize", 28);
-        var valueFontSize = definition.GetDouble("valueFontSize", fontSize * 0.85);
+        var fontSize = settings.Number("fontSize");
+        var valueFontSize = settings.OptionalNumber("valueFontSize") ?? fontSize * 0.85;
         var stack = new StackPanel
         {
-            VerticalAlignment = definition.GetString("align")?.Equals("bottom", StringComparison.OrdinalIgnoreCase) == true
-                ? VerticalAlignment.Bottom
-                : VerticalAlignment.Top,
+            VerticalAlignment = settings.String("align") == "bottom" ? VerticalAlignment.Bottom : VerticalAlignment.Top,
         };
 
-        foreach (var row in definition.GetObjects("rows"))
+        foreach (var row in settings.Items("rows"))
         {
             var grid = new Grid();
             var label = CreateText(fontSize);
-            label.Text = row.GetString("label") ?? string.Empty;
+            label.Text = row.String("label");
             var value = CreateText(valueFontSize, Theme.Secondary, HorizontalAlignment.Right);
             value.VerticalAlignment = VerticalAlignment.Center;
             grid.Children.Add(label);
             grid.Children.Add(value);
             stack.Children.Add(grid);
-            _rows.Add((ValueTemplate.Parse(row.GetString("text")), value));
+            _rows.Add((ValueTemplate.Parse(row.String("text")), value));
         }
 
         Children.Add(stack);

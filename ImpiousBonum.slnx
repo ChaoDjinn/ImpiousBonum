@@ -5,6 +5,7 @@
     <Project Path="src/ImpiousBonum.Sensors/ImpiousBonum.Sensors.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/ImpiousBonum.App.Tests/ImpiousBonum.App.Tests.csproj" />
     <Project Path="tests/ImpiousBonum.Core.Tests/ImpiousBonum.Core.Tests.csproj" />
   </Folder>
 </Solution>

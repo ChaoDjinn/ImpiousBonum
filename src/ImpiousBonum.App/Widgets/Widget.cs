@@ -1,4 +1,3 @@
-using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -7,17 +6,20 @@ using ImpiousBonum.Core.Metrics;
 
 namespace ImpiousBonum.App.Widgets;
 
-/// <summary>Base for everything placed on the dashboard canvas. Widgets build their visuals once and update them on each tick.</summary>
+/// <summary>
+/// Base for everything placed on the dashboard canvas. Widgets build their visuals once and update them on each tick.
+/// Each widget type also publishes a static <see cref="WidgetDescriptor"/> listing its settings.
+/// </summary>
 public abstract class Widget : Grid
 {
-    protected Widget(JsonObject definition, Theme theme)
+    protected Widget(WidgetSettings settings, Theme theme)
     {
-        Definition = definition;
+        Settings = settings;
         Theme = theme;
         ClipToBounds = false;
     }
 
-    protected JsonObject Definition { get; }
+    protected WidgetSettings Settings { get; }
 
     protected Theme Theme { get; }
 

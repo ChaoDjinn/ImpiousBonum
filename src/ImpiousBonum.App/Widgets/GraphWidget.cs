@@ -1,4 +1,3 @@
-using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -7,33 +6,46 @@ using ImpiousBonum.Core.Metrics;
 
 namespace ImpiousBonum.App.Widgets;
 
-/// <summary>
-/// A header (label left, value right) above a history graph.
-/// Settings: <c>label</c>, <c>text</c> (template for the right side), <c>metric</c>, <c>style</c> (line/area),
-/// <c>fontSize</c>, <c>points</c>, <c>min</c>, <c>max</c> (defaults to the metric's natural maximum, else auto).
-/// </summary>
+/// <summary>A header (label left, value right) above a history graph.</summary>
 public sealed class GraphWidget : Widget
 {
+    public static WidgetDescriptor Descriptor { get; } = new(
+        "graph", "Graph", "A label and live value above a scrolling history of one metric, drawn as a line or a filled area.",
+        427, 100,
+        [
+            Setting.PlainText("label", "Label", "CPU"),
+            Setting.Metric("metric", "Metric", "cpu.load"),
+            Setting.Template("text", "Value text", null, help: "Shown on the right of the header. Empty shows the metric's value."),
+            Setting.Choice("style", "Style", "line", ["line", "area"], group: Setting.Appearance),
+            Setting.Number("points", "History (seconds)", 120, 2, MetricStore.DefaultHistoryLength, group: Setting.Appearance),
+            Setting.Number("min", "Minimum", 0, double.MinValue, double.MaxValue, group: Setting.Appearance),
+            Setting.Number("max", "Maximum", null, double.MinValue, double.MaxValue, group: Setting.Appearance,
+                help: "Empty uses the metric's natural maximum (100 for percentages, the total for memory), else scales to fit."),
+            Setting.Number("lineThickness", "Line thickness", 2.5, 0.5, 20, group: Setting.Appearance),
+            Setting.Number("fontSize", "Font size", 26, 6, 200),
+        ],
+        (settings, theme) => new GraphWidget(settings, theme));
+
     private readonly string _metric;
     private readonly ValueTemplate _template;
     private readonly TextBlock _value;
     private readonly GraphElement _graph;
     private readonly double? _configuredMax;
 
-    public GraphWidget(JsonObject definition, Theme theme) : base(definition, theme)
+    public GraphWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
-        _metric = definition.GetString("metric") ?? string.Empty;
-        _template = ValueTemplate.Parse(definition.GetString("text") ?? $"{{{_metric}}}");
-        _configuredMax = definition.GetDouble("max");
+        _metric = settings.String("metric");
+        _template = ValueTemplate.Parse(settings.OptionalString("text") is { Length: > 0 } text ? text : $"{{{_metric}}}");
+        _configuredMax = settings.OptionalNumber("max");
 
-        var fontSize = definition.GetDouble("fontSize", 26);
-        var style = definition.GetString("style")?.Equals("area", StringComparison.OrdinalIgnoreCase) == true ? GraphStyle.Area : GraphStyle.Line;
+        var fontSize = settings.Number("fontSize");
+        var style = settings.String("style") == "area" ? GraphStyle.Area : GraphStyle.Line;
 
         RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
         var label = CreateText(fontSize);
-        label.Text = definition.GetString("label") ?? string.Empty;
+        label.Text = settings.String("label");
         _value = CreateText(fontSize * 0.9, theme.Secondary, HorizontalAlignment.Right);
         _value.VerticalAlignment = VerticalAlignment.Center;
         Children.Add(label);
@@ -42,12 +54,12 @@ public sealed class GraphWidget : Widget
         _graph = new GraphElement
         {
             Kind = style,
-            Points = (int)definition.GetDouble("points", 120),
-            Minimum = definition.GetDouble("min", 0),
+            Points = (int)settings.Number("points"),
+            Minimum = settings.Number("min"),
             Maximum = _configuredMax,
             Stroke = theme.Accent,
             Fill = CreateAreaFill(theme.AccentColor),
-            Thickness = definition.GetDouble("lineThickness", 2.5),
+            Thickness = settings.Number("lineThickness"),
             Margin = new Thickness(0, fontSize * 0.35, 0, 0),
         };
         SetRow(_graph, 1);

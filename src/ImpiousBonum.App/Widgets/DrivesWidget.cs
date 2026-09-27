@@ -1,4 +1,3 @@
-using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using ImpiousBonum.App.Layout;
@@ -7,13 +6,22 @@ using ImpiousBonum.Core.Providers;
 
 namespace ImpiousBonum.App.Widgets;
 
-/// <summary>
-/// One row per drive: name, free/total text, and a bar showing how full it is. Rows follow drives as they are added or removed.
-/// Settings: <c>drives</c> ("all" or e.g. "C,D"), <c>label</c> (default "{letter}:/"), <c>text</c> (default "{free} free / {total}"),
-/// <c>fontSize</c>, <c>barHeight</c>, <c>spacing</c>.
-/// </summary>
+/// <summary>One row per drive: name, free/total text, and a bar showing how full it is. Rows follow drives as they are added or removed.</summary>
 public sealed class DrivesWidget : Widget
 {
+    public static WidgetDescriptor Descriptor { get; } = new(
+        "drives", "Drives", "One row per drive with free space and a bar showing how full it is. Follows drives as they are plugged in or removed.",
+        425, 230,
+        [
+            Setting.PlainText("drives", "Drives", "all", help: "\"all\", or letters separated by commas, e.g. \"C,D\"."),
+            Setting.PlainText("label", "Row label", "{letter}:/", help: "{letter} is replaced with the drive letter."),
+            Setting.PlainText("text", "Row value", "{free} free / {total}", help: "Placeholders: {free}, {used}, {total}, {label}."),
+            Setting.Number("fontSize", "Font size", 25, 6, 200),
+            Setting.Number("barHeight", "Bar height", 5, 1, 100, group: Setting.Appearance),
+            Setting.Number("spacing", "Row spacing", 12, 0, 200, group: Setting.Appearance),
+        ],
+        (settings, theme) => new DrivesWidget(settings, theme));
+
     private readonly StackPanel _rows = new();
     private readonly HashSet<string>? _only;
     private readonly string _labelFormat;
@@ -24,17 +32,17 @@ public sealed class DrivesWidget : Widget
     private readonly List<Row> _current = [];
     private string _letters = string.Empty;
 
-    public DrivesWidget(JsonObject definition, Theme theme) : base(definition, theme)
+    public DrivesWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
-        var drives = definition.GetString("drives", "all")!;
+        var drives = settings.String("drives");
         _only = drives.Equals("all", StringComparison.OrdinalIgnoreCase)
             ? null
             : drives.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(d => d[..1]).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        _labelFormat = definition.GetString("label", "{letter}:/")!;
-        _textFormat = definition.GetString("text", "{free} free / {total}")!;
-        _fontSize = definition.GetDouble("fontSize", 25);
-        _barHeight = definition.GetDouble("barHeight", 5);
-        _spacing = definition.GetDouble("spacing", 12);
+        _labelFormat = settings.String("label");
+        _textFormat = settings.String("text");
+        _fontSize = settings.Number("fontSize");
+        _barHeight = settings.Number("barHeight");
+        _spacing = settings.Number("spacing");
         Children.Add(_rows);
     }
 
