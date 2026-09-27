@@ -48,6 +48,12 @@ public enum SettingKind
 
     /// <summary>A list of objects, each with <see cref="SettingDescriptor.ItemSettings"/>.</summary>
     Items,
+
+    /// <summary>An installed font family name.</summary>
+    Font,
+
+    /// <summary>A path to a .ttf/.otf file.</summary>
+    FontFile,
 }
 
 /// <summary>One setting of a widget type. Create these with the <see cref="Setting"/> helpers.</summary>
@@ -89,8 +95,11 @@ public static class Setting
     public static SettingDescriptor Choice(string key, string label, string @default, IReadOnlyList<string> choices, string group = Text, string? help = null) =>
         new(key, label, SettingKind.Choice, @default, group, help, choices);
 
-    public static SettingDescriptor Color(string key, string label, string @default, string group = Appearance, string? help = null) =>
-        new(key, label, SettingKind.Color, @default, group, help);
+    /// <summary>A colour. With <paramref name="named"/>, the theme's foreground/secondary/accent are offered as choices too.</summary>
+    public static SettingDescriptor Color(string key, string label, string @default, string group = Appearance, string? help = null, bool named = true) =>
+        new(key, label, SettingKind.Color, @default, group, help, Choices: named ? NamedColors : null);
+
+    public static readonly IReadOnlyList<string> NamedColors = ["foreground", "secondary", "accent"];
 
     public static SettingDescriptor Icon(string key, string label, string @default, string group = Content) =>
         new(key, label, SettingKind.Icon, @default, group, Choices: Icons.Names);

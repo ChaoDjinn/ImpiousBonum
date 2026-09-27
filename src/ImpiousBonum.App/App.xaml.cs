@@ -5,6 +5,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using ImpiousBonum.App.Editor;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
@@ -31,6 +32,8 @@ public partial class App : Application
     private TrayIcon? _tray;
     private DashboardWindow? _window;
     private DispatcherTimer? _tick;
+    private EditorWindow? _editor;
+    private bool _mirrorQueued;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -85,6 +88,7 @@ public partial class App : Application
         _tray.MonitorSelected += (_, monitor) => MoveTo(monitor);
         _tray.SensorServiceChangeRequested += async (_, install) => await ChangeSensorServiceAsync(install);
         _tray.ReloadRequested += (_, _) => ApplyLayout();
+        _tray.EditLayoutRequested += (_, _) => OpenEditor();
         _tray.ExitRequested += async (_, _) => await ExitAsync();
 
         _layouts = new LayoutStore();
@@ -103,7 +107,73 @@ public partial class App : Application
         _tick.Start();
     }
 
-    private void Refresh() => _window?.Dashboard.Refresh(_sampler!.Store, DateTime.Now);
+    private void Refresh()
+    {
+        var now = DateTime.Now;
+        _window?.Dashboard.Refresh(_sampler!.Store, now);
+        _editor?.Refresh(_sampler!.Store, now);
+    }
+
+    private void OpenEditor()
+    {
+        if (_editor is not null)
+        {
+            _editor.Activate();
+            return;
+        }
+
+        var session = new LayoutSession(LoadSavedLayout());
+        _editor = new EditorWindow(session, LoadSavedLayout, () =>
+            DisplayMonitor.Resolve(_settings, DisplayMonitor.GetAll()) is { } monitor ? (monitor.Bounds.Width, monitor.Bounds.Height) : null);
+
+        session.Changed += (_, change) => MirrorToDashboard(session, change);
+        _editor.SaveRequested += (_, layout) => _layouts?.Save(layout);
+        _editor.Closed += (_, _) =>
+        {
+            _editor = null;
+            // Back to what's on disk: the saved layout, or the old one if changes were discarded.
+            ApplyLayout();
+        };
+        _editor.Show();
+        Refresh();
+    }
+
+    private LayoutDocument LoadSavedLayout()
+    {
+        try
+        {
+            return _layouts!.Load();
+        }
+        catch (Exception ex) when (ex is JsonException or IOException)
+        {
+            return LayoutStore.LoadDefault();
+        }
+    }
+
+    /// <summary>Shows the editor's working copy on the real dashboard as you edit, so you see it at true size.</summary>
+    private void MirrorToDashboard(LayoutSession session, LayoutChange change)
+    {
+        if (_window is null)
+            return;
+
+        if (change.Kind == ChangeKind.Geometry && change.WidgetIndex is { } index)
+        {
+            var r = LayoutSession.GeometryOf(session.Document.Widgets[index]);
+            _window.Dashboard.SetGeometry(index, r.X, r.Y, r.Width, r.Height);
+            return;
+        }
+
+        if (_mirrorQueued)
+            return;
+        _mirrorQueued = true;
+        Dispatcher.BeginInvoke(() =>
+        {
+            _mirrorQueued = false;
+            _window.Background = Theme.From(session.Document.Theme).Background;
+            _window.Dashboard.Build(session.Document);
+            Refresh();
+        }, DispatcherPriority.Background);
+    }
 
     private string SensorStatus() =>
         _sampler is not null && _sampler.Store.TryGet(SensorHostProvider.Status, out var status) && status.Text is { } text
@@ -121,7 +191,8 @@ public partial class App : Application
 
     private void ApplyLayout()
     {
-        if (_layouts is null || _window is null)
+        // While the editor is open it owns the layout (including our own saves, which trigger the file watcher).
+        if (_layouts is null || _window is null || _editor is not null)
             return;
 
         LayoutDocument layout;
@@ -196,6 +267,11 @@ public partial class App : Application
 
     private async Task ExitAsync()
     {
+        // Give the editor its chance to save; if the user cancels that prompt, stay running.
+        _editor?.Close();
+        if (_editor is not null)
+            return;
+
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         _tick?.Stop();
         _layouts?.Dispose();

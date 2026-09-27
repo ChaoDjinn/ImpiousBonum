@@ -38,6 +38,18 @@ public sealed class DashboardView : Canvas
         }
     }
 
+    /// <summary>Moves or resizes one widget without rebuilding anything; used while dragging in the editor.</summary>
+    public void SetGeometry(int index, double x, double y, double width, double height)
+    {
+        if (index < 0 || index >= _widgets.Count)
+            return;
+        var widget = _widgets[index];
+        SetLeft(widget, x);
+        SetTop(widget, y);
+        widget.Width = width;
+        widget.Height = height;
+    }
+
     public void Refresh(MetricStore store, DateTime now)
     {
         foreach (var widget in _widgets)

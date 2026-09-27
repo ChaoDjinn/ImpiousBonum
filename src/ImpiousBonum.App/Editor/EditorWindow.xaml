@@ -1,0 +1,62 @@
+<Window x:Class="ImpiousBonum.App.Editor.EditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Impious Bonum layout editor"
+        ThemeMode="System"
+        Width="1500" Height="900" MinWidth="900" MinHeight="560"
+        WindowStartupLocation="CenterScreen">
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top" Padding="12,8" BorderThickness="0,0,0,1" BorderBrush="#30808080">
+            <DockPanel LastChildFill="False">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <Button x:Name="AddButton" Content="Add widget ▾" Click="OnAdd" Margin="0,0,6,0" />
+                    <Button x:Name="DuplicateButton" Content="Duplicate" Click="OnDuplicate" Margin="0,0,6,0" ToolTip="Ctrl+D" />
+                    <Button x:Name="DeleteButton" Content="Delete" Click="OnDelete" Margin="0,0,6,0" ToolTip="Delete" />
+                    <Button x:Name="ForwardButton" Content="Bring forward" Click="OnForward" Margin="0,0,6,0" ToolTip="Draw on top of the next widget" />
+                    <Button x:Name="BackwardButton" Content="Send back" Click="OnBackward" Margin="0,0,18,0" />
+                    <Button x:Name="UndoButton" Content="Undo" Click="OnUndo" Margin="0,0,6,0" ToolTip="Ctrl+Z" />
+                    <Button x:Name="RedoButton" Content="Redo" Click="OnRedo" Margin="0,0,18,0" ToolTip="Ctrl+Y" />
+                    <TextBlock Text="Snap" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <ComboBox x:Name="SnapBox" Width="90" SelectionChanged="OnSnapChanged" ToolTip="Grid size for moving and resizing. Hold Alt while dragging to place freely." />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <Button x:Name="RevertButton" Content="Revert" Click="OnRevert" Margin="0,0,6,0" ToolTip="Go back to the last saved layout" />
+                    <Button x:Name="SaveButton" Content="Save" Click="OnSave" Style="{DynamicResource AccentButtonStyle}" ToolTip="Ctrl+S" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom" Padding="12,5" BorderThickness="0,1,0,0" BorderBrush="#30808080">
+            <DockPanel>
+                <TextBlock x:Name="IssuesText" DockPanel.Dock="Right" Foreground="IndianRed" />
+                <TextBlock x:Name="StatusText" Opacity="0.75" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </Border>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="230" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="400" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Widget list -->
+            <DockPanel Grid.Column="0" Margin="12,12,6,12">
+                <TextBlock DockPanel.Dock="Top" Text="Widgets" FontWeight="SemiBold" Margin="4,0,0,6" />
+                <TextBlock DockPanel.Dock="Bottom" Opacity="0.6" TextWrapping="Wrap" FontSize="11.5" Margin="4,8,0,0"
+                           Text="Lower in the list draws on top. Click empty canvas (or press Esc) for canvas and theme settings." />
+                <ListBox x:Name="WidgetList" SelectionChanged="OnListSelectionChanged" />
+            </DockPanel>
+
+            <!-- Preview -->
+            <ContentControl x:Name="PreviewHost" Grid.Column="1" Margin="6,12,6,12" />
+
+            <!-- Properties -->
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ContentControl x:Name="PropertiesHost" />
+            </ScrollViewer>
+        </Grid>
+    </DockPanel>
+</Window>

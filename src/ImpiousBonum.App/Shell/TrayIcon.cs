@@ -29,7 +29,8 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_displays);
         menu.Items.Add(_sensors);
         menu.Items.Add(_fpsSource);
-        menu.Items.Add("Edit layout…", null, (_, _) => Open(AppPaths.LayoutFile));
+        menu.Items.Add(new ToolStripMenuItem("Edit layout…", null, (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty)) { Font = new Font(menu.Font, FontStyle.Bold) });
+        menu.Items.Add("Open layout.json", null, (_, _) => Open(AppPaths.LayoutFile));
         menu.Items.Add("Open settings folder", null, (_, _) => Open(AppPaths.DataDirectory));
         menu.Items.Add("Reload layout", null, (_, _) => ReloadRequested?.Invoke(this, EventArgs.Empty));
         menu.Items.Add(_startup);
@@ -52,11 +53,15 @@ public sealed class TrayIcon : IDisposable
         };
 
         _icon = new NotifyIcon { Icon = _image, Text = "Impious Bonum", ContextMenuStrip = menu, Visible = true };
+        _icon.DoubleClick += (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty);
     }
 
     public event EventHandler? MenuOpening;
 
     public event EventHandler? ReloadRequested;
+
+    /// <summary>Open the layout editor (menu, or double-click the icon).</summary>
+    public event EventHandler? EditLayoutRequested;
 
     public event EventHandler? ExitRequested;
 

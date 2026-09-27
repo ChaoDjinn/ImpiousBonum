@@ -49,6 +49,20 @@ public sealed class LayoutStore : IDisposable
         return JsonSerializer.Deserialize<LayoutDocument>(json, JsonDefaults.Options) ?? LoadDefault();
     }
 
+    /// <summary>
+    /// Writes layout.json. JSON can't carry comments through a round trip, so a short header pointing at the
+    /// widget reference replaces any hand-written ones.
+    /// </summary>
+    public void Save(LayoutDocument layout)
+    {
+        var json = JsonSerializer.Serialize(layout, JsonDefaults.Options);
+        File.WriteAllText(AppPaths.LayoutFile, SavedHeader + json + Environment.NewLine);
+    }
+
+    private const string SavedHeader =
+        "// Impious Bonum layout, saved by the layout editor. You can still edit it by hand; changes apply on save.\n" +
+        "// Widget reference: https://github.com/ChaoDjinn/ImpiousBonum/blob/main/docs/widgets.md\n";
+
     public static LayoutDocument LoadDefault() =>
         JsonSerializer.Deserialize<LayoutDocument>(ReadDefaultJson(), JsonDefaults.Options)!;
 

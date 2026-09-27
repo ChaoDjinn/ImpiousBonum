@@ -4,7 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
-    <!-- WinForms is only used for the tray icon (NotifyIcon). -->
+    <!-- WinForms is only used for the tray icon (NotifyIcon) and the editor's colour picker. -->
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>ImpiousBonum</AssemblyName>
     <RootNamespace>ImpiousBonum.App</RootNamespace>
@@ -12,9 +12,14 @@
     <!-- Keep the idle footprint small: no background GC thread, workstation GC. -->
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
     <ServerGarbageCollection>false</ServerGarbageCollection>
+    <!-- WPF0001: Window.ThemeMode (Fluent theme for the editor) is marked experimental. -->
     <!-- WFO0003 wants DPI set via the WinForms API; this is a WPF app, so the manifest is the right place. -->
-    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <NoWarn>$(NoWarn);WFO0003;WPF0001</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ImpiousBonum.App.Tests" />
+  </ItemGroup>
 
   <ItemGroup>
     <Using Remove="System.Windows.Forms" />

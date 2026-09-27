@@ -46,6 +46,15 @@ Reading CPU temperatures needs admin rights and a kernel driver, so it lives in 
 - The service only reads hardware while a dashboard is connected. Its log is in `%ProgramData%\ImpiousBonum\sensors.log`.
 - For development: `ImpiousBonum.Sensors.exe run` serves from a console, and `list` prints every sensor. Both work unelevated with fewer sensors.
 
+### Layout editor
+
+Double-click the tray icon (or tray → *Edit layout…*) to open the editor on your main screen:
+
+- **Preview:** click a widget to select it, drag to move, drag the handles to resize. Moves snap to a grid (toolbar); hold Alt to place freely. Arrow keys nudge, Shift+arrows by 10.
+- **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme.
+- **Widgets:** add, duplicate (Ctrl+D), delete, and bring forward / send back.
+- The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes `layout.json`; closing without saving puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
+
 ### Layout basics
 
 The canvas has a design size (default 1920×480) and scales to fit the window. Each widget has `type`, `x`, `y`, `width`, `height` plus its own settings. Text uses templates:
@@ -73,9 +82,10 @@ To use a font you don't want to install, point the theme at the file: `"fontFile
 
 1. ~~Borderless dashboard on a chosen monitor, remembered placement, the default layout~~
 2. ~~Sensor host: elevated service (LibreHardwareMonitorLib) for temperatures, fans, clocks and power, over a named pipe~~
-3. Metric picker and widget list driven by the metric registry
-4. On-screen edit mode: drag, resize and style widgets (touch friendly)
-5. FPS via ETW present events for any GPU and windowed apps, more widget types, themes, installer (Velopack) and signing
+3. ~~Layout editor: live preview, drag/resize, generated properties, theme, undo/redo~~
+4. Metric picker: browse and search every metric with live values, insert into templates
+5. Touch edit mode on the dashboard itself, synced with the editor
+6. Vulkan/OpenGL frame counting, more widget types, themes, installer (Velopack) and signing
 
 ## Layout of the code
 
