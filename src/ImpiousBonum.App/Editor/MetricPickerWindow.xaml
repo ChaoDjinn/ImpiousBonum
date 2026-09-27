@@ -1,0 +1,64 @@
+<Window x:Class="ImpiousBonum.App.Editor.MetricPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Insert metric"
+        ThemeMode="System"
+        Width="760" Height="800" MinWidth="520" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <DockPanel Margin="16">
+        <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="0,0,0,10" TextChanged="OnSearchChanged"
+                 ToolTip="Search by name, id or hardware, e.g. &quot;gpu temp&quot; or &quot;core #3&quot;" />
+
+        <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="0,12,0,0">
+            <TextBlock x:Name="ResultText" DockPanel.Dock="Left" VerticalAlignment="Center" FontFamily="Cascadia Mono, Consolas" Opacity="0.8" />
+            <Button DockPanel.Dock="Right" Content="Cancel" IsCancel="True" Margin="8,0,0,0" MinWidth="80" />
+            <Button x:Name="InsertButton" DockPanel.Dock="Right" Content="Insert" IsDefault="True" Click="OnInsert" MinWidth="80"
+                    Style="{DynamicResource AccentButtonStyle}" />
+        </DockPanel>
+
+        <StackPanel x:Name="FormatPanel" DockPanel.Dock="Bottom" Margin="0,10,0,0">
+            <TextBlock Text="Show it as" FontWeight="SemiBold" Margin="0,0,0,4" />
+            <ListBox x:Name="FormatList" SelectionChanged="OnFormatChanged" MouseDoubleClick="OnInsert" MaxHeight="190">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Example}" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="1" Text="{Binding Description}" Opacity="0.75" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+
+        <ListView x:Name="MetricList" SelectionChanged="OnMetricChanged" MouseDoubleClick="OnMetricDoubleClick"
+                  VirtualizingPanel.IsVirtualizingWhenGrouping="True" VirtualizingPanel.VirtualizationMode="Recycling">
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="4,10,0,4" />
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Name" Width="250" DisplayMemberBinding="{Binding Name}" />
+                    <GridViewColumn Header="Now" Width="120" DisplayMemberBinding="{Binding Value}" />
+                    <GridViewColumn Header="Id" Width="280">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Id}" FontFamily="Cascadia Mono, Consolas" Opacity="0.75" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </DockPanel>
+</Window>

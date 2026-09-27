@@ -51,6 +51,7 @@ Reading CPU temperatures needs admin rights and a kernel driver, so it lives in 
 Double-click the tray icon (or tray → *Edit layout…*) to open the editor on your main screen:
 
 - **Preview:** click a widget to select it, drag to move, drag the handles to resize. Moves snap to a grid (toolbar); hold Alt to place freely. Arrow keys nudge, Shift+arrows by 10.
+- **Metrics:** template and metric fields have a `{…}` button that opens a searchable list of every metric (about 280 on a typical PC, including every raw sensor) with live values. Pick one and choose how to show it (e.g. `18.7 GB`, `19,138 MB` or just `18.7`) and it's inserted at the cursor. Under each field a live preview shows what it renders now and flags unknown metric ids.
 - **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme.
 - **Widgets:** add, duplicate (Ctrl+D), delete, and bring forward / send back.
 - The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes `layout.json`; closing without saving puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
@@ -83,7 +84,7 @@ To use a font you don't want to install, point the theme at the file: `"fontFile
 1. ~~Borderless dashboard on a chosen monitor, remembered placement, the default layout~~
 2. ~~Sensor host: elevated service (LibreHardwareMonitorLib) for temperatures, fans, clocks and power, over a named pipe~~
 3. ~~Layout editor: live preview, drag/resize, generated properties, theme, undo/redo~~
-4. Metric picker: browse and search every metric with live values, insert into templates
+4. ~~Metric picker: browse and search every metric with live values, insert into templates~~
 5. Touch edit mode on the dashboard itself, synced with the editor
 6. Vulkan/OpenGL frame counting, more widget types, themes, installer (Velopack) and signing
 

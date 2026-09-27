@@ -6,6 +6,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using ImpiousBonum.App.Widgets;
+using ImpiousBonum.Core.Metrics;
 using WinForms = System.Windows.Forms;
 
 namespace ImpiousBonum.App.Editor;
@@ -20,14 +21,17 @@ public sealed class PropertyPanel : StackPanel
 
     private readonly LayoutSession _session;
     private readonly Func<(int Width, int Height)?> _dashboardSize;
+    private readonly Func<MetricStore?> _store;
     private readonly List<Action> _refreshers = [];
+    private readonly List<Action> _liveRefreshers = [];
     private bool _updating;
     private static IReadOnlyList<string>? _fontNames;
 
-    public PropertyPanel(LayoutSession session, Func<(int Width, int Height)?> dashboardSize)
+    public PropertyPanel(LayoutSession session, Func<(int Width, int Height)?> dashboardSize, Func<MetricStore?> store)
     {
         _session = session;
         _dashboardSize = dashboardSize;
+        _store = store;
         Margin = new Thickness(16, 12, 16, 24);
 
         session.SelectionChanged += (_, _) => Rebuild();
@@ -45,6 +49,7 @@ public sealed class PropertyPanel : StackPanel
     {
         Children.Clear();
         _refreshers.Clear();
+        _liveRefreshers.Clear();
 
         if (_session.SelectedWidget is not { } widget)
         {
@@ -82,6 +87,13 @@ public sealed class PropertyPanel : StackPanel
         }
 
         RefreshValues();
+    }
+
+    /// <summary>Updates the live "what this shows now" previews under template and metric fields. Called once a second.</summary>
+    public void RefreshLive()
+    {
+        foreach (var refresh in _liveRefreshers)
+            refresh();
     }
 
     /// <summary>Updates every editor from the session, except the one being typed in.</summary>
@@ -174,6 +186,7 @@ public sealed class PropertyPanel : StackPanel
         SettingKind.Color => ColorEditor(target, setting),
         SettingKind.Font => FontEditor(target, setting),
         SettingKind.FontFile => FontFileEditor(target, setting),
+        SettingKind.Template or SettingKind.Metric => MetricTextEditor(target, setting),
         _ => TextEditor(target, setting),
     };
 
@@ -182,13 +195,93 @@ public sealed class PropertyPanel : StackPanel
     private (FrameworkElement, Action) TextEditor(SettingTarget target, SettingDescriptor setting)
     {
         var box = new TextBox { IsUndoEnabled = false };
-        if (setting.Kind is SettingKind.Template or SettingKind.Metric)
-            box.FontFamily = new FontFamily("Cascadia Mono, Consolas");
         box.TextChanged += (_, _) => Write(target, setting.Key, JsonValue.Create(box.Text));
         return (box, () =>
         {
             if (!box.IsKeyboardFocusWithin)
                 box.Text = CurrentString(target, setting);
+        });
+    }
+
+    /// <summary>
+    /// A template or metric id, with a button that opens the metric picker and a live preview underneath
+    /// ("→ 11.8 % / 16 threads") that also flags ids that don't exist.
+    /// </summary>
+    private (FrameworkElement, Action) MetricTextEditor(SettingTarget target, SettingDescriptor setting)
+    {
+        var isTemplate = setting.Kind == SettingKind.Template;
+        var panel = new StackPanel();
+        var line = new DockPanel();
+        var pick = new Button { Content = "{…}", ToolTip = isTemplate ? "Insert metric…" : "Choose metric…", Margin = new Thickness(6, 0, 0, 0), Padding = new Thickness(8, 2, 8, 2) };
+        DockPanel.SetDock(pick, Dock.Right);
+        var box = new TextBox { IsUndoEnabled = false, FontFamily = new FontFamily("Cascadia Mono, Consolas") };
+        line.Children.Add(pick);
+        line.Children.Add(box);
+        var preview = Secondary(new TextBlock { FontSize = 11.5, Margin = new Thickness(2, 3, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis });
+        panel.Children.Add(line);
+        panel.Children.Add(preview);
+
+        void UpdatePreview()
+        {
+            if (_store() is not { } store)
+            {
+                preview.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            var text = box.Text;
+            if (text.Length == 0)
+            {
+                preview.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            var ids = isTemplate ? ValueTemplate.Parse(text).MetricIds.ToList() : [text.Trim()];
+            var unknown = ids.Where(id => !store.TryGet(id, out _)).Distinct().ToList();
+            preview.Visibility = Visibility.Visible;
+            preview.Foreground = unknown.Count > 0 ? Brushes.IndianRed : null;
+            if (preview.Foreground is null)
+                preview.ClearValue(TextBlock.ForegroundProperty);
+            preview.Text = unknown.Count > 0
+                ? $"Unknown metric{(unknown.Count > 1 ? "s" : "")}: {string.Join(", ", unknown)}"
+                : "→ " + (isTemplate ? ValueTemplate.Parse(text).Render(store) : ValueTemplate.Parse($"{{{text.Trim()}}}").Render(store));
+        }
+
+        box.TextChanged += (_, _) =>
+        {
+            Write(target, setting.Key, JsonValue.Create(box.Text));
+            UpdatePreview();
+        };
+
+        pick.Click += (_, _) =>
+        {
+            if (_store() is not { } store)
+                return;
+            var currentId = isTemplate ? null : box.Text.Trim();
+            var picker = new MetricPickerWindow(store, placeholder: isTemplate, currentId) { Owner = Window.GetWindow(this) };
+            if (picker.ShowDialog() != true || picker.Result is not { } result)
+                return;
+
+            if (isTemplate)
+            {
+                // Insert at the caret, replacing any selected text.
+                var caret = box.SelectionStart;
+                box.Text = box.Text.Remove(caret, box.SelectionLength).Insert(caret, result);
+                box.CaretIndex = caret + result.Length;
+            }
+            else
+            {
+                box.Text = result;
+            }
+            box.Focus();
+        };
+
+        _liveRefreshers.Add(UpdatePreview);
+        return (panel, () =>
+        {
+            if (!box.IsKeyboardFocusWithin)
+                box.Text = CurrentString(target, setting);
+            UpdatePreview();
         });
     }
 

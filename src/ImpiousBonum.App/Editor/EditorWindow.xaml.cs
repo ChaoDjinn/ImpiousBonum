@@ -19,6 +19,8 @@ public partial class EditorWindow : Window
 
     private readonly LayoutSession _session;
     private readonly PreviewSurface _preview;
+    private readonly PropertyPanel _properties;
+    private MetricStore? _store;
     private readonly Func<LayoutDocument> _loadSaved;
     private bool _syncingList;
 
@@ -32,7 +34,8 @@ public partial class EditorWindow : Window
 
         _preview = new PreviewSurface(session);
         PreviewHost.Content = _preview;
-        PropertiesHost.Content = new PropertyPanel(session, dashboardSize);
+        _properties = new PropertyPanel(session, dashboardSize, () => _store);
+        PropertiesHost.Content = _properties;
 
         SnapBox.ItemsSource = SnapSizes.Select(s => s <= 1 ? "Off" : $"{s} px").ToList();
         SnapBox.SelectedIndex = Array.IndexOf(SnapSizes, 10.0);
@@ -65,7 +68,16 @@ public partial class EditorWindow : Window
     /// <summary>Raised when the user saves; the app writes the document to layout.json.</summary>
     public event EventHandler<LayoutDocument>? SaveRequested;
 
-    public void Refresh(MetricStore store, DateTime now) => _preview.Refresh(store, now);
+    public void Refresh(MetricStore store, DateTime now)
+    {
+        var first = _store is null;
+        _store = store;
+        _preview.Refresh(store, now);
+        if (first)
+            _properties.Rebuild();
+        else
+            _properties.RefreshLive();
+    }
 
     // ---- List ---------------------------------------------------------------------------------------
 
