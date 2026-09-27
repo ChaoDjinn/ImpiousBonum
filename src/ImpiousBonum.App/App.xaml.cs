@@ -72,6 +72,7 @@ public partial class App : Application
         _sampler.Start();
 
         _window = new DashboardWindow();
+        _window.EditRequested += (_, _) => OpenEditor();
         _tray = new TrayIcon();
         _tray.MenuOpening += (_, _) =>
         {
@@ -118,7 +119,7 @@ public partial class App : Application
     {
         if (_editor is not null)
         {
-            _editor.Activate();
+            BringToFront(_editor);
             return;
         }
 
@@ -131,11 +132,27 @@ public partial class App : Application
         _editor.Closed += (_, _) =>
         {
             _editor = null;
+            _window?.EndEdit();
             // Back to what's on disk: the saved layout, or the old one if changes were discarded.
             ApplyLayout();
         };
         _editor.Show();
+        BringToFront(_editor);
+        _window?.BeginEdit(session);
         Refresh();
+    }
+
+    /// <summary>
+    /// Windows won't let a background app take focus. When the editor is opened from the dashboard (which never
+    /// activates), briefly making it topmost at least puts it in front where it can be seen.
+    /// </summary>
+    private static void BringToFront(Window window)
+    {
+        if (window.WindowState == WindowState.Minimized)
+            window.WindowState = WindowState.Normal;
+        window.Activate();
+        window.Topmost = true;
+        window.Topmost = false;
     }
 
     private LayoutDocument LoadSavedLayout()

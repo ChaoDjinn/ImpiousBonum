@@ -149,8 +149,8 @@ public partial class EditorWindow : Window
 
     private void OnSnapChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_preview is not null && SnapBox.SelectedIndex >= 0)
-            _preview.Snap = SnapSizes[SnapBox.SelectedIndex];
+        if (_session is not null && SnapBox.SelectedIndex >= 0)
+            _session.Snap = SnapSizes[SnapBox.SelectedIndex];
     }
 
     private void Save()

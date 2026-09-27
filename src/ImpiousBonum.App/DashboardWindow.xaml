@@ -10,7 +10,10 @@
         WindowStartupLocation="Manual"
         Background="Black"
         UseLayoutRounding="True">
-    <Viewbox Stretch="Uniform">
-        <app:DashboardView x:Name="View" />
+    <Viewbox x:Name="Scaler" Stretch="Uniform">
+        <!-- The edit overlay is added on top of the view while the layout editor is open. -->
+        <Grid x:Name="Stage">
+            <app:DashboardView x:Name="View" />
+        </Grid>
     </Viewbox>
 </Window>

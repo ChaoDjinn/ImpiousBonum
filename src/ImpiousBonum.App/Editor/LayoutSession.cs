@@ -78,6 +78,12 @@ public sealed class LayoutSession
 
     public bool CanUndo => _undo.Count > 0;
 
+    /// <summary>
+    /// Grid size for moving and resizing, in canvas units; 1 means none. Lives here so the editor's preview and
+    /// the dashboard's touch overlay snap the same way. Not part of the layout and not undoable.
+    /// </summary>
+    public double Snap { get; set; } = 10;
+
     public bool CanRedo => _redo.Count > 0;
 
     public event EventHandler<LayoutChange>? Changed;
