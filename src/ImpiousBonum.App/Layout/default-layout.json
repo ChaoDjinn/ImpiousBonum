@@ -4,10 +4,12 @@
 // Text templates use {metric.id} or {metric.id:spec}. Spec tokens: a number format (0.0, N0),
 // a byte unit (KB, MB, GB, TB) or "nounit". Missing readings show as "—".
 //
-// Metric ids: cpu.load, cpu.threads, cpu.temp, mem.used, mem.total, mem.available, mem.load,
-// gpu.name, gpu.load, gpu.vram.used, gpu.vram.total, gpu.temp, fps,
+// Metric ids: cpu.load, cpu.threads, mem.used, mem.total, mem.available, mem.load,
+// gpu.name, gpu.load, gpu.vram.used, gpu.vram.total,
 // disk.C.free, disk.C.used, disk.C.total, disk.C.usedPct, disk.C.label (any drive letter),
 // net.down, net.up, net.ping
+// With the sensor service: cpu.temp, cpu.power, gpu.temp, gpu.hotspot, gpu.power, gpu.fan, fps, sensors.status,
+// plus every raw sensor as hw/... (run "sensors\ImpiousBonum.Sensors.exe list" to see them).
 {
   "width": 1920,
   "height": 480,

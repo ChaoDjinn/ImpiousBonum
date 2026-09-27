@@ -13,6 +13,10 @@ public sealed class TrayIcon : IDisposable
     private readonly Icon _image;
     private readonly ToolStripMenuItem _displays = new("Display");
     private readonly ToolStripMenuItem _startup = new("Start with Windows") { CheckOnClick = true };
+    private readonly ToolStripMenuItem _sensors = new("Sensors");
+    private readonly ToolStripMenuItem _sensorStatus = new() { Enabled = false };
+    private readonly ToolStripMenuItem _sensorAction = new();
+    private bool _sensorServiceInstalled;
 
     public TrayIcon()
     {
@@ -22,12 +26,17 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(new ToolStripMenuItem("Impious Bonum") { Enabled = false });
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_displays);
+        menu.Items.Add(_sensors);
         menu.Items.Add("Edit layout…", null, (_, _) => Open(AppPaths.LayoutFile));
         menu.Items.Add("Open settings folder", null, (_, _) => Open(AppPaths.DataDirectory));
         menu.Items.Add("Reload layout", null, (_, _) => ReloadRequested?.Invoke(this, EventArgs.Empty));
         menu.Items.Add(_startup);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty));
+
+        _sensors.DropDownItems.Add(_sensorStatus);
+        _sensors.DropDownItems.Add(_sensorAction);
+        _sensorAction.Click += (_, _) => SensorServiceChangeRequested?.Invoke(this, !_sensorServiceInstalled);
 
         _startup.Checked = StartupRegistration.IsEnabled;
         _startup.CheckedChanged += (_, _) => StartupRegistration.SetEnabled(_startup.Checked);
@@ -48,6 +57,16 @@ public sealed class TrayIcon : IDisposable
 
     public event EventHandler<DisplayMonitor>? MonitorSelected;
 
+    /// <summary>True to install the sensor service, false to remove it.</summary>
+    public event EventHandler<bool>? SensorServiceChangeRequested;
+
+    public void SetSensorState(string status, bool serviceInstalled)
+    {
+        _sensorServiceInstalled = serviceInstalled;
+        _sensorStatus.Text = status;
+        _sensorAction.Text = serviceInstalled ? "Remove sensor service…" : "Install sensor service…";
+    }
+
     public void SetMonitors(IReadOnlyList<DisplayMonitor> monitors, DisplayMonitor? current)
     {
         _displays.DropDownItems.Clear();
@@ -61,6 +80,9 @@ public sealed class TrayIcon : IDisposable
 
     public void ShowError(string title, string message) =>
         _icon.ShowBalloonTip(5000, title, message, ToolTipIcon.Warning);
+
+    public void ShowInfo(string title, string message) =>
+        _icon.ShowBalloonTip(5000, title, message, ToolTipIcon.Info);
 
     private static void Open(string path)
     {

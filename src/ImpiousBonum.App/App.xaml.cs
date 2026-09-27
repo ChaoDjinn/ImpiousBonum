@@ -9,6 +9,7 @@ using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.Core;
 using ImpiousBonum.Core.Metrics;
+using ImpiousBonum.Core.Providers;
 using Microsoft.Win32;
 
 namespace ImpiousBonum.App;
@@ -59,8 +60,14 @@ public partial class App : Application
 
         _window = new DashboardWindow();
         _tray = new TrayIcon();
-        _tray.MenuOpening += (_, _) => _tray.SetMonitors(DisplayMonitor.GetAll(), DisplayMonitor.Resolve(_settings, DisplayMonitor.GetAll()));
+        _tray.MenuOpening += (_, _) =>
+        {
+            var monitors = DisplayMonitor.GetAll();
+            _tray.SetMonitors(monitors, DisplayMonitor.Resolve(_settings, monitors));
+            _tray.SetSensorState(SensorStatus(), SensorServiceControl.IsInstalled);
+        };
         _tray.MonitorSelected += (_, monitor) => MoveTo(monitor);
+        _tray.SensorServiceChangeRequested += async (_, install) => await ChangeSensorServiceAsync(install);
         _tray.ReloadRequested += (_, _) => ApplyLayout();
         _tray.ExitRequested += async (_, _) => await ExitAsync();
 
@@ -81,6 +88,20 @@ public partial class App : Application
     }
 
     private void Refresh() => _window?.Dashboard.Refresh(_sampler!.Store, DateTime.Now);
+
+    private string SensorStatus() =>
+        _sampler is not null && _sampler.Store.TryGet(SensorHostProvider.Status, out var status) && status.Text is { } text
+            ? text
+            : SensorHostProvider.NotRunning;
+
+    private async Task ChangeSensorServiceAsync(bool install)
+    {
+        var error = await SensorServiceControl.RunAsync(install);
+        if (error is null)
+            _tray?.ShowInfo("Impious Bonum", install ? "Sensor service installed. Temperatures will appear in a few seconds." : "Sensor service removed.");
+        else if (error != "Cancelled.")
+            _tray?.ShowError(install ? "Couldn't install the sensor service" : "Couldn't remove the sensor service", error);
+    }
 
     private void ApplyLayout()
     {

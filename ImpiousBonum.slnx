@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/ImpiousBonum.App/ImpiousBonum.App.csproj" />
     <Project Path="src/ImpiousBonum.Core/ImpiousBonum.Core.csproj" />
+    <Project Path="src/ImpiousBonum.Sensors/ImpiousBonum.Sensors.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ImpiousBonum.Core.Tests/ImpiousBonum.Core.Tests.csproj" />

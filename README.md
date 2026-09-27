@@ -5,7 +5,7 @@
 - Pick a monitor; the dashboard fills it and comes back to the same place after reboots or display changes.
 - Hidden from the taskbar and Alt+Tab, and tapping it never steals focus.
 - Layout, fonts and colours live in one JSON file that applies live as you save it.
-- Small footprint: ~50 MB private memory and well under 0.1% CPU when idle.
+- Small footprint: ~50 MB private memory and well under 0.1% CPU when idle; the optional sensor service adds ~20 MB.
 
 ## What it shows today
 
@@ -17,7 +17,9 @@
 | `disk.<L>.free/used/total/usedPct/label` | `DriveInfo`, follows drives as they come and go |
 | `net.down`, `net.up` | Adapters with a default gateway |
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
-| `cpu.temp`, `gpu.temp`, `fps` | Placeholders until the sensor host lands (see roadmap) |
+| `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan`, `fps` | Sensor service (below). `fps` currently comes from AMD's driver for fullscreen apps |
+| `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
+| `sensors.status` | Text describing the sensor service connection |
 
 ## Running
 
@@ -33,6 +35,15 @@ Settings and layout live in `%AppData%\ImpiousBonum`:
 
 - `layout.json`: canvas size, theme and widgets. Saved changes apply immediately.
 - `settings.json`: which monitor, ping host, `hardwareRendering` (off by default to save memory).
+
+### Sensor service (temperatures, fans, power)
+
+Reading CPU temperatures needs admin rights and a kernel driver, so it lives in a separate process: `sensors\ImpiousBonum.Sensors.exe`, built on [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor). The dashboard itself stays unelevated and receives readings over a read-only named pipe.
+
+- **Install:** tray icon → *Sensors* → *Install sensor service…* (one UAC prompt). The host is copied to `Program Files\Impious Bonum\Sensors` and registered as an auto-start service, so there are no prompts at logon.
+- **CPU temperatures** also need the signed [PawnIO](https://pawnio.eu) driver (`winget install namazso.PawnIO`). HWiNFO and FanControl install it too. GPU sensors work without it.
+- The service only reads hardware while a dashboard is connected. Its log is in `%ProgramData%\ImpiousBonum\sensors.log`.
+- For development: `ImpiousBonum.Sensors.exe run` serves from a console, and `list` prints every sensor. Both work unelevated with fewer sensors.
 
 ### Layout basics
 
@@ -59,16 +70,17 @@ To use a font you don't want to install, point the theme at the file: `"fontFile
 ## Roadmap
 
 1. ~~Borderless dashboard on a chosen monitor, remembered placement, the default layout~~
-2. **Sensor host**: a small elevated service (LibreHardwareMonitorLib) for CPU/GPU temperatures, fans and clocks, talking to the unelevated UI over a named pipe
+2. ~~Sensor host: elevated service (LibreHardwareMonitorLib) for temperatures, fans, clocks and power, over a named pipe~~
 3. Metric picker and widget list driven by the metric registry
 4. On-screen edit mode: drag, resize and style widgets (touch friendly)
-5. FPS via ETW present events, more widget types, themes, installer (Velopack) and signing
+5. FPS via ETW present events for any GPU and windowed apps, more widget types, themes, installer (Velopack) and signing
 
 ## Layout of the code
 
 ```
 src/ImpiousBonum.Core    metric store, formatting/templates, providers, sampler (no UI)
 src/ImpiousBonum.App     WPF dashboard, widgets, tray, monitor placement
+src/ImpiousBonum.Sensors elevated sensor service (LibreHardwareMonitor) serving the named pipe
 tests/                   unit tests for the core
 ```
 

@@ -10,4 +10,8 @@ public enum MetricUnit
     Milliseconds,
     FramesPerSecond,
     Text,
+    Megahertz,
+    Rpm,
+    Volts,
+    Watts,
 }

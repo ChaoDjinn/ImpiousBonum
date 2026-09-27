@@ -42,6 +42,10 @@ public static class MetricFormatter
                     MetricUnit.Celsius => ("0.0", "°C"),
                     MetricUnit.Milliseconds => ("0", "ms"),
                     MetricUnit.FramesPerSecond => ("0.0", "FPS"),
+                    MetricUnit.Megahertz => ("0", "MHz"),
+                    MetricUnit.Rpm => ("0", "RPM"),
+                    MetricUnit.Volts => ("0.000", "V"),
+                    MetricUnit.Watts => ("0.0", "W"),
                     _ => ("0.##", ""),
                 };
                 var number = value.ToString(spec.NumberFormat ?? defaultFormat, culture);

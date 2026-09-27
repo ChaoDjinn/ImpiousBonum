@@ -28,7 +28,7 @@ public sealed class Sampler : IAsyncDisposable
         new DriveProvider(),
         new NetworkProvider(),
         new PingProvider(pingHost),
-        new SensorPlaceholderProvider(),
+        new SensorHostProvider(),
     ];
 
     public void Start()

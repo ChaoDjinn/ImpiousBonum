@@ -27,6 +27,22 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ImpiousBonum.Core\ImpiousBonum.Core.csproj" />
+    <!-- Build order only. The host runs as its own process, so none of its assemblies (LibreHardwareMonitor etc.) load into the dashboard. -->
+    <ProjectReference Include="..\ImpiousBonum.Sensors\ImpiousBonum.Sensors.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <!-- Ship the sensor host alongside the dashboard in a "sensors" subfolder with its own dependencies. -->
+  <Target Name="CopySensorHost" AfterTargets="Build">
+    <MSBuild Projects="..\ImpiousBonum.Sensors\ImpiousBonum.Sensors.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" PropertyName="SensorHostAssembly" />
+    </MSBuild>
+    <PropertyGroup>
+      <SensorHostDirectory>$([System.IO.Path]::GetDirectoryName($(SensorHostAssembly)))</SensorHostDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <SensorHostFiles Include="$(SensorHostDirectory)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(SensorHostFiles)" DestinationFiles="@(SensorHostFiles->'$(OutDir)sensors\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>
