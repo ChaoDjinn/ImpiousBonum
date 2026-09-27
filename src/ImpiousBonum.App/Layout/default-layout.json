@@ -1,0 +1,46 @@
+// Impious Bonum layout. Save this file and the dashboard updates immediately.
+//
+// width/height are design units; the whole canvas scales uniformly to fit the window.
+// Text templates use {metric.id} or {metric.id:spec}. Spec tokens: a number format (0.0, N0),
+// a byte unit (KB, MB, GB, TB) or "nounit". Missing readings show as "—".
+//
+// Metric ids: cpu.load, cpu.threads, cpu.temp, mem.used, mem.total, mem.available, mem.load,
+// gpu.name, gpu.load, gpu.vram.used, gpu.vram.total, gpu.temp, fps,
+// disk.C.free, disk.C.used, disk.C.total, disk.C.usedPct, disk.C.label (any drive letter),
+// net.down, net.up, net.ping
+{
+  "width": 1920,
+  "height": 480,
+  "theme": {
+    "fontFamily": "Segoe UI",
+    "fontWeight": "Light",
+    // "fontFile": "C:\\path\\to\\SomeFont-Light.otf",
+    "foreground": "#FFFFFF",
+    "secondary": "#D0FFFFFF",
+    "accent": "#FF9800",
+    "background": "#000000",
+    "track": "#1A1A1A"
+  },
+  "widgets": [
+    { "type": "graph", "x": 58, "y": 4, "width": 427, "height": 100,
+      "label": "CPU", "text": "{cpu.load} / {cpu.threads} threads", "metric": "cpu.load", "style": "line" },
+    { "type": "graph", "x": 58, "y": 124, "width": 427, "height": 92,
+      "label": "RAM", "text": "{mem.used} / {mem.total}", "metric": "mem.used", "style": "area" },
+    { "type": "text", "x": 58, "y": 224, "width": 427, "height": 76, "fontSize": 64, "text": "{gpu.load}" },
+    { "type": "text", "x": 58, "y": 296, "width": 427, "height": 76, "fontSize": 64, "text": "{gpu.vram.used:N0 MB}" },
+
+    { "type": "icon", "x": 548, "y": 12, "width": 360, "height": 80, "icon": "cpu", "text": "{cpu.temp:nounit} °C" },
+    { "type": "icon", "x": 548, "y": 102, "width": 360, "height": 80, "icon": "gpu", "text": "{gpu.temp:nounit} °C" },
+    { "type": "text", "x": 546, "y": 240, "width": 380, "height": 80, "fontSize": 64, "text": "{fps:nounit} FPS" },
+
+    { "type": "clock", "x": 930, "y": 18, "width": 420, "height": 200, "timeSize": 150, "dateSize": 29 },
+
+    { "type": "drives", "x": 1490, "y": 2, "width": 425, "height": 230, "fontSize": 25, "barHeight": 5 },
+    { "type": "rows", "x": 1490, "y": 366, "width": 425, "height": 108, "fontSize": 28, "valueFontSize": 22, "align": "bottom",
+      "rows": [
+        { "label": "Download", "text": "{net.down}" },
+        { "label": "Upload", "text": "{net.up}" },
+        { "label": "Ping", "text": "{net.ping}" }
+      ] }
+  ]
+}

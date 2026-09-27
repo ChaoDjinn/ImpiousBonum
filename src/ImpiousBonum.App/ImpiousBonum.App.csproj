@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- WinForms is only used for the tray icon (NotifyIcon). -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>ImpiousBonum</AssemblyName>
+    <RootNamespace>ImpiousBonum.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Keep the idle footprint small: no background GC thread, workstation GC. -->
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+    <!-- WFO0003 wants DPI set via the WinForms API; this is a WPF app, so the manifest is the right place. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Layout\default-layout.json" LogicalName="ImpiousBonum.default-layout.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ImpiousBonum.Core\ImpiousBonum.Core.csproj" />
+  </ItemGroup>
+
+</Project>

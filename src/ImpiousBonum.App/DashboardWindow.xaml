@@ -1,0 +1,16 @@
+<Window x:Class="ImpiousBonum.App.DashboardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:ImpiousBonum.App"
+        Title="Impious Bonum"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        WindowStartupLocation="Manual"
+        Background="Black"
+        UseLayoutRounding="True">
+    <Viewbox Stretch="Uniform">
+        <app:DashboardView x:Name="View" />
+    </Viewbox>
+</Window>
