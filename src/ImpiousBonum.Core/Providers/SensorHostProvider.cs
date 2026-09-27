@@ -1,5 +1,6 @@
 using System.IO.Pipes;
 using ImpiousBonum.Core.Metrics;
+using ImpiousBonum.Core.Native;
 using ImpiousBonum.Core.Sensors;
 
 namespace ImpiousBonum.Core.Providers;
@@ -8,7 +9,11 @@ namespace ImpiousBonum.Core.Providers;
 /// Receives temperatures, fans, power and the rest from the elevated sensor host over a named pipe,
 /// so the dashboard itself never needs admin rights or a kernel driver. Reconnects automatically if the host restarts.
 /// </summary>
-public sealed class SensorHostProvider : IMetricProvider
+/// <param name="frameRateTarget">
+/// Picks the app whose frame rate is shown as <c>fps</c>. Defaults to the foreground app; the dashboard can
+/// substitute "the top app on monitor X". Called on a background thread.
+/// </param>
+public sealed class SensorHostProvider(Func<(int ProcessId, string? Name)>? frameRateTarget = null) : IMetricProvider
 {
     /// <summary>Text metric describing the connection, e.g. "Sensors running" or "Sensor service not running".</summary>
     public const string Status = "sensors.status";
@@ -100,14 +105,30 @@ public sealed class SensorHostProvider : IMetricProvider
             case SensorMessage.ValuesType when message.Values is not null:
                 foreach (var (id, value) in message.Values)
                     store.Set(id, value);
+                ApplyFrameRate(store, message.Presenters);
                 break;
         }
+    }
+
+    /// <summary>The host can't see the user's desktop (it runs in the services session), so the foreground app is matched here.</summary>
+    private void ApplyFrameRate(MetricStore store, IReadOnlyList<PresenterInfo>? presenters)
+    {
+        var match = presenters is null ? null : ForForeground(presenters);
+        store.Set(SensorAliases.FramesPerSecond, match?.Fps);
+        store.SetText(SensorAliases.FramesPerSecondApp, match?.Name);
+    }
+
+    private PresenterInfo? ForForeground(IReadOnlyList<PresenterInfo> presenters)
+    {
+        var (processId, name) = (frameRateTarget ?? ForegroundApp.Get)();
+        return PresenterInfo.ForForeground(presenters, processId, name);
     }
 
     private void ClearValues(MetricStore store)
     {
         foreach (var id in _hostIds.Concat(_aliases))
             store.Set(id, null);
+        store.SetText(SensorAliases.FramesPerSecondApp, null);
     }
 
     public void Dispose()

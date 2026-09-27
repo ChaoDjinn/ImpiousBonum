@@ -15,6 +15,7 @@ public static class SensorAliases
     public const string GpuPower = "gpu.power";
     public const string GpuFan = "gpu.fan";
     public const string FramesPerSecond = "fps";
+    public const string FramesPerSecondApp = "fps.app";
 
     public static readonly IReadOnlyList<SensorInfo> All =
     [
@@ -25,5 +26,9 @@ public static class SensorAliases
         new(GpuPower, "GPU power", "Sensors", MetricUnit.Watts),
         new(GpuFan, "GPU fan speed", "Sensors", MetricUnit.Rpm),
         new(FramesPerSecond, "Frames per second (foreground app)", "Sensors", MetricUnit.FramesPerSecond),
+        new(FramesPerSecondApp, "App the frame rate is measured for", "Sensors", MetricUnit.Text),
     ];
+
+    /// <summary>Aliases the dashboard computes itself (from the presenter list), so the host doesn't send values for them.</summary>
+    public static bool IsComputedByDashboard(string id) => id is FramesPerSecond or FramesPerSecondApp;
 }

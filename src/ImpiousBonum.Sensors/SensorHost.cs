@@ -2,13 +2,17 @@ using ImpiousBonum.Core.Sensors;
 
 namespace ImpiousBonum.Sensors;
 
-/// <summary>Reads sensors once a second and broadcasts them. Sits idle, without touching the hardware, while no dashboard is connected.</summary>
+/// <summary>
+/// Reads sensors and frame rates once a second and broadcasts them.
+/// Sits idle, without touching the hardware or tracing presents, while no dashboard is connected.
+/// </summary>
 internal sealed class SensorHost : IAsyncDisposable
 {
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(1);
 
     private readonly SensorCollector _collector = new();
     private readonly PipeBroadcaster _broadcaster = new();
+    private readonly FrameRateMonitor _frames = new();
     private readonly CancellationTokenSource _stop = new();
     private Task? _loop;
 
@@ -41,13 +45,34 @@ internal sealed class SensorHost : IAsyncDisposable
         while (await WaitAsync(timer, cancellationToken))
         {
             if (!_broadcaster.HasClients)
+            {
+                if (_frames.IsRunning)
+                {
+                    _frames.Stop();
+                    Log.Info("Frame counting stopped (no dashboards connected).");
+                }
                 continue;
+            }
 
             try
             {
-                if (_collector.Update())
+                var catalogChanged = _collector.Update();
+                if (!_frames.IsRunning && _frames.Problem is null)
+                {
+                    // Only tried once per run: a failure (e.g. no admin rights) won't fix itself by retrying.
+                    if (!_frames.Start())
+                        Log.Error(_frames.Problem!);
+                    catalogChanged = true;
+                }
+                if (catalogChanged)
                     await PublishCatalogAsync();
-                await _broadcaster.BroadcastAsync(new SensorMessage { Type = SensorMessage.ValuesType, Values = _collector.ReadValues() });
+
+                await _broadcaster.BroadcastAsync(new SensorMessage
+                {
+                    Type = SensorMessage.ValuesType,
+                    Values = _collector.ReadValues(),
+                    Presenters = _frames.IsRunning ? _frames.Snapshot() : null,
+                });
             }
             catch (Exception ex)
             {
@@ -62,7 +87,7 @@ internal sealed class SensorHost : IAsyncDisposable
         await _broadcaster.SetStatusAsync(new SensorMessage
         {
             Type = SensorMessage.StatusType,
-            Status = _collector.Status,
+            Status = _frames.Problem is { } problem ? $"{_collector.Status}. {problem}" : _collector.Status,
             LowLevelAccess = _collector.HasLowLevelAccess,
         });
         await _broadcaster.SetCatalogAsync(new SensorMessage { Type = SensorMessage.CatalogType, Sensors = _collector.Catalog });
@@ -86,6 +111,7 @@ internal sealed class SensorHost : IAsyncDisposable
         if (_loop is not null)
             await _loop;
         await _broadcaster.DisposeAsync();
+        _frames.Dispose();
         _collector.Dispose();
         _stop.Dispose();
     }

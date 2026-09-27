@@ -20,7 +20,7 @@ public sealed class Sampler : IAsyncDisposable
 
     public MetricStore Store => _store;
 
-    public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(string pingHost = "1.1.1.1") =>
+    public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(string pingHost = "1.1.1.1", Func<(int ProcessId, string? Name)>? frameRateTarget = null) =>
     [
         new CpuProvider(),
         new MemoryProvider(),
@@ -28,7 +28,7 @@ public sealed class Sampler : IAsyncDisposable
         new DriveProvider(),
         new NetworkProvider(),
         new PingProvider(pingHost),
-        new SensorHostProvider(),
+        new SensorHostProvider(frameRateTarget),
     ];
 
     public void Start()

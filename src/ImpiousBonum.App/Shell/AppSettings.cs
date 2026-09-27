@@ -20,6 +20,9 @@ public sealed class AppSettings
 
     public string PingHost { get; set; } = "1.1.1.1";
 
+    /// <summary>Monitor whose top app the FPS reading follows (a <see cref="DisplayMonitor.Id"/>), or null for the foreground app.</summary>
+    public string? FpsMonitorId { get; set; }
+
     /// <summary>
     /// GPU-accelerated drawing. Off by default: the dashboard redraws once a second, and software rendering
     /// avoids loading the graphics driver into the process, which saves a lot of memory.

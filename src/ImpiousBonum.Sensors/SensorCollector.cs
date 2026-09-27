@@ -74,12 +74,8 @@ internal sealed class SensorCollector : IDisposable
             values[tracked.Info.Id] = tracked.Sensor.Value is float v ? v * tracked.Scale : null;
 
         // Aliases are always sent (null when unresolved) so the dashboard shows "—" rather than a stale reading.
-        foreach (var alias in SensorAliases.All)
+        foreach (var alias in SensorAliases.All.Where(a => !SensorAliases.IsComputedByDashboard(a.Id)))
             values[alias.Id] = _aliases.TryGetValue(alias.Id, out var sensor) && sensor.Value is float v ? v : null;
-
-        // The driver reports 0 FPS when nothing is running fullscreen; show that as no reading.
-        if (values[SensorAliases.FramesPerSecond] is <= 0)
-            values[SensorAliases.FramesPerSecond] = null;
 
         return values;
     }
@@ -147,8 +143,7 @@ internal sealed class SensorCollector : IDisposable
             Add(SensorAliases.GpuHotSpot, ByName(Sensors(gpu, SensorType.Temperature), ["GPU Hot Spot"]));
             Add(SensorAliases.GpuPower, ByName(Sensors(gpu, SensorType.Power), GpuPowerNames));
             Add(SensorAliases.GpuFan, Sensors(gpu, SensorType.Fan).FirstOrDefault());
-            // AMD's driver measures the frame rate of fullscreen apps itself. Other vendors will need ETW (later).
-            Add(SensorAliases.FramesPerSecond, ByName(Sensors(gpu, SensorType.Factor), ["Fullscreen FPS"]));
+
         }
 
         return aliases;

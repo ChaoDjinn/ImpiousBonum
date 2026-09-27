@@ -48,6 +48,26 @@ public sealed record SensorMessage
     public IReadOnlyList<SensorInfo>? Sensors { get; init; }
 
     public IReadOnlyDictionary<string, double?>? Values { get; init; }
+
+    /// <summary>
+    /// For <c>values</c>: apps currently presenting frames and their rates. Null when frame counting is unavailable.
+    /// The dashboard picks the foreground app from this list, since only it can see the user's desktop.
+    /// </summary>
+    public IReadOnlyList<PresenterInfo>? Presenters { get; init; }
+}
+
+public sealed record PresenterInfo(int ProcessId, string Name, double Fps)
+{
+    /// <summary>
+    /// The presenter for the foreground app: the same process, or else the busiest process with the same exe name
+    /// (Chromium/Electron apps present from a separate GPU process that shares the exe).
+    /// </summary>
+    public static PresenterInfo? ForForeground(IEnumerable<PresenterInfo> presenters, int processId, string? processName)
+    {
+        var list = presenters as IReadOnlyList<PresenterInfo> ?? presenters.ToList();
+        return list.FirstOrDefault(p => p.ProcessId == processId)
+            ?? (processName is null ? null : list.Where(p => p.Name.Equals(processName, StringComparison.OrdinalIgnoreCase)).MaxBy(p => p.Fps));
+    }
 }
 
 public sealed record SensorInfo(string Id, string Name, string Category, MetricUnit Unit, double? Max = null)

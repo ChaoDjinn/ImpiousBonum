@@ -55,7 +55,8 @@ public partial class App : Application
         _settings = AppSettings.Load();
         if (!_settings.HardwareRendering)
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
-        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost));
+        var frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
+        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, frameRateTarget.Get));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -65,6 +66,12 @@ public partial class App : Application
             var monitors = DisplayMonitor.GetAll();
             _tray.SetMonitors(monitors, DisplayMonitor.Resolve(_settings, monitors));
             _tray.SetSensorState(SensorStatus(), SensorServiceControl.IsInstalled);
+            _tray.SetFpsSources(monitors, _settings.FpsMonitorId);
+        };
+        _tray.FpsSourceSelected += (_, monitorId) =>
+        {
+            _settings.FpsMonitorId = monitorId;
+            _settings.Save();
         };
         _tray.MonitorSelected += (_, monitor) => MoveTo(monitor);
         _tray.SensorServiceChangeRequested += async (_, install) => await ChangeSensorServiceAsync(install);
