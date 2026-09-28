@@ -147,6 +147,9 @@ public sealed class LayoutStore : IDisposable
 
     public void Duplicate(string name, string newName) => Library.Duplicate(name, newName);
 
+    /// <summary>Saves an imported layout, replacing any of that name (the dashboard reloads if it's showing it). Returns the saved name.</summary>
+    public string Import(LayoutPackageContents package, string name) => Library.Import(package, name);
+
     /// <summary>Deletes a layout. Deleting the active one switches to the remembered one, or another if that was it.</summary>
     public void Delete(string name)
     {
