@@ -68,7 +68,7 @@ Download [`ImpiousBonum-win-Setup.exe`](https://github.com/ChaoDjinn/ImpiousBonu
 
 - It installs for your user only (no admin prompt) into `%LocalAppData%\ImpiousBonum`, adds Start menu and desktop shortcuts, and installs the .NET 10 Desktop Runtime first if you don't have it.
 - On first run it picks your smallest secondary monitor. Use the tray icon to move it to another display, edit the layout, or turn on *Start with Windows*.
-- The app checks GitHub for updates, downloads them in the background, and offers *Restart to update* in the tray menu. Updates are small deltas.
+- The app checks GitHub for updates about a minute after it starts and every six hours after that; tray → *Check for updates* checks right away. New versions download in the background (usually as a small delta) and the tray offers *Restart to update to x.y.z*. The tray menu's first line shows the installed version.
 - After an update, if the sensor service is from an older version the tray says so; *Sensors → Update sensor service…* brings it up to date.
 - Uninstall from Windows Settings → Apps. It removes start-with-Windows and offers to remove the sensor service (one UAC prompt). Your layout and settings in `%AppData%\ImpiousBonum` are kept.
 - The installer isn't code-signed yet, so Windows SmartScreen may warn the first time: choose *More info → Run anyway*.
@@ -78,6 +78,18 @@ Settings and layout live in `%AppData%\ImpiousBonum`:
 - `layout.json`: canvas size, theme and widgets. Saved changes apply immediately.
 - `settings.json`: which monitor, ping host, `hardwareRendering` (off by default to save memory).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
+
+### Tray menu
+
+| Item | |
+|---|---|
+| *Display* | Which monitor the dashboard fills |
+| *Sensors* | Sensor service status, and install, update or remove it |
+| *FPS from* | Follow the foreground app, or the top app on a chosen monitor |
+| *Edit layout…* | Open the layout editor (or double-click the tray icon) |
+| *Open layout.json*, *Open settings folder*, *Reload layout* | Work with the files directly |
+| *Start with Windows* | Start the dashboard when you sign in |
+| *Check for updates* | Installed copies only |
 
 ## Sensor service (temperatures, fans, power, FPS)
 
@@ -100,7 +112,7 @@ flowchart LR
 - **Install:** tray icon → *Sensors* → *Install sensor service…* (one UAC prompt). The host is copied to `Program Files\Impious Bonum\Sensors` and registered as an auto-start service, so there are no prompts at logon.
 - **CPU temperatures** also need the signed [PawnIO](https://pawnio.eu) driver (`winget install namazso.PawnIO`). HWiNFO and FanControl install it too. GPU sensors work without it.
 - The service only reads hardware while a dashboard is connected. Its log is in `%ProgramData%\ImpiousBonum\sensors.log`.
-- For development: `ImpiousBonum.Sensors.exe run` serves from a console, and `list` prints every sensor. Both work unelevated with fewer sensors.
+- For development: `ImpiousBonum.Sensors.exe run` serves from a console, and `list` prints every sensor. Both work unelevated with fewer sensors. `install` and `uninstall` (as admin) do what the tray items do.
 
 ## Layout editor
 
@@ -150,21 +162,32 @@ Requires the .NET 10 SDK on Windows 10/11.
 dotnet run --project src/ImpiousBonum.App -c Release
 ```
 
-Tests: `dotnet test ImpiousBonum.slnx -c Release` (CI runs the same on every push and pull request).
+Tests: `dotnet test ImpiousBonum.slnx -c Release` (CI runs the same on every push to `main` and every pull request).
+
+A build run from source shows *development build* in the tray and never checks for updates; only installed copies do.
+
+`docs/widgets.md` is generated from the widget descriptors, and a test fails if it's out of date. After changing a widget's settings, regenerate it:
+
+```bash
+dotnet run --project src/ImpiousBonum.App -c Release -- --widget-docs docs/widgets.md
+```
 
 ### Making a release
 
-Push a version tag and GitHub Actions builds, tests, packs and publishes it:
+1. Set `<Version>` in `Directory.Build.props` to the new version and merge that to `main`.
+2. Tag that commit on `main` with the same version and push the tag:
 
-```bash
-git tag v0.2.0
-```
+   ```bash
+   git tag v0.2.1
+   ```
 
-```bash
-git push origin v0.2.0
-```
+   ```bash
+   git push origin v0.2.1
+   ```
 
-To build the installer locally instead: `pwsh build/publish.ps1 -Version 0.2.0` (output in `artifacts/releases`).
+The [release workflow](.github/workflows/release.yml) then runs the tests, downloads the previous release so it can build a delta package, packs the installer with Velopack and publishes the GitHub release *Impious Bonum 0.2.1*. Installed copies pick it up on their next update check. The tag decides the version that ships, so keep it in step with `Directory.Build.props`; a version number can only be released once.
+
+To build the installer locally instead: `pwsh build/publish.ps1 -Version 0.2.1` (output in `artifacts/releases`; add `-SkipTests` to skip the test run).
 
 ### Layout of the code
 
@@ -175,6 +198,7 @@ src/ImpiousBonum.Sensors elevated sensor service (LibreHardwareMonitor, ETW fram
 tests/                   unit tests for the core and the app (widgets, layout validation, editor)
 docs/widgets.md          widget reference, generated from the widget descriptors
 build/                   installer build (publish.ps1) and icon generator
+.github/workflows/       CI (ci.yml) and tag-triggered releases (release.yml)
 ```
 
 ## Roadmap
