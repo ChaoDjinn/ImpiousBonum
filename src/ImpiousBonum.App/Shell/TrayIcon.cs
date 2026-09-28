@@ -6,12 +6,13 @@ using System.Windows.Forms;
 
 namespace ImpiousBonum.App.Shell;
 
-/// <summary>The notification-area icon and its menu: displays, sensors, FPS source, the layout editor, updates and exit.</summary>
+/// <summary>The notification-area icon and its menu: displays, layouts, sensors, FPS source, the layout editor, updates and exit.</summary>
 public sealed class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
     private readonly Icon _image;
     private readonly ToolStripMenuItem _displays = new("Display");
+    private readonly ToolStripMenuItem _layouts = new("Layout");
     private readonly ToolStripMenuItem _fpsSource = new("FPS from");
     private readonly ToolStripMenuItem _startup = new("Start with Windows") { CheckOnClick = true };
     private readonly ToolStripMenuItem _sensors = new("Sensors");
@@ -21,6 +22,7 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _header = new("Impious Bonum") { Enabled = false };
     private readonly ToolStripMenuItem _checkUpdates = new("Check for updates") { Visible = false };
     private readonly ToolStripMenuItem _restartToUpdate = new() { Visible = false };
+    private string? _activeLayoutPath;
 
     public TrayIcon()
     {
@@ -31,10 +33,15 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_restartToUpdate);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_displays);
+        menu.Items.Add(_layouts);
         menu.Items.Add(_sensors);
         menu.Items.Add(_fpsSource);
         menu.Items.Add(new ToolStripMenuItem("Edit layout…", null, (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty)) { Font = new Font(menu.Font, FontStyle.Bold) });
-        menu.Items.Add("Open layout.json", null, (_, _) => Open(AppPaths.LayoutFile));
+        menu.Items.Add("Open layout file", null, (_, _) =>
+        {
+            if (_activeLayoutPath is not null)
+                Open(_activeLayoutPath);
+        });
         menu.Items.Add("Open settings folder", null, (_, _) => Open(AppPaths.DataDirectory));
         menu.Items.Add("Reload layout", null, (_, _) => ReloadRequested?.Invoke(this, EventArgs.Empty));
         menu.Items.Add(_startup);
@@ -122,6 +129,22 @@ public sealed class TrayIcon : IDisposable
         _sensorInstall.Text = serviceInstalled ? "Update sensor service…" : "Install sensor service…";
         _sensorInstall.Font = outdated ? new Font(_sensorInstall.Owner?.Font ?? SystemFonts.MenuFont!, FontStyle.Bold) : null;
         _sensorRemove.Visible = serviceInstalled;
+    }
+
+    /// <summary>A saved layout's name.</summary>
+    public event EventHandler<string>? LayoutSelected;
+
+    public void SetLayouts(IReadOnlyList<string> names, string active, string activePath)
+    {
+        _activeLayoutPath = activePath;
+        _layouts.DropDownItems.Clear();
+        foreach (var name in names)
+        {
+            // "&" would otherwise underline the next letter as a mnemonic.
+            var item = new ToolStripMenuItem(name.Replace("&", "&&")) { Checked = name == active };
+            item.Click += (_, _) => LayoutSelected?.Invoke(this, name);
+            _layouts.DropDownItems.Add(item);
+        }
     }
 
     public void SetMonitors(IReadOnlyList<DisplayMonitor> monitors, DisplayMonitor? current)

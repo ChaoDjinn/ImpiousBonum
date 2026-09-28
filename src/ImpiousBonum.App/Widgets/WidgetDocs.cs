@@ -13,7 +13,7 @@ public static class WidgetDocs
         md.AppendLine();
         md.AppendLine("<!-- Generated from the widget descriptors: ImpiousBonum.exe --widget-docs docs/widgets.md. Don't edit by hand. -->");
         md.AppendLine();
-        md.AppendLine("Every widget in `layout.json` has `type`, `x`, `y`, `width` and `height` (in canvas units), plus the settings below.");
+        md.AppendLine("Every widget in a layout file has `type`, `x`, `y`, `width` and `height` (in canvas units), plus the settings below.");
         md.AppendLine("Anything left out uses its default.");
         md.AppendLine();
         md.AppendLine("Templates are text with live values: `{metric.id}` or `{metric.id:spec}`, where spec can be a number format (`0.0`, `N0`),");

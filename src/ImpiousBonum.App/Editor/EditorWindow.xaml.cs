@@ -11,7 +11,8 @@ namespace ImpiousBonum.App.Editor;
 
 /// <summary>
 /// The layout editor: widget list, live preview and properties. Edits go to a <see cref="LayoutSession"/>;
-/// the app mirrors that onto the real dashboard as you work, and writes layout.json when you save.
+/// the app mirrors that onto the real dashboard as you work. It edits the active saved layout, and can switch to,
+/// create, rename, duplicate and delete saved layouts.
 /// </summary>
 public partial class EditorWindow : Window
 {
@@ -21,16 +22,18 @@ public partial class EditorWindow : Window
     private readonly PreviewSurface _preview;
     private readonly PropertyPanel _properties;
     private MetricStore? _store;
-    private readonly Func<LayoutDocument> _loadSaved;
+    private readonly LayoutStore _layouts;
+    private readonly MenuItem _deleteLayoutItem;
     private bool _syncingList;
+    private bool _syncingLayouts;
 
-    /// <param name="loadSaved">Reads the layout as last saved, for Revert.</param>
+    /// <param name="layouts">The saved layouts; the session holds a working copy of the active one.</param>
     /// <param name="dashboardSize">The dashboard monitor's size in pixels, for "Match dashboard screen".</param>
-    public EditorWindow(LayoutSession session, Func<LayoutDocument> loadSaved, Func<(int Width, int Height)?> dashboardSize)
+    public EditorWindow(LayoutSession session, LayoutStore layouts, Func<(int Width, int Height)?> dashboardSize)
     {
         InitializeComponent();
         _session = session;
-        _loadSaved = loadSaved;
+        _layouts = layouts;
 
         _preview = new PreviewSurface(session);
         PreviewHost.Content = _preview;
@@ -49,6 +52,15 @@ public partial class EditorWindow : Window
         }
         AddButton.ContextMenu = menu;
 
+        var layoutMenu = new ContextMenu();
+        layoutMenu.Items.Add(MenuItemFor("Save as…", "Save your changes as a new layout", SaveAs));
+        layoutMenu.Items.Add(MenuItemFor("Rename…", null, RenameLayout));
+        layoutMenu.Items.Add(MenuItemFor("Duplicate…", "Copy the saved layout and edit the copy", DuplicateLayout));
+        layoutMenu.Items.Add(new Separator());
+        _deleteLayoutItem = MenuItemFor("Delete", null, DeleteLayout);
+        layoutMenu.Items.Add(_deleteLayoutItem);
+        LayoutMenuButton.ContextMenu = layoutMenu;
+
         session.Changed += (_, change) =>
         {
             if (change.Kind != ChangeKind.Geometry)
@@ -62,11 +74,16 @@ public partial class EditorWindow : Window
         };
 
         RefreshList();
+        RefreshLayouts();
         UpdateState();
     }
 
-    /// <summary>Raised when the user saves; the app writes the document to layout.json.</summary>
-    public event EventHandler<LayoutDocument>? SaveRequested;
+    private static MenuItem MenuItemFor(string header, string? toolTip, Action action)
+    {
+        var item = new MenuItem { Header = header, ToolTip = toolTip };
+        item.Click += (_, _) => action();
+        return item;
+    }
 
     public void Refresh(MetricStore store, DateTime now)
     {
@@ -117,6 +134,123 @@ public partial class EditorWindow : Window
         return string.IsNullOrWhiteSpace(detail) ? name : $"{name}: {detail}";
     }
 
+    // ---- Saved layouts ------------------------------------------------------------------------------
+
+    private void RefreshLayouts()
+    {
+        _syncingLayouts = true;
+        var names = _layouts.List();
+        LayoutBox.ItemsSource = names;
+        LayoutBox.SelectedItem = _layouts.Active;
+        _deleteLayoutItem.IsEnabled = names.Count > 1;
+        _syncingLayouts = false;
+    }
+
+    private void OnLayoutBoxChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_syncingLayouts && LayoutBox.SelectedItem is string name)
+            SwitchTo(name);
+    }
+
+    private void OnLayoutMenu(object sender, RoutedEventArgs e)
+    {
+        LayoutMenuButton.ContextMenu.PlacementTarget = LayoutMenuButton;
+        LayoutMenuButton.ContextMenu.Placement = PlacementMode.Bottom;
+        LayoutMenuButton.ContextMenu.IsOpen = true;
+    }
+
+    /// <summary>Edits another saved layout (the dashboard follows), asking about unsaved changes first.</summary>
+    /// <returns>False if the user cancelled.</returns>
+    public bool SwitchTo(string name)
+    {
+        if (string.Equals(name, _layouts.Active, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (!ConfirmLeave())
+        {
+            RefreshLayouts();
+            return false;
+        }
+
+        _layouts.SetActive(name);
+        LoadActive();
+        return true;
+    }
+
+    private void SaveAs()
+    {
+        var name = NamePromptWindow.Ask(this, "Save layout as", "Name for the new layout", $"{_layouts.Active} copy",
+            n => _layouts.Library.CheckNewName(n));
+        if (name is null)
+            return;
+
+        // Unsaved changes go to the new layout; the old one stays as it was last saved.
+        _layouts.Save(name, _session.Document);
+        _layouts.SetActive(name);
+        _session.MarkSaved();
+        RefreshLayouts();
+        UpdateState();
+    }
+
+    private void RenameLayout()
+    {
+        var current = _layouts.Active;
+        var name = NamePromptWindow.Ask(this, "Rename layout", $"New name for \"{current}\"", current,
+            n => _layouts.Library.CheckNewName(n, except: current));
+        if (name is null || name == current)
+            return;
+
+        _layouts.Rename(current, name);
+        RefreshLayouts();
+        UpdateState();
+    }
+
+    private void DuplicateLayout()
+    {
+        if (!ConfirmLeave())
+            return;
+        var name = NamePromptWindow.Ask(this, "Duplicate layout", $"Name for the copy of \"{_layouts.Active}\"", $"{_layouts.Active} copy",
+            n => _layouts.Library.CheckNewName(n));
+        if (name is null)
+            return;
+
+        _layouts.Duplicate(_layouts.Active, name);
+        _layouts.SetActive(name);
+        LoadActive();
+    }
+
+    private void DeleteLayout()
+    {
+        if (_layouts.List().Count <= 1)
+            return;
+        var answer = MessageBox.Show(this, $"Delete the layout \"{_layouts.Active}\"? This can't be undone.", "Impious Bonum",
+            MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
+        if (answer != MessageBoxResult.OK)
+            return;
+
+        _layouts.Delete(_layouts.Active);
+        LoadActive();
+    }
+
+    /// <summary>Starts editing the active layout from its saved file.</summary>
+    private void LoadActive()
+    {
+        _session.Reset(_layouts.LoadOrDefault());
+        RefreshLayouts();
+        UpdateState();
+    }
+
+    /// <summary>Before leaving the layout being edited: save, discard, or (false) stay.</summary>
+    private bool ConfirmLeave()
+    {
+        if (!_session.IsDirty)
+            return true;
+
+        var answer = MessageBox.Show(this, $"Save your changes to \"{_layouts.Active}\"?", "Impious Bonum", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+        if (answer == MessageBoxResult.Yes)
+            Save();
+        return answer != MessageBoxResult.Cancel;
+    }
+
     // ---- Commands -------------------------------------------------------------------------------------
 
     private void OnAdd(object sender, RoutedEventArgs e)
@@ -144,7 +278,7 @@ public partial class EditorWindow : Window
     {
         if (!_session.IsDirty)
             return;
-        _session.Replace(_loadSaved());
+        _session.Replace(_layouts.LoadOrDefault());
     }
 
     private void OnSnapChanged(object sender, SelectionChangedEventArgs e)
@@ -155,7 +289,7 @@ public partial class EditorWindow : Window
 
     private void Save()
     {
-        SaveRequested?.Invoke(this, _session.Document);
+        _layouts.Save(_session.Document);
         _session.MarkSaved();
         UpdateState();
     }
@@ -163,7 +297,7 @@ public partial class EditorWindow : Window
     private void UpdateState()
     {
         var dirty = _session.IsDirty;
-        Title = $"{(dirty ? "● " : string.Empty)}Impious Bonum layout editor";
+        Title = $"{(dirty ? "● " : string.Empty)}{_layouts.Active} · Impious Bonum layout editor";
         SaveButton.IsEnabled = dirty;
         RevertButton.IsEnabled = dirty;
         UndoButton.IsEnabled = _session.CanUndo;
@@ -238,13 +372,7 @@ public partial class EditorWindow : Window
     protected override void OnClosing(CancelEventArgs e)
     {
         base.OnClosing(e);
-        if (!_session.IsDirty)
-            return;
-
-        var answer = MessageBox.Show(this, "Save your changes to the layout?", "Impious Bonum", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
-        if (answer == MessageBoxResult.Yes)
-            Save();
-        else if (answer == MessageBoxResult.Cancel)
+        if (!ConfirmLeave())
             e.Cancel = true;
     }
 }
