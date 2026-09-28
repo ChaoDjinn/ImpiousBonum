@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows.Media;
+using ImpiousBonum.App.Editor;
 using ImpiousBonum.App.Widgets;
 
 namespace ImpiousBonum.App.Layout;
@@ -13,14 +14,19 @@ namespace ImpiousBonum.App.Layout;
 /// </summary>
 public static class LayoutValidator
 {
-    public static IReadOnlyList<string> Validate(LayoutDocument layout)
+    /// <param name="themes">The themes the layout's theme can name; null for only the built-in ones.</param>
+    public static IReadOnlyList<string> Validate(LayoutDocument layout, ThemeLibrary? themes = null)
     {
         var issues = new List<string>();
 
         if (layout.Width <= 0 || layout.Height <= 0)
             issues.Add($"Canvas size {layout.Width}×{layout.Height} must be positive.");
 
-        CheckTheme(layout.Theme, issues);
+        themes ??= new ThemeLibrary(null);
+        if (themes.Problem(layout.Theme) is { } themeProblem)
+            issues.Add($"Theme: {themeProblem}");
+        CheckThemeKeys(layout.Theme, issues);
+        CheckTheme(themes.Resolve(layout.Theme), issues);
 
         for (var i = 0; i < layout.Widgets.Count; i++)
         {
@@ -106,6 +112,26 @@ public static class LayoutValidator
                         issues.Add($"{where}: {key}[{i + 1}] should be an object.");
                 }
             }
+        }
+    }
+
+    /// <summary>Unknown keys in the layout's own theme values, and values of the wrong type (which make the whole theme fall back).</summary>
+    private static void CheckThemeKeys(JsonObject theme, List<string> issues)
+    {
+        var keys = EditorDescriptors.Theme.Select(s => s.Key).Append(ThemeLibrary.BaseKey).ToList();
+        foreach (var (key, _) in theme)
+        {
+            if (!keys.Contains(key))
+                issues.Add($"Theme: unknown setting '{key}'{Suggest(Closest(key, keys))}.");
+        }
+
+        try
+        {
+            theme.Deserialize<ThemeSettings>(JsonDefaults.Options);
+        }
+        catch (JsonException ex)
+        {
+            issues.Add($"Theme: {ex.Message}");
         }
     }
 

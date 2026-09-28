@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Windows.Threading;
 using ImpiousBonum.App.Shell;
 
@@ -7,13 +8,16 @@ namespace ImpiousBonum.App.Layout;
 
 /// <summary>
 /// The saved layouts and which one is active (remembered in settings.json). Watches the active layout's file so
-/// hand edits apply on save; edits to other layouts do nothing until they're selected.
+/// hand edits apply on save; edits to other layouts do nothing until they're selected. Also watches the saved themes,
+/// since changing one restyles every layout that uses it.
 /// </summary>
 public sealed class LayoutStore : IDisposable
 {
     private readonly AppSettings _settings;
     private readonly FileSystemWatcher _watcher;
     private readonly DispatcherTimer _debounce;
+    private readonly FileSystemWatcher _themeWatcher;
+    private readonly DispatcherTimer _themeDebounce;
 
     public LayoutStore(AppSettings settings)
     {
@@ -49,9 +53,58 @@ public sealed class LayoutStore : IDisposable
         _watcher.Created += (_, e) => Restart(e.Name);
         _watcher.Renamed += (_, e) => Restart(e.Name);
         _watcher.EnableRaisingEvents = true;
+
+        Themes = new ThemeLibrary(AppPaths.DataDirectory);
+        Themes.EnsureCreated();
+        _themeDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+        _themeDebounce.Tick += (_, _) =>
+        {
+            _themeDebounce.Stop();
+            ThemeChanged?.Invoke(this, EventArgs.Empty);
+        };
+        _themeWatcher = new FileSystemWatcher(Themes.Directory!, "*.json")
+        {
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
+        };
+        void RestartThemes() => _themeDebounce.Dispatcher.BeginInvoke(() =>
+        {
+            _themeDebounce.Stop();
+            _themeDebounce.Start();
+        });
+        _themeWatcher.Changed += (_, _) => RestartThemes();
+        _themeWatcher.Created += (_, _) => RestartThemes();
+        _themeWatcher.Renamed += (_, _) => RestartThemes();
+        _themeWatcher.Deleted += (_, _) => RestartThemes();
+        _themeWatcher.EnableRaisingEvents = true;
     }
 
     public LayoutLibrary Library { get; }
+
+    /// <summary>The built-in and saved themes layouts can use by name.</summary>
+    public ThemeLibrary Themes { get; }
+
+    /// <summary>A game's theme showing in place of the layout's own, or null. Never remembered.</summary>
+    public string? ThemeOverride { get; private set; }
+
+    /// <summary>Raised on the UI thread after a saved theme's file changes, or a game's theme starts or stops showing.</summary>
+    public event EventHandler? ThemeChanged;
+
+    /// <summary>
+    /// Restyles whatever layout is showing with a saved theme, without remembering it, for game links that name a theme;
+    /// null goes back to the layout's own theme. Throws <see cref="FileNotFoundException"/> if there's no such theme.
+    /// </summary>
+    public void ShowThemeTemporarily(string? name)
+    {
+        var found = name is null ? null : Themes.Find(name) ?? throw new FileNotFoundException($"There's no theme called \"{name}\".");
+        if (found == ThemeOverride)
+            return;
+        ThemeOverride = found;
+        ThemeChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>The values to draw <paramref name="layout"/> with: a game's theme if one is showing, else the layout's own.</summary>
+    public ThemeSettings ResolveTheme(LayoutDocument layout) =>
+        ThemeOverride is { } name ? Themes.Resolve(new JsonObject { [ThemeLibrary.BaseKey] = name }) : Themes.Resolve(layout.Theme);
 
     /// <summary>Name of the layout the dashboard shows and the editor edits: the remembered choice, or a game's layout.</summary>
     public string Active { get; private set; }
@@ -177,5 +230,7 @@ public sealed class LayoutStore : IDisposable
     {
         _watcher.Dispose();
         _debounce.Stop();
+        _themeWatcher.Dispose();
+        _themeDebounce.Stop();
     }
 }

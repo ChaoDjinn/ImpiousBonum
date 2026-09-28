@@ -60,14 +60,28 @@ public sealed class LayoutSession
     private string _saved;
     private string? _lastMergeKey;
     private long _lastEditTimestamp;
+    private ThemeSettings? _resolvedTheme;
 
-    public LayoutSession(LayoutDocument document)
+    /// <param name="themes">Themes the layout can name; null for only the built-in ones.</param>
+    public LayoutSession(LayoutDocument document, ThemeLibrary? themes = null)
     {
+        Themes = themes ?? new ThemeLibrary(null);
         Document = Clone(document);
         _saved = Serialize(Document);
     }
 
     public LayoutDocument Document { get; private set; }
+
+    public ThemeLibrary Themes { get; }
+
+    /// <summary>The values the layout is drawn with: its own theme values over its named theme's, over the defaults.</summary>
+    public ThemeSettings ResolvedTheme => _resolvedTheme ??= Themes.Resolve(Document.Theme);
+
+    /// <summary>The saved theme the layout uses (its theme's <c>base</c>), or null for its own.</summary>
+    public string? ThemeName => ThemeLibrary.BaseName(Document.Theme);
+
+    /// <summary>The layout's own theme values that differ from its named theme's (ignoring <c>base</c>).</summary>
+    public bool HasThemeOverrides => Document.Theme.Any(p => !string.Equals(p.Key, ThemeLibrary.BaseKey, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>The selected widget, or -1 for the canvas and theme.</summary>
     public int SelectedIndex { get; private set; } = -1;
@@ -110,7 +124,7 @@ public sealed class LayoutSession
             "height" => Number(Document.Height),
             _ => null,
         },
-        SettingTargetKind.Theme => ThemeObject()[key]?.DeepClone(),
+        SettingTargetKind.Theme => Document.Theme[key]?.DeepClone(),
         _ => Resolve(target)?[key],
     };
 
@@ -138,13 +152,11 @@ public sealed class LayoutSession
                     break;
 
                 case SettingTargetKind.Theme:
-                    var theme = ThemeObject();
-                    // Remove rather than write null: a missing key deserialises to the built-in default, an explicit null doesn't.
+                    // Removing a value goes back to the named theme's (or the built-in default).
                     if (value is null)
-                        theme.Remove(key);
+                        document.Theme.Remove(key);
                     else
-                        theme[key] = value.DeepClone();
-                    document.Theme = theme.Deserialize<ThemeSettings>(JsonDefaults.Options) ?? new ThemeSettings();
+                        document.Theme[key] = value.DeepClone();
                     break;
 
                 default:
@@ -177,6 +189,51 @@ public sealed class LayoutSession
         widget.GetDouble("y", 0),
         Math.Max(1, widget.GetDouble("width", 200)),
         Math.Max(1, widget.GetDouble("height", 100)));
+
+    /// <summary>The value the theme setting <paramref name="key"/> has once resolved, set or not (for showing a default).</summary>
+    public JsonNode? GetResolvedThemeValue(string key) => ResolvedTheme.ToJson()[key]?.DeepClone();
+
+    // ---- Themes ---------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Switches to a saved theme (null for the layout's own values, starting from the defaults). The layout's own theme
+    /// values are dropped, since they'd otherwise hide the new theme's. Undoable.
+    /// </summary>
+    public void UseTheme(string? name)
+    {
+        var theme = name is null ? new JsonObject() : new JsonObject { [ThemeLibrary.BaseKey] = name };
+        if (JsonNode.DeepEquals(Document.Theme, theme))
+            return;
+        Edit(ChangeKind.Content, null, null, null, document => document.Theme = theme);
+    }
+
+    /// <summary>Copies the named theme's values into the layout, so it no longer depends on the theme. Undoable.</summary>
+    public void DetachTheme()
+    {
+        if (ThemeName is null)
+            return;
+        var values = ResolvedTheme.ToJson();
+        Edit(ChangeKind.Content, null, null, null, document => document.Theme = values);
+    }
+
+    /// <summary>
+    /// Saves the theme the layout is drawn with as a saved theme, and switches the layout to it with no values of its own.
+    /// Used by "Save theme as" (a new name) and "Update theme" (the named theme). Undoable, though the file stays written.
+    /// </summary>
+    public void SaveThemeAs(string name)
+    {
+        Themes.Save(name, ResolvedTheme.ToJson());
+        _resolvedTheme = null;
+        var saved = Themes.Find(name) ?? name;
+        Edit(ChangeKind.Content, null, null, null, document => document.Theme = new JsonObject { [ThemeLibrary.BaseKey] = saved });
+    }
+
+    /// <summary>A saved theme changed on disk: re-resolve and redraw.</summary>
+    public void RefreshTheme()
+    {
+        _resolvedTheme = null;
+        Changed?.Invoke(this, new LayoutChange(ChangeKind.Content, null, null));
+    }
 
     // ---- Widgets --------------------------------------------------------------------------------
 
@@ -258,6 +315,7 @@ public sealed class LayoutSession
         _redo.Clear();
         _lastMergeKey = null;
         Document = Clone(document);
+        _resolvedTheme = null;
         SelectedIndex = -1;
         Changed?.Invoke(this, new LayoutChange(ChangeKind.Reset, null, null));
         SelectionChanged?.Invoke(this, EventArgs.Empty);
@@ -270,6 +328,7 @@ public sealed class LayoutSession
         _redo.Clear();
         _lastMergeKey = null;
         Document = Clone(document);
+        _resolvedTheme = null;
         _saved = Serialize(Document);
         SelectedIndex = -1;
         Changed?.Invoke(this, new LayoutChange(ChangeKind.Reset, null, null));
@@ -298,6 +357,7 @@ public sealed class LayoutSession
         _redo.Clear();
 
         change(Document);
+        _resolvedTheme = null;
         Changed?.Invoke(this, new LayoutChange(kind, widgetIndex, origin));
     }
 
@@ -320,6 +380,7 @@ public sealed class LayoutSession
             return;
         to.Push(Serialize(Document));
         Document = Deserialize(from.Pop());
+        _resolvedTheme = null;
         _lastMergeKey = null;
         if (SelectedIndex >= Document.Widgets.Count)
             SelectedIndex = -1;
@@ -338,8 +399,6 @@ public sealed class LayoutSession
             return widget;
         return widget[target.ItemsKey!] is JsonArray items && target.ItemIndex < items.Count ? items[target.ItemIndex] as JsonObject : null;
     }
-
-    private JsonObject ThemeObject() => JsonSerializer.SerializeToNode(Document.Theme, JsonDefaults.Options)!.AsObject();
 
     /// <summary>Whole numbers are stored as integers so layout.json stays tidy.</summary>
     public static JsonValue Number(double value) =>

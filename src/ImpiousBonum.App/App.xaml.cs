@@ -37,7 +37,8 @@ public partial class App : Application
     private readonly Updater _updater = new();
     private FrameRateTarget? _frameRateTarget;
     private readonly GameLayoutSwitcher _gameSwitcher = new(GameLayoutSwitcher.DefaultDelay);
-    private readonly HashSet<string> _reportedMissingLayouts = new(StringComparer.OrdinalIgnoreCase);
+    // "layout:<name>" or "theme:<name>" for links whose target has gone, so each is reported once.
+    private readonly HashSet<string> _reportedMissingLinks = new(StringComparer.OrdinalIgnoreCase);
     private string? _gameLayoutApplied;
     private string? _recentApp;
     private DispatcherTimer? _updateTimer;
@@ -104,7 +105,7 @@ public partial class App : Application
             {
                 var names = _layouts.List();
                 _tray.SetLayouts(names, _layouts.Active, _layouts.ActivePath);
-                _tray.SetGameLayouts(_settings.GameLayoutsEnabled, _settings.GameLayouts, _recentApp, names);
+                _tray.SetGameLayouts(_settings.GameLayoutsEnabled, _settings.GameLayouts, _recentApp, names, _layouts.Themes.List());
             }
         };
         _tray.LayoutSelected += (_, name) => SelectLayout(name);
@@ -132,6 +133,12 @@ public partial class App : Application
         {
             if (_layouts is { } store)
                 AppLog.Info($"Showing layout \"{store.Active}\"{(store.IsTemporary ? " (game layout)" : "")}");
+            ApplyLayout();
+        };
+        _layouts.ThemeChanged += (_, _) =>
+        {
+            // A saved theme changed on disk, or a game's theme came or went. The editor restyles its own copy.
+            _editor?.RefreshTheme();
             ApplyLayout();
         };
         ApplyLayout();
@@ -229,7 +236,7 @@ public partial class App : Application
             return;
         }
 
-        var session = new LayoutSession(_layouts!.LoadOrDefault());
+        var session = new LayoutSession(_layouts!.LoadOrDefault(), _layouts.Themes);
         _editor = new EditorWindow(session, _layouts, () =>
             DisplayMonitor.Resolve(_settings, DisplayMonitor.GetAll()) is { } monitor ? (monitor.Bounds.Width, monitor.Bounds.Height) : null);
 
@@ -306,38 +313,50 @@ public partial class App : Application
         Path.GetFileNameWithoutExtension(Environment.ProcessPath) ?? "ImpiousBonum",
     };
 
-    /// <summary>Shows the layout the game switcher wants, unless the editor has the layout or it's already showing.</summary>
+    /// <summary>Shows the layout and theme the game switcher wants, unless the editor has the layout or they're already showing.</summary>
     private void ApplyGameLayout()
     {
         if (_layouts is null || _editor is not null)
             return;
 
         var rule = _gameSwitcher.Current;
-        var wanted = rule?.Layout;
+        var wanted = rule is null ? null : $"{rule.Layout}|{rule.Theme}";
         if (string.Equals(wanted, _gameLayoutApplied, StringComparison.OrdinalIgnoreCase))
             return;
         _gameLayoutApplied = wanted;
 
-        if (rule is not null && _layouts.Library.Find(rule.Layout) is null)
+        var layout = rule?.Layout;
+        var theme = rule?.Theme;
+        if (rule is not null && layout is not null && _layouts.Library.Find(layout) is null)
         {
-            if (_reportedMissingLayouts.Add(rule.Layout))
-            {
-                AppLog.Warning($"Game layout for \"{rule.Process}\" ignored: there's no layout called \"{rule.Layout}\"");
-                _tray?.ShowError("Game layout not found", $"\"{rule.Process}\" is linked to \"{rule.Layout}\", which doesn't exist any more. Tray → Layout → Game layouts.");
-            }
-            rule = null;
+            ReportMissingLink(rule, "layout", layout);
+            layout = null;
+        }
+        if (rule is not null && theme is not null && _layouts.Themes.Find(theme) is null)
+        {
+            ReportMissingLink(rule, "theme", theme);
+            theme = null;
         }
 
-        AppLog.Info(rule is null ? "No linked game in front; back to the chosen layout" : $"\"{rule.Process}\" is in front; switching to its layout");
+        AppLog.Info(rule is null ? "No linked game in front; back to the chosen layout" : $"\"{rule.Process}\" is in front; switching to {rule.Describe()}");
         try
         {
-            _layouts.ShowTemporarily(rule?.Layout);
+            _layouts.ShowTemporarily(layout);
+            _layouts.ShowThemeTemporarily(theme);
         }
         catch (FileNotFoundException ex)
         {
             // Deleted between the check and the switch.
             AppLog.Warning(ex.Message);
         }
+    }
+
+    private void ReportMissingLink(GameLayoutRule rule, string kind, string name)
+    {
+        if (!_reportedMissingLinks.Add($"{kind}:{name}"))
+            return;
+        AppLog.Warning($"Game {kind} for \"{rule.Process}\" ignored: there's no {kind} called \"{name}\"");
+        _tray?.ShowError($"Game {kind} not found", $"\"{rule.Process}\" is linked to the {kind} \"{name}\", which doesn't exist any more. Tray → Layout → Game layouts.");
     }
 
     private void SetGameLayoutsEnabled(bool enabled)
@@ -357,16 +376,19 @@ public partial class App : Application
         _settings.GameLayouts.RemoveAll(r => r.Matches(rule.Process));
         _settings.GameLayouts.Add(rule);
         _settings.Save();
-        _reportedMissingLayouts.Remove(rule.Layout);
-        AppLog.Info($"Linked \"{rule.Process}\" to layout \"{rule.Layout}\"");
-        _tray?.ShowInfo("Game layout linked", $"\"{rule.Layout}\" will show a few seconds after \"{rule.Process}\" comes to the front.");
+        _reportedMissingLinks.Remove($"layout:{rule.Layout}");
+        _reportedMissingLinks.Remove($"theme:{rule.Theme}");
+        AppLog.Info($"Linked \"{rule.Process}\" to {rule.Describe()}");
+        _tray?.ShowInfo("Game layout linked", rule.Layout is null
+            ? $"The theme \"{rule.Theme}\" will restyle the dashboard a few seconds after \"{rule.Process}\" comes to the front."
+            : $"\"{rule.Describe()}\" will show a few seconds after \"{rule.Process}\" comes to the front.");
     }
 
     private void UnlinkGame(GameLayoutRule rule)
     {
         _settings.GameLayouts.Remove(rule);
         _settings.Save();
-        AppLog.Info($"Removed the link from \"{rule.Process}\" to layout \"{rule.Layout}\"");
+        AppLog.Info($"Removed the link from \"{rule.Process}\" to {rule.Describe()}");
     }
 
     /// <summary>Shows the editor's working copy on the real dashboard as you edit, so you see it at true size.</summary>
@@ -388,8 +410,8 @@ public partial class App : Application
         Dispatcher.BeginInvoke(() =>
         {
             _mirrorQueued = false;
-            _window.Background = Theme.From(session.Document.Theme).Background;
-            _window.Dashboard.Build(session.Document);
+            _window.Background = Theme.From(session.ResolvedTheme).Background;
+            _window.Dashboard.Build(session.Document, session.ResolvedTheme);
             Refresh();
         }, DispatcherPriority.Background);
     }
@@ -429,12 +451,13 @@ public partial class App : Application
             layout = LayoutStore.LoadDefault();
         }
 
-        var issues = LayoutValidator.Validate(layout);
+        var issues = LayoutValidator.Validate(layout, _layouts.Themes);
         if (issues.Count > 0)
             _tray?.ShowError($"{Path.GetFileName(_layouts.ActivePath)}: {issues.Count} problem{(issues.Count == 1 ? "" : "s")}", string.Join("\n", issues.Take(3)));
 
-        _window.Background = Theme.From(layout.Theme).Background;
-        _window.Dashboard.Build(layout);
+        var theme = _layouts.ResolveTheme(layout);
+        _window.Background = Theme.From(theme).Background;
+        _window.Dashboard.Build(layout, theme);
         Refresh();
     }
 
@@ -532,7 +555,7 @@ public partial class App : Application
         var layout = library.Load(name);
 
         var view = new DashboardView();
-        view.Build(layout);
+        view.Build(layout, new ThemeLibrary(AppPaths.DataDirectory).Resolve(layout.Theme));
         view.Refresh(sampler.Store, DateTime.Now);
         var size = new Size(layout.Width, layout.Height);
         view.Measure(size);

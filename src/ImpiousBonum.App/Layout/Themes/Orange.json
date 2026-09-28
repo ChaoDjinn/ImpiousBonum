@@ -1,0 +1,12 @@
+// The look Impious Bonum starts with: light Segoe UI, white text and orange graphs on black.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "Light",
+  "foreground": "#FFFFFF",
+  "secondary": "#D0FFFFFF",
+  "accent": "#FF9800",
+  "background": "#000000",
+  "track": "#1A1A1A",
+  "warning": "#FFC107",
+  "critical": "#F44336"
+}

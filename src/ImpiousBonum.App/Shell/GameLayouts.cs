@@ -1,8 +1,28 @@
+using System.Text.Json.Serialization;
+
 namespace ImpiousBonum.App.Shell;
 
-/// <summary>A link from a game, by process name (<c>.exe</c> optional), to the saved layout shown while it's in front.</summary>
-public sealed record GameLayoutRule(string Process, string Layout)
+/// <summary>
+/// A link from a game, by process name (<c>.exe</c> optional), to what shows while it's in front: a saved layout, a saved
+/// theme that restyles whichever layout is showing, or both (that layout in that theme).
+/// </summary>
+public sealed record GameLayoutRule(
+    string Process,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Layout,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Theme = null)
 {
+    /// <summary>Links to something: a rule with neither a layout nor a theme does nothing.</summary>
+    [JsonIgnore]
+    public bool IsUsable => !string.IsNullOrWhiteSpace(Process) && (!string.IsNullOrWhiteSpace(Layout) || !string.IsNullOrWhiteSpace(Theme));
+
+    /// <summary>"Elden Ring", "theme Neon" or "Elden Ring, theme Neon", for menus and messages.</summary>
+    public string Describe() => (Layout, Theme) switch
+    {
+        ({ } layout, { } theme) => $"{layout}, theme {theme}",
+        (null, { } theme) => $"theme {theme}",
+        _ => Layout ?? string.Empty,
+    };
+
     /// <summary>Case-insensitive, ignoring a trailing <c>.exe</c> on either side. A rule with no process never matches.</summary>
     public bool Matches(string? processName) =>
         !string.IsNullOrWhiteSpace(Process) && !string.IsNullOrWhiteSpace(processName)
@@ -28,7 +48,7 @@ public sealed class GameLayoutSwitcher(TimeSpan delay)
     private DateTime _pendingSince;
     private bool _hasPending;
 
-    /// <summary>The rule whose layout should be showing, or null for the user's own choice.</summary>
+    /// <summary>The rule whose layout or theme should be showing, or null for the user's own choice.</summary>
     public GameLayoutRule? Current { get; private set; }
 
     /// <summary>The first rule for <paramref name="processName"/>, or null.</summary>
@@ -68,7 +88,8 @@ public sealed class GameLayoutSwitcher(TimeSpan delay)
         _hasPending = false;
     }
 
-    // Two games linked to the same layout count as no change.
+    // Two games linked to the same layout and theme count as no change.
     private static bool SameLayout(GameLayoutRule? a, GameLayoutRule? b) =>
-        string.Equals(a?.Layout, b?.Layout, StringComparison.OrdinalIgnoreCase);
+        string.Equals(a?.Layout, b?.Layout, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(a?.Theme, b?.Theme, StringComparison.OrdinalIgnoreCase);
 }

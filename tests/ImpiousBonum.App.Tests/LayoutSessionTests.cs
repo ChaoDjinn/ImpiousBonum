@@ -132,12 +132,13 @@ public sealed class LayoutSessionTests
         session.SetValue(SettingTarget.Theme, "accent", JsonValue.Create("#00FF00"), null);
         session.SetValue(SettingTarget.Canvas, "width", JsonValue.Create(800), null);
 
-        Assert.Equal("#00FF00", session.Document.Theme.Accent);
+        Assert.Equal("#00FF00", session.ResolvedTheme.Accent);
         Assert.Equal(800, session.Document.Width);
 
         // Resetting a theme colour restores the built-in default.
         session.SetValue(SettingTarget.Theme, "accent", null, null);
-        Assert.Equal(new ThemeSettings().Accent, session.Document.Theme.Accent);
+        Assert.Equal(new ThemeSettings().Accent, session.ResolvedTheme.Accent);
+        Assert.Empty(session.Document.Theme);
     }
 
     [Fact]
@@ -160,7 +161,7 @@ public sealed class LayoutSessionTests
         session.Changed += (_, _) => changes++;
 
         session.SetValue(SettingTarget.Widget(0), "text", JsonValue.Create("A"), null);
-        session.SetValue(SettingTarget.Theme, "accent", JsonValue.Create(session.Document.Theme.Accent), null);
+        session.SetValue(SettingTarget.Theme, "accent", null, null);
         session.SetGeometry(0, new Rect(0, 0, 100, 50), "drag:1", null);
 
         Assert.Equal(0, changes);

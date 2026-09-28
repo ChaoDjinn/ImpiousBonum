@@ -76,6 +76,7 @@ Download [`ImpiousBonum-win-Setup.exe`](https://github.com/ChaoDjinn/ImpiousBonu
 Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
+- `themes\<name>.json`: your saved themes (font, colours and background), which any layout can use by name.
 - `settings.json`: which monitor, which layout (`activeLayout`), ping host, `hardwareRendering` (off by default to save memory).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
 
@@ -125,6 +126,7 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 - **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme.
 - **Widgets:** add, duplicate (Ctrl+D), delete, and bring forward / send back.
 - **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
+- **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout: *Orange* (the default look), *Ice* and *Terminal* are built in. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
 - **Saved layouts:** the editor edits the layout the dashboard is showing. The *Layout* drop-down switches to another (asking first if you have unsaved changes), and *Layouts ▾* has *Save as…* (your changes as a new layout), *Rename…*, *Duplicate…* and *Delete* (not the last one). Keep a "Gaming" and a "Desktop" layout, for example, and flip between them from the tray.
 - The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes the layout's file; closing without saving puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
 
@@ -136,18 +138,19 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 
 A game can have its own layout: FPS front and centre, its colours, a themed font. When a linked game has been in front for about 3 seconds the dashboard switches to its layout, and when it has been gone for about 3 seconds it goes back to the layout you chose. Alt-tabbing out briefly, or a launcher flashing up, doesn't switch anything.
 
-To link a game: with the game running, open tray → *Layout* → *Game layouts* → *Link "game" to* and pick a layout (the menu offers the last app you had in front, so click the tray icon straight after leaving the game). The same menu lists the links with *Remove link*, and *Switch automatically* turns the whole thing off and on (remembered).
+To link a game: with the game running, open tray → *Layout* → *Game layouts* → *Link "game" to* and pick a layout (the menu offers the last app you had in front, so click the tray icon straight after leaving the game). To keep your usual layout and only change its look, pick a theme under *Theme only* instead. The same menu lists the links with *Remove link*, and *Switch automatically* turns the whole thing off and on (remembered).
 
 "In front" means the same thing as for the FPS reading: the foreground app, or with *FPS from → Top app on a monitor*, the top app on that monitor, so a game on one screen keeps its layout while you type on another.
 
-Game layouts are temporary: picking a layout from the tray while a game is running makes that your choice to come back to, and the editor keeps whichever layout it opened on (switching waits until it closes). Switches are written to `dashboard.log`. A link to a layout that no longer exists is ignored, with one notification and a line in the log; renaming a layout updates its links.
+Game layouts are temporary: picking a layout from the tray while a game is running makes that your choice to come back to, and the editor keeps whichever layout it opened on (switching waits until it closes). Switches are written to `dashboard.log`. A link to a layout or theme that no longer exists is ignored, with one notification and a line in the log; renaming a layout updates its links.
 
-Links live in `settings.json` (tray → *Open settings folder*) and can be edited by hand while the dashboard isn't running. `process` is the program's name as Task Manager's *Details* tab shows it, with or without `.exe`, matched ignoring case:
+Links live in `settings.json` (tray → *Open settings folder*) and can be edited by hand while the dashboard isn't running. `process` is the program's name as Task Manager's *Details* tab shows it, with or without `.exe`, matched ignoring case. A link has a `layout`, a `theme` (which restyles whichever layout is showing), or both:
 
 ```json
 "gameLayouts": [
-  { "process": "eldenring", "layout": "Elden Ring" },
-  { "process": "Cyberpunk2077.exe", "layout": "FPS" }
+  { "process": "eldenring", "theme": "Elden Ring" },
+  { "process": "Cyberpunk2077.exe", "layout": "FPS" },
+  { "process": "doom", "layout": "FPS", "theme": "Terminal" }
 ],
 "gameLayoutsEnabled": true
 ```
@@ -167,6 +170,8 @@ The canvas has a design size (default 1920×480) and scales to fit the window. E
 To make a value change colour when it runs hot, give its `text`, `icon`, `graph` or `drives` widget warning colours (in the editor, or as `thresholds` in the layout file): `[{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }]`. `warning` and `critical` are theme colours, and `below` works too, e.g. for a low frame rate.
 
 If a layout has a typo or an out-of-range value, the tray shows a notification naming the file and saying what and where, e.g. *unknown setting 'fontsize' (did you mean 'fontSize'?)*.
+
+A layout's `theme` can be its own values, a saved theme's name (`"theme": "Ice"`), or a saved theme with a few values changed for this layout: `"theme": { "base": "Ice", "accent": "#FF4081" }`. Saved themes are files in `%AppData%\ImpiousBonum\themes` holding the same settings; saving one restyles every layout that uses it straight away. An unknown theme name is reported like any other typo, and the layout falls back to the default look.
 
 To use a font you don't want to install, point the theme at the file: `"fontFile": "C:\\Fonts\\SomeFont-Light.otf"`.
 
@@ -261,7 +266,7 @@ tools/ReleaseSigning     creates the update signing key and signs releases
 - [ ] Code signing
 - [ ] Vulkan/OpenGL frame counting
 - [ ] More widget types
-- [ ] Themes
+- [x] Themes
 
 ## License
 

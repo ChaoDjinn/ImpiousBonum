@@ -180,7 +180,7 @@ public sealed class LayoutLibrary
             throw new ArgumentException(problem, nameof(name));
     }
 
-    private static string ReadWithRetry(string path)
+    internal static string ReadWithRetry(string path)
     {
         // The file may still be locked by the editor that just saved it.
         for (var attempt = 0; ; attempt++)

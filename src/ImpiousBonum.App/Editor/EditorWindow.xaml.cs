@@ -96,6 +96,9 @@ public partial class EditorWindow : Window
             _properties.RefreshLive();
     }
 
+    /// <summary>A saved theme changed on disk; redraw with it.</summary>
+    public void RefreshTheme() => _session.RefreshTheme();
+
     // ---- List ---------------------------------------------------------------------------------------
 
     private void RefreshList()
@@ -319,7 +322,7 @@ public partial class EditorWindow : Window
             StatusText.Text = $"Canvas {_session.Document.Width:0}×{_session.Document.Height:0} · {_session.Document.Widgets.Count} widgets";
         }
 
-        var issues = LayoutValidator.Validate(_session.Document);
+        var issues = LayoutValidator.Validate(_session.Document, _session.Themes);
         IssuesText.Text = issues.Count == 0 ? string.Empty : $"{issues.Count} problem{(issues.Count == 1 ? "" : "s")}";
         IssuesText.ToolTip = issues.Count == 0 ? null : string.Join(Environment.NewLine, issues);
     }
