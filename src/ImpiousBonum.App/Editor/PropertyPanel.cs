@@ -75,7 +75,7 @@ public sealed class PropertyPanel : StackPanel
             var descriptor = WidgetFactory.Find(widget.GetString("type"));
             if (descriptor is null)
             {
-                AddHeading($"Unknown widget '{widget.GetString("type")}'", "This widget type doesn't exist. Delete it, or fix the type in layout.json.");
+                AddHeading($"Unknown widget '{widget.GetString("type")}'", "This widget type doesn't exist. Delete it, or fix the type in the layout file.");
                 AddSettings(target, EditorDescriptors.Geometry);
             }
             else

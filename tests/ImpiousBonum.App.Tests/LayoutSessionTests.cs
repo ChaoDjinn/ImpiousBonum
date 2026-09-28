@@ -168,6 +168,21 @@ public sealed class LayoutSessionTests
     }
 
     [Fact]
+    public void Switching_layouts_starts_clean_with_no_undo_history()
+    {
+        var session = Session();
+        session.SetValue(SettingTarget.Widget(0), "text", JsonValue.Create("edited"), null);
+        session.Select(1);
+
+        session.Reset(new LayoutDocument { Widgets = [new JsonObject { ["type"] = "text", ["x"] = 0, ["y"] = 0, ["width"] = 10, ["height"] = 10, ["text"] = "Other" }] });
+
+        Assert.Equal("Other", Text(session, 0));
+        Assert.False(session.IsDirty);
+        Assert.False(session.CanUndo);
+        Assert.Equal(-1, session.SelectedIndex);
+    }
+
+    [Fact]
     public void Whole_numbers_are_stored_as_integers() =>
         Assert.Equal("12", LayoutSession.Number(12.0).ToJsonString());
 }
