@@ -57,6 +57,25 @@ public sealed class LayoutValidatorTests
     }
 
     [Fact]
+    public void Threshold_rules_are_checked()
+    {
+        var rules = new JsonArray(
+            new JsonObject { ["metric"] = "{cpu.temp}", ["above"] = 80, ["color"] = "warning" },
+            new JsonObject { ["above"] = 90, ["color"] = "reddish" },
+            new JsonObject { ["color"] = "critical" },
+            new JsonObject { ["metric"] = "cpu.temp", ["below"] = 10, ["color"] = "#2196F3" });
+        var issues = Validate(Widget("text", ("thresholds", rules)));
+        Assert.Equal(3, issues.Count);
+        Assert.Contains(issues, i => i.Contains("thresholds[1]: 'metric' should be a metric id"));
+        Assert.Contains(issues, i => i.Contains("thresholds[2]: 'color' should be foreground"));
+        Assert.Contains(issues, i => i.Contains("thresholds[3]: needs 'above' or 'below'"));
+    }
+
+    [Fact]
+    public void Theme_warning_colours_are_checked() =>
+        Assert.Single(LayoutValidator.Validate(new LayoutDocument { Theme = new ThemeSettings { Critical = "warning" } }));
+
+    [Fact]
     public void Missing_geometry_is_reported()
     {
         var widget = Widget("clock");

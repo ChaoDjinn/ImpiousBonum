@@ -19,6 +19,7 @@ public sealed class DrivesWidget : Widget
             Setting.Number("fontSize", "Font size", 25, 6, 200),
             Setting.Number("barHeight", "Bar height", 5, 1, 100, group: Setting.Appearance),
             Setting.Number("spacing", "Row spacing", 12, 0, 200, group: Setting.Appearance),
+            Setting.Thresholds("Changes each drive's bar. An empty metric uses that drive's used percentage (disk.C.usedPct for C:)."),
         ],
         (settings, theme) => new DrivesWidget(settings, theme));
 
@@ -29,6 +30,7 @@ public sealed class DrivesWidget : Widget
     private readonly double _fontSize;
     private readonly double _barHeight;
     private readonly double _spacing;
+    private readonly ThresholdColors _thresholds;
     private readonly List<Row> _current = [];
     private string _letters = string.Empty;
 
@@ -43,6 +45,7 @@ public sealed class DrivesWidget : Widget
         _fontSize = settings.Number("fontSize");
         _barHeight = settings.Number("barHeight");
         _spacing = settings.Number("spacing");
+        _thresholds = new ThresholdColors(settings, theme);
         Children.Add(_rows);
     }
 
@@ -61,6 +64,7 @@ public sealed class DrivesWidget : Widget
             var used = store.TryGet(DriveProvider.UsedPercent(row.Letter), out var pct) && pct.Value is double v ? Math.Clamp(v, 0, 100) : 0;
             row.Bar.ColumnDefinitions[0].Width = new GridLength(used, GridUnitType.Star);
             row.Bar.ColumnDefinitions[1].Width = new GridLength(100 - used, GridUnitType.Star);
+            row.Fill.Background = _thresholds.Pick(store, DriveProvider.UsedPercent(row.Letter), Theme.Accent);
         }
     }
 
@@ -82,7 +86,8 @@ public sealed class DrivesWidget : Widget
             var bar = new Grid { Height = _barHeight, Background = Theme.Track, Margin = new Thickness(0, 2, 0, 0) };
             bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) });
             bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100, GridUnitType.Star) });
-            bar.Children.Add(new Border { Background = Theme.Accent });
+            var fill = new Border { Background = Theme.Accent };
+            bar.Children.Add(fill);
 
             var row = new StackPanel { Margin = new Thickness(0, 0, 0, _spacing) };
             row.Children.Add(header);
@@ -94,9 +99,9 @@ public sealed class DrivesWidget : Widget
                 .Replace("{total}", $"{{{DriveProvider.Total(letter)}}}", StringComparison.OrdinalIgnoreCase)
                 .Replace("{used}", $"{{{DriveProvider.Used(letter)}}}", StringComparison.OrdinalIgnoreCase)
                 .Replace("{label}", $"{{{DriveProvider.Label(letter)}}}", StringComparison.OrdinalIgnoreCase);
-            _current.Add(new Row(letter, ValueTemplate.Parse(template), value, bar));
+            _current.Add(new Row(letter, ValueTemplate.Parse(template), value, bar, fill));
         }
     }
 
-    private sealed record Row(string Letter, ValueTemplate Template, TextBlock Value, Grid Bar);
+    private sealed record Row(string Letter, ValueTemplate Template, TextBlock Value, Grid Bar, Border Fill);
 }

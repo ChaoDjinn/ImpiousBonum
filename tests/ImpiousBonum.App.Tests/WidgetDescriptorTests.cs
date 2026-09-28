@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json.Nodes;
+using System.Windows.Controls;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
@@ -78,6 +79,37 @@ public sealed class WidgetDescriptorTests
         var settings = new WidgetSettings(new JsonObject { ["fontSize"] = 100_000, ["uppercase"] = "yes" }, TextWidget.Descriptor.Settings);
         Assert.Equal(400, settings.Number("fontSize"));
         Assert.False(settings.Bool("uppercase"));
+    }
+
+    [Fact]
+    public void Text_changes_colour_as_it_crosses_thresholds()
+    {
+        Sta.Run(() =>
+        {
+            var theme = Theme.From(new ThemeSettings());
+            var definition = new JsonObject
+            {
+                ["type"] = "text",
+                ["text"] = "{cpu.temp}",
+                ["thresholds"] = new JsonArray(
+                    new JsonObject { ["above"] = 80, ["color"] = "warning" },
+                    new JsonObject { ["above"] = 90, ["color"] = "critical" }),
+            };
+            var widget = WidgetFactory.Create(definition, theme);
+            var text = Assert.IsType<TextBlock>(Assert.Single(widget.Children.Cast<object>()));
+            var store = new MetricStore();
+
+            widget.Refresh(store, DateTime.Now);
+            Assert.Same(theme.Foreground, text.Foreground);
+
+            store.Register(new MetricDefinition("cpu.temp", "Temp", "CPU", MetricUnit.Celsius));
+            foreach (var (value, expected) in new[] { (45.0, theme.Foreground), (85.0, theme.Warning), (95.0, theme.Critical), (60.0, theme.Foreground) })
+            {
+                store.Set("cpu.temp", value);
+                widget.Refresh(store, DateTime.Now);
+                Assert.Same(expected, text.Foreground);
+            }
+        });
     }
 
     [Fact]

@@ -24,9 +24,10 @@ public sealed class GraphElement : FrameworkElement
     /// <summary>Upper bound; <c>null</c> scales to the largest visible value.</summary>
     public double? Maximum { get; set; }
 
-    public Brush Stroke { get; init; } = Brushes.Orange;
+    /// <summary>Line colour. Changes show on the next <see cref="SetValues"/>.</summary>
+    public Brush Stroke { get; set; } = Brushes.Orange;
 
-    public Brush? Fill { get; init; }
+    public Brush? Fill { get; set; }
 
     public double Thickness { get; init; } = 2;
 

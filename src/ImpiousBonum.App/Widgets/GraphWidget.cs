@@ -23,6 +23,7 @@ public sealed class GraphWidget : Widget
                 help: "Empty uses the metric's natural maximum (100 for percentages, the total for memory), else scales to fit."),
             Setting.Number("lineThickness", "Line thickness", 2.5, 0.5, 20, group: Setting.Appearance),
             Setting.Number("fontSize", "Font size", 26, 6, 200),
+            Setting.Thresholds("Changes the line or area and the value. An empty metric uses the graph's metric."),
         ],
         (settings, theme) => new GraphWidget(settings, theme));
 
@@ -31,12 +32,15 @@ public sealed class GraphWidget : Widget
     private readonly TextBlock _value;
     private readonly GraphElement _graph;
     private readonly double? _configuredMax;
+    private readonly ThresholdColors _thresholds;
+    private readonly Dictionary<Brush, Brush> _areaFills = new();
 
     public GraphWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
         _metric = settings.String("metric");
         _template = ValueTemplate.Parse(settings.OptionalString("text") is { Length: > 0 } text ? text : $"{{{_metric}}}");
         _configuredMax = settings.OptionalNumber("max");
+        _thresholds = new ThresholdColors(settings, theme);
 
         var fontSize = settings.Number("fontSize");
         var style = settings.String("style") == "area" ? GraphStyle.Area : GraphStyle.Line;
@@ -58,7 +62,7 @@ public sealed class GraphWidget : Widget
             Minimum = settings.Number("min"),
             Maximum = _configuredMax,
             Stroke = theme.Accent,
-            Fill = CreateAreaFill(theme.AccentColor),
+            Fill = AreaFill(theme.Accent),
             Thickness = settings.Number("lineThickness"),
             Margin = new Thickness(0, fontSize * 0.35, 0, 0),
         };
@@ -69,9 +73,20 @@ public sealed class GraphWidget : Widget
     public override void Refresh(MetricStore store, DateTime now)
     {
         _value.Text = _template.Render(store);
+        var color = _thresholds.Pick(store, _metric, Theme.Accent);
+        _value.Foreground = ReferenceEquals(color, Theme.Accent) ? Theme.Secondary : color;
+        _graph.Stroke = color;
+        _graph.Fill = AreaFill(color);
         if (_configuredMax is null && store.TryGet(_metric, out var sample))
             _graph.Maximum = sample.Definition.Max;
         _graph.SetValues(store.GetHistory(_metric, _graph.Points));
+    }
+
+    private Brush AreaFill(Brush stroke)
+    {
+        if (!_areaFills.TryGetValue(stroke, out var fill))
+            _areaFills[stroke] = fill = CreateAreaFill(stroke is SolidColorBrush solid ? solid.Color : Theme.AccentColor);
+        return fill;
     }
 
     private static Brush CreateAreaFill(Color accent)

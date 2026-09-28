@@ -39,4 +39,10 @@ public sealed class ThemeSettings
 
     /// <summary>Unfilled part of bars.</summary>
     public string Track { get; set; } = "#1A1A1A";
+
+    /// <summary>Named by warning colour rules as <c>warning</c>.</summary>
+    public string Warning { get; set; } = "#FFC107";
+
+    /// <summary>Named by warning colour rules as <c>critical</c>.</summary>
+    public string Critical { get; set; } = "#F44336";
 }
