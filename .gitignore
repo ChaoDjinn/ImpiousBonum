@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Update signing private key (lives in the release environment secret, never in the repo)
+*.private.txt

@@ -12,6 +12,8 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    # Holds the UPDATE_SIGNING_KEY secret. Give it a required reviewer so every release waits for approval.
+    environment: release
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
@@ -21,4 +23,5 @@ jobs:
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
         run: ./build/publish.ps1 -Version $env:GITHUB_REF_NAME.TrimStart('v') -GitHubToken $env:GITHUB_TOKEN

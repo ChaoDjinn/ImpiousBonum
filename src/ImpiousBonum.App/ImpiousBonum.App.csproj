@@ -37,6 +37,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Layout\default-layout.json" LogicalName="ImpiousBonum.default-layout.json" />
+    <!-- Public half of the update signing key. Without it the app refuses every update (and build/publish.ps1 refuses to release). -->
+    <EmbeddedResource Include="..\..\assets\update-signing-key.pub" LogicalName="ImpiousBonum.update-signing-key.pub" Condition="Exists('..\..\assets\update-signing-key.pub')" />
   </ItemGroup>
 
   <ItemGroup>
