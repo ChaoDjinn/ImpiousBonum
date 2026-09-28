@@ -39,7 +39,10 @@ public sealed class Updater
         {
             var update = await _manager.CheckForUpdatesAsync().ConfigureAwait(false);
             if (update is null)
+            {
+                AppLog.Info(ReadyVersion is { } ready ? $"{ready} is downloaded and waiting for a restart" : $"Up to date ({CurrentVersion})");
                 return ReadyVersion;
+            }
 
             var target = update.TargetFullRelease;
             if (!await IsSignedAsync(target, cancellationToken).ConfigureAwait(false))
@@ -47,8 +50,10 @@ public sealed class Updater
 
             // Velopack checks the package it ends up with (downloaded whole or rebuilt from deltas) against target.SHA256,
             // which the signature has just vouched for.
+            AppLog.Info($"Downloading {target.Version}{(update.DeltasToTarget.Any() ? " (delta)" : " (full)")}");
             await _manager.DownloadUpdatesAsync(update, null, cancellationToken).ConfigureAwait(false);
             _ready = target;
+            AppLog.Info($"Downloaded {ReadyVersion}; ready to apply");
             return ReadyVersion;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -71,7 +76,7 @@ public sealed class Updater
         var version = target.Version?.ToString() ?? "";
         if (_publicKey.Length == 0)
         {
-            Trace.TraceWarning($"Not updating to {version}: this build has no update signing key.");
+            AppLog.Warning($"Not updating to {version}: this build has no update signing key.");
             return false;
         }
 
@@ -80,15 +85,18 @@ public sealed class Updater
         if (!response.IsSuccessStatusCode)
         {
             // Also the case for a few seconds while a release is being published, before its signature is uploaded.
-            Trace.TraceWarning($"Not updating to {version}: no signature ({(int)response.StatusCode}).");
+            AppLog.Warning($"Not updating to {version}: no signature ({(int)response.StatusCode}).");
             return false;
         }
 
         var document = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         if (ReleaseSignature.Verify(document, _publicKey, version, target.FileName ?? "", target.SHA256))
+        {
+            AppLog.Info($"{version} is signed with the update key");
             return true;
+        }
 
-        Trace.TraceWarning($"Not updating to {version}: its signature doesn't match {target.FileName}.");
+        AppLog.Warning($"Not updating to {version}: its signature doesn't match {target.FileName}.");
         return false;
     }
 

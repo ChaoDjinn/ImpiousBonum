@@ -12,6 +12,8 @@ public static class AppPaths
 
     public static string LayoutFile => Path.Combine(DataDirectory, "layout.json");
 
+    public static string LogFile => Path.Combine(DataDirectory, "dashboard.log");
+
     public static void UseDataDirectory(string directory) => DataDirectory = Path.GetFullPath(directory);
 
     public static void EnsureCreated() => Directory.CreateDirectory(DataDirectory);
