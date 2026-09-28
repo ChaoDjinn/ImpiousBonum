@@ -210,7 +210,16 @@ public sealed class TrayIcon : IDisposable
     // "&" would otherwise underline the next letter as a mnemonic.
     private static string Escape(string text) => text.Replace("&", "&&");
 
-    public void SetMonitors(IReadOnlyList<DisplayMonitor> monitors, DisplayMonitor? current)
+    /// <summary>Tray → Display: one of the window options changed.</summary>
+    public event EventHandler<WindowOptions>? WindowOptionsChanged;
+
+    /// <summary>Tray → Display → Reset size and position.</summary>
+    public event EventHandler? ResetWindowRequested;
+
+    /// <summary>Tray → Display → Bring to front.</summary>
+    public event EventHandler? BringToFrontRequested;
+
+    public void SetMonitors(IReadOnlyList<DisplayMonitor> monitors, DisplayMonitor? current, WindowOptions options)
     {
         _displays.DropDownItems.Clear();
         foreach (var monitor in monitors)
@@ -219,6 +228,30 @@ public sealed class TrayIcon : IDisposable
             item.Click += (_, _) => MonitorSelected?.Invoke(this, monitor);
             _displays.DropDownItems.Add(item);
         }
+
+        _displays.DropDownItems.Add(new ToolStripSeparator());
+        AddOption("Fill screen", !options.Windowed, true, options with { Windowed = false });
+        AddOption("Windowed", options.Windowed, true, options with { Windowed = true });
+        AddOption("Lock position", options.Locked, options.Windowed, options with { Locked = !options.Locked },
+            "Unlocked, drag the dashboard to move it and drag its edges to resize it");
+        AddOption("Click-through when locked", options.ClickThrough, options.Windowed && options.Locked, options with { ClickThrough = !options.ClickThrough },
+            "Clicks go to the window underneath. Unlock it here to edit or move it again.");
+        var reset = new ToolStripMenuItem("Reset size and position") { Enabled = options.Windowed };
+        reset.Click += (_, _) => ResetWindowRequested?.Invoke(this, EventArgs.Empty);
+        _displays.DropDownItems.Add(reset);
+
+        _displays.DropDownItems.Add(new ToolStripSeparator());
+        AddOption("Always on top", options.AlwaysOnTop, true, options with { AlwaysOnTop = !options.AlwaysOnTop });
+        AddOption("Hide over fullscreen apps", options.HideOverFullscreen, options.AlwaysOnTop, options with { HideOverFullscreen = !options.HideOverFullscreen },
+            "Steps aside while a game or video fills the dashboard's screen");
+        _displays.DropDownItems.Add("Bring to front", null, (_, _) => BringToFrontRequested?.Invoke(this, EventArgs.Empty));
+    }
+
+    private void AddOption(string text, bool isChecked, bool enabled, WindowOptions whenClicked, string? tip = null)
+    {
+        var item = new ToolStripMenuItem(text) { Checked = isChecked, Enabled = enabled, ToolTipText = tip };
+        item.Click += (_, _) => WindowOptionsChanged?.Invoke(this, whenClicked);
+        _displays.DropDownItems.Add(item);
     }
 
     public void ShowError(string title, string message) =>
@@ -282,3 +315,6 @@ public sealed class TrayIcon : IDisposable
         _image.Dispose();
     }
 }
+
+/// <summary>How the dashboard window behaves, as shown and changed in tray → Display.</summary>
+public sealed record WindowOptions(bool Windowed, bool Locked, bool ClickThrough, bool AlwaysOnTop, bool HideOverFullscreen);

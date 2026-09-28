@@ -28,7 +28,7 @@ public partial class EditorWindow : Window
     private bool _syncingLayouts;
 
     /// <param name="layouts">The saved layouts; the session holds a working copy of the active one.</param>
-    /// <param name="dashboardSize">The dashboard monitor's size in pixels, for "Match dashboard screen".</param>
+    /// <param name="dashboardSize">The dashboard's size in pixels (its monitor, or its window when windowed), for "Match dashboard screen".</param>
     public EditorWindow(LayoutSession session, LayoutStore layouts, Func<(int Width, int Height)?> dashboardSize)
     {
         InitializeComponent();
