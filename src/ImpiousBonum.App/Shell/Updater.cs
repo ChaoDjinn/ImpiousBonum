@@ -32,10 +32,15 @@ public sealed class Updater
         {
             var update = await _manager.CheckForUpdatesAsync().ConfigureAwait(false);
             if (update is null)
+            {
+                AppLog.Info(ReadyVersion is { } ready ? $"{ready} is downloaded and waiting for a restart" : $"Up to date ({CurrentVersion})");
                 return ReadyVersion;
+            }
 
+            AppLog.Info($"Downloading {update.TargetFullRelease.Version}{(update.DeltasToTarget.Any() ? " (delta)" : " (full)")}");
             await _manager.DownloadUpdatesAsync(update, null, cancellationToken).ConfigureAwait(false);
             _ready = update.TargetFullRelease;
+            AppLog.Info($"Downloaded {ReadyVersion}; ready to apply");
             return ReadyVersion;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
