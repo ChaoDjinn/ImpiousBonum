@@ -58,7 +58,7 @@ Every box is a widget you can move, resize, restyle or replace. Six widget types
 | `net.down`, `net.up` | Adapters with a default gateway |
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
-| `fps`, `fps.app` | Sensor service counts DirectX frames per app (like PresentMon/HWiNFO); the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
+| `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
 
@@ -100,7 +100,7 @@ Reading CPU temperatures needs admin rights and a kernel driver, so it lives in 
 ```mermaid
 flowchart LR
     lhm["LibreHardwareMonitor<br/>+ PawnIO driver"] --> sensors
-    etw["DirectX frame events<br/>(ETW)"] --> sensors
+    etw["Frame events: DirectX,<br/>Vulkan, OpenGL (ETW)"] --> sensors
     subgraph svc["Windows service (elevated)"]
         sensors["Sensor service<br/>ImpiousBonum.Sensors.exe"]
     end
@@ -259,7 +259,7 @@ tools/ReleaseSigning     creates the update signing key and signs releases
 - [x] Touch edit mode on the dashboard itself, synced with the editor
 - [x] Installer and automatic updates (Velopack, GitHub Releases)
 - [ ] Code signing
-- [ ] Vulkan/OpenGL frame counting
+- [x] Vulkan/OpenGL frame counting
 - [ ] More widget types
 - [ ] Themes
 
