@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace ImpiousBonum.App.Shell;
 
-/// <summary>The notification-area icon: the only UI besides the dashboard itself until the layout editor exists.</summary>
+/// <summary>The notification-area icon and its menu: displays, sensors, FPS source, the layout editor, updates and exit.</summary>
 public sealed class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
@@ -18,13 +18,17 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _sensorStatus = new() { Enabled = false };
     private readonly ToolStripMenuItem _sensorInstall = new();
     private readonly ToolStripMenuItem _sensorRemove = new("Remove sensor service…");
+    private readonly ToolStripMenuItem _header = new("Impious Bonum") { Enabled = false };
+    private readonly ToolStripMenuItem _checkUpdates = new("Check for updates") { Visible = false };
+    private readonly ToolStripMenuItem _restartToUpdate = new() { Visible = false };
 
     public TrayIcon()
     {
         _image = DrawIcon();
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add(new ToolStripMenuItem("Impious Bonum") { Enabled = false });
+        menu.Items.Add(_header);
+        menu.Items.Add(_restartToUpdate);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_displays);
         menu.Items.Add(_sensors);
@@ -34,6 +38,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add("Open settings folder", null, (_, _) => Open(AppPaths.DataDirectory));
         menu.Items.Add("Reload layout", null, (_, _) => ReloadRequested?.Invoke(this, EventArgs.Empty));
         menu.Items.Add(_startup);
+        menu.Items.Add(_checkUpdates);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty));
 
@@ -43,6 +48,10 @@ public sealed class TrayIcon : IDisposable
         // Installing over an existing service replaces it, so "Update" is the same operation.
         _sensorInstall.Click += (_, _) => SensorServiceChangeRequested?.Invoke(this, true);
         _sensorRemove.Click += (_, _) => SensorServiceChangeRequested?.Invoke(this, false);
+
+        _restartToUpdate.Font = new Font(menu.Font, FontStyle.Bold);
+        _restartToUpdate.Click += (_, _) => RestartToUpdateRequested?.Invoke(this, EventArgs.Empty);
+        _checkUpdates.Click += (_, _) => CheckForUpdatesRequested?.Invoke(this, EventArgs.Empty);
 
         _startup.Checked = StartupRegistration.IsEnabled;
         _startup.CheckedChanged += (_, _) => StartupRegistration.SetEnabled(_startup.Checked);
@@ -67,6 +76,24 @@ public sealed class TrayIcon : IDisposable
 
     public event EventHandler<DisplayMonitor>? MonitorSelected;
 
+    public event EventHandler? CheckForUpdatesRequested;
+
+    public event EventHandler? RestartToUpdateRequested;
+
+    /// <summary>Shows the version in the menu header and, for installed copies, the update items.</summary>
+    public void SetVersion(string? version, bool updatesAvailable)
+    {
+        _header.Text = version is null ? "Impious Bonum (development build)" : $"Impious Bonum {version}";
+        _checkUpdates.Visible = updatesAvailable;
+    }
+
+    /// <summary>A downloaded update is waiting; offer to restart into it.</summary>
+    public void SetUpdateReady(string? version)
+    {
+        _restartToUpdate.Visible = version is not null;
+        _restartToUpdate.Text = $"Restart to update to {version}";
+    }
+
     /// <summary>A monitor id, or null for "whichever app is in the foreground".</summary>
     public event EventHandler<string?>? FpsSourceSelected;
 
@@ -89,10 +116,11 @@ public sealed class TrayIcon : IDisposable
     /// <summary>True to install the sensor service, false to remove it.</summary>
     public event EventHandler<bool>? SensorServiceChangeRequested;
 
-    public void SetSensorState(string status, bool serviceInstalled)
+    public void SetSensorState(string status, bool serviceInstalled, bool outdated)
     {
-        _sensorStatus.Text = status;
+        _sensorStatus.Text = outdated ? "Sensor service is from an older version" : status;
         _sensorInstall.Text = serviceInstalled ? "Update sensor service…" : "Install sensor service…";
+        _sensorInstall.Font = outdated ? new Font(_sensorInstall.Owner?.Font ?? SystemFonts.MenuFont!, FontStyle.Bold) : null;
         _sensorRemove.Visible = serviceInstalled;
     }
 
@@ -139,7 +167,7 @@ public sealed class TrayIcon : IDisposable
             tile.AddArc(21, 21, 10, 10, 0, 90);
             tile.AddArc(1, 21, 10, 10, 90, 90);
             tile.CloseFigure();
-            using var orange = new SolidBrush(Color.FromArgb(0xFF, 0x98, 0x00));
+            using var orange = new SolidBrush(Color.FromArgb(0xFF, 0xAA, 0x00));
             g.FillPath(orange, tile);
             g.FillRectangle(Brushes.Black, 7, 17, 4, 8);
             g.FillRectangle(Brushes.Black, 14, 9, 4, 16);

@@ -20,6 +20,9 @@ public sealed class SensorHostProvider(Func<(int ProcessId, string? Name)>? fram
 
     public const string NotRunning = "Sensor service not running";
 
+    /// <summary>Text metric with the connected host's version, or no value when not connected.</summary>
+    public const string Version = "sensors.version";
+
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(5);
 
     private readonly CancellationTokenSource _stop = new();
@@ -34,6 +37,7 @@ public sealed class SensorHostProvider(Func<(int ProcessId, string? Name)>? fram
     {
         store.Register(new MetricDefinition(Status, "Sensor service status", "Sensors", MetricUnit.Text));
         store.SetText(Status, NotRunning);
+        store.Register(new MetricDefinition(Version, "Sensor service version", "Sensors", MetricUnit.Text));
         foreach (var alias in SensorAliases.All)
             store.Register(alias.ToDefinition());
 
@@ -69,6 +73,7 @@ public sealed class SensorHostProvider(Func<(int ProcessId, string? Name)>? fram
 
             ClearValues(store);
             store.SetText(Status, NotRunning);
+            store.SetText(Version, null);
 
             try
             {
@@ -87,6 +92,7 @@ public sealed class SensorHostProvider(Func<(int ProcessId, string? Name)>? fram
         {
             case SensorMessage.StatusType:
                 store.SetText(Status, message.Status);
+                store.SetText(Version, message.Version);
                 break;
 
             case SensorMessage.CatalogType when message.Sensors is not null:

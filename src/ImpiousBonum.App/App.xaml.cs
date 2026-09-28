@@ -33,6 +33,9 @@ public partial class App : Application
     private DashboardWindow? _window;
     private DispatcherTimer? _tick;
     private EditorWindow? _editor;
+    private readonly Updater _updater = new();
+    private DispatcherTimer? _updateTimer;
+    private bool _warnedOutdatedService;
     private bool _mirrorQueued;
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -78,7 +81,7 @@ public partial class App : Application
         {
             var monitors = DisplayMonitor.GetAll();
             _tray.SetMonitors(monitors, DisplayMonitor.Resolve(_settings, monitors));
-            _tray.SetSensorState(SensorStatus(), SensorServiceControl.IsInstalled);
+            _tray.SetSensorState(SensorStatus(), SensorServiceControl.IsInstalled, SensorServiceControl.IsOutdated(SensorVersion()));
             _tray.SetFpsSources(monitors, _settings.FpsMonitorId);
         };
         _tray.FpsSourceSelected += (_, monitorId) =>
@@ -91,6 +94,10 @@ public partial class App : Application
         _tray.ReloadRequested += (_, _) => ApplyLayout();
         _tray.EditLayoutRequested += (_, _) => OpenEditor();
         _tray.ExitRequested += async (_, _) => await ExitAsync();
+        _tray.CheckForUpdatesRequested += async (_, _) => await CheckForUpdatesAsync(userAsked: true);
+        _tray.RestartToUpdateRequested += async (_, _) => await RestartToUpdateAsync();
+        _tray.SetVersion(_updater.CurrentVersion, _updater.IsInstalled);
+        StartUpdateChecks();
 
         _layouts = new LayoutStore();
         _layouts.Changed += (_, _) => ApplyLayout();
@@ -113,6 +120,49 @@ public partial class App : Application
         var now = DateTime.Now;
         _window?.Dashboard.Refresh(_sampler!.Store, now);
         _editor?.Refresh(_sampler!.Store, now);
+
+        // After an app update the installed service is still the old build; say so once per run.
+        if (!_warnedOutdatedService && SensorServiceControl.IsOutdated(SensorVersion()))
+        {
+            _warnedOutdatedService = true;
+            _tray?.ShowInfo("Sensor service needs updating", "It's from an older version of Impious Bonum. Tray → Sensors → Update sensor service.");
+        }
+    }
+
+    private string? SensorVersion() =>
+        _sampler is not null && _sampler.Store.TryGet(SensorHostProvider.Version, out var version) ? version.Text : null;
+
+    /// <summary>Installed copies check GitHub shortly after starting and then every few hours; development builds never do.</summary>
+    private void StartUpdateChecks()
+    {
+        if (!_updater.IsInstalled)
+            return;
+        _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+        _updateTimer.Tick += async (_, _) =>
+        {
+            _updateTimer.Interval = TimeSpan.FromHours(6);
+            await CheckForUpdatesAsync(userAsked: false);
+        };
+        _updateTimer.Start();
+    }
+
+    private async Task CheckForUpdatesAsync(bool userAsked)
+    {
+        if (userAsked)
+            _tray?.ShowInfo("Impious Bonum", "Checking for updates…");
+
+        var ready = await _updater.CheckAndDownloadAsync();
+        _tray?.SetUpdateReady(ready);
+        if (ready is not null)
+            _tray?.ShowInfo($"Impious Bonum {ready} is ready", "Tray → Restart to update.");
+        else if (userAsked)
+            _tray?.ShowInfo("Impious Bonum", $"You're up to date ({_updater.CurrentVersion}).");
+    }
+
+    private async Task RestartToUpdateAsync()
+    {
+        if (await ReleaseEverythingAsync())
+            _updater.RestartToUpdate();
     }
 
     private void OpenEditor()
@@ -284,20 +334,32 @@ public partial class App : Application
 
     private async Task ExitAsync()
     {
-        // Give the editor its chance to save; if the user cancels that prompt, stay running.
+        if (await ReleaseEverythingAsync())
+            Shutdown();
+    }
+
+    /// <summary>
+    /// Closes the editor (which may ask to save), removes the tray icon and stops sampling.
+    /// Returns false if the user cancelled the editor's save prompt, in which case nothing else is touched.
+    /// </summary>
+    private async Task<bool> ReleaseEverythingAsync()
+    {
         _editor?.Close();
         if (_editor is not null)
-            return;
+            return false;
 
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         _tick?.Stop();
+        _updateTimer?.Stop();
         _layouts?.Dispose();
         _tray?.Dispose();
+        _tray = null;
         _window?.Close();
         if (_sampler is not null)
             await _sampler.DisposeAsync();
         _singleInstance?.ReleaseMutex();
-        Shutdown();
+        _singleInstance = null;
+        return true;
     }
 
     private static async Task RenderSnapshotAsync(string path, TimeSpan warmup)

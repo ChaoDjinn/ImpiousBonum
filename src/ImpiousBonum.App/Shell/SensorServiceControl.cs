@@ -13,6 +13,20 @@ public static class SensorServiceControl
 
     public static string HostPath => Path.Combine(AppContext.BaseDirectory, "sensors", "ImpiousBonum.Sensors.exe");
 
+    /// <summary>Version of the host shipped with this copy of the app (what "Install/Update" would install).</summary>
+    public static string? BundledVersion
+    {
+        get
+        {
+            var dll = Path.ChangeExtension(HostPath, ".dll");
+            return File.Exists(dll) ? FileVersionInfo.GetVersionInfo(dll).ProductVersion : null;
+        }
+    }
+
+    /// <summary>True when the running service is a different build from the one bundled with the app (e.g. after an app update).</summary>
+    public static bool IsOutdated(string? runningVersion) =>
+        runningVersion is not null && BundledVersion is { } bundled && !string.Equals(runningVersion, bundled, StringComparison.Ordinal);
+
     public static bool IsInstalled
     {
         get

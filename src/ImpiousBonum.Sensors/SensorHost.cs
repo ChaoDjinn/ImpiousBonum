@@ -10,6 +10,11 @@ internal sealed class SensorHost : IAsyncDisposable
 {
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(1);
 
+    /// <summary>Informational version (e.g. "0.2.0+commit"), matching the dashboard it was built with.</summary>
+    public static string HostVersion { get; } =
+        typeof(SensorHost).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion ?? "unknown";
+
     private readonly SensorCollector _collector = new();
     private readonly PipeBroadcaster _broadcaster = new();
     private readonly FrameRateMonitor _frames = new();
@@ -88,6 +93,7 @@ internal sealed class SensorHost : IAsyncDisposable
         {
             Type = SensorMessage.StatusType,
             Status = _frames.Problem is { } problem ? $"{_collector.Status}. {problem}" : _collector.Status,
+            Version = HostVersion,
             LowLevelAccess = _collector.HasLowLevelAccess,
         });
         await _broadcaster.SetCatalogAsync(new SensorMessage { Type = SensorMessage.CatalogType, Sensors = _collector.Catalog });

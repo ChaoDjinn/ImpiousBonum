@@ -6,6 +6,7 @@
     <AssemblyName>ImpiousBonum.Sensors</AssemblyName>
     <RootNamespace>ImpiousBonum.Sensors</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\assets\ImpiousBonum.ico</ApplicationIcon>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
     <ServerGarbageCollection>false</ServerGarbageCollection>

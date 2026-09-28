@@ -22,7 +22,31 @@
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
 
-## Running
+## Installing
+
+Download `ImpiousBonum-win-Setup.exe` from the [latest release](https://github.com/ChaoDjinn/ImpiousBonum/releases/latest) and run it.
+
+- It installs for your user only (no admin prompt) into `%LocalAppData%\ImpiousBonum`, adds Start menu and desktop shortcuts, and installs the .NET 10 Desktop Runtime first if you don't have it.
+- The app checks GitHub for updates, downloads them in the background, and offers *Restart to update* in the tray menu. Updates are small deltas.
+- After an update, if the sensor service is from an older version the tray says so; *Sensors → Update sensor service…* brings it up to date.
+- Uninstall from Windows Settings → Apps. It removes start-with-Windows and offers to remove the sensor service (one UAC prompt). Your layout and settings in `%AppData%\ImpiousBonum` are kept.
+- The installer isn't code-signed yet, so Windows SmartScreen may warn the first time: choose *More info → Run anyway*.
+
+### Making a release
+
+Push a version tag and GitHub Actions builds, tests, packs and publishes it:
+
+```bash
+git tag v0.2.0
+```
+
+```bash
+git push origin v0.2.0
+```
+
+To build the installer locally instead: `pwsh build/publish.ps1 -Version 0.2.0` (output in `artifacts/releases`).
+
+## Running from source
 
 Requires the .NET 10 SDK on Windows 10/11.
 
@@ -87,7 +111,8 @@ To use a font you don't want to install, point the theme at the file: `"fontFile
 3. ~~Layout editor: live preview, drag/resize, generated properties, theme, undo/redo~~
 4. ~~Metric picker: browse and search every metric with live values, insert into templates~~
 5. ~~Touch edit mode on the dashboard itself, synced with the editor~~
-6. Vulkan/OpenGL frame counting, more widget types, themes, installer (Velopack) and signing
+6. ~~Installer and automatic updates (Velopack, GitHub Releases)~~
+7. Code signing, Vulkan/OpenGL frame counting, more widget types, themes
 
 ## Layout of the code
 

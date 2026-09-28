@@ -42,6 +42,9 @@ public sealed record SensorMessage
     /// <summary>For <c>status</c>: a short human-readable line such as "Sensors running" or "PawnIO driver not installed".</summary>
     public string? Status { get; init; }
 
+    /// <summary>For <c>status</c>: the host's version, so the dashboard can tell when the installed service is older than the app.</summary>
+    public string? Version { get; init; }
+
     /// <summary>For <c>status</c>: whether low-level CPU/motherboard sensors are readable (elevated with the PawnIO driver present).</summary>
     public bool? LowLevelAccess { get; init; }
 
