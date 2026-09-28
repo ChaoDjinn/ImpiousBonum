@@ -146,8 +146,12 @@ public sealed class TrayIcon : IDisposable
             _layouts.DropDownItems.Add(item);
         }
         _layouts.DropDownItems.Add(new ToolStripSeparator());
+        _layouts.DropDownItems.Add("Import…", null, (_, _) => ImportLayoutRequested?.Invoke(this, EventArgs.Empty));
         _layouts.DropDownItems.Add(_gameLayouts);
     }
+
+    /// <summary>Tray → Layout → Import…</summary>
+    public event EventHandler? ImportLayoutRequested;
 
     /// <summary>Tray → Layout → Game layouts → Switch automatically.</summary>
     public event EventHandler<bool>? GameLayoutsToggled;

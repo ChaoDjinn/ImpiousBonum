@@ -16,6 +16,7 @@ internal static unsafe partial class Etw
     public const uint ProcessTraceModeEventRecord = 0x10000000;
     public const uint EventFilterTypeEventId = 0x80000200;
     public const uint EnableTraceParametersVersion2 = 2;
+    public const byte TraceLevelInformation = 4;
     public const byte TraceLevelVerbose = 5;
 
     /// <summary>ClientContext value selecting QueryPerformanceCounter timestamps (same clock as <see cref="System.Diagnostics.Stopwatch"/>).</summary>

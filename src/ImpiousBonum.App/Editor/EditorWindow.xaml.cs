@@ -12,7 +12,7 @@ namespace ImpiousBonum.App.Editor;
 /// <summary>
 /// The layout editor: widget list, live preview and properties. Edits go to a <see cref="LayoutSession"/>;
 /// the app mirrors that onto the real dashboard as you work. It edits the active saved layout, and can switch to,
-/// create, rename, duplicate and delete saved layouts.
+/// create, rename, duplicate, delete, export and import saved layouts.
 /// </summary>
 public partial class EditorWindow : Window
 {
@@ -56,6 +56,9 @@ public partial class EditorWindow : Window
         layoutMenu.Items.Add(MenuItemFor("Save as…", "Save your changes as a new layout", SaveAs));
         layoutMenu.Items.Add(MenuItemFor("Rename…", null, RenameLayout));
         layoutMenu.Items.Add(MenuItemFor("Duplicate…", "Copy the saved layout and edit the copy", DuplicateLayout));
+        layoutMenu.Items.Add(new Separator());
+        layoutMenu.Items.Add(MenuItemFor("Export…", "Save this layout, with its font and background image, as one file to share or move to another PC", ExportLayout));
+        layoutMenu.Items.Add(MenuItemFor("Import…", "Add a layout from an exported .ibl file", ImportLayout));
         layoutMenu.Items.Add(new Separator());
         _deleteLayoutItem = MenuItemFor("Delete", null, DeleteLayout);
         layoutMenu.Items.Add(_deleteLayoutItem);
@@ -217,6 +220,20 @@ public partial class EditorWindow : Window
             return;
 
         _layouts.Duplicate(_layouts.Active, name);
+        _layouts.SetActive(name);
+        LoadActive();
+    }
+
+    /// <summary>Exports what's in the editor, unsaved changes included.</summary>
+    private void ExportLayout() => LayoutTransfer.Export(this, _session.Document, _layouts.Active, _session.Themes);
+
+    /// <summary>Imports a layout file and starts editing it (the dashboard follows).</summary>
+    public void ImportLayout()
+    {
+        if (!ConfirmLeave())
+            return;
+        if (LayoutTransfer.Import(this, _layouts) is not { } name)
+            return;
         _layouts.SetActive(name);
         LoadActive();
     }

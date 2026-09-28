@@ -109,6 +109,7 @@ public partial class App : Application
             }
         };
         _tray.LayoutSelected += (_, name) => SelectLayout(name);
+        _tray.ImportLayoutRequested += (_, _) => ImportLayout();
         _tray.GameLayoutsToggled += (_, enabled) => SetGameLayoutsEnabled(enabled);
         _tray.GameLinkRequested += (_, rule) => LinkGame(rule);
         _tray.GameLinkRemoved += (_, rule) => UnlinkGame(rule);
@@ -287,6 +288,22 @@ public partial class App : Application
         {
             _tray?.ShowError("Couldn't switch layout", ex.Message);
         }
+    }
+
+    /// <summary>Tray → Layout → Import…: adds the layout and shows it. With the editor open, the editor does it.</summary>
+    private void ImportLayout()
+    {
+        if (_editor is not null)
+        {
+            BringToFront(_editor);
+            _editor.ImportLayout();
+            return;
+        }
+        if (_layouts is null || LayoutTransfer.Import(null, _layouts) is not { } name)
+            return;
+
+        _layouts.SetActive(name);
+        AppLog.Info($"Imported layout \"{name}\"");
     }
 
     /// <summary>

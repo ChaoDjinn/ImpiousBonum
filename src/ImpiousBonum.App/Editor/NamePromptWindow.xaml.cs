@@ -24,7 +24,7 @@ public partial class NamePromptWindow : Window
 
     /// <param name="check">Returns why a name can't be used, or null if it can.</param>
     /// <returns>The name, or null if cancelled.</returns>
-    public static string? Ask(Window owner, string title, string prompt, string initial, Func<string, string?> check)
+    public static string? Ask(Window? owner, string title, string prompt, string initial, Func<string, string?> check)
     {
         var window = new NamePromptWindow(title, prompt, initial, check) { Owner = owner };
         return window.ShowDialog() == true ? window.NameBox.Text : null;

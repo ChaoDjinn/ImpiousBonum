@@ -116,6 +116,22 @@ public sealed class ThemeLibrary
         return node is JsonValue value && value.TryGetValue<string>(out var name) && !string.IsNullOrWhiteSpace(name) ? name : null;
     }
 
+    /// <summary>A text value in a theme object (such as <c>fontFile</c>), matching the key ignoring case like the rest of the file.</summary>
+    public static string? GetString(JsonObject theme, string key)
+    {
+        var node = theme.FirstOrDefault(p => string.Equals(p.Key, key, StringComparison.OrdinalIgnoreCase)).Value;
+        return node is JsonValue value && value.TryGetValue<string>(out var text) ? text : null;
+    }
+
+    /// <summary>Sets a text value in a theme object, replacing it in any case; null removes it.</summary>
+    public static void SetString(JsonObject theme, string key, string? value)
+    {
+        foreach (var existing in theme.Where(p => string.Equals(p.Key, key, StringComparison.OrdinalIgnoreCase)).Select(p => p.Key).ToList())
+            theme.Remove(existing);
+        if (value is not null)
+            theme[key] = value;
+    }
+
     /// <summary>
     /// The values to draw a layout with: its own theme values over its base theme's, over the built-in defaults.
     /// A base theme that's missing or broken counts as empty; <see cref="Problem"/> explains why.

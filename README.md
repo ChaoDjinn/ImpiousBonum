@@ -58,7 +58,7 @@ Every box is a widget you can move, resize, restyle or replace. Six widget types
 | `net.down`, `net.up` | Adapters with a default gateway |
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
-| `fps`, `fps.app` | Sensor service counts DirectX frames per app (like PresentMon/HWiNFO); the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
+| `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
 
@@ -86,6 +86,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 |---|---|
 | *Display* | Which monitor the dashboard fills |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
+| *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, and turn automatic switching on or off (see [Game layouts](#game-layouts)) |
 | *Sensors* | Sensor service status, and install, update or remove it |
 | *FPS from* | Follow the foreground app, or the top app on a chosen monitor |
@@ -101,7 +102,7 @@ Reading CPU temperatures needs admin rights and a kernel driver, so it lives in 
 ```mermaid
 flowchart LR
     lhm["LibreHardwareMonitor<br/>+ PawnIO driver"] --> sensors
-    etw["DirectX frame events<br/>(ETW)"] --> sensors
+    etw["Frame events: DirectX,<br/>Vulkan, OpenGL (ETW)"] --> sensors
     subgraph svc["Windows service (elevated)"]
         sensors["Sensor service<br/>ImpiousBonum.Sensors.exe"]
     end
@@ -127,12 +128,18 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 - **Widgets:** add, duplicate (Ctrl+D), delete, and bring forward / send back.
 - **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
 - **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout: *Orange* (the default look), *Ice* and *Terminal* are built in. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
-- **Saved layouts:** the editor edits the layout the dashboard is showing. The *Layout* drop-down switches to another (asking first if you have unsaved changes), and *Layouts ▾* has *Save as…* (your changes as a new layout), *Rename…*, *Duplicate…* and *Delete* (not the last one). Keep a "Gaming" and a "Desktop" layout, for example, and flip between them from the tray.
+- **Saved layouts:** the editor edits the layout the dashboard is showing. The *Layout* drop-down switches to another (asking first if you have unsaved changes), and *Layouts ▾* has *Save as…* (your changes as a new layout), *Rename…*, *Duplicate…*, *Export…*, *Import…* and *Delete* (not the last one). Keep a "Gaming" and a "Desktop" layout, for example, and flip between them from the tray.
 - The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes the layout's file; closing without saving puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
 
 <!-- Editor screenshot (Win+Shift+S): save as docs/images/editor.png, then remove these comment markers:
 <p align="center"><img src="docs/images/editor.png" alt="The layout editor with the metric picker open"></p>
 -->
+
+## Sharing layouts
+
+*Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file and background image inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor, or tray → *Layout*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual.
+
+An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder. Imports only take the layout and the font (`.ttf`, `.otf`) and image it names, reject a file with `..` or absolute paths in it, and cap sizes (1 MB for the layout, 50 MB per file).
 
 ## Game layouts
 
@@ -264,7 +271,7 @@ tools/ReleaseSigning     creates the update signing key and signs releases
 - [x] Touch edit mode on the dashboard itself, synced with the editor
 - [x] Installer and automatic updates (Velopack, GitHub Releases)
 - [ ] Code signing
-- [ ] Vulkan/OpenGL frame counting
+- [x] Vulkan/OpenGL frame counting
 - [ ] More widget types
 - [x] Themes
 
