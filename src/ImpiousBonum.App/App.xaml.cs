@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net.Sockets;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Interop;
@@ -12,6 +13,7 @@ using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
+using ImpiousBonum.Core.Remote;
 using Microsoft.Win32;
 
 namespace ImpiousBonum.App;
@@ -34,6 +36,8 @@ public partial class App : Application
     private DashboardWindow? _window;
     private DispatcherTimer? _tick;
     private EditorWindow? _editor;
+    private TabletView? _tablet;
+    private TabletLinkWindow? _tabletLink;
     private readonly Updater _updater = new();
     private FrameRateTarget? _frameRateTarget;
     private readonly GameLayoutSwitcher _gameSwitcher = new(GameLayoutSwitcher.DefaultDelay);
@@ -103,6 +107,7 @@ public partial class App : Application
             _tray.SetMonitors(monitors, DisplayMonitor.Resolve(_settings, monitors), CurrentWindowOptions());
             _tray.SetSensorState(SensorStatus(), SensorServiceControl.IsInstalled, SensorServiceControl.IsOutdated(SensorVersion()));
             _tray.SetFpsSources(monitors, _settings.FpsMonitorId);
+            _tray.SetTabletView(_tablet?.IsRunning == true);
             if (_layouts is not null)
             {
                 var names = _layouts.List();
@@ -124,6 +129,10 @@ public partial class App : Application
         _tray.WindowOptionsChanged += (_, options) => SetWindowOptions(options);
         _tray.ResetWindowRequested += (_, _) => ResetWindow();
         _tray.BringToFrontRequested += (_, _) => _window?.BringForward();
+        _tray.TabletViewToggled += (_, on) => SetTabletView(on);
+        _tray.TabletLinkRequested += (_, _) => ShowTabletLink();
+        _tray.TabletLinkCopyRequested += (_, _) => CopyTabletLink();
+        _tray.TabletNewLinkRequested += (_, _) => NewTabletLink();
         _tray.SensorServiceChangeRequested += async (_, install) => await ChangeSensorServiceAsync(install);
         _tray.ReloadRequested += (_, _) => ApplyLayout();
         _tray.EditLayoutRequested += (_, _) => OpenEditor();
@@ -133,6 +142,7 @@ public partial class App : Application
         _tray.SetVersion(_updater.CurrentVersion, _updater.IsInstalled);
         StartUpdateChecks();
 
+        _tablet = new TabletView();
         _layouts = new LayoutStore(_settings);
         _layouts.Changed += (_, _) => ApplyLayout();
         _layouts.ActiveChanged += (_, _) =>
@@ -148,6 +158,8 @@ public partial class App : Application
             ApplyLayout();
         };
         ApplyLayout();
+        if (_settings.TabletView)
+            StartTablet();
 
         ApplyWindowBehaviour();
         Place();
@@ -187,6 +199,7 @@ public partial class App : Application
         var now = DateTime.Now;
         _window?.Dashboard.Refresh(_sampler!.Store, now);
         _editor?.Refresh(_sampler!.Store, now);
+        _tablet?.Refresh(_sampler!.Store, now);
         UpdateGameLayout();
         UpdateFullscreenHide();
 
@@ -427,6 +440,7 @@ public partial class App : Application
         {
             var r = LayoutSession.GeometryOf(session.Document.Widgets[index]);
             _window.Dashboard.SetGeometry(index, r.X, r.Y, r.Width, r.Height);
+            _tablet?.SetGeometry(index, r.X, r.Y, r.Width, r.Height);
             return;
         }
 
@@ -438,6 +452,7 @@ public partial class App : Application
             _mirrorQueued = false;
             _window.Background = Theme.From(session.ResolvedTheme).Background;
             _window.Dashboard.Build(session.Document, session.ResolvedTheme);
+            _tablet?.Build(session.Document, session.ResolvedTheme);
             Refresh();
         }, DispatcherPriority.Background);
     }
@@ -484,7 +499,87 @@ public partial class App : Application
         var theme = _layouts.ResolveTheme(layout);
         _window.Background = Theme.From(theme).Background;
         _window.Dashboard.Build(layout, theme);
+        _tablet?.Build(layout, theme);
         Refresh();
+    }
+
+    /// <summary>Tray → Display → Tablet view → Show on tablets. Turning it on shows the link to open.</summary>
+    private void SetTabletView(bool on)
+    {
+        _settings.TabletView = on;
+        _settings.Save();
+        if (!on)
+        {
+            _tablet?.Stop();
+            _tabletLink?.Close();
+            AppLog.Info("Tablet view off");
+            return;
+        }
+        if (StartTablet())
+            ShowTabletLink();
+    }
+
+    private bool StartTablet()
+    {
+        if (_tablet is null)
+            return false;
+        if (string.IsNullOrEmpty(_settings.TabletToken))
+        {
+            _settings.TabletToken = TabletAccess.NewToken();
+            _settings.Save();
+        }
+
+        try
+        {
+            _tablet.Start(_settings.TabletPort, _settings.TabletToken);
+            AppLog.Info($"Tablet view on, port {_settings.TabletPort}");
+            return true;
+        }
+        catch (Exception ex) when (ex is SocketException or ArgumentOutOfRangeException)
+        {
+            // In use by another app, or a hand-edited port that isn't one.
+            AppLog.Warning($"Tablet view couldn't use port {_settings.TabletPort}: {ex.Message}");
+            _tray?.ShowError("Couldn't start the tablet view",
+                $"Port {_settings.TabletPort} is in use or isn't a valid port. Change tabletPort in settings.json (tray → Open settings folder), then try again.");
+            return false;
+        }
+    }
+
+    private void ShowTabletLink()
+    {
+        if (_tabletLink is not null)
+        {
+            BringToFront(_tabletLink);
+            return;
+        }
+        if (_tablet?.IsRunning != true || _settings.TabletToken is not { } token)
+            return;
+
+        _tabletLink = new TabletLinkWindow(_settings.TabletPort, token, NewTabletLink);
+        _tabletLink.Closed += (_, _) => _tabletLink = null;
+        _tabletLink.Show();
+        BringToFront(_tabletLink);
+    }
+
+    private void CopyTabletLink()
+    {
+        if (_settings.TabletToken is not { } token)
+            return;
+        if (TabletLinkWindow.FirstLink(_settings.TabletPort, token) is not { } link)
+            _tray?.ShowError("No tablet link", "This PC doesn't seem to be on a local network.");
+        else if (TabletLinkWindow.CopyToClipboard(link))
+            _tray?.ShowInfo("Tablet link copied", link);
+    }
+
+    /// <summary>A new secret for the link: tablets using the old one stop updating. Returns the new secret.</summary>
+    private string NewTabletLink()
+    {
+        var token = TabletAccess.NewToken();
+        _settings.TabletToken = token;
+        _settings.Save();
+        _tablet?.SetToken(token);
+        AppLog.Info("Tablet view: new link");
+        return token;
     }
 
     private void Place()
@@ -652,6 +747,8 @@ public partial class App : Application
         _layouts?.Dispose();
         _tray?.Dispose();
         _tray = null;
+        _tabletLink?.Close();
+        _tablet?.Dispose();
         _window?.Close();
         if (_sampler is not null)
             await _sampler.DisposeAsync();

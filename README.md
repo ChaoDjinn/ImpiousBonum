@@ -36,6 +36,7 @@
 - **Made for a spare screen, or a window.** Pick a monitor; the dashboard fills it and comes back to the same place after reboots or display changes. No spare screen? Make it a window you can drag, resize, lock in place and keep on top. It's hidden from the taskbar and Alt+Tab, and tapping it never steals focus.
 - **The numbers you'd run HWiNFO for, built in.** CPU, memory, GPU, drives and network out of the box. The optional sensor service adds temperatures, fans, clocks, power and per-app FPS, about 280 metrics on a typical PC.
 - **Edit it visually, or by hand.** A layout editor with live preview, drag and resize, a searchable metric picker and touch editing on the dashboard itself. Underneath it's one JSON file that applies live as you save it.
+- **On a tablet too.** Turn on the tablet view and any tablet or phone on your Wi-Fi can show the dashboard in its browser, with nothing to install on it.
 - **Tiny footprint.** About 50 MB of private memory and well under 0.1% CPU when idle; the sensor service adds about 20 MB.
 - **Installs and updates itself.** A per-user installer with no admin prompt, and small background updates from GitHub Releases.
 
@@ -77,7 +78,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours and background), which any layout can use by name.
-- `settings.json`: which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, `hardwareRendering` (off by default to save memory).
+- `settings.json`: which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
 
 ### Tray menu
@@ -85,6 +86,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | Item | |
 |---|---|
 | *Display* | Which monitor the dashboard is on, and how its window behaves (see [Windowed mode](#windowed-mode)) |
+| *Display → Tablet view* | Show the dashboard in a browser on a tablet or phone (see [Tablet view](#tablet-view)) |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, and turn automatic switching on or off (see [Game layouts](#game-layouts)) |
@@ -105,6 +107,15 @@ Without a spare screen, tray → *Display* → *Windowed* turns the dashboard in
 - The canvas scales to the window, so a small window shrinks everything evenly. For a window that isn't a strip, give the layout a matching size in the editor (*Canvas*); *Match dashboard screen* uses the window's size.
 
 *Fill screen* goes back to covering the whole monitor.
+
+### Tablet view
+
+A tablet or phone on the same Wi-Fi can show the dashboard in its web browser, as a wireless second screen. Tray → *Display* → *Tablet view* → *Show on tablets* turns it on and shows a link and a QR code; open it on the tablet. It shows exactly what the dashboard shows (same layout, theme, background and game layouts), updated once a second, and keeps going while the dashboard window is hidden over a fullscreen game.
+
+- **Add it to the home screen** (Safari: Share → *Add to Home Screen*; Chrome: ⋮ → *Add to Home screen*) to open it without the browser's bars, or tap *Full screen* where the browser offers it. Set the tablet's screen timeout to never, since the page can't keep the screen on by itself over plain HTTP.
+- **Cost:** with no tablet watching it draws nothing. With one watching, it draws the layout off-screen and sends one JPEG a second, and only when something changed.
+- **Security:** it's off by default and read-only: the page can't change anything on the PC. The link carries a random secret, and *New link* stops old links working. It only answers addresses on the local network (private, link-local and loopback addresses), never the internet. When Windows asks about the firewall the first time, allow **private networks** only. It's plain HTTP, so someone watching your Wi-Fi traffic could see the dashboard's numbers.
+- It listens on port 8787. If another app uses that port, change `tabletPort` in `settings.json` and turn the tablet view off and on.
 
 ## Sensor service (temperatures, fans, power, FPS)
 
@@ -277,6 +288,7 @@ tools/ReleaseSigning     creates the update signing key and signs releases
 - [x] Installer and automatic updates (Velopack, GitHub Releases)
 - [ ] Code signing
 - [x] Vulkan/OpenGL frame counting
+- [x] Tablet view: the dashboard in a browser over the local network
 - [ ] More widget types
 - [x] Themes
 
