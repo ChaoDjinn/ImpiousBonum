@@ -33,7 +33,7 @@
 
 ## Highlights
 
-- **Made for a spare screen.** Pick a monitor; the dashboard fills it and comes back to the same place after reboots or display changes. It's hidden from the taskbar and Alt+Tab, and tapping it never steals focus.
+- **Made for a spare screen, or a window.** Pick a monitor; the dashboard fills it and comes back to the same place after reboots or display changes. No spare screen? Make it a window you can drag, resize, lock in place and keep on top. It's hidden from the taskbar and Alt+Tab, and tapping it never steals focus.
 - **The numbers you'd run HWiNFO for, built in.** CPU, memory, GPU, drives and network out of the box. The optional sensor service adds temperatures, fans, clocks, power and per-app FPS, about 280 metrics on a typical PC.
 - **Edit it visually, or by hand.** A layout editor with live preview, drag and resize, a searchable metric picker and touch editing on the dashboard itself. Underneath it's one JSON file that applies live as you save it.
 - **Tiny footprint.** About 50 MB of private memory and well under 0.1% CPU when idle; the sensor service adds about 20 MB.
@@ -77,14 +77,14 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours and background), which any layout can use by name.
-- `settings.json`: which monitor, which layout (`activeLayout`), ping host, `hardwareRendering` (off by default to save memory).
+- `settings.json`: which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, `hardwareRendering` (off by default to save memory).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
 
 ### Tray menu
 
 | Item | |
 |---|---|
-| *Display* | Which monitor the dashboard fills |
+| *Display* | Which monitor the dashboard is on, and how its window behaves (see [Windowed mode](#windowed-mode)) |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, and turn automatic switching on or off (see [Game layouts](#game-layouts)) |
@@ -94,6 +94,17 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Open layout file*, *Open settings folder*, *Reload layout* | Work with the files directly (*Open layout file* opens the one being shown) |
 | *Start with Windows* | Start the dashboard when you sign in |
 | *Check for updates* | Installed copies only |
+
+### Windowed mode
+
+Without a spare screen, tray → *Display* → *Windowed* turns the dashboard into a window on the chosen monitor. It starts unlocked with a dashed outline: drag it to move it (onto another monitor too) and drag an edge or corner to resize it. It keeps the layout's shape, so the layout always fills it. Then tick *Lock position*. Its size, position and monitor are remembered, and it's moved back on screen if the resolution changes.
+
+- *Click-through when locked* lets clicks go to the window underneath. Right-click can't open the editor then; use the tray.
+- *Always on top* keeps it above other windows. *Hide over fullscreen apps* (on by default) hides it while a game or video fills its monitor, since a window over a borderless game can cost frame pacing, and it can't show over exclusive fullscreen anyway.
+- *Bring to front* raises it when it's behind other windows, and *Reset size and position* recentres it.
+- The canvas scales to the window, so a small window shrinks everything evenly. For a window that isn't a strip, give the layout a matching size in the editor (*Canvas*); *Match dashboard screen* uses the window's size.
+
+*Fill screen* goes back to covering the whole monitor.
 
 ## Sensor service (temperatures, fans, power, FPS)
 

@@ -46,6 +46,7 @@ public partial class App : Application
     private bool _mirrorQueued;
     private bool _started;
     private bool _reportedError;
+    private bool _hiddenForFullscreen;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -94,11 +95,12 @@ public partial class App : Application
 
         _window = new DashboardWindow();
         _window.EditRequested += (_, _) => OpenEditor();
+        _window.PlacementChanged += (_, rect) => OnWindowMoved(rect);
         _tray = new TrayIcon();
         _tray.MenuOpening += (_, _) =>
         {
             var monitors = DisplayMonitor.GetAll();
-            _tray.SetMonitors(monitors, DisplayMonitor.Resolve(_settings, monitors));
+            _tray.SetMonitors(monitors, DisplayMonitor.Resolve(_settings, monitors), CurrentWindowOptions());
             _tray.SetSensorState(SensorStatus(), SensorServiceControl.IsInstalled, SensorServiceControl.IsOutdated(SensorVersion()));
             _tray.SetFpsSources(monitors, _settings.FpsMonitorId);
             if (_layouts is not null)
@@ -119,6 +121,9 @@ public partial class App : Application
             _settings.Save();
         };
         _tray.MonitorSelected += (_, monitor) => MoveTo(monitor);
+        _tray.WindowOptionsChanged += (_, options) => SetWindowOptions(options);
+        _tray.ResetWindowRequested += (_, _) => ResetWindow();
+        _tray.BringToFrontRequested += (_, _) => _window?.BringForward();
         _tray.SensorServiceChangeRequested += async (_, install) => await ChangeSensorServiceAsync(install);
         _tray.ReloadRequested += (_, _) => ApplyLayout();
         _tray.EditLayoutRequested += (_, _) => OpenEditor();
@@ -144,6 +149,7 @@ public partial class App : Application
         };
         ApplyLayout();
 
+        ApplyWindowBehaviour();
         Place();
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
 
@@ -182,6 +188,7 @@ public partial class App : Application
         _window?.Dashboard.Refresh(_sampler!.Store, now);
         _editor?.Refresh(_sampler!.Store, now);
         UpdateGameLayout();
+        UpdateFullscreenHide();
 
         // After an app update the installed service is still the old build; say so once per run.
         if (!_warnedOutdatedService && SensorServiceControl.IsOutdated(SensorVersion()))
@@ -239,7 +246,9 @@ public partial class App : Application
 
         var session = new LayoutSession(_layouts!.LoadOrDefault(), _layouts.Themes);
         _editor = new EditorWindow(session, _layouts, () =>
-            DisplayMonitor.Resolve(_settings, DisplayMonitor.GetAll()) is { } monitor ? (monitor.Bounds.Width, monitor.Bounds.Height) : null);
+            !_settings.Fill && _settings.Area is { } area ? (area.Width, area.Height)
+            : DisplayMonitor.Resolve(_settings, DisplayMonitor.GetAll()) is { } monitor ? (monitor.Bounds.Width, monitor.Bounds.Height)
+            : null);
 
         session.Changed += (_, change) => MirrorToDashboard(session, change);
         _editor.Closed += (_, _) =>
@@ -500,13 +509,109 @@ public partial class App : Application
         }
 
         var b = monitor.Bounds;
-        var rect = _settings.Fill || _settings.Area is not { } area
-            ? b
-            : new PixelRect(b.X + area.X, b.Y + area.Y, area.Width, area.Height);
+        var rect = b;
+        if (!_settings.Fill)
+        {
+            // Windowed: first time, the layout's shape centred on the monitor; after that, kept on screen.
+            var saved = _settings.Area ?? WindowGeometry.DefaultArea(b, LayoutWidth, LayoutHeight);
+            var area = WindowGeometry.Clamp(saved, b.Width, b.Height);
+            if (area != _settings.Area)
+            {
+                _settings.Area = area;
+                _settings.Save();
+            }
+            rect = new PixelRect(b.X + area.X, b.Y + area.Y, area.Width, area.Height);
+        }
 
         _window.PlaceOn(rect);
-        if (!_window.IsVisible)
+        if (!_window.IsVisible && !_hiddenForFullscreen)
             _window.Show();
+    }
+
+    private double LayoutWidth => _window?.Dashboard.Width is > 0 and var w ? w : 1920;
+
+    private double LayoutHeight => _window?.Dashboard.Height is > 0 and var h ? h : 480;
+
+    private WindowOptions CurrentWindowOptions() =>
+        new(!_settings.Fill, _settings.Locked, _settings.ClickThrough, _settings.AlwaysOnTop, _settings.HideOverFullscreen);
+
+    private void ApplyWindowBehaviour()
+    {
+        var windowed = !_settings.Fill;
+        _window?.SetBehaviour(
+            movable: windowed && !_settings.Locked,
+            clickThrough: windowed && _settings.Locked && _settings.ClickThrough,
+            topmost: _settings.AlwaysOnTop);
+    }
+
+    /// <summary>Tray → Display: fill screen or windowed, lock, click-through, always on top.</summary>
+    private void SetWindowOptions(WindowOptions options)
+    {
+        var becameWindowed = options.Windowed && _settings.Fill;
+        _settings.Fill = !options.Windowed;
+        // Unlock on the way into windowed mode so it can be put in place straight away.
+        _settings.Locked = !becameWindowed && options.Locked;
+        _settings.ClickThrough = options.ClickThrough;
+        _settings.AlwaysOnTop = options.AlwaysOnTop;
+        _settings.HideOverFullscreen = options.HideOverFullscreen;
+        _settings.Save();
+        AppLog.Info($"Window: {(options.Windowed ? "windowed" : "fill screen")}, {(_settings.Locked ? "locked" : "unlocked")}"
+            + $"{(_settings.ClickThrough ? ", click-through" : "")}{(_settings.AlwaysOnTop ? ", on top" : "")}");
+
+        ApplyWindowBehaviour();
+        UpdateFullscreenHide();
+        Place();
+        if (becameWindowed)
+            _tray?.ShowInfo("Dashboard windowed", "Drag it where you want and resize it from the edges, then tray → Display → Lock position.");
+    }
+
+    /// <summary>Back to the default windowed size, centred on the dashboard's monitor.</summary>
+    private void ResetWindow()
+    {
+        _settings.Area = null;
+        _settings.Save();
+        Place();
+        _window?.BringForward();
+    }
+
+    /// <summary>The window was dragged or resized: remember which monitor it's on and where.</summary>
+    private void OnWindowMoved(PixelRect rect)
+    {
+        var monitors = DisplayMonitor.GetAll();
+        var index = WindowGeometry.MostOverlapped(rect, monitors.Select(m => m.Bounds).ToList());
+        if (index >= 0)
+        {
+            var monitor = monitors[index];
+            var b = monitor.Bounds;
+            _settings.MonitorId = monitor.Id;
+            _settings.MonitorDevice = monitor.Device;
+            _settings.Area = new PixelRect(rect.X - b.X, rect.Y - b.Y, rect.Width, rect.Height);
+            _settings.Save();
+        }
+        // Dropped off every screen: Place puts it back where it was.
+        Place();
+    }
+
+    /// <summary>
+    /// With always on top and "hide over fullscreen apps", steps aside while a game or video fills the dashboard's
+    /// monitor, rather than sitting over it (which can also cost the game frame pacing).
+    /// </summary>
+    private void UpdateFullscreenHide()
+    {
+        if (_window is null)
+            return;
+
+        var handle = new WindowInteropHelper(_window).Handle;
+        var hide = handle != 0 && _editor is null && _settings.AlwaysOnTop && _settings.HideOverFullscreen
+            && (_window.IsVisible || _hiddenForFullscreen) && FullscreenApp.IsInFrontOf(handle);
+        if (hide == _hiddenForFullscreen)
+            return;
+
+        _hiddenForFullscreen = hide;
+        if (hide)
+            _window.Hide();
+        else
+            Place();
     }
 
     private void MoveTo(DisplayMonitor monitor)

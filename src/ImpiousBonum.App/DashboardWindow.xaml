@@ -10,10 +10,15 @@
         WindowStartupLocation="Manual"
         Background="Black"
         UseLayoutRounding="True">
-    <Viewbox x:Name="Scaler" Stretch="Uniform">
-        <!-- The edit overlay is added on top of the view while the layout editor is open. -->
-        <Grid x:Name="Stage">
-            <app:DashboardView x:Name="View" />
-        </Grid>
-    </Viewbox>
+    <Grid>
+        <Viewbox x:Name="Scaler" Stretch="Uniform">
+            <!-- The edit overlay is added on top of the view while the layout editor is open. -->
+            <Grid x:Name="Stage">
+                <app:DashboardView x:Name="View" />
+            </Grid>
+        </Viewbox>
+        <!-- Shown while the windowed dashboard is unlocked, so it's clear it can be dragged and resized. -->
+        <Rectangle x:Name="MoveOutline" Visibility="Collapsed" IsHitTestVisible="False"
+                   Stroke="#B0FFFFFF" StrokeThickness="2" StrokeDashArray="4 3" />
+    </Grid>
 </Window>

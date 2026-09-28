@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace ImpiousBonum.App.Shell;
 
-/// <summary>Per-machine settings: which monitor the dashboard lives on and where on it, which layout it shows, and game layouts.</summary>
+/// <summary>Per-machine settings: which monitor the dashboard lives on and where on it, how its window behaves, which layout it shows, and game layouts.</summary>
 public sealed class AppSettings
 {
     private List<GameLayoutRule> _gameLayouts = [];
@@ -19,6 +19,18 @@ public sealed class AppSettings
 
     /// <summary>Area relative to the monitor's top-left, in physical pixels.</summary>
     public PixelRect? Area { get; set; }
+
+    /// <summary>When windowed, stops the window being dragged or resized.</summary>
+    public bool Locked { get; set; } = true;
+
+    /// <summary>When windowed and locked, clicks pass through to whatever is underneath.</summary>
+    public bool ClickThrough { get; set; }
+
+    /// <summary>Keep the dashboard above other windows.</summary>
+    public bool AlwaysOnTop { get; set; }
+
+    /// <summary>With <see cref="AlwaysOnTop"/>, hide while a fullscreen app is in front on the dashboard's monitor.</summary>
+    public bool HideOverFullscreen { get; set; } = true;
 
     /// <summary>Name of the saved layout to show (a file in the layouts folder), or null for "Default".</summary>
     public string? ActiveLayout { get; set; }
