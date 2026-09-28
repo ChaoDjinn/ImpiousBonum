@@ -35,6 +35,11 @@ public partial class App : Application
     private DispatcherTimer? _tick;
     private EditorWindow? _editor;
     private readonly Updater _updater = new();
+    private FrameRateTarget? _frameRateTarget;
+    private readonly GameLayoutSwitcher _gameSwitcher = new(GameLayoutSwitcher.DefaultDelay);
+    private readonly HashSet<string> _reportedMissingLayouts = new(StringComparer.OrdinalIgnoreCase);
+    private string? _gameLayoutApplied;
+    private string? _recentApp;
     private DispatcherTimer? _updateTimer;
     private bool _warnedOutdatedService;
     private bool _mirrorQueued;
@@ -82,8 +87,8 @@ public partial class App : Application
         _settings = AppSettings.Load();
         if (!_settings.HardwareRendering)
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
-        var frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
-        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, frameRateTarget.Get));
+        _frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
+        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -96,9 +101,16 @@ public partial class App : Application
             _tray.SetSensorState(SensorStatus(), SensorServiceControl.IsInstalled, SensorServiceControl.IsOutdated(SensorVersion()));
             _tray.SetFpsSources(monitors, _settings.FpsMonitorId);
             if (_layouts is not null)
-                _tray.SetLayouts(_layouts.List(), _layouts.Active, _layouts.ActivePath);
+            {
+                var names = _layouts.List();
+                _tray.SetLayouts(names, _layouts.Active, _layouts.ActivePath);
+                _tray.SetGameLayouts(_settings.GameLayoutsEnabled, _settings.GameLayouts, _recentApp, names);
+            }
         };
         _tray.LayoutSelected += (_, name) => SelectLayout(name);
+        _tray.GameLayoutsToggled += (_, enabled) => SetGameLayoutsEnabled(enabled);
+        _tray.GameLinkRequested += (_, rule) => LinkGame(rule);
+        _tray.GameLinkRemoved += (_, rule) => UnlinkGame(rule);
         _tray.FpsSourceSelected += (_, monitorId) =>
         {
             _settings.FpsMonitorId = monitorId;
@@ -116,7 +128,12 @@ public partial class App : Application
 
         _layouts = new LayoutStore(_settings);
         _layouts.Changed += (_, _) => ApplyLayout();
-        _layouts.ActiveChanged += (_, _) => ApplyLayout();
+        _layouts.ActiveChanged += (_, _) =>
+        {
+            if (_layouts is { } store)
+                AppLog.Info($"Showing layout \"{store.Active}\"{(store.IsTemporary ? " (game layout)" : "")}");
+            ApplyLayout();
+        };
         ApplyLayout();
 
         Place();
@@ -156,6 +173,7 @@ public partial class App : Application
         var now = DateTime.Now;
         _window?.Dashboard.Refresh(_sampler!.Store, now);
         _editor?.Refresh(_sampler!.Store, now);
+        UpdateGameLayout();
 
         // After an app update the installed service is still the old build; say so once per run.
         if (!_warnedOutdatedService && SensorServiceControl.IsOutdated(SensorVersion()))
@@ -220,6 +238,8 @@ public partial class App : Application
         {
             _editor = null;
             _window?.EndEdit();
+            // Catch up with any game that came or went while the editor had the layout.
+            ApplyGameLayout();
             // Back to what's on disk: the saved layout, or the old one if changes were discarded.
             ApplyLayout();
         };
@@ -260,6 +280,93 @@ public partial class App : Application
         {
             _tray?.ShowError("Couldn't switch layout", ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Follows the app the user is looking at (the same one the FPS reading follows) and switches to a linked game's
+    /// layout once it has been in front for a few seconds, and back once it has gone.
+    /// </summary>
+    private void UpdateGameLayout()
+    {
+        if (_frameRateTarget is null || _layouts is null)
+            return;
+
+        var (_, app) = _frameRateTarget.Get();
+        if (app is not null && !NotGames.Contains(app))
+            _recentApp = app;
+
+        if (_settings.GameLayoutsEnabled && _gameSwitcher.Update(_settings.GameLayouts, app, DateTime.UtcNow))
+            ApplyGameLayout();
+    }
+
+    /// <summary>Apps offered for linking never include the shell, whose windows come to the front when you use the tray.</summary>
+    private static readonly HashSet<string> NotGames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "explorer", "ShellExperienceHost", "StartMenuExperienceHost", "SearchHost", "SearchApp", "LockApp",
+        Path.GetFileNameWithoutExtension(Environment.ProcessPath) ?? "ImpiousBonum",
+    };
+
+    /// <summary>Shows the layout the game switcher wants, unless the editor has the layout or it's already showing.</summary>
+    private void ApplyGameLayout()
+    {
+        if (_layouts is null || _editor is not null)
+            return;
+
+        var rule = _gameSwitcher.Current;
+        var wanted = rule?.Layout;
+        if (string.Equals(wanted, _gameLayoutApplied, StringComparison.OrdinalIgnoreCase))
+            return;
+        _gameLayoutApplied = wanted;
+
+        if (rule is not null && _layouts.Library.Find(rule.Layout) is null)
+        {
+            if (_reportedMissingLayouts.Add(rule.Layout))
+            {
+                AppLog.Warning($"Game layout for \"{rule.Process}\" ignored: there's no layout called \"{rule.Layout}\"");
+                _tray?.ShowError("Game layout not found", $"\"{rule.Process}\" is linked to \"{rule.Layout}\", which doesn't exist any more. Tray → Layout → Game layouts.");
+            }
+            rule = null;
+        }
+
+        AppLog.Info(rule is null ? "No linked game in front; back to the chosen layout" : $"\"{rule.Process}\" is in front; switching to its layout");
+        try
+        {
+            _layouts.ShowTemporarily(rule?.Layout);
+        }
+        catch (FileNotFoundException ex)
+        {
+            // Deleted between the check and the switch.
+            AppLog.Warning(ex.Message);
+        }
+    }
+
+    private void SetGameLayoutsEnabled(bool enabled)
+    {
+        _settings.GameLayoutsEnabled = enabled;
+        _settings.Save();
+        AppLog.Info($"Automatic game layouts {(enabled ? "on" : "off")}");
+        if (!enabled)
+        {
+            _gameSwitcher.Reset();
+            ApplyGameLayout();
+        }
+    }
+
+    private void LinkGame(GameLayoutRule rule)
+    {
+        _settings.GameLayouts.RemoveAll(r => r.Matches(rule.Process));
+        _settings.GameLayouts.Add(rule);
+        _settings.Save();
+        _reportedMissingLayouts.Remove(rule.Layout);
+        AppLog.Info($"Linked \"{rule.Process}\" to layout \"{rule.Layout}\"");
+        _tray?.ShowInfo("Game layout linked", $"\"{rule.Layout}\" will show a few seconds after \"{rule.Process}\" comes to the front.");
+    }
+
+    private void UnlinkGame(GameLayoutRule rule)
+    {
+        _settings.GameLayouts.Remove(rule);
+        _settings.Save();
+        AppLog.Info($"Removed the link from \"{rule.Process}\" to layout \"{rule.Layout}\"");
     }
 
     /// <summary>Shows the editor's working copy on the real dashboard as you edit, so you see it at true size.</summary>

@@ -6,7 +6,8 @@ namespace ImpiousBonum.App.Shell;
 
 /// <summary>
 /// Decides which app the FPS reading follows: the foreground app, or the topmost visible app on a chosen monitor
-/// (useful when a game runs on one screen while you type on another). Called from a background thread once a second.
+/// (useful when a game runs on one screen while you type on another). Called once a second from the sampler's
+/// background thread (FPS) and from the UI thread (game layouts), so calls are serialised.
 /// </summary>
 public sealed class FrameRateTarget(Func<string?> monitorId)
 {
@@ -19,16 +20,20 @@ public sealed class FrameRateTarget(Func<string?> monitorId)
 
     private readonly int _ownProcessId = Environment.ProcessId;
     private readonly Dictionary<int, string?> _names = [];
+    private readonly Lock _lock = new();
     private (string? Id, string? Device, DateTime Expires) _monitor;
 
     public (int ProcessId, string? Name) Get()
     {
-        var id = monitorId();
-        if (id is null)
-            return ForegroundApp.Get();
+        lock (_lock)
+        {
+            var id = monitorId();
+            if (id is null)
+                return ForegroundApp.Get();
 
-        var device = DeviceFor(id);
-        return device is null ? (0, null) : TopAppOn(device);
+            var device = DeviceFor(id);
+            return device is null ? (0, null) : TopAppOn(device);
+        }
     }
 
     private string? DeviceFor(string id)
