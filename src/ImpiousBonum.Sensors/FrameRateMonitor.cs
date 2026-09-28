@@ -9,7 +9,9 @@ namespace ImpiousBonum.Sensors;
 /// <summary>
 /// Counts frames per process the way PresentMon (and HWiNFO's "Framerate Presented") does: a real-time ETW session
 /// on the Direct3D runtime's Present events. Works for windowed and fullscreen apps on any GPU vendor.
-/// Covers DXGI (D3D10/11/12, and most Chromium/Electron apps) and D3D9. Vulkan and OpenGL aren't counted yet.
+/// Covers DXGI (D3D10/11/12, and most Chromium/Electron apps) and D3D9 through their runtimes, and Vulkan, OpenGL and
+/// anything else that draws to a window through the graphics kernel's (DxgKrnl) present events. A process seen by both
+/// is counted once (see <see cref="PresentRateTracker"/>). Nothing is injected into the apps being counted.
 /// Needs admin (or Performance Log Users) to create the session.
 /// </summary>
 internal sealed unsafe class FrameRateMonitor : IDisposable
@@ -23,6 +25,17 @@ internal sealed unsafe class FrameRateMonitor : IDisposable
     // Microsoft-Windows-D3D9: Present_Start (1).
     private static readonly Guid D3D9Provider = new("783ACA0A-790E-4D7F-8451-AA850511C6B9");
     private static readonly ushort[] D3D9PresentEvents = [1];
+
+    // Microsoft-Windows-DxgKrnl: Present_Info (184), raised at the end of every kernel present (blit, flip, and how
+    // most Vulkan and OpenGL drivers present), and PresentHistory_Start (171), raised when a frame is queued for the
+    // compositor (flip-model presents, which may not go through Present_Info). Both arrive on the presenting app's
+    // thread. Only the Base and Present keywords: PresentMon warns that the Performance keyword slows some Windows
+    // versions down, and the rest are chatty diagnostics.
+    private static readonly Guid DxgKrnlProvider = new("802EC45A-1E99-4B83-9920-87C98277BA9D");
+    private const ushort DxgKrnlPresentInfo = 184;
+    private const ushort DxgKrnlPresentHistoryStart = 171;
+    private static readonly ushort[] DxgKrnlPresentEvents = [DxgKrnlPresentInfo, DxgKrnlPresentHistoryStart];
+    private const ulong DxgKrnlKeywords = 0x1 | 0x8000000;
 
     private readonly PresentRateTracker _tracker = new(Stopwatch.Frequency, window: TimeSpan.FromSeconds(2), staleAfter: TimeSpan.FromSeconds(5));
     private readonly Dictionary<int, string> _names = [];
@@ -58,6 +71,7 @@ internal sealed unsafe class FrameRateMonitor : IDisposable
 
         Enable(DxgiProvider, DxgiPresentEvents);
         Enable(D3D9Provider, D3D9PresentEvents);
+        Enable(DxgKrnlProvider, DxgKrnlPresentEvents, Etw.TraceLevelInformation, DxgKrnlKeywords);
 
         _self = GCHandle.Alloc(this);
         _loggerName = Marshal.StringToHGlobalUni(SessionName);
@@ -160,8 +174,14 @@ internal sealed unsafe class FrameRateMonitor : IDisposable
     private static void OnEvent(Etw.EventRecord* record)
     {
         // Filtering happens in the kernel (by event id), so everything arriving here is a present.
-        if (GCHandle.FromIntPtr(record->UserContext).Target is FrameRateMonitor monitor)
-            monitor._tracker.Record((int)record->EventHeader.ProcessId, record->EventHeader.TimeStamp);
+        if (GCHandle.FromIntPtr(record->UserContext).Target is not FrameRateMonitor monitor)
+            return;
+
+        ref var header = ref record->EventHeader;
+        var source = header.ProviderId != DxgKrnlProvider ? PresentSource.Runtime
+            : header.EventDescriptor.Id == DxgKrnlPresentInfo ? PresentSource.KernelPresent
+            : PresentSource.KernelPresentHistory;
+        monitor._tracker.Record((int)header.ProcessId, header.TimeStamp, source);
     }
 
     private uint StartSession()
@@ -195,7 +215,7 @@ internal sealed unsafe class FrameRateMonitor : IDisposable
         }
     }
 
-    private void Enable(Guid provider, ushort[] eventIds)
+    private void Enable(Guid provider, ushort[] eventIds, byte level = Etw.TraceLevelVerbose, ulong keywords = ulong.MaxValue)
     {
         // EVENT_FILTER_EVENT_ID: BOOLEAN FilterIn; UCHAR Reserved; USHORT Count; USHORT Events[Count].
         var filterSize = 4 + 2 * eventIds.Length;
@@ -214,8 +234,8 @@ internal sealed unsafe class FrameRateMonitor : IDisposable
             FilterDescCount = 1,
         };
 
-        var status = Etw.EnableTraceEx2(_session, &provider, Etw.EventControlCodeEnableProvider, Etw.TraceLevelVerbose,
-            ulong.MaxValue, 0, 0, &parameters);
+        var status = Etw.EnableTraceEx2(_session, &provider, Etw.EventControlCodeEnableProvider, level,
+            keywords, 0, 0, &parameters);
         if (status != Etw.ErrorSuccess)
             Log.Error($"Couldn't enable present events for provider {provider} (error {status}).");
     }

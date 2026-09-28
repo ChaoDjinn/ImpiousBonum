@@ -9,10 +9,15 @@ public sealed class FrameRateTests
     private static PresentRateTracker Tracker() =>
         new(TicksPerSecond, window: TimeSpan.FromSeconds(2), staleAfter: TimeSpan.FromSeconds(5));
 
-    private static void Record60Fps(PresentRateTracker tracker, int processId, long start, int frames)
+    private static void Record60Fps(PresentRateTracker tracker, int processId, long start, int frames,
+        PresentSource source = PresentSource.Runtime) =>
+        RecordFps(tracker, processId, start, frames, 60, source);
+
+    private static void RecordFps(PresentRateTracker tracker, int processId, long start, int frames, double fps,
+        PresentSource source = PresentSource.Runtime)
     {
         for (var i = 0; i < frames; i++)
-            tracker.Record(processId, start + (long)(i * 1000.0 / 60));
+            tracker.Record(processId, start + (long)(i * 1000.0 / fps), source);
     }
 
     [Fact]
@@ -66,6 +71,65 @@ public sealed class FrameRateTests
         tracker.Record(1, 1_000);
 
         Assert.Empty(tracker.Snapshot(now: 1_500));
+    }
+
+    [Fact]
+    public void Kernel_presents_count_for_apps_the_runtime_doesnt_see()
+    {
+        // A Vulkan or OpenGL game: only the graphics kernel reports its frames.
+        var tracker = Tracker();
+        Record60Fps(tracker, 42, start: 10_000, frames: 61, PresentSource.KernelPresent);
+
+        var (processId, fps) = Assert.Single(tracker.Snapshot(now: 11_000));
+        Assert.Equal(42, processId);
+        Assert.Equal(60, fps, precision: 0);
+    }
+
+    [Fact]
+    public void A_DirectX_game_seen_by_runtime_and_kernel_is_not_double_counted()
+    {
+        var tracker = Tracker();
+        Record60Fps(tracker, 42, start: 10_000, frames: 61);
+        Record60Fps(tracker, 42, start: 10_000, frames: 61, PresentSource.KernelPresent);
+        Record60Fps(tracker, 42, start: 10_000, frames: 61, PresentSource.KernelPresentHistory);
+
+        var (_, fps) = Assert.Single(tracker.Snapshot(now: 11_000));
+        Assert.Equal(60, fps, precision: 0);
+    }
+
+    [Fact]
+    public void The_runtime_rate_wins_over_the_kernel_rate()
+    {
+        // DirectX games report the same numbers as before kernel events were counted.
+        var tracker = Tracker();
+        RecordFps(tracker, 42, start: 10_000, frames: 61, fps: 60);
+        RecordFps(tracker, 42, start: 10_000, frames: 145, fps: 144, PresentSource.KernelPresentHistory);
+
+        var (_, fps) = Assert.Single(tracker.Snapshot(now: 11_000));
+        Assert.Equal(60, fps, precision: 0);
+    }
+
+    [Fact]
+    public void The_busiest_kernel_source_is_used_when_there_is_no_runtime()
+    {
+        // Not every present path raises every kernel event, so a quieter one is missing frames, not a slower app.
+        var tracker = Tracker();
+        RecordFps(tracker, 42, start: 10_000, frames: 11, fps: 10, PresentSource.KernelPresent);
+        RecordFps(tracker, 42, start: 10_000, frames: 145, fps: 144, PresentSource.KernelPresentHistory);
+
+        var (_, fps) = Assert.Single(tracker.Snapshot(now: 11_000));
+        Assert.Equal(144, fps, precision: 0);
+    }
+
+    [Fact]
+    public void Kernel_rate_takes_over_once_the_runtime_goes_quiet()
+    {
+        var tracker = Tracker();
+        Record60Fps(tracker, 42, start: 0, frames: 61);
+        Record60Fps(tracker, 42, start: 6_000, frames: 61, PresentSource.KernelPresent);
+
+        var (_, fps) = Assert.Single(tracker.Snapshot(now: 7_000));
+        Assert.Equal(60, fps, precision: 0);
     }
 
     [Fact]
