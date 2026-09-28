@@ -85,6 +85,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 |---|---|
 | *Display* | Which monitor the dashboard fills |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
+| *Layout → Game layouts* | Link the app you were just using to a layout, remove links, and turn automatic switching on or off (see [Game layouts](#game-layouts)) |
 | *Sensors* | Sensor service status, and install, update or remove it |
 | *FPS from* | Follow the foreground app, or the top app on a chosen monitor |
 | *Edit layout…* | Open the layout editor (or double-click the tray icon) |
@@ -130,6 +131,26 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 <!-- Editor screenshot (Win+Shift+S): save as docs/images/editor.png, then remove these comment markers:
 <p align="center"><img src="docs/images/editor.png" alt="The layout editor with the metric picker open"></p>
 -->
+
+## Game layouts
+
+A game can have its own layout: FPS front and centre, its colours, a themed font. When a linked game has been in front for about 3 seconds the dashboard switches to its layout, and when it has been gone for about 3 seconds it goes back to the layout you chose. Alt-tabbing out briefly, or a launcher flashing up, doesn't switch anything.
+
+To link a game: with the game running, open tray → *Layout* → *Game layouts* → *Link "game" to* and pick a layout (the menu offers the last app you had in front, so click the tray icon straight after leaving the game). The same menu lists the links with *Remove link*, and *Switch automatically* turns the whole thing off and on (remembered).
+
+"In front" means the same thing as for the FPS reading: the foreground app, or with *FPS from → Top app on a monitor*, the top app on that monitor, so a game on one screen keeps its layout while you type on another.
+
+Game layouts are temporary: picking a layout from the tray while a game is running makes that your choice to come back to, and the editor keeps whichever layout it opened on (switching waits until it closes). Switches are written to `dashboard.log`. A link to a layout that no longer exists is ignored, with one notification and a line in the log; renaming a layout updates its links.
+
+Links live in `settings.json` (tray → *Open settings folder*) and can be edited by hand while the dashboard isn't running. `process` is the program's name as Task Manager's *Details* tab shows it, with or without `.exe`, matched ignoring case:
+
+```json
+"gameLayouts": [
+  { "process": "eldenring", "layout": "Elden Ring" },
+  { "process": "Cyberpunk2077.exe", "layout": "FPS" }
+],
+"gameLayoutsEnabled": true
+```
 
 ## Editing layouts by hand
 

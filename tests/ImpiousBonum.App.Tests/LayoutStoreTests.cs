@@ -5,6 +5,7 @@ using ImpiousBonum.App.Shell;
 
 namespace ImpiousBonum.App.Tests;
 
+[Collection("AppPaths")]
 public sealed class LayoutStoreTests : IDisposable
 {
     private readonly string _directory = Path.Combine(Path.GetTempPath(), "ImpiousBonum.Tests", Guid.NewGuid().ToString("N"));

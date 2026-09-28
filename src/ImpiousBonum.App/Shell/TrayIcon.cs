@@ -13,6 +13,7 @@ public sealed class TrayIcon : IDisposable
     private readonly Icon _image;
     private readonly ToolStripMenuItem _displays = new("Display");
     private readonly ToolStripMenuItem _layouts = new("Layout");
+    private readonly ToolStripMenuItem _gameLayouts = new("Game layouts");
     private readonly ToolStripMenuItem _fpsSource = new("FPS from");
     private readonly ToolStripMenuItem _startup = new("Start with Windows") { CheckOnClick = true };
     private readonly ToolStripMenuItem _sensors = new("Sensors");
@@ -140,12 +141,59 @@ public sealed class TrayIcon : IDisposable
         _layouts.DropDownItems.Clear();
         foreach (var name in names)
         {
-            // "&" would otherwise underline the next letter as a mnemonic.
-            var item = new ToolStripMenuItem(name.Replace("&", "&&")) { Checked = name == active };
+            var item = new ToolStripMenuItem(Escape(name)) { Checked = name == active };
             item.Click += (_, _) => LayoutSelected?.Invoke(this, name);
             _layouts.DropDownItems.Add(item);
         }
+        _layouts.DropDownItems.Add(new ToolStripSeparator());
+        _layouts.DropDownItems.Add(_gameLayouts);
     }
+
+    /// <summary>Tray → Layout → Game layouts → Switch automatically.</summary>
+    public event EventHandler<bool>? GameLayoutsToggled;
+
+    /// <summary>Link a process name to a layout.</summary>
+    public event EventHandler<GameLayoutRule>? GameLinkRequested;
+
+    public event EventHandler<GameLayoutRule>? GameLinkRemoved;
+
+    /// <summary>
+    /// Fills the Game layouts submenu. <paramref name="recentApp"/> is the last app seen in front (the tray itself is in
+    /// front while its menu is open) and is offered for linking to any of the saved layouts in <paramref name="names"/>.
+    /// </summary>
+    public void SetGameLayouts(bool enabled, IReadOnlyList<GameLayoutRule> rules, string? recentApp, IReadOnlyList<string> names)
+    {
+        _gameLayouts.DropDownItems.Clear();
+        var toggle = new ToolStripMenuItem("Switch automatically") { Checked = enabled };
+        toggle.Click += (_, _) => GameLayoutsToggled?.Invoke(this, !enabled);
+        _gameLayouts.DropDownItems.Add(toggle);
+
+        if (recentApp is { } app)
+        {
+            var linked = GameLayoutSwitcher.Match(rules, app)?.Layout;
+            var link = new ToolStripMenuItem($"Link \"{Escape(app)}\" to");
+            foreach (var name in names)
+            {
+                var item = new ToolStripMenuItem(Escape(name)) { Checked = string.Equals(name, linked, StringComparison.OrdinalIgnoreCase) };
+                item.Click += (_, _) => GameLinkRequested?.Invoke(this, new GameLayoutRule(app, name));
+                link.DropDownItems.Add(item);
+            }
+            _gameLayouts.DropDownItems.Add(link);
+        }
+
+        if (rules.Count == 0)
+            return;
+        _gameLayouts.DropDownItems.Add(new ToolStripSeparator());
+        foreach (var rule in rules)
+        {
+            var item = new ToolStripMenuItem($"{Escape(rule.Process)} → {Escape(rule.Layout)}");
+            item.DropDownItems.Add("Remove link", null, (_, _) => GameLinkRemoved?.Invoke(this, rule));
+            _gameLayouts.DropDownItems.Add(item);
+        }
+    }
+
+    // "&" would otherwise underline the next letter as a mnemonic.
+    private static string Escape(string text) => text.Replace("&", "&&");
 
     public void SetMonitors(IReadOnlyList<DisplayMonitor> monitors, DisplayMonitor? current)
     {

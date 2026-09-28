@@ -3,9 +3,11 @@ using System.Text.Json;
 
 namespace ImpiousBonum.App.Shell;
 
-/// <summary>Per-machine settings: which monitor the dashboard lives on and where on it, and which layout it shows.</summary>
+/// <summary>Per-machine settings: which monitor the dashboard lives on and where on it, which layout it shows, and game layouts.</summary>
 public sealed class AppSettings
 {
+    private List<GameLayoutRule> _gameLayouts = [];
+
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
     public string? MonitorId { get; set; }
 
@@ -23,6 +25,16 @@ public sealed class AppSettings
 
     public string PingHost { get; set; } = "1.1.1.1";
 
+    /// <summary>Games linked to layouts, shown while the game is in front (see <see cref="GameLayoutSwitcher"/>).</summary>
+    public List<GameLayoutRule> GameLayouts
+    {
+        get => _gameLayouts;
+        set => _gameLayouts = value ?? [];
+    }
+
+    /// <summary>Switch to a game's linked layout automatically. Off leaves the links in place but unused.</summary>
+    public bool GameLayoutsEnabled { get; set; } = true;
+
     /// <summary>Monitor whose top app the FPS reading follows (a <see cref="DisplayMonitor.Id"/>), or null for the foreground app.</summary>
     public string? FpsMonitorId { get; set; }
 
@@ -36,8 +48,13 @@ public sealed class AppSettings
     {
         try
         {
-            if (File.Exists(AppPaths.SettingsFile))
-                return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(AppPaths.SettingsFile), JsonDefaults.Options) ?? new();
+            if (File.Exists(AppPaths.SettingsFile)
+                && JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(AppPaths.SettingsFile), JsonDefaults.Options) is { } settings)
+            {
+                // Hand edits: drop links missing a process or layout rather than tripping over them later.
+                settings.GameLayouts.RemoveAll(rule => rule is null || string.IsNullOrWhiteSpace(rule.Process) || string.IsNullOrWhiteSpace(rule.Layout));
+                return settings;
+            }
         }
         catch (Exception ex) when (ex is JsonException or IOException)
         {
