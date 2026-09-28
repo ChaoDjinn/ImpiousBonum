@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 480" width="1920" height="480" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1920" height="480" rx="18" fill="#000"/>
+<rect x="62" y="8" width="419" height="92" rx="8" fill="#1A1A1A" stroke="#FF9800" stroke-width="3"/>
+<text x="271.5" y="50.0" fill="#FFFFFF" font-size="30" font-weight="300" text-anchor="middle">CPU load graph</text>
+<text x="271.5" y="84.0" fill="#FF9800" font-size="24" text-anchor="middle" font-family="Consolas, Menlo, monospace">graph · cpu.load</text>
+<rect x="62" y="128" width="419" height="84" rx="8" fill="#1A1A1A" stroke="#FF9800" stroke-width="3"/>
+<text x="271.5" y="166.0" fill="#FFFFFF" font-size="30" font-weight="300" text-anchor="middle">Memory graph</text>
+<text x="271.5" y="200.0" fill="#FF9800" font-size="24" text-anchor="middle" font-family="Consolas, Menlo, monospace">graph · mem.used</text>
+<rect x="62" y="228" width="419" height="68" rx="8" fill="#1A1A1A" stroke="#FF9800" stroke-width="3"/>
+<text x="271.5" y="258.0" fill="#FFFFFF" font-size="26" font-weight="300" text-anchor="middle">GPU load</text>
+<text x="271.5" y="288.0" fill="#FF9800" font-size="20" text-anchor="middle" font-family="Consolas, Menlo, monospace">text · {gpu.load}</text>
+<rect x="62" y="300" width="419" height="68" rx="8" fill="#1A1A1A" stroke="#FF9800" stroke-width="3"/>
+<text x="271.5" y="330.0" fill="#FFFFFF" font-size="26" font-weight="300" text-anchor="middle">VRAM used</text>
+<text x="271.5" y="360.0" fill="#FF9800" font-size="20" text-anchor="middle" font-family="Consolas, Menlo, monospace">text · {gpu.vram.used}</text>
+<rect x="552" y="16" width="352" height="72" rx="8" fill="#1A1A1A" stroke="#FF9800" stroke-width="3"/>
+<text x="728.0" y="48.0" fill="#FFFFFF" font-size="26" font-weight="300" text-anchor="middle">CPU temperature</text>
+<text x="728.0" y="78.0" fill="#FF9800" font-size="20" text-anchor="middle" font-family="Consolas, Menlo, monospace">icon · {cpu.temp}</text>
+<rect x="552" y="106" width="352" height="72" rx="8" fill="#1A1A1A" stroke="#FF9800" stroke-width="3"/>
+<text x="728.0" y="138.0" fill="#FFFFFF" font-size="26" font-weight="300" text-anchor="middle">GPU temperature</text>
+<text x="728.0" y="168.0" fill="#FF9800" font-size="20" text-anchor="middle" font-family="Consolas, Menlo, monospace">icon · {gpu.temp}</text>
+<rect x="550" y="244" width="372" height="72" rx="8" fill="#1A1A1A" stroke="#FF9800" stroke-width="3"/>
+<text x="736.0" y="276.0" fill="#FFFFFF" font-size="26" font-weight="300" text-anchor="middle">FPS</text>
+<text x="736.0" y="306.0" fill="#FF9800" font-size="20" text-anchor="middle" font-family="Consolas, Menlo, monospace">text · {fps}</text>
+<rect x="934" y="22" width="412" height="192" rx="8" fill="#1A1A1A" stroke="#FF9800" stroke-width="3"/>
+<text x="1140.0" y="114.0" fill="#FFFFFF" font-size="30" font-weight="300" text-anchor="middle">Clock and date</text>
+<text x="1140.0" y="148.0" fill="#FF9800" font-size="24" text-anchor="middle" font-family="Consolas, Menlo, monospace">clock</text>
+<rect x="1494" y="6" width="417" height="222" rx="8" fill="#1A1A1A" stroke="#FF9800" stroke-width="3"/>
+<text x="1702.5" y="113.0" fill="#FFFFFF" font-size="30" font-weight="300" text-anchor="middle">Drives (free space bars)</text>
+<text x="1702.5" y="147.0" fill="#FF9800" font-size="24" text-anchor="middle" font-family="Consolas, Menlo, monospace">drives</text>
+<rect x="1494" y="370" width="417" height="100" rx="8" fill="#1A1A1A" stroke="#FF9800" stroke-width="3"/>
+<text x="1702.5" y="416.0" fill="#FFFFFF" font-size="30" font-weight="300" text-anchor="middle">Download / Upload / Ping</text>
+<text x="1702.5" y="450.0" fill="#FF9800" font-size="24" text-anchor="middle" font-family="Consolas, Menlo, monospace">rows · net.*</text>
+</svg>
