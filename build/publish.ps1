@@ -8,6 +8,9 @@
   With -GitHubToken, the previous release is downloaded first (so a small delta update is produced) and the
   new release is uploaded to GitHub Releases, where installed copies pick it up automatically.
 
+  When UPDATE_SIGNING_KEY holds the update signing key, the full package is signed and the signature uploaded with the
+  release; installed copies only take releases that carry a valid signature. Publishing to GitHub requires it.
+
 .EXAMPLE
   pwsh build/publish.ps1 -Version 0.2.0
 .EXAMPLE
@@ -26,6 +29,15 @@ $PSNativeCommandUseErrorActionPreference = $true
 $root = Resolve-Path (Join-Path $PSScriptRoot '..')
 Push-Location $root
 try {
+    $publicKey = 'assets/update-signing-key.pub'
+    $sign = [bool]$env:UPDATE_SIGNING_KEY
+    if ($GitHubToken -and -not $sign) {
+        throw 'UPDATE_SIGNING_KEY is not set. Installed copies refuse unsigned releases, so this one would never reach anyone.'
+    }
+    if (($GitHubToken -or $sign) -and -not (Test-Path $publicKey)) {
+        throw "$publicKey is missing. Create the update signing key first (README, Update signing)."
+    }
+
     dotnet tool restore
 
     if (-not $SkipTests) {
@@ -67,9 +79,19 @@ try {
         --framework net10-x64-desktop `
         --outputDir $releases
 
+    $package = Join-Path $releases "ImpiousBonum-$Version-full.nupkg"
+    $signature = Join-Path $releases "ImpiousBonum-$Version-signature.txt"
+    if ($sign) {
+        dotnet run --project tools/ReleaseSigning -c Release -- sign $publicKey $Version $package
+    }
+
     if ($GitHubToken) {
         dotnet vpk upload github --repoUrl $RepoUrl --token $GitHubToken -o $releases `
             --publish --releaseName "Impious Bonum $Version" --tag "v$Version"
+
+        # Copies that check in the moment between these two steps find no signature, skip the update and try again later.
+        $env:GH_TOKEN = $GitHubToken
+        gh release upload "v$Version" $signature --clobber --repo ($RepoUrl -replace '^https://github.com/', '')
     }
 
     Write-Host ''

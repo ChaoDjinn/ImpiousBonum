@@ -165,6 +165,24 @@ git push origin v0.2.0
 
 To build the installer locally instead: `pwsh build/publish.ps1 -Version 0.2.0` (output in `artifacts/releases`).
 
+### Update signing
+
+Installed copies only take a release whose full package is signed with the project's update key. The public half is `assets/update-signing-key.pub`, built into the app; the private half is the `UPDATE_SIGNING_KEY` secret of the `release` environment, and the release workflow uploads `ImpiousBonum-<version>-signature.txt` with each release. This is separate from Authenticode code signing, which the installer doesn't have yet.
+
+One-time setup:
+
+1. Create the key (on your own machine, not in CI):
+
+   ```bash
+   dotnet run --project tools/ReleaseSigning -- new-key assets/update-signing-key.pub update-signing-key.private.txt
+   ```
+
+2. In the repository settings, under Environments, create `release`, add yourself as a required reviewer, and add the contents of `update-signing-key.private.txt` as the secret `UPDATE_SIGNING_KEY`.
+3. Keep a copy of the private key offline, then delete the file. If the key is lost, installed copies can't take updates until they are reinstalled by hand.
+4. Commit `assets/update-signing-key.pub`.
+
+Releases then pause for your approval, and fail rather than publish if the secret is missing or doesn't match the public key.
+
 ### Layout of the code
 
 ```
@@ -174,6 +192,7 @@ src/ImpiousBonum.Sensors elevated sensor service (LibreHardwareMonitor, ETW fram
 tests/                   unit tests for the core and the app (widgets, layout validation, editor)
 docs/widgets.md          widget reference, generated from the widget descriptors
 build/                   installer build (publish.ps1) and icon generator
+tools/ReleaseSigning     creates the update signing key and signs releases
 ```
 
 ## Roadmap
