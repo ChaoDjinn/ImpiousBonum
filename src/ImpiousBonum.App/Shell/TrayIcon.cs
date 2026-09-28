@@ -12,6 +12,11 @@ public sealed class TrayIcon : IDisposable
     private readonly NotifyIcon _icon;
     private readonly Icon _image;
     private readonly ToolStripMenuItem _displays = new("Display");
+    private readonly ToolStripMenuItem _tablet = new("Tablet view");
+    private readonly ToolStripMenuItem _tabletOn = new("Show on tablets") { ToolTipText = "Serve the dashboard to browsers on your local network" };
+    private readonly ToolStripMenuItem _tabletShowLink = new("Show link…");
+    private readonly ToolStripMenuItem _tabletCopyLink = new("Copy link");
+    private readonly ToolStripMenuItem _tabletNewLink = new("New link") { ToolTipText = "Stops old links working" };
     private readonly ToolStripMenuItem _layouts = new("Layout");
     private readonly ToolStripMenuItem _gameLayouts = new("Game layouts");
     private readonly ToolStripMenuItem _fpsSource = new("FPS from");
@@ -56,6 +61,12 @@ public sealed class TrayIcon : IDisposable
         // Installing over an existing service replaces it, so "Update" is the same operation.
         _sensorInstall.Click += (_, _) => SensorServiceChangeRequested?.Invoke(this, true);
         _sensorRemove.Click += (_, _) => SensorServiceChangeRequested?.Invoke(this, false);
+
+        _tablet.DropDownItems.AddRange([_tabletOn, new ToolStripSeparator(), _tabletShowLink, _tabletCopyLink, _tabletNewLink]);
+        _tabletOn.Click += (_, _) => TabletViewToggled?.Invoke(this, !_tabletOn.Checked);
+        _tabletShowLink.Click += (_, _) => TabletLinkRequested?.Invoke(this, EventArgs.Empty);
+        _tabletCopyLink.Click += (_, _) => TabletLinkCopyRequested?.Invoke(this, EventArgs.Empty);
+        _tabletNewLink.Click += (_, _) => TabletNewLinkRequested?.Invoke(this, EventArgs.Empty);
 
         _restartToUpdate.Font = new Font(menu.Font, FontStyle.Bold);
         _restartToUpdate.Click += (_, _) => RestartToUpdateRequested?.Invoke(this, EventArgs.Empty);
@@ -245,6 +256,25 @@ public sealed class TrayIcon : IDisposable
         AddOption("Hide over fullscreen apps", options.HideOverFullscreen, options.AlwaysOnTop, options with { HideOverFullscreen = !options.HideOverFullscreen },
             "Steps aside while a game or video fills the dashboard's screen");
         _displays.DropDownItems.Add("Bring to front", null, (_, _) => BringToFrontRequested?.Invoke(this, EventArgs.Empty));
+
+        _displays.DropDownItems.Add(new ToolStripSeparator());
+        _displays.DropDownItems.Add(_tablet);
+    }
+
+    /// <summary>Tray → Display → Tablet view → Show on tablets: true to start serving, false to stop.</summary>
+    public event EventHandler<bool>? TabletViewToggled;
+
+    /// <summary>Tray → Display → Tablet view → Show link…</summary>
+    public event EventHandler? TabletLinkRequested;
+
+    public event EventHandler? TabletLinkCopyRequested;
+
+    public event EventHandler? TabletNewLinkRequested;
+
+    public void SetTabletView(bool on)
+    {
+        _tabletOn.Checked = on;
+        _tabletShowLink.Enabled = _tabletCopyLink.Enabled = _tabletNewLink.Enabled = on;
     }
 
     private void AddOption(string text, bool isChecked, bool enabled, WindowOptions whenClicked, string? tip = null)

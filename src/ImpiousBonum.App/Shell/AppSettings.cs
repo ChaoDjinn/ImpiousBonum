@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using ImpiousBonum.Core.Remote;
 
 namespace ImpiousBonum.App.Shell;
 
@@ -55,6 +56,14 @@ public sealed class AppSettings
     /// avoids loading the graphics driver into the process, which saves a lot of memory.
     /// </summary>
     public bool HardwareRendering { get; set; }
+
+    /// <summary>Serve the dashboard to browsers on the local network (tray → Display → Tablet view). Off by default.</summary>
+    public bool TabletView { get; set; }
+
+    public int TabletPort { get; set; } = TabletServer.DefaultPort;
+
+    /// <summary>The secret in the tablet link. Created when the tablet view is first turned on; replaced by "New link".</summary>
+    public string? TabletToken { get; set; }
 
     public static AppSettings Load()
     {
