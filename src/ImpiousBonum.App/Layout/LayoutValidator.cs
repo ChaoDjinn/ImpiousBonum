@@ -76,7 +76,7 @@ public static class LayoutValidator
                     $"should be between {setting.Min} and {setting.Max}",
                 SettingKind.Toggle when value.GetValueKind() is not (JsonValueKind.True or JsonValueKind.False) => "should be true or false",
                 SettingKind.Items when value is not JsonArray => "should be a list",
-                SettingKind.Text or SettingKind.Template or SettingKind.Metric or SettingKind.Color or SettingKind.Choice or SettingKind.Icon or SettingKind.Font or SettingKind.FontFile
+                SettingKind.Text or SettingKind.Template or SettingKind.Metric or SettingKind.Color or SettingKind.Choice or SettingKind.Icon or SettingKind.Font or SettingKind.FontFile or SettingKind.ImageFile
                     when value.GetValueKind() != JsonValueKind.String => "should be text",
                 SettingKind.Choice or SettingKind.Icon when !setting.Choices!.Contains(value.GetValue<string>()) =>
                     $"should be one of {string.Join(", ", setting.Choices!)}",
@@ -123,6 +123,19 @@ public static class LayoutValidator
 
         if (!string.IsNullOrWhiteSpace(theme.FontFile) && !File.Exists(theme.FontFile))
             issues.Add($"Theme: font file not found: {theme.FontFile}");
+
+        if (!string.IsNullOrWhiteSpace(theme.BackgroundImage))
+        {
+            if (!File.Exists(theme.BackgroundImage))
+                issues.Add($"Theme: background image not found: {theme.BackgroundImage}");
+            else if (!BackgroundImage.IsSupported(theme.BackgroundImage))
+                issues.Add($"Theme: background image should be one of {string.Join(", ", BackgroundImage.Extensions)}: {theme.BackgroundImage}");
+        }
+
+        if (!BackgroundImage.Fits.Contains(theme.BackgroundFit))
+            issues.Add($"Theme: 'backgroundFit' should be one of {string.Join(", ", BackgroundImage.Fits)}.");
+        if (theme.BackgroundOpacity is < 0 or > 1 || double.IsNaN(theme.BackgroundOpacity))
+            issues.Add("Theme: 'backgroundOpacity' should be between 0 and 1.");
     }
 
     /// <summary>

@@ -24,7 +24,7 @@ public sealed class DashboardView : Canvas
         _widgets.Clear();
         Width = layout.Width;
         Height = layout.Height;
-        Background = theme.Background;
+        Background = theme.CanvasBackground(layout.Width, layout.Height);
 
         foreach (var definition in layout.Widgets)
         {

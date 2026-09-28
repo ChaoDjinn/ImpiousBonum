@@ -185,7 +185,8 @@ public sealed class PropertyPanel : StackPanel
         SettingKind.Choice or SettingKind.Icon => ChoiceEditor(target, setting),
         SettingKind.Color => ColorEditor(target, setting),
         SettingKind.Font => FontEditor(target, setting),
-        SettingKind.FontFile => FontFileEditor(target, setting),
+        SettingKind.FontFile => FileEditor(target, setting, "Fonts (*.ttf;*.otf)|*.ttf;*.otf|All files|*.*", "Choose a font file"),
+        SettingKind.ImageFile => FileEditor(target, setting, "Images (*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff)|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff|All files|*.*", "Choose a background image"),
         SettingKind.Template or SettingKind.Metric => MetricTextEditor(target, setting),
         _ => TextEditor(target, setting),
     };
@@ -368,7 +369,7 @@ public sealed class PropertyPanel : StackPanel
         });
     }
 
-    private (FrameworkElement, Action) FontFileEditor(SettingTarget target, SettingDescriptor setting)
+    private (FrameworkElement, Action) FileEditor(SettingTarget target, SettingDescriptor setting, string filter, string title)
     {
         var panel = new DockPanel();
         var browse = new Button { Content = "Browse…", Margin = new Thickness(6, 0, 0, 0) };
@@ -380,7 +381,7 @@ public sealed class PropertyPanel : StackPanel
         box.TextChanged += (_, _) => Write(target, setting.Key, box.Text.Length == 0 ? null : JsonValue.Create(box.Text));
         browse.Click += (_, _) =>
         {
-            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Fonts (*.ttf;*.otf)|*.ttf;*.otf|All files|*.*", Title = "Choose a font file" };
+            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = filter, Title = title };
             if (dialog.ShowDialog(Window.GetWindow(this)) == true)
                 _session.SetValue(target, setting.Key, JsonValue.Create(dialog.FileName), this);
         };

@@ -21,6 +21,7 @@
     "secondary": "#D0FFFFFF",
     "accent": "#FF9800",
     "background": "#000000",
+    // "backgroundImage": "C:\\path\\to\\wallpaper.jpg", "backgroundFit": "fill", "backgroundOpacity": 0.5,
     "track": "#1A1A1A"
   },
   "widgets": [

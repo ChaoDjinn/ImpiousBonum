@@ -29,6 +29,8 @@ public static class EditorDescriptors
     public static readonly IReadOnlyList<string> FontWeights =
         ["Thin", "ExtraLight", "Light", "Normal", "Medium", "SemiBold", "Bold", "ExtraBold", "Black"];
 
+    public const string BackgroundGroup = "Background";
+
     public static IReadOnlyList<SettingDescriptor> Theme { get; } = CreateTheme();
 
     private static IReadOnlyList<SettingDescriptor> CreateTheme()
@@ -50,6 +52,12 @@ public static class EditorDescriptors
             Setting.Color("track", "Bar track", defaults.Track, colours, "The unfilled part of bars.", named: false),
             Setting.Color("warning", "Warning", defaults.Warning, colours, "Used by warning colour rules that say \"warning\".", named: false),
             Setting.Color("critical", "Critical", defaults.Critical, colours, "Used by warning colour rules that say \"critical\".", named: false),
+            new("backgroundImage", "Image", SettingKind.ImageFile, defaults.BackgroundImage, BackgroundGroup,
+                "A PNG or JPG drawn behind the widgets, over the background colour."),
+            Setting.Choice("backgroundFit", "Fit", defaults.BackgroundFit, BackgroundImage.Fits, BackgroundGroup,
+                "fill covers the canvas (cropping), fit shows it all, stretch distorts to fit, center and tile keep its size."),
+            Setting.Number("backgroundOpacity", "Opacity", defaults.BackgroundOpacity, 0, 1, BackgroundGroup,
+                "Below 1 the background colour shows through, e.g. 0.4 to dim a busy picture on black."),
         ];
     }
 }

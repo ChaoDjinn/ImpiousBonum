@@ -7,8 +7,11 @@ namespace ImpiousBonum.App.Layout;
 /// <summary>Resolved, frozen WPF resources for a <see cref="ThemeSettings"/>.</summary>
 public sealed class Theme
 {
+    private readonly ThemeSettings _settings;
+
     private Theme(ThemeSettings settings)
     {
+        _settings = settings;
         FontFamily = ResolveFontFamily(settings);
         FontWeight = ParseWeight(settings.FontWeight);
         Foreground = ParseBrush(settings.Foreground, Brushes.White);
@@ -43,6 +46,10 @@ public sealed class Theme
     public Brush Critical { get; }
 
     public static Theme From(ThemeSettings settings) => new(settings);
+
+    /// <summary>The background colour with the theme's background image (if any) over it, for a canvas of this size.</summary>
+    public Brush CanvasBackground(double width, double height) =>
+        BackgroundImage.CreateBrush(_settings, Background, width, height);
 
     /// <summary>
     /// Resolves a widget colour setting: <c>foreground</c>, <c>secondary</c>, <c>accent</c>, <c>warning</c>, <c>critical</c>

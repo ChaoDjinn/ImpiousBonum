@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using ImpiousBonum.App.Editor;
 
 namespace ImpiousBonum.App.Widgets;
 
@@ -42,6 +43,14 @@ public static class WidgetDocs
                 AppendTable(md, items.ItemSettings ?? []);
             }
         }
+
+        md.AppendLine();
+        md.AppendLine("## Theme");
+        md.AppendLine();
+        md.AppendLine("The layout's `theme` object sets the font and colours every widget uses, and the canvas background.");
+        md.AppendLine("A `backgroundImage` is drawn over the `background` colour and behind the widgets, and scales with the canvas.");
+        md.AppendLine();
+        AppendTable(md, EditorDescriptors.Theme);
 
         return md.ToString();
     }
