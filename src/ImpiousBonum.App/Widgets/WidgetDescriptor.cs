@@ -54,6 +54,9 @@ public enum SettingKind
 
     /// <summary>A path to a .ttf/.otf file.</summary>
     FontFile,
+
+    /// <summary>A path to a PNG/JPG image.</summary>
+    ImageFile,
 }
 
 /// <summary>One setting of a widget type. Create these with the <see cref="Setting"/> helpers.</summary>

@@ -37,6 +37,15 @@ public sealed class ThemeSettings
 
     public string Background { get; set; } = "#000000";
 
+    /// <summary>Optional path to a PNG/JPG drawn over <see cref="Background"/>, behind the widgets.</summary>
+    public string? BackgroundImage { get; set; }
+
+    /// <summary>How the image covers the canvas: fill, fit, stretch, center or tile.</summary>
+    public string BackgroundFit { get; set; } = "fill";
+
+    /// <summary>0–1. Lower values let the background colour show through the image.</summary>
+    public double BackgroundOpacity { get; set; } = 1;
+
     /// <summary>Unfilled part of bars.</summary>
     public string Track { get; set; } = "#1A1A1A";
 

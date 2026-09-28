@@ -138,3 +138,24 @@ Each entry in `rows`:
 |---|---|---|---|
 | `label` | text | `Download` | Label |
 | `text` | template | `{net.down}` | Value |
+
+## Theme
+
+The layout's `theme` object sets the font and colours every widget uses, and the canvas background.
+A `backgroundImage` is drawn over the `background` colour and behind the widgets, and scales with the canvas.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `fontFamily` | font | `Segoe UI` | Font |
+| `fontWeight` | `Thin` / `ExtraLight` / `Light` / `Normal` / `Medium` / `SemiBold` / `Bold` / `ExtraBold` / `Black` | `Light` | Weight |
+| `fontFile` | fontfile | — | Font file. Use a .ttf/.otf file without installing it. Overrides the font above. |
+| `foreground` | color | `#FFFFFF` | Text |
+| `secondary` | color | `#D0FFFFFF` | Secondary text. Values in widget headers and rows. |
+| `accent` | color | `#FF9800` | Accent. Graphs, bars and icons. |
+| `background` | color | `#000000` | Background |
+| `track` | color | `#1A1A1A` | Bar track. The unfilled part of bars. |
+| `warning` | color | `#FFC107` | Warning. Used by warning colour rules that say "warning". |
+| `critical` | color | `#F44336` | Critical. Used by warning colour rules that say "critical". |
+| `backgroundImage` | imagefile | — | Image. A PNG or JPG drawn behind the widgets, over the background colour. |
+| `backgroundFit` | `fill` / `fit` / `stretch` / `center` / `tile` | `fill` | Fit. fill covers the canvas (cropping), fit shows it all, stretch distorts to fit, center and tile keep its size. |
+| `backgroundOpacity` | number (0–1) | `1` | Opacity. Below 1 the background colour shows through, e.g. 0.4 to dim a busy picture on black. |
