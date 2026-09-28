@@ -21,7 +21,9 @@ param(
     [string] $Output = 'artifacts',
     [string] $GitHubToken,
     [string] $RepoUrl = 'https://github.com/ChaoDjinn/ImpiousBonum',
-    [switch] $SkipTests
+    [switch] $SkipTests,
+    # Tag the current commit v<Version> and push the tag before uploading (the release workflow's Run button).
+    [switch] $CreateTag
 )
 
 $ErrorActionPreference = 'Stop'
@@ -86,6 +88,10 @@ try {
     }
 
     if ($GitHubToken) {
+        if ($CreateTag) {
+            git tag "v$Version" HEAD
+            git push origin "v$Version"
+        }
         dotnet vpk upload github --repoUrl $RepoUrl --token $GitHubToken -o $releases `
             --publish --releaseName "Impious Bonum $Version" --tag "v$Version"
 

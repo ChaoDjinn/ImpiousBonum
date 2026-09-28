@@ -228,17 +228,11 @@ dotnet run --project src/ImpiousBonum.App -c Release -- --widget-docs docs/widge
 ### Making a release
 
 1. Set `<Version>` in `Directory.Build.props` to the new version and merge that to `main`.
-2. Tag that commit on `main` with the same version and push the tag:
+2. In the repository's **Actions** tab, open **Release**, choose **Run workflow**, leave the branch on `main` and press **Run workflow**.
 
-   ```bash
-   git tag v0.2.1
-   ```
+The [release workflow](.github/workflows/release.yml) reads the version from `Directory.Build.props`, runs the tests, downloads the previous release so it can build a delta package, packs the installer with Velopack, tags the commit (for example `v0.4.0`) and publishes the GitHub release *Impious Bonum 0.4.0*. Installed copies pick it up on their next update check. A version number can only be released once, so the run stops straight away if that tag already exists.
 
-   ```bash
-   git push origin v0.2.1
-   ```
-
-The [release workflow](.github/workflows/release.yml) then runs the tests, downloads the previous release so it can build a delta package, packs the installer with Velopack and publishes the GitHub release *Impious Bonum 0.2.1*. Installed copies pick it up on their next update check. The tag decides the version that ships, so keep it in step with `Directory.Build.props`; a version number can only be released once.
+Pushing a tag yourself (`git tag v0.4.0 <commit>` then `git push origin v0.4.0`) still works too; then the tag decides the version, so keep it in step with `Directory.Build.props`.
 
 To build the installer locally instead: `pwsh build/publish.ps1 -Version 0.2.1` (output in `artifacts/releases`; add `-SkipTests` to skip the test run).
 
@@ -270,7 +264,7 @@ tests/                   unit tests for the core and the app (widgets, layout va
 docs/widgets.md          widget reference, generated from the widget descriptors
 build/                   installer build (publish.ps1) and icon generator
 tools/ReleaseSigning     creates the update signing key and signs releases
-.github/workflows/       CI (ci.yml) and tag-triggered releases (release.yml)
+.github/workflows/       CI (ci.yml) and releases (release.yml)
 ```
 
 ## Roadmap

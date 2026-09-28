@@ -1,10 +1,14 @@
 name: Release
 
-# Push a tag like v0.2.0 to build the installer and publish it as a GitHub release.
+# Two ways to release; both build the installer and publish it as a GitHub release:
+# - Actions tab > Release > Run workflow on main. Tags that commit with the <Version> in
+#   Directory.Build.props, then releases it in the same run.
+# - Push a tag like v0.2.0.
 # Installed copies check GitHub Releases and update themselves.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -19,9 +23,29 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
+      - name: Pick the version
+        id: version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_EVENT_NAME -eq 'push') {
+              $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          } else {
+              if ($env:GITHUB_REF -ne 'refs/heads/main') { throw "Run the release from main, not $env:GITHUB_REF_NAME." }
+              $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+              if (-not $version) { throw 'No <Version> in Directory.Build.props.' }
+              if (git ls-remote --tags origin "refs/tags/v$version") {
+                  throw "v$version is already released. Bump <Version> in Directory.Build.props first."
+              }
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
       - name: Build, pack and publish
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
-        run: ./build/publish.ps1 -Version $env:GITHUB_REF_NAME.TrimStart('v') -GitHubToken $env:GITHUB_TOKEN
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # A manual run tags the commit it releases just before uploading, once the tests have passed.
+          # A tag pushed with GITHUB_TOKEN doesn't start this workflow again.
+          $tag = $env:GITHUB_EVENT_NAME -ne 'push'
+          ./build/publish.ps1 -Version $env:VERSION -GitHubToken $env:GITHUB_TOKEN -CreateTag:$tag
