@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace ImpiousBonum.App.Shell;
 
-/// <summary>Per-machine settings: which monitor the dashboard lives on and where on it.</summary>
+/// <summary>Per-machine settings: which monitor the dashboard lives on and where on it, and which layout it shows.</summary>
 public sealed class AppSettings
 {
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
@@ -17,6 +17,9 @@ public sealed class AppSettings
 
     /// <summary>Area relative to the monitor's top-left, in physical pixels.</summary>
     public PixelRect? Area { get; set; }
+
+    /// <summary>Name of the saved layout to show (a file in the layouts folder), or null for "Default".</summary>
+    public string? ActiveLayout { get; set; }
 
     public string PingHost { get; set; } = "1.1.1.1";
 

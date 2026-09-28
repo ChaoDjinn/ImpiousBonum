@@ -21,6 +21,11 @@
                     <ComboBox x:Name="SnapBox" Width="90" SelectionChanged="OnSnapChanged" ToolTip="Grid size for moving and resizing. Hold Alt while dragging to place freely." />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <TextBlock Text="Layout" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <ComboBox x:Name="LayoutBox" Width="180" SelectionChanged="OnLayoutBoxChanged" Margin="0,0,6,0"
+                              ToolTip="The saved layout you're editing. The dashboard shows the same one." />
+                    <Button x:Name="LayoutMenuButton" Content="Layouts ▾" Click="OnLayoutMenu" Margin="0,0,18,0"
+                            ToolTip="Save as, rename, duplicate or delete saved layouts" />
                     <Button x:Name="RevertButton" Content="Revert" Click="OnRevert" Margin="0,0,6,0" ToolTip="Go back to the last saved layout" />
                     <Button x:Name="SaveButton" Content="Save" Click="OnSave" Style="{DynamicResource AccentButtonStyle}" ToolTip="Ctrl+S" />
                 </StackPanel>

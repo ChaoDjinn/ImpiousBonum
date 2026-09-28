@@ -263,6 +263,19 @@ public sealed class LayoutSession
         SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Starts over on another document (switching layouts): no undo history, and nothing unsaved.</summary>
+    public void Reset(LayoutDocument document)
+    {
+        _undo.Clear();
+        _redo.Clear();
+        _lastMergeKey = null;
+        Document = Clone(document);
+        _saved = Serialize(Document);
+        SelectedIndex = -1;
+        Changed?.Invoke(this, new LayoutChange(ChangeKind.Reset, null, null));
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public void MarkSaved()
     {
         _saved = Serialize(Document);

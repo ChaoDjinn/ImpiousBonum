@@ -20,6 +20,7 @@ namespace ImpiousBonum.App;
 /// Command line:
 ///   --data-dir &lt;dir&gt;     use a different settings/layout folder (default %AppData%\ImpiousBonum)
 ///   --snapshot &lt;file.png&gt; render the layout to a PNG after a short warm-up, then exit
+///   --layout &lt;name&gt;       with --snapshot, render this saved layout instead of the active one
 ///   --warmup &lt;seconds&gt;    how long to sample before a snapshot (default 3)
 ///   --widget-docs &lt;file&gt;  write the widget reference (docs/widgets.md) and exit
 /// </summary>
@@ -57,8 +58,8 @@ public partial class App : Application
         if (args.TryGetValue("snapshot", out var snapshotPath))
         {
             var warmup = args.TryGetValue("warmup", out var w) && double.TryParse(w, out var seconds) ? seconds : 3;
-            await RenderSnapshotAsync(snapshotPath, TimeSpan.FromSeconds(warmup));
-            Shutdown();
+            var rendered = await RenderSnapshotAsync(snapshotPath, TimeSpan.FromSeconds(warmup), args.GetValueOrDefault("layout"));
+            Shutdown(rendered ? 0 : 1);
             return;
         }
 
@@ -94,7 +95,10 @@ public partial class App : Application
             _tray.SetMonitors(monitors, DisplayMonitor.Resolve(_settings, monitors));
             _tray.SetSensorState(SensorStatus(), SensorServiceControl.IsInstalled, SensorServiceControl.IsOutdated(SensorVersion()));
             _tray.SetFpsSources(monitors, _settings.FpsMonitorId);
+            if (_layouts is not null)
+                _tray.SetLayouts(_layouts.List(), _layouts.Active, _layouts.ActivePath);
         };
+        _tray.LayoutSelected += (_, name) => SelectLayout(name);
         _tray.FpsSourceSelected += (_, monitorId) =>
         {
             _settings.FpsMonitorId = monitorId;
@@ -110,8 +114,9 @@ public partial class App : Application
         _tray.SetVersion(_updater.CurrentVersion, _updater.IsInstalled);
         StartUpdateChecks();
 
-        _layouts = new LayoutStore();
+        _layouts = new LayoutStore(_settings);
         _layouts.Changed += (_, _) => ApplyLayout();
+        _layouts.ActiveChanged += (_, _) => ApplyLayout();
         ApplyLayout();
 
         Place();
@@ -206,12 +211,11 @@ public partial class App : Application
             return;
         }
 
-        var session = new LayoutSession(LoadSavedLayout());
-        _editor = new EditorWindow(session, LoadSavedLayout, () =>
+        var session = new LayoutSession(_layouts!.LoadOrDefault());
+        _editor = new EditorWindow(session, _layouts, () =>
             DisplayMonitor.Resolve(_settings, DisplayMonitor.GetAll()) is { } monitor ? (monitor.Bounds.Width, monitor.Bounds.Height) : null);
 
         session.Changed += (_, change) => MirrorToDashboard(session, change);
-        _editor.SaveRequested += (_, layout) => _layouts?.Save(layout);
         _editor.Closed += (_, _) =>
         {
             _editor = null;
@@ -238,15 +242,23 @@ public partial class App : Application
         window.Topmost = false;
     }
 
-    private LayoutDocument LoadSavedLayout()
+    /// <summary>Tray → Layout. With the editor open, the editor switches (asking about unsaved changes first).</summary>
+    private void SelectLayout(string name)
     {
+        if (_editor is not null)
+        {
+            BringToFront(_editor);
+            _editor.SwitchTo(name);
+            return;
+        }
+
         try
         {
-            return _layouts!.Load();
+            _layouts?.SetActive(name);
         }
-        catch (Exception ex) when (ex is JsonException or IOException)
+        catch (FileNotFoundException ex)
         {
-            return LayoutStore.LoadDefault();
+            _tray?.ShowError("Couldn't switch layout", ex.Message);
         }
     }
 
@@ -304,7 +316,7 @@ public partial class App : Application
         catch (Exception ex) when (ex is JsonException or IOException)
         {
             // Keep showing the previous layout; an obviously broken file shouldn't blank the screen.
-            _tray?.ShowError("Couldn't read layout.json", ex.Message);
+            _tray?.ShowError($"Couldn't read {Path.GetFileName(_layouts.ActivePath)}", ex.Message);
             if (_window.Dashboard.Children.Count > 0)
                 return;
             layout = LayoutStore.LoadDefault();
@@ -312,7 +324,7 @@ public partial class App : Application
 
         var issues = LayoutValidator.Validate(layout);
         if (issues.Count > 0)
-            _tray?.ShowError($"layout.json: {issues.Count} problem{(issues.Count == 1 ? "" : "s")}", string.Join("\n", issues.Take(3)));
+            _tray?.ShowError($"{Path.GetFileName(_layouts.ActivePath)}: {issues.Count} problem{(issues.Count == 1 ? "" : "s")}", string.Join("\n", issues.Take(3)));
 
         _window.Background = Theme.From(layout.Theme).Background;
         _window.Dashboard.Build(layout);
@@ -396,16 +408,21 @@ public partial class App : Application
         return true;
     }
 
-    private static async Task RenderSnapshotAsync(string path, TimeSpan warmup)
+    /// <summary>Returns false if <paramref name="layoutName"/> isn't a saved layout.</summary>
+    private static async Task<bool> RenderSnapshotAsync(string path, TimeSpan warmup, string? layoutName)
     {
         var settings = AppSettings.Load();
+        var library = new LayoutLibrary(AppPaths.DataDirectory);
+        library.EnsureSeeded();
+        var name = layoutName is null ? library.Resolve(settings.ActiveLayout) : library.Find(layoutName);
+        if (name is null)
+            return false;
+
         await using var sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost));
         sampler.Start();
         await Task.Delay(warmup);
 
-        LayoutDocument layout;
-        using (var layouts = new LayoutStore())
-            layout = layouts.Load();
+        var layout = library.Load(name);
 
         var view = new DashboardView();
         view.Build(layout);
@@ -422,6 +439,7 @@ public partial class App : Application
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         await using var file = File.Create(path);
         encoder.Save(file);
+        return true;
     }
 
     private static Dictionary<string, string> ParseArgs(string[] args)

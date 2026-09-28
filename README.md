@@ -73,10 +73,10 @@ Download [`ImpiousBonum-win-Setup.exe`](https://github.com/ChaoDjinn/ImpiousBonu
 - Uninstall from Windows Settings → Apps. It removes start-with-Windows and offers to remove the sensor service (one UAC prompt). Your layout and settings in `%AppData%\ImpiousBonum` are kept.
 - The installer isn't code-signed yet, so Windows SmartScreen may warn the first time: choose *More info → Run anyway*.
 
-Settings and layout live in `%AppData%\ImpiousBonum`:
+Settings and layouts live in `%AppData%\ImpiousBonum`:
 
-- `layout.json`: canvas size, theme and widgets. Saved changes apply immediately.
-- `settings.json`: which monitor, ping host, `hardwareRendering` (off by default to save memory).
+- `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
+- `settings.json`: which monitor, which layout (`activeLayout`), ping host, `hardwareRendering` (off by default to save memory).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
 
 ### Tray menu
@@ -84,10 +84,11 @@ Settings and layout live in `%AppData%\ImpiousBonum`:
 | Item | |
 |---|---|
 | *Display* | Which monitor the dashboard fills |
+| *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Sensors* | Sensor service status, and install, update or remove it |
 | *FPS from* | Follow the foreground app, or the top app on a chosen monitor |
 | *Edit layout…* | Open the layout editor (or double-click the tray icon) |
-| *Open layout.json*, *Open settings folder*, *Reload layout* | Work with the files directly |
+| *Open layout file*, *Open settings folder*, *Reload layout* | Work with the files directly (*Open layout file* opens the one being shown) |
 | *Start with Windows* | Start the dashboard when you sign in |
 | *Check for updates* | Installed copies only |
 
@@ -123,13 +124,16 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 - **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme.
 - **Widgets:** add, duplicate (Ctrl+D), delete, and bring forward / send back.
 - **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
-- The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes `layout.json`; closing without saving puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
+- **Saved layouts:** the editor edits the layout the dashboard is showing. The *Layout* drop-down switches to another (asking first if you have unsaved changes), and *Layouts ▾* has *Save as…* (your changes as a new layout), *Rename…*, *Duplicate…* and *Delete* (not the last one). Keep a "Gaming" and a "Desktop" layout, for example, and flip between them from the tray.
+- The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes the layout's file; closing without saving puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
 
 <!-- Editor screenshot (Win+Shift+S): save as docs/images/editor.png, then remove these comment markers:
 <p align="center"><img src="docs/images/editor.png" alt="The layout editor with the metric picker open"></p>
 -->
 
-## Editing layout.json by hand
+## Editing layouts by hand
+
+Each layout is a JSON file in `%AppData%\ImpiousBonum\layouts` (tray → *Open layout file* opens the one being shown). Saving the shown layout's file applies it straight away; changes to other layouts show when you switch to them. To add a layout by hand, drop a new `.json` file in the folder and pick it from tray → *Layout*.
 
 The canvas has a design size (default 1920×480) and scales to fit the window. Each widget has `type`, `x`, `y`, `width`, `height` plus its own settings. Text uses templates:
 
@@ -139,7 +143,7 @@ The canvas has a design size (default 1920×480) and scales to fit the window. E
 
 `{id}` formats automatically (`18.7 GB`, `11.8 %`, `79.7 KB/s`). After a colon you can add a number format (`0.0`, `N0`), force a byte unit (`MB`, `GB`, …) or write `nounit`. Readings that aren't available show as `—`.
 
-If `layout.json` has a typo or an out-of-range value, the tray shows a notification saying what and where, e.g. *unknown setting 'fontsize' (did you mean 'fontSize'?)*.
+If a layout has a typo or an out-of-range value, the tray shows a notification naming the file and saying what and where, e.g. *unknown setting 'fontsize' (did you mean 'fontSize'?)*.
 
 To use a font you don't want to install, point the theme at the file: `"fontFile": "C:\\Fonts\\SomeFont-Light.otf"`.
 
@@ -149,6 +153,7 @@ To use a font you don't want to install, point the theme at the file: `"fontFile
 |---|---|
 | `--data-dir <dir>` | Use a different settings folder |
 | `--snapshot <file.png>` | Render the layout with live data to a PNG and exit |
+| `--layout <name>` | With `--snapshot`, render this saved layout instead of the one being shown |
 | `--warmup <seconds>` | Sampling time before a snapshot (default 3) |
 | `--widget-docs <file>` | Regenerate the widget reference from the widget descriptors |
 
