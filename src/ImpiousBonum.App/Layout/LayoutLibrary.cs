@@ -113,6 +113,107 @@ public sealed class LayoutLibrary
         if (List().Count <= 1)
             throw new InvalidOperationException("The last layout can't be deleted.");
         File.Delete(PathOf(name));
+        DeleteUnusedImportFolders();
+    }
+
+    /// <summary>
+    /// Saves an imported layout as <paramref name="name"/>, replacing any layout of that name. Its font and image go
+    /// in a folder of their own under <c>layouts</c> and the theme points at them there. Returns the saved name.
+    /// </summary>
+    public string Import(LayoutPackageContents package, string name)
+    {
+        RequireValid(name);
+        var layout = package.Layout;
+        if (package.Font is not null || package.Background is not null)
+        {
+            var folder = NewImportFolder(name);
+            System.IO.Directory.CreateDirectory(folder);
+            File.WriteAllText(Path.Combine(folder, ImportMarker), "Files for an imported layout. Deleted when no layout uses them.\n");
+            layout.Theme.FontFile = Place(folder, "font", package.Font);
+            layout.Theme.BackgroundImage = Place(folder, "background", package.Background);
+        }
+        name = Find(name) ?? name;
+        Save(name, layout);
+        DeleteUnusedImportFolders();
+        return name;
+    }
+
+    /// <summary>Marks a folder <see cref="Import"/> made, so only those are ever cleaned up.</summary>
+    private const string ImportMarker = "imported.txt";
+
+    private static string? Place(string folder, string baseName, PackagedFile? file)
+    {
+        if (file is null)
+            return null;
+        // Fixed names: nothing from the package decides where a file is written.
+        var path = Path.Combine(folder, baseName + file.Extension);
+        File.WriteAllBytes(path, file.Data);
+        return path;
+    }
+
+    /// <summary><c>layouts\&lt;name&gt;</c>, or <c>&lt;name&gt; (2)</c> and so on if that's taken; a copy may still use the old files.</summary>
+    private string NewImportFolder(string name)
+    {
+        var folder = Path.Combine(Directory, name);
+        for (var i = 2; System.IO.Directory.Exists(folder) || File.Exists(folder); i++)
+            folder = Path.Combine(Directory, $"{name} ({i})");
+        return folder;
+    }
+
+    /// <summary>
+    /// Removes folders made by <see cref="Import"/> that no saved layout points into any more (after a delete, or a
+    /// re-import over the same name). Does nothing if a layout can't be read, since its references are then unknown.
+    /// </summary>
+    public void DeleteUnusedImportFolders()
+    {
+        if (!System.IO.Directory.Exists(Directory))
+            return;
+        var folders = System.IO.Directory.EnumerateDirectories(Directory)
+            .Where(folder => File.Exists(Path.Combine(folder, ImportMarker)))
+            .ToList();
+        if (folders.Count == 0)
+            return;
+
+        var used = new List<string>();
+        foreach (var name in List())
+        {
+            try
+            {
+                var theme = Load(name).Theme;
+                used.AddRange(new[] { theme.FontFile, theme.BackgroundImage }.OfType<string>().Where(p => !string.IsNullOrWhiteSpace(p)).Select(FullPathOrEmpty));
+            }
+            catch (Exception ex) when (ex is JsonException or IOException)
+            {
+                return;
+            }
+        }
+
+        foreach (var folder in folders)
+        {
+            var prefix = Path.GetFullPath(folder) + Path.DirectorySeparatorChar;
+            if (used.Any(path => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                continue;
+            try
+            {
+                System.IO.Directory.Delete(folder, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // In use (e.g. the font is loaded); try again next time.
+            }
+        }
+    }
+
+    private static string FullPathOrEmpty(string path)
+    {
+        try
+        {
+            return Path.GetFullPath(path);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return string.Empty;
+        }
     }
 
     /// <summary>Why <paramref name="name"/> can't be used as a new layout name, or null if it can.</summary>

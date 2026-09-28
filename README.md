@@ -85,6 +85,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 |---|---|
 | *Display* | Which monitor the dashboard fills |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
+| *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, and turn automatic switching on or off (see [Game layouts](#game-layouts)) |
 | *Sensors* | Sensor service status, and install, update or remove it |
 | *FPS from* | Follow the foreground app, or the top app on a chosen monitor |
@@ -125,12 +126,18 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 - **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme.
 - **Widgets:** add, duplicate (Ctrl+D), delete, and bring forward / send back.
 - **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
-- **Saved layouts:** the editor edits the layout the dashboard is showing. The *Layout* drop-down switches to another (asking first if you have unsaved changes), and *Layouts ▾* has *Save as…* (your changes as a new layout), *Rename…*, *Duplicate…* and *Delete* (not the last one). Keep a "Gaming" and a "Desktop" layout, for example, and flip between them from the tray.
+- **Saved layouts:** the editor edits the layout the dashboard is showing. The *Layout* drop-down switches to another (asking first if you have unsaved changes), and *Layouts ▾* has *Save as…* (your changes as a new layout), *Rename…*, *Duplicate…*, *Export…*, *Import…* and *Delete* (not the last one). Keep a "Gaming" and a "Desktop" layout, for example, and flip between them from the tray.
 - The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes the layout's file; closing without saving puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
 
 <!-- Editor screenshot (Win+Shift+S): save as docs/images/editor.png, then remove these comment markers:
 <p align="center"><img src="docs/images/editor.png" alt="The layout editor with the metric picker open"></p>
 -->
+
+## Sharing layouts
+
+*Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file and background image inside, so it works on another PC. *Import…* (in the editor, or tray → *Layout*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual.
+
+An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder. Imports only take the layout and the font (`.ttf`, `.otf`) and image it names, reject a file with `..` or absolute paths in it, and cap sizes (1 MB for the layout, 50 MB per file).
 
 ## Game layouts
 
