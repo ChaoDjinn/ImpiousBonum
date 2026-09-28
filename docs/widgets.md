@@ -144,6 +144,11 @@ Each entry in `rows`:
 The layout's `theme` object sets the font and colours every widget uses, and the canvas background.
 A `backgroundImage` is drawn over the `background` colour and behind the widgets, and scales with the canvas.
 
+Instead of its own values, a layout can use a saved theme by name: `"theme": "Ice"`. To change a few of the theme's
+values for one layout, name it as `base` and add the ones to change: `"theme": { "base": "Ice", "accent": "#FF4081" }`.
+Built-in themes: `Ice`, `Orange`, `Terminal`. Your own are in `themes\<name>.json` in the
+settings folder, each holding the settings below; changing one restyles every layout that uses it.
+
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `fontFamily` | font | `Segoe UI` | Font |

@@ -1,10 +1,12 @@
 using System.Globalization;
+using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
 using WinForms = System.Windows.Forms;
@@ -67,6 +69,7 @@ public sealed class PropertyPanel : StackPanel
                 };
                 canvas.Children.Add(match);
             }
+            AddThemePicker();
             AddSettings(SettingTarget.Theme, EditorDescriptors.Theme);
         }
         else
@@ -123,6 +126,103 @@ public sealed class PropertyPanel : StackPanel
         var group = new StackPanel();
         Children.Add(group);
         return group;
+    }
+
+    /// <summary>
+    /// Which saved theme the layout uses, with Save theme as, Update theme and Detach. The theme settings below it are
+    /// the layout's own values, which override the theme's; resetting one goes back to the theme's value.
+    /// </summary>
+    private void AddThemePicker()
+    {
+        const string own = "None (this layout's own)";
+        var group = AddGroup("Theme");
+        var themes = _session.Themes;
+        var combo = new ComboBox { ItemsSource = themes.List().Prepend(own).ToList() };
+        combo.SelectionChanged += (_, _) =>
+        {
+            if (_updating || combo.SelectedItem is not string choice)
+                return;
+            var name = choice == own ? null : choice;
+            if (!string.Equals(name, _session.ThemeName, StringComparison.OrdinalIgnoreCase))
+                _session.UseTheme(name);
+        };
+        group.Children.Add(LabelledRow("Theme", combo,
+            "A saved theme sets the font, colours and background. Changing a setting below changes it for this layout only; ↺ goes back to the theme's value."));
+
+        var buttons = new WrapPanel { Margin = new Thickness(LabelWidth, 6, 0, 0) };
+        var saveAs = new Button { Content = "Save theme as…", Margin = new Thickness(0, 0, 6, 0), ToolTip = "Save this look as a theme other layouts can use" };
+        var update = new Button { Content = "Update theme", Margin = new Thickness(0, 0, 6, 0), ToolTip = "Save this layout's changes into the theme, restyling every layout that uses it" };
+        var detach = new Button { Content = "Detach", ToolTip = "Copy the theme's values into this layout, so later changes to the theme don't affect it" };
+        ToolTipService.SetShowOnDisabled(update, true);
+        buttons.Children.Add(saveAs);
+        buttons.Children.Add(update);
+        buttons.Children.Add(detach);
+        group.Children.Add(buttons);
+
+        saveAs.Click += (_, _) =>
+        {
+            var initial = _session.ThemeName is { } current ? $"{current} copy" : "My theme";
+            var name = NamePromptWindow.Ask(Window.GetWindow(this)!, "Save theme as", "Name for the new theme", initial, themes.CheckNewName);
+            if (name is not null)
+                SaveTheme(name);
+        };
+        update.Click += (_, _) =>
+        {
+            if (_session.ThemeName is not { } name)
+                return;
+            var answer = MessageBox.Show(Window.GetWindow(this)!, $"Save this layout's theme changes into \"{name}\"? Every layout using it will change.",
+                "Impious Bonum", MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel);
+            if (answer == MessageBoxResult.OK)
+                SaveTheme(name);
+        };
+        detach.Click += (_, _) => _session.DetachTheme();
+
+        _refreshers.Add(() =>
+        {
+            var name = _session.ThemeName;
+            // A theme that doesn't exist (deleted, or a typo in the file) shows as nothing picked; the status bar explains.
+            combo.SelectedItem = name is null ? own : themes.Find(name);
+            update.IsEnabled = name is not null && !ThemeLibrary.IsBuiltIn(name) && themes.Find(name) is not null && _session.HasThemeOverrides;
+            update.ToolTip = ThemeLibrary.IsBuiltIn(name)
+                ? "Built-in themes can't be changed. Use Save theme as to make your own copy."
+                : "Save this layout's changes into the theme, restyling every layout that uses it";
+            detach.IsEnabled = name is not null;
+        });
+    }
+
+    private void SaveTheme(string name)
+    {
+        try
+        {
+            _session.SaveThemeAs(name);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            MessageBox.Show(Window.GetWindow(this)!, ex.Message, "Couldn't save the theme", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        // The list of themes may have grown.
+        Rebuild();
+    }
+
+    private static Grid LabelledRow(string label, FrameworkElement editor, string? help)
+    {
+        var grid = new Grid { Margin = new Thickness(0, 3, 0, 3) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(LabelWidth) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.RowDefinitions.Add(new RowDefinition());
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.Children.Add(new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center, ToolTip = help });
+        Grid.SetColumn(editor, 1);
+        grid.Children.Add(editor);
+        if (help is not null)
+        {
+            var text = Secondary(new TextBlock { Text = help, TextWrapping = TextWrapping.Wrap, FontSize = 11.5, Margin = new Thickness(0, 2, 0, 0) });
+            Grid.SetRow(text, 1);
+            Grid.SetColumn(text, 1);
+            grid.Children.Add(text);
+        }
+        return grid;
     }
 
     private void AddSettings(SettingTarget target, IReadOnlyList<SettingDescriptor> settings)
@@ -329,7 +429,7 @@ public sealed class PropertyPanel : StackPanel
                 return;
             var current = _session.GetValue(target, setting.Key);
             box.Text = JsonDefaults.TryGetNumber(current, out var n) ? Format(n)
-                : setting.Default is double d ? Format(d)
+                : DefaultOf(target, setting) is double d ? Format(d)
                 : string.Empty;
             box.ClearValue(Control.BorderBrushProperty);
         });
@@ -512,11 +612,21 @@ public sealed class PropertyPanel : StackPanel
     }
 
     private string CurrentString(SettingTarget target, SettingDescriptor setting) =>
-        _session.GetValue(target, setting.Key) is JsonValue v && v.TryGetValue<string>(out var s) ? s : setting.Default as string ?? string.Empty;
+        _session.GetValue(target, setting.Key) is JsonValue v && v.TryGetValue<string>(out var s) ? s : DefaultOf(target, setting) as string ?? string.Empty;
+
+    /// <summary>What an unset setting shows: its default, or for the theme, the value from the layout's named theme.</summary>
+    private object? DefaultOf(SettingTarget target, SettingDescriptor setting)
+    {
+        if (target.Kind != SettingTargetKind.Theme || _session.GetResolvedThemeValue(setting.Key) is not JsonValue value)
+            return setting.Default;
+        if (value.TryGetValue<string>(out var text))
+            return text;
+        return JsonDefaults.TryGetNumber(value, out var number) ? number : setting.Default;
+    }
 
     private Color? ResolveColor(string value)
     {
-        var theme = _session.Document.Theme;
+        var theme = _session.ResolvedTheme;
         value = value.Trim().ToLowerInvariant() switch
         {
             "foreground" => theme.Foreground,

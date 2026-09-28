@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -79,13 +80,13 @@ public sealed class BackgroundImageTests : IDisposable
         var text = System.IO.Path.Combine(_folder, "notes.txt");
         File.WriteAllText(text, "hi");
 
-        var missing = LayoutValidator.Validate(new LayoutDocument { Theme = new ThemeSettings { BackgroundImage = System.IO.Path.Combine(_folder, "gone.jpg") } });
+        var missing = LayoutValidator.Validate(new LayoutDocument { Theme = new JsonObject { ["backgroundImage"] = System.IO.Path.Combine(_folder, "gone.jpg") } });
         Assert.Contains(missing, issue => issue.Contains("background image not found"));
 
-        var unsupported = LayoutValidator.Validate(new LayoutDocument { Theme = new ThemeSettings { BackgroundImage = text } });
+        var unsupported = LayoutValidator.Validate(new LayoutDocument { Theme = new JsonObject { ["backgroundImage"] = text } });
         Assert.Contains(unsupported, issue => issue.Contains("background image should be one of"));
 
-        var settings = LayoutValidator.Validate(new LayoutDocument { Theme = new ThemeSettings { BackgroundFit = "zoom", BackgroundOpacity = 2 } });
+        var settings = LayoutValidator.Validate(new LayoutDocument { Theme = new JsonObject { ["backgroundFit"] = "zoom", ["backgroundOpacity"] = 2 } });
         Assert.Contains(settings, issue => issue.Contains("'backgroundFit'"));
         Assert.Contains(settings, issue => issue.Contains("'backgroundOpacity'"));
     }

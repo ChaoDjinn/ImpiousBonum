@@ -1,0 +1,12 @@
+// Green monospace text on black, like an old terminal.
+{
+  "fontFamily": "Consolas",
+  "fontWeight": "Normal",
+  "foreground": "#33FF66",
+  "secondary": "#B033FF66",
+  "accent": "#33FF66",
+  "background": "#000000",
+  "track": "#0D2614",
+  "warning": "#FFB000",
+  "critical": "#FF3333"
+}

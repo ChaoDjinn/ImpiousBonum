@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using ImpiousBonum.App.Editor;
+using ImpiousBonum.App.Layout;
 
 namespace ImpiousBonum.App.Widgets;
 
@@ -49,6 +50,11 @@ public static class WidgetDocs
         md.AppendLine();
         md.AppendLine("The layout's `theme` object sets the font and colours every widget uses, and the canvas background.");
         md.AppendLine("A `backgroundImage` is drawn over the `background` colour and behind the widgets, and scales with the canvas.");
+        md.AppendLine();
+        md.AppendLine("Instead of its own values, a layout can use a saved theme by name: `\"theme\": \"Ice\"`. To change a few of the theme's");
+        md.AppendLine("values for one layout, name it as `base` and add the ones to change: `\"theme\": { \"base\": \"Ice\", \"accent\": \"#FF4081\" }`.");
+        md.AppendLine($"Built-in themes: {string.Join(", ", ThemeLibrary.BuiltInNames.Select(n => $"`{n}`"))}. Your own are in `themes\\<name>.json` in the");
+        md.AppendLine("settings folder, each holding the settings below; changing one restyles every layout that uses it.");
         md.AppendLine();
         AppendTable(md, EditorDescriptors.Theme);
 

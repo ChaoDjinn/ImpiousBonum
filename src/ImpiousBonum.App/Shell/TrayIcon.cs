@@ -156,16 +156,17 @@ public sealed class TrayIcon : IDisposable
     /// <summary>Tray → Layout → Game layouts → Switch automatically.</summary>
     public event EventHandler<bool>? GameLayoutsToggled;
 
-    /// <summary>Link a process name to a layout.</summary>
+    /// <summary>Link a process name to a layout or a theme.</summary>
     public event EventHandler<GameLayoutRule>? GameLinkRequested;
 
     public event EventHandler<GameLayoutRule>? GameLinkRemoved;
 
     /// <summary>
     /// Fills the Game layouts submenu. <paramref name="recentApp"/> is the last app seen in front (the tray itself is in
-    /// front while its menu is open) and is offered for linking to any of the saved layouts in <paramref name="names"/>.
+    /// front while its menu is open) and is offered for linking to any of the saved layouts in <paramref name="names"/>,
+    /// or to any of the <paramref name="themes"/> to restyle whichever layout is showing.
     /// </summary>
-    public void SetGameLayouts(bool enabled, IReadOnlyList<GameLayoutRule> rules, string? recentApp, IReadOnlyList<string> names)
+    public void SetGameLayouts(bool enabled, IReadOnlyList<GameLayoutRule> rules, string? recentApp, IReadOnlyList<string> names, IReadOnlyList<string> themes)
     {
         _gameLayouts.DropDownItems.Clear();
         var toggle = new ToolStripMenuItem("Switch automatically") { Checked = enabled };
@@ -174,14 +175,24 @@ public sealed class TrayIcon : IDisposable
 
         if (recentApp is { } app)
         {
-            var linked = GameLayoutSwitcher.Match(rules, app)?.Layout;
+            var linked = GameLayoutSwitcher.Match(rules, app);
             var link = new ToolStripMenuItem($"Link \"{Escape(app)}\" to");
             foreach (var name in names)
             {
-                var item = new ToolStripMenuItem(Escape(name)) { Checked = string.Equals(name, linked, StringComparison.OrdinalIgnoreCase) };
+                var item = new ToolStripMenuItem(Escape(name)) { Checked = linked?.Theme is null && string.Equals(name, linked?.Layout, StringComparison.OrdinalIgnoreCase) };
                 item.Click += (_, _) => GameLinkRequested?.Invoke(this, new GameLayoutRule(app, name));
                 link.DropDownItems.Add(item);
             }
+
+            var themed = new ToolStripMenuItem("Theme only") { ToolTipText = "Keep the layout that's showing and restyle it with a theme" };
+            foreach (var theme in themes)
+            {
+                var item = new ToolStripMenuItem(Escape(theme)) { Checked = linked?.Layout is null && string.Equals(theme, linked?.Theme, StringComparison.OrdinalIgnoreCase) };
+                item.Click += (_, _) => GameLinkRequested?.Invoke(this, new GameLayoutRule(app, null, theme));
+                themed.DropDownItems.Add(item);
+            }
+            link.DropDownItems.Add(new ToolStripSeparator());
+            link.DropDownItems.Add(themed);
             _gameLayouts.DropDownItems.Add(link);
         }
 
@@ -190,7 +201,7 @@ public sealed class TrayIcon : IDisposable
         _gameLayouts.DropDownItems.Add(new ToolStripSeparator());
         foreach (var rule in rules)
         {
-            var item = new ToolStripMenuItem($"{Escape(rule.Process)} → {Escape(rule.Layout)}");
+            var item = new ToolStripMenuItem($"{Escape(rule.Process)} → {Escape(rule.Describe())}");
             item.DropDownItems.Add("Remove link", null, (_, _) => GameLinkRemoved?.Invoke(this, rule));
             _gameLayouts.DropDownItems.Add(item);
         }

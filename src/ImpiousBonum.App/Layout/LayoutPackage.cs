@@ -55,16 +55,23 @@ public static class LayoutPackage
 
     /// <summary>
     /// Writes <paramref name="layout"/> and the files its theme points at to <paramref name="destination"/>.
-    /// A font or image that can't be found is left out and named in the returned warnings.
+    /// A font or image that can't be found is left out and named in the returned warnings. A layout using one of your
+    /// saved themes has that theme's values copied in (as the editor's Detach does), since the other PC won't have it;
+    /// built-in themes stay as names.
     /// </summary>
-    public static IReadOnlyList<string> Write(LayoutDocument layout, string name, Stream destination)
+    /// <param name="themes">The saved themes the layout may name; null for only the built-in ones.</param>
+    public static IReadOnlyList<string> Write(LayoutDocument layout, string name, Stream destination, ThemeLibrary? themes = null)
     {
         var warnings = new List<string>();
+        themes ??= new ThemeLibrary(null);
         var copy = Clone(layout);
+        if (ThemeLibrary.BaseName(copy.Theme) is { } themeName && !ThemeLibrary.IsBuiltIn(themeName))
+            copy.Theme = themes.Resolve(copy.Theme).ToJson();
+        var theme = themes.Resolve(copy.Theme);
 
         using var zip = new ZipArchive(destination, ZipArchiveMode.Create, leaveOpen: true);
-        copy.Theme.FontFile = Pack(zip, layout.Theme.FontFile, "font", FontExtensions, "font file", warnings);
-        copy.Theme.BackgroundImage = Pack(zip, layout.Theme.BackgroundImage, "background", BackgroundImage.Extensions, "background image", warnings);
+        ThemeLibrary.SetString(copy.Theme, "fontFile", Pack(zip, theme.FontFile, "font", FontExtensions, "font file", warnings));
+        ThemeLibrary.SetString(copy.Theme, "backgroundImage", Pack(zip, theme.BackgroundImage, "background", BackgroundImage.Extensions, "background image", warnings));
 
         WriteText(zip, ManifestEntry, new JsonObject
         {
@@ -77,14 +84,14 @@ public static class LayoutPackage
     }
 
     /// <summary>Writes a package file, replacing any existing one only once the new one is complete.</summary>
-    public static IReadOnlyList<string> Write(LayoutDocument layout, string name, string path)
+    public static IReadOnlyList<string> Write(LayoutDocument layout, string name, string path, ThemeLibrary? themes = null)
     {
         var temp = path + ".tmp";
         try
         {
             IReadOnlyList<string> warnings;
             using (var file = File.Create(temp))
-                warnings = Write(layout, name, file);
+                warnings = Write(layout, name, file, themes);
             File.Move(temp, path, overwrite: true);
             return warnings;
         }
@@ -136,10 +143,10 @@ public static class LayoutPackage
             var name = ReadName(entries, fallbackName);
 
             var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { LayoutEntry, ManifestEntry };
-            var font = Unpack(entries, layout.Theme.FontFile, FontExtensions, "font file", used, skipped);
-            var background = Unpack(entries, layout.Theme.BackgroundImage, BackgroundImage.Extensions, "background image", used, skipped);
-            layout.Theme.FontFile = null;
-            layout.Theme.BackgroundImage = null;
+            var font = Unpack(entries, ThemeLibrary.GetString(layout.Theme, "fontFile"), FontExtensions, "font file", used, skipped);
+            var background = Unpack(entries, ThemeLibrary.GetString(layout.Theme, "backgroundImage"), BackgroundImage.Extensions, "background image", used, skipped);
+            ThemeLibrary.SetString(layout.Theme, "fontFile", null);
+            ThemeLibrary.SetString(layout.Theme, "backgroundImage", null);
 
             skipped.AddRange(entries.Keys.Where(key => !used.Contains(key)).Order(StringComparer.OrdinalIgnoreCase).Select(key => $"{key}: not used by the layout"));
             return new LayoutPackageContents { Name = name, Layout = layout, Font = font, Background = background, Skipped = skipped };

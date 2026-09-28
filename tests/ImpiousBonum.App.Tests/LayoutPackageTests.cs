@@ -41,10 +41,12 @@ public sealed class LayoutPackageTests : IDisposable
         {
             Width = 800,
             Height = 200,
-            Theme = new ThemeSettings { FontFamily = "Fancy", FontFile = font, BackgroundImage = image, BackgroundFit = "tile", Accent = "#123456" },
+            Theme = new JsonObject { ["fontFamily"] = "Fancy", ["fontFile"] = font, ["backgroundImage"] = image, ["backgroundFit"] = "tile", ["accent"] = "#123456" },
             Widgets = [new JsonObject { ["type"] = "text", ["x"] = 1, ["y"] = 2, ["width"] = 100, ["height"] = 50, ["text"] = "{hw/some-sensor-only-I-have}" }],
         };
     }
+
+    private static ThemeSettings Resolved(LayoutDocument layout) => new ThemeLibrary(null).Resolve(layout.Theme);
 
     private static MemoryStream Pack(LayoutDocument layout, string name, out IReadOnlyList<string> warnings)
     {
@@ -87,14 +89,14 @@ public sealed class LayoutPackageTests : IDisposable
         var imported = other.Load(name);
         Assert.Equal(800, imported.Width);
         Assert.Equal(200, imported.Height);
-        Assert.Equal("tile", imported.Theme.BackgroundFit);
-        Assert.Equal("#123456", imported.Theme.Accent);
+        Assert.Equal("tile", Resolved(imported).BackgroundFit);
+        Assert.Equal("#123456", Resolved(imported).Accent);
 
         var folder = Path.Combine(other.Directory, "Shared");
-        Assert.Equal(Path.Combine(folder, "font.ttf"), imported.Theme.FontFile);
-        Assert.Equal(Path.Combine(folder, "background.jpg"), imported.Theme.BackgroundImage);
-        Assert.Equal(FontBytes, File.ReadAllBytes(imported.Theme.FontFile!));
-        Assert.Equal(ImageBytes, File.ReadAllBytes(imported.Theme.BackgroundImage!));
+        Assert.Equal(Path.Combine(folder, "font.ttf"), Resolved(imported).FontFile);
+        Assert.Equal(Path.Combine(folder, "background.jpg"), Resolved(imported).BackgroundImage);
+        Assert.Equal(FontBytes, File.ReadAllBytes(Resolved(imported).FontFile!));
+        Assert.Equal(ImageBytes, File.ReadAllBytes(Resolved(imported).BackgroundImage!));
 
         // Metric ids the other PC doesn't have come through untouched; the widget shows "—" for them as usual.
         Assert.Equal("{hw/some-sensor-only-I-have}", (string?)imported.Widgets[0]["text"]);
@@ -117,14 +119,41 @@ public sealed class LayoutPackageTests : IDisposable
         Assert.Equal("assets/background.jpg", (string?)theme["backgroundImage"]);
 
         // The layout being exported is left alone.
-        Assert.EndsWith("Fancy Font.TTF", original.Theme.FontFile);
+        Assert.EndsWith("Fancy Font.TTF", Resolved(original).FontFile);
+    }
+
+    [Fact]
+    public void A_layout_using_a_saved_theme_carries_the_theme_with_it()
+    {
+        var files = LayoutWithFiles();
+        var themes = new ThemeLibrary(Path.Combine(_root, "mine"));
+        themes.Save("Neon", files.Theme);
+        var layout = new LayoutDocument { Theme = new JsonObject { ["base"] = "Neon", ["foreground"] = "#EEEEEE" } };
+
+        var package = new MemoryStream();
+        LayoutPackage.Write(layout, "Shared", package, themes);
+        package.Position = 0;
+        var contents = LayoutPackage.Read(package, "x");
+
+        // The other PC has no "Neon": its values come along, with the font and image packed.
+        Assert.Null(ThemeLibrary.BaseName(contents.Layout.Theme));
+        Assert.Equal("#123456", Resolved(contents.Layout).Accent);
+        Assert.Equal("#EEEEEE", Resolved(contents.Layout).Foreground);
+        Assert.Equal(FontBytes, contents.Font!.Data);
+        Assert.Equal(ImageBytes, contents.Background!.Data);
+
+        // Built-in themes exist everywhere, so they stay as names.
+        var builtIn = new MemoryStream();
+        LayoutPackage.Write(new LayoutDocument { Theme = new JsonObject { ["base"] = "Ice" } }, "Cool", builtIn, themes);
+        builtIn.Position = 0;
+        Assert.Equal("Ice", ThemeLibrary.BaseName(LayoutPackage.Read(builtIn, "x").Layout.Theme));
     }
 
     [Fact]
     public void Missing_files_are_left_out_with_a_warning()
     {
         var layout = LayoutWithFiles();
-        File.Delete(layout.Theme.FontFile!);
+        File.Delete(Resolved(layout).FontFile!);
 
         using var package = Pack(layout, "Shared", out var warnings);
 
@@ -178,7 +207,7 @@ public sealed class LayoutPackageTests : IDisposable
         var contents = LayoutPackage.Read(package, "x");
 
         Assert.Null(contents.Font);
-        Assert.Null(contents.Layout.Theme.FontFile);
+        Assert.Null(Resolved(contents.Layout).FontFile);
         Assert.Equal(".png", contents.Background!.Extension);
         Assert.Contains(contents.Skipped, s => s.Contains("evil.exe"));
         Assert.Contains(contents.Skipped, s => s.Contains("readme.bat"));
@@ -197,8 +226,8 @@ public sealed class LayoutPackageTests : IDisposable
 
         var contents = LayoutPackage.Read(package, "x");
 
-        Assert.Null(contents.Layout.Theme.FontFile);
-        Assert.Null(contents.Layout.Theme.BackgroundImage);
+        Assert.Null(Resolved(contents.Layout).FontFile);
+        Assert.Null(Resolved(contents.Layout).BackgroundImage);
         Assert.Equal(2, contents.Skipped.Count);
     }
 
@@ -252,7 +281,7 @@ public sealed class LayoutPackageTests : IDisposable
         var library = NewProfile("pc");
         using (var first = Pack(LayoutWithFiles(), "Shared", out _))
             library.Import(LayoutPackage.Read(first, "x"), "Shared");
-        var firstFolder = Path.GetDirectoryName(library.Load("Shared").Theme.FontFile)!;
+        var firstFolder = Path.GetDirectoryName(Resolved(library.Load("Shared")).FontFile)!;
 
         var second = LayoutWithFiles();
         second.Width = 1234;
@@ -262,8 +291,8 @@ public sealed class LayoutPackageTests : IDisposable
         var replaced = library.Load("Shared");
         Assert.Equal(1234, replaced.Width);
         Assert.Single(library.List(), n => n.Equals("Shared", StringComparison.OrdinalIgnoreCase));
-        Assert.True(File.Exists(replaced.Theme.FontFile));
-        Assert.NotEqual(firstFolder, Path.GetDirectoryName(replaced.Theme.FontFile));
+        Assert.True(File.Exists(Resolved(replaced).FontFile));
+        Assert.NotEqual(firstFolder, Path.GetDirectoryName(Resolved(replaced).FontFile));
         Assert.False(Directory.Exists(firstFolder));
     }
 
@@ -273,7 +302,7 @@ public sealed class LayoutPackageTests : IDisposable
         var library = NewProfile("pc");
         using (var package = Pack(LayoutWithFiles(), "Shared", out _))
             library.Import(LayoutPackage.Read(package, "x"), "Shared");
-        var folder = Path.GetDirectoryName(library.Load("Shared").Theme.FontFile)!;
+        var folder = Path.GetDirectoryName(Resolved(library.Load("Shared")).FontFile)!;
         library.Duplicate("Shared", "Shared copy");
 
         library.Delete("Shared");

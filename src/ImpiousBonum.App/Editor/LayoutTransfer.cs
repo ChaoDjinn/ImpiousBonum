@@ -10,7 +10,8 @@ public static class LayoutTransfer
     private const string Caption = "Impious Bonum";
 
     /// <summary>Asks where to save, then writes the layout with its font and background image as one <c>.ibl</c> file.</summary>
-    public static void Export(Window owner, LayoutDocument layout, string name)
+    /// <param name="themes">Saved themes the layout may name; a saved theme's values are copied into the package.</param>
+    public static void Export(Window owner, LayoutDocument layout, string name, ThemeLibrary themes)
     {
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
@@ -24,7 +25,7 @@ public static class LayoutTransfer
 
         try
         {
-            var warnings = LayoutPackage.Write(layout, name, dialog.FileName);
+            var warnings = LayoutPackage.Write(layout, name, dialog.FileName, themes);
             var message = $"Exported \"{name}\" to {Path.GetFileName(dialog.FileName)}.";
             if (warnings.Count > 0)
                 message += Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine, warnings);

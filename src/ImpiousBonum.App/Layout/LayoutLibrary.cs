@@ -129,8 +129,8 @@ public sealed class LayoutLibrary
             var folder = NewImportFolder(name);
             System.IO.Directory.CreateDirectory(folder);
             File.WriteAllText(Path.Combine(folder, ImportMarker), "Files for an imported layout. Deleted when no layout uses them.\n");
-            layout.Theme.FontFile = Place(folder, "font", package.Font);
-            layout.Theme.BackgroundImage = Place(folder, "background", package.Background);
+            ThemeLibrary.SetString(layout.Theme, "fontFile", Place(folder, "font", package.Font));
+            ThemeLibrary.SetString(layout.Theme, "backgroundImage", Place(folder, "background", package.Background));
         }
         name = Find(name) ?? name;
         Save(name, layout);
@@ -180,7 +180,7 @@ public sealed class LayoutLibrary
             try
             {
                 var theme = Load(name).Theme;
-                used.AddRange(new[] { theme.FontFile, theme.BackgroundImage }.OfType<string>().Where(p => !string.IsNullOrWhiteSpace(p)).Select(FullPathOrEmpty));
+                used.AddRange(new[] { ThemeLibrary.GetString(theme, "fontFile"), ThemeLibrary.GetString(theme, "backgroundImage") }.OfType<string>().Where(p => !string.IsNullOrWhiteSpace(p)).Select(FullPathOrEmpty));
             }
             catch (Exception ex) when (ex is JsonException or IOException)
             {
@@ -281,7 +281,7 @@ public sealed class LayoutLibrary
             throw new ArgumentException(problem, nameof(name));
     }
 
-    private static string ReadWithRetry(string path)
+    internal static string ReadWithRetry(string path)
     {
         // The file may still be locked by the editor that just saved it.
         for (var attempt = 0; ; attempt++)

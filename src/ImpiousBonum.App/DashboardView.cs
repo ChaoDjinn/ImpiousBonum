@@ -17,9 +17,10 @@ public sealed class DashboardView : Canvas
         SnapsToDevicePixels = true;
     }
 
-    public void Build(LayoutDocument layout)
+    /// <param name="themeSettings">The layout's theme once resolved (see <see cref="ThemeLibrary.Resolve"/>).</param>
+    public void Build(LayoutDocument layout, ThemeSettings themeSettings)
     {
-        var theme = Theme.From(layout.Theme);
+        var theme = Theme.From(themeSettings);
         Children.Clear();
         _widgets.Clear();
         Width = layout.Width;

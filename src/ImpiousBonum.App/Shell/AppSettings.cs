@@ -25,7 +25,7 @@ public sealed class AppSettings
 
     public string PingHost { get; set; } = "1.1.1.1";
 
-    /// <summary>Games linked to layouts, shown while the game is in front (see <see cref="GameLayoutSwitcher"/>).</summary>
+    /// <summary>Games linked to layouts or themes, shown while the game is in front (see <see cref="GameLayoutSwitcher"/>).</summary>
     public List<GameLayoutRule> GameLayouts
     {
         get => _gameLayouts;
@@ -51,8 +51,8 @@ public sealed class AppSettings
             if (File.Exists(AppPaths.SettingsFile)
                 && JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(AppPaths.SettingsFile), JsonDefaults.Options) is { } settings)
             {
-                // Hand edits: drop links missing a process or layout rather than tripping over them later.
-                settings.GameLayouts.RemoveAll(rule => rule is null || string.IsNullOrWhiteSpace(rule.Process) || string.IsNullOrWhiteSpace(rule.Layout));
+                // Hand edits: drop links missing a process, or both a layout and a theme, rather than tripping over them later.
+                settings.GameLayouts.RemoveAll(rule => rule is null || !rule.IsUsable);
                 return settings;
             }
         }

@@ -70,7 +70,7 @@ public sealed class PreviewSurface : Border
 
     private void Rebuild()
     {
-        _view.Build(_session.Document);
+        _view.Build(_session.Document, _session.ResolvedTheme);
         // Fill new widgets with the latest readings now rather than on the next tick, so edits don't flash blank.
         if (_store is not null)
             _view.Refresh(_store, DateTime.Now);

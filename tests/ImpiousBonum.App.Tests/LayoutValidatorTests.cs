@@ -73,7 +73,7 @@ public sealed class LayoutValidatorTests
 
     [Fact]
     public void Theme_warning_colours_are_checked() =>
-        Assert.Single(LayoutValidator.Validate(new LayoutDocument { Theme = new ThemeSettings { Critical = "warning" } }));
+        Assert.Single(LayoutValidator.Validate(new LayoutDocument { Theme = new JsonObject { ["critical"] = "warning" } }));
 
     [Fact]
     public void Missing_geometry_is_reported()
