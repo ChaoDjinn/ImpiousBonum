@@ -37,6 +37,8 @@ public partial class App : Application
     private DispatcherTimer? _updateTimer;
     private bool _warnedOutdatedService;
     private bool _mirrorQueued;
+    private bool _started;
+    private bool _reportedError;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -66,6 +68,15 @@ public partial class App : Application
             Shutdown();
             return;
         }
+
+        AppLog.Start(_updater.CurrentVersion);
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += (_, fatal) => AppLog.Error("Fatal error", fatal.ExceptionObject as Exception ?? new Exception($"{fatal.ExceptionObject}"));
+        TaskScheduler.UnobservedTaskException += (_, unobserved) =>
+        {
+            AppLog.Error("Unobserved task error", unobserved.Exception);
+            unobserved.SetObserved();
+        };
 
         _settings = AppSettings.Load();
         if (!_settings.HardwareRendering)
@@ -109,10 +120,30 @@ public partial class App : Application
         _tick = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
         _tick.Tick += (_, _) => Refresh();
         Refresh();
+        _started = true;
         // Line ticks up with the wall clock so the minute flips on time.
         await Task.Delay(1000 - DateTime.Now.Millisecond);
         Refresh();
         _tick.Start();
+    }
+
+    /// <summary>
+    /// Logs errors on the UI thread. Once running, a status display is more use carrying on after one bad tick than
+    /// vanishing, so the error is swallowed and the tray says where the details are (once per run). During startup
+    /// it isn't: a half-built app with no window or tray would sit invisibly holding the single-instance lock.
+    /// </summary>
+    private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        AppLog.Error(_started ? "Unhandled error" : "Startup failed", e.Exception);
+        if (!_started)
+            return;
+
+        e.Handled = true;
+        if (!_reportedError)
+        {
+            _reportedError = true;
+            _tray?.ShowError("Impious Bonum hit an error", "It's still running. Details are in dashboard.log (tray → Open settings folder).");
+        }
     }
 
     private void Refresh()
@@ -151,6 +182,7 @@ public partial class App : Application
         if (userAsked)
             _tray?.ShowInfo("Impious Bonum", "Checking for updates…");
 
+        AppLog.Info("Checking for updates");
         var ready = await _updater.CheckAndDownloadAsync();
         _tray?.SetUpdateReady(ready);
         if (ready is not null)
@@ -161,6 +193,7 @@ public partial class App : Application
 
     private async Task RestartToUpdateAsync()
     {
+        AppLog.Info($"Restarting to update to {_updater.ReadyVersion}");
         if (await ReleaseEverythingAsync())
             _updater.RestartToUpdate();
     }
@@ -250,6 +283,7 @@ public partial class App : Application
     private async Task ChangeSensorServiceAsync(bool install)
     {
         var error = await SensorServiceControl.RunAsync(install);
+        AppLog.Info($"Sensor service {(install ? "install" : "removal")}: {error ?? "done"}");
         if (error is null)
             _tray?.ShowInfo("Impious Bonum", install ? "Sensor service installed. Temperatures will appear in a few seconds." : "Sensor service removed.");
         else if (error != "Cancelled.")

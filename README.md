@@ -77,6 +77,7 @@ Settings and layout live in `%AppData%\ImpiousBonum`:
 
 - `layout.json`: canvas size, theme and widgets. Saved changes apply immediately.
 - `settings.json`: which monitor, ping host, `hardwareRendering` (off by default to save memory).
+- `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
 
 ## Sensor service (temperatures, fans, power, FPS)
 
