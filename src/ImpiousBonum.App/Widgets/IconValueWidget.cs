@@ -20,16 +20,19 @@ public sealed class IconValueWidget : Widget
             Setting.Number("iconSize", "Icon size", 60, 8, 400, group: Setting.Appearance),
             Setting.Number("iconStroke", "Icon line width", 2, 0.5, 6, group: Setting.Appearance, help: "On the icon's 24×24 grid."),
             Setting.Number("gap", "Gap after icon", 50, 0, 400, group: Setting.Appearance),
+            Setting.Thresholds("Changes the value's colour. An empty metric uses the first metric in the text."),
         ],
         (settings, theme) => new IconValueWidget(settings, theme));
 
     private readonly ValueTemplate _template;
     private readonly TextBlock _text;
+    private readonly ThresholdColors _thresholds;
 
     public IconValueWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
         _template = ValueTemplate.Parse(settings.String("text"));
         var iconSize = settings.Number("iconSize");
+        _thresholds = new ThresholdColors(settings, theme);
 
         ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -61,5 +64,9 @@ public sealed class IconValueWidget : Widget
         Children.Add(_text);
     }
 
-    public override void Refresh(MetricStore store, DateTime now) => _text.Text = _template.Render(store);
+    public override void Refresh(MetricStore store, DateTime now)
+    {
+        _text.Text = _template.Render(store);
+        _text.Foreground = _thresholds.Pick(store, _template.MetricIds.FirstOrDefault(), Theme.Foreground);
+    }
 }

@@ -40,7 +40,7 @@ public enum SettingKind
     /// <summary>One of <see cref="SettingDescriptor.Choices"/>.</summary>
     Choice,
 
-    /// <summary><c>foreground</c>, <c>secondary</c>, <c>accent</c> or <c>#RRGGBB</c>/<c>#AARRGGBB</c>.</summary>
+    /// <summary><c>foreground</c>, <c>secondary</c>, <c>accent</c>, <c>warning</c>, <c>critical</c> or <c>#RRGGBB</c>/<c>#AARRGGBB</c>.</summary>
     Color,
 
     /// <summary>One of the built-in icon names (<see cref="SettingDescriptor.Choices"/>).</summary>
@@ -99,7 +99,7 @@ public static class Setting
     public static SettingDescriptor Color(string key, string label, string @default, string group = Appearance, string? help = null, bool named = true) =>
         new(key, label, SettingKind.Color, @default, group, help, Choices: named ? NamedColors : null);
 
-    public static readonly IReadOnlyList<string> NamedColors = ["foreground", "secondary", "accent"];
+    public static readonly IReadOnlyList<string> NamedColors = ["foreground", "secondary", "accent", "warning", "critical"];
 
     public static SettingDescriptor Icon(string key, string label, string @default, string group = Content) =>
         new(key, label, SettingKind.Icon, @default, group, Choices: Icons.Names);
@@ -108,4 +108,18 @@ public static class Setting
         new(key, label, SettingKind.Items, null, group, help, ItemSettings: itemSettings);
 
     public static readonly IReadOnlyList<string> HorizontalAlignments = ["left", "center", "right"];
+
+    public const string ThresholdsKey = "thresholds";
+
+    /// <summary>The <c>thresholds</c> list read by <see cref="ThresholdColors"/>. <paramref name="help"/> says what it colours and what "own metric" means.</summary>
+    public static SettingDescriptor Thresholds(string help) =>
+        Items(ThresholdsKey, "Warning colours",
+        [
+            Metric("metric", "Metric", null, help: "Empty uses the widget's own metric."),
+            Number("above", "Above", null, double.MinValue, double.MaxValue, help: "Matches when the value is above this."),
+            Number("below", "Below", null, double.MinValue, double.MaxValue, help: "Matches when the value is below this."),
+            Color("color", "Colour", "critical"),
+        ],
+        group: "Warning colours",
+        help: help + " When several rules match, the last one wins, so list them mildest first.");
 }

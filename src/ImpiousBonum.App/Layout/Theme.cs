@@ -16,6 +16,8 @@ public sealed class Theme
         Accent = ParseBrush(settings.Accent, Brushes.Orange);
         Background = ParseBrush(settings.Background, Brushes.Black);
         Track = ParseBrush(settings.Track, Brushes.Transparent);
+        Warning = ParseBrush(settings.Warning, Brushes.Gold);
+        Critical = ParseBrush(settings.Critical, Brushes.Red);
         AccentColor = Accent is SolidColorBrush solid ? solid.Color : Colors.Orange;
     }
 
@@ -35,15 +37,25 @@ public sealed class Theme
 
     public Brush Track { get; }
 
+    /// <summary>Warning colour rules can name, e.g. a CPU running hot.</summary>
+    public Brush Warning { get; }
+
+    public Brush Critical { get; }
+
     public static Theme From(ThemeSettings settings) => new(settings);
 
-    /// <summary>Resolves a widget colour setting: <c>foreground</c>, <c>secondary</c>, <c>accent</c> or a <c>#RRGGBB</c>/<c>#AARRGGBB</c> value.</summary>
+    /// <summary>
+    /// Resolves a widget colour setting: <c>foreground</c>, <c>secondary</c>, <c>accent</c>, <c>warning</c>, <c>critical</c>
+    /// or a <c>#RRGGBB</c>/<c>#AARRGGBB</c> value.
+    /// </summary>
     public Brush Resolve(string? value, Brush fallback) => value?.ToLowerInvariant() switch
     {
         null or "" => fallback,
         "foreground" => Foreground,
         "secondary" => Secondary,
         "accent" => Accent,
+        "warning" => Warning,
+        "critical" => Critical,
         _ => ParseBrush(value, fallback),
     };
 

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.Core.Metrics;
 
@@ -17,21 +18,23 @@ public sealed class TextWidget : Widget
             Setting.Choice("align", "Alignment", "left", Setting.HorizontalAlignments),
             Setting.Toggle("uppercase", "Uppercase", false),
             Setting.Color("color", "Colour", "foreground"),
+            Setting.Thresholds("Changes the text colour. An empty metric uses the first metric in the text."),
         ],
         (settings, theme) => new TextWidget(settings, theme));
 
     private readonly ValueTemplate _template;
     private readonly TextBlock _text;
     private readonly bool _uppercase;
+    private readonly Brush _color;
+    private readonly ThresholdColors _thresholds;
 
     public TextWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
         _template = ValueTemplate.Parse(settings.String("text"));
         _uppercase = settings.Bool("uppercase");
-        _text = CreateText(
-            settings.Number("fontSize"),
-            theme.Resolve(settings.String("color"), theme.Foreground),
-            ParseAlignment(settings.String("align")));
+        _color = theme.Resolve(settings.String("color"), theme.Foreground);
+        _thresholds = new ThresholdColors(settings, theme);
+        _text = CreateText(settings.Number("fontSize"), _color, ParseAlignment(settings.String("align")));
         _text.VerticalAlignment = VerticalAlignment.Center;
         Children.Add(_text);
     }
@@ -40,5 +43,6 @@ public sealed class TextWidget : Widget
     {
         var text = _template.Render(store);
         _text.Text = _uppercase ? text.ToUpper() : text;
+        _text.Foreground = _thresholds.Pick(store, _template.MetricIds.FirstOrDefault(), _color);
     }
 }

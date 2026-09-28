@@ -13,8 +13,6 @@ namespace ImpiousBonum.App.Layout;
 /// </summary>
 public static class LayoutValidator
 {
-    private static readonly string[] NamedColors = ["foreground", "secondary", "accent"];
-
     public static IReadOnlyList<string> Validate(LayoutDocument layout)
     {
         var issues = new List<string>();
@@ -83,7 +81,9 @@ public static class LayoutValidator
                 SettingKind.Choice or SettingKind.Icon when !setting.Choices!.Contains(value.GetValue<string>()) =>
                     $"should be one of {string.Join(", ", setting.Choices!)}",
                 SettingKind.Color when !IsColor(value.GetValue<string>()) =>
-                    "should be foreground, secondary, accent or a colour like #FF9800",
+                    "should be foreground, secondary, accent, warning, critical or a colour like #FF9800",
+                SettingKind.Metric when !IsMetricId(value.GetValue<string>()) =>
+                    "should be a metric id like cpu.temp, without braces or spaces",
                 _ => null,
             };
             if (problem is not null)
@@ -97,7 +97,11 @@ public static class LayoutValidator
                 for (var i = 0; i < items.Count; i++)
                 {
                     if (items[i] is JsonObject item)
+                    {
                         CheckSettings(item, setting.ItemSettings ?? [], $"{where} {key}[{i + 1}]", issues, skip: []);
+                        if (key == Setting.ThresholdsKey && item["above"] is null && item["below"] is null)
+                            issues.Add($"{where} {key}[{i + 1}]: needs 'above' or 'below', or it never applies.");
+                    }
                     else
                         issues.Add($"{where}: {key}[{i + 1}] should be an object.");
                 }
@@ -110,7 +114,7 @@ public static class LayoutValidator
         foreach (var (name, value) in new[]
         {
             ("foreground", theme.Foreground), ("secondary", theme.Secondary), ("accent", theme.Accent),
-            ("background", theme.Background), ("track", theme.Track),
+            ("background", theme.Background), ("track", theme.Track), ("warning", theme.Warning), ("critical", theme.Critical),
         })
         {
             if (!IsColor(value, allowNamed: false))
@@ -121,11 +125,18 @@ public static class LayoutValidator
             issues.Add($"Theme: font file not found: {theme.FontFile}");
     }
 
+    /// <summary>
+    /// Metric ids come from the running sensors, so they can't all be known here; this catches the likely slips,
+    /// such as writing <c>{cpu.temp}</c> or a template where a single id belongs. Empty means "the widget's default".
+    /// </summary>
+    private static bool IsMetricId(string value) =>
+        !value.Any(c => char.IsWhiteSpace(c) || c is '{' or '}' or ':');
+
     private static bool IsNumber(JsonNode? node) => JsonDefaults.TryGetNumber(node, out _);
 
     private static bool IsColor(string value, bool allowNamed = true)
     {
-        if (allowNamed && NamedColors.Contains(value, StringComparer.OrdinalIgnoreCase))
+        if (allowNamed && Setting.NamedColors.Contains(value, StringComparer.OrdinalIgnoreCase))
             return true;
         try
         {

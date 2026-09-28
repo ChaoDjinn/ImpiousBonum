@@ -521,6 +521,8 @@ public sealed class PropertyPanel : StackPanel
             "foreground" => theme.Foreground,
             "secondary" => theme.Secondary,
             "accent" => theme.Accent,
+            "warning" => theme.Warning,
+            "critical" => theme.Critical,
             _ => value,
         };
         try

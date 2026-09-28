@@ -48,6 +48,8 @@ public static class EditorDescriptors
             Setting.Color("accent", "Accent", defaults.Accent, colours, "Graphs, bars and icons.", named: false),
             Setting.Color("background", "Background", defaults.Background, colours, named: false),
             Setting.Color("track", "Bar track", defaults.Track, colours, "The unfilled part of bars.", named: false),
+            Setting.Color("warning", "Warning", defaults.Warning, colours, "Used by warning colour rules that say \"warning\".", named: false),
+            Setting.Color("critical", "Critical", defaults.Critical, colours, "Used by warning colour rules that say \"critical\".", named: false),
         ];
     }
 }

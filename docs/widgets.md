@@ -6,7 +6,13 @@ Every widget in `layout.json` has `type`, `x`, `y`, `width` and `height` (in can
 Anything left out uses its default.
 
 Templates are text with live values: `{metric.id}` or `{metric.id:spec}`, where spec can be a number format (`0.0`, `N0`),
-a byte unit (`MB`, `GB`, …) or `nounit`. Colours are `foreground`, `secondary`, `accent` or `#RRGGBB` / `#AARRGGBB`.
+a byte unit (`MB`, `GB`, …) or `nounit`. Colours are `foreground`, `secondary`, `accent`, `warning`, `critical`
+or `#RRGGBB` / `#AARRGGBB`; the named ones come from the layout's theme.
+
+Widgets with a `thresholds` list change colour when a value crosses a limit, e.g.
+`"thresholds": [{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }]`.
+Each rule checks its `metric` (empty means the widget's own) against `above` and/or `below`. When several rules match,
+the last one in the list wins, so list them mildest first. A metric with no reading keeps the normal colour.
 
 ## Text (`text`)
 
@@ -19,6 +25,16 @@ A line of text with live values, e.g. "{gpu.load}" or "{cpu.temp:nounit} °C".
 | `align` | `left` / `center` / `right` | `left` | Alignment |
 | `uppercase` | true/false | `false` | Uppercase |
 | `color` | color | `foreground` | Colour |
+| `thresholds` | list | — | Warning colours. Changes the text colour. An empty metric uses the first metric in the text. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
 
 ## Graph (`graph`)
 
@@ -35,6 +51,16 @@ A label and live value above a scrolling history of one metric, drawn as a line 
 | `max` | number | — | Maximum. Empty uses the metric's natural maximum (100 for percentages, the total for memory), else scales to fit. |
 | `lineThickness` | number (0.5–20) | `2.5` | Line thickness |
 | `fontSize` | number (6–200) | `26` | Font size |
+| `thresholds` | list | — | Warning colours. Changes the line or area and the value. An empty metric uses the graph's metric. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
 
 ## Icon and value (`icon`)
 
@@ -48,6 +74,16 @@ An accent-coloured line icon followed by a live value, e.g. a chip and the CPU t
 | `iconSize` | number (8–400) | `60` | Icon size |
 | `iconStroke` | number (0.5–6) | `2` | Icon line width. On the icon's 24×24 grid. |
 | `gap` | number (0–400) | `50` | Gap after icon |
+| `thresholds` | list | — | Warning colours. Changes the value's colour. An empty metric uses the first metric in the text. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
 
 ## Clock (`clock`)
 
@@ -74,6 +110,16 @@ One row per drive with free space and a bar showing how full it is. Follows driv
 | `fontSize` | number (6–200) | `25` | Font size |
 | `barHeight` | number (1–100) | `5` | Bar height |
 | `spacing` | number (0–200) | `12` | Row spacing |
+| `thresholds` | list | — | Warning colours. Changes each drive's bar. An empty metric uses that drive's used percentage (disk.C.usedPct for C:). When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
 
 ## Rows (`rows`)
 
