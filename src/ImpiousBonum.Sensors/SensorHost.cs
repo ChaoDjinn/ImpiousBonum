@@ -9,6 +9,7 @@ namespace ImpiousBonum.Sensors;
 internal sealed class SensorHost : IAsyncDisposable
 {
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan PawnIoRecheckInterval = TimeSpan.FromSeconds(30);
 
     /// <summary>Informational version (e.g. "0.2.0+commit"), matching the dashboard it was built with.</summary>
     public static string HostVersion { get; } =
@@ -44,8 +45,9 @@ internal sealed class SensorHost : IAsyncDisposable
         }
 
         await PublishCatalogAsync();
-        Log.Info($"{_collector.Status}. {_collector.Catalog.Count} sensors. Admin: {_collector.IsElevated}, PawnIO: {_collector.IsPawnIoRunning}.");
+        Log.Info($"{_collector.Status}. {_collector.Catalog.Count} sensors. Admin: {_collector.IsElevated}, PawnIO: {_collector.PawnIo?.ToString() ?? "not installed"}.");
 
+        var nextPawnIoCheck = DateTime.UtcNow + PawnIoRecheckInterval;
         using var timer = new PeriodicTimer(Interval);
         while (await WaitAsync(timer, cancellationToken))
         {
@@ -61,6 +63,13 @@ internal sealed class SensorHost : IAsyncDisposable
 
             try
             {
+                if (DateTime.UtcNow >= nextPawnIoCheck)
+                {
+                    nextPawnIoCheck = DateTime.UtcNow + PawnIoRecheckInterval;
+                    if (_collector.RecheckPawnIo())
+                        Log.Info("PawnIO driver has started; reopened hardware sensors for CPU temperature and power.");
+                }
+
                 var catalogChanged = _collector.Update();
                 if (!_frames.IsRunning && _frames.Problem is null)
                 {
