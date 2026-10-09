@@ -36,18 +36,42 @@ internal sealed class SensorCollector : IDisposable
 
     public bool IsElevated { get; } = new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
 
-    public bool IsPawnIoRunning { get; } = CheckPawnIo();
+    /// <summary>The PawnIO driver's service state, or null when it isn't installed.</summary>
+    public ServiceControllerStatus? PawnIo { get; private set; } = CheckPawnIo();
+
+    public bool IsPawnIoRunning => PawnIo == ServiceControllerStatus.Running;
 
     /// <summary>Low-level CPU and motherboard sensors need both admin rights and the PawnIO driver.</summary>
     public bool HasLowLevelAccess => IsElevated && IsPawnIoRunning;
 
     public string Status =>
         !IsElevated ? "Not running as admin: CPU temperature unavailable"
-        : !IsPawnIoRunning ? "PawnIO driver not installed: CPU temperature unavailable"
+        : PawnIo is null ? "PawnIO driver not installed: CPU temperature unavailable"
+        : !IsPawnIoRunning ? $"PawnIO driver installed but not running ({PawnIo}): CPU temperature unavailable"
         : !_aliases.ContainsKey(SensorAliases.CpuTemperature) ? "Sensors running (no CPU temperature sensor found)"
         : "Sensors running";
 
     public void Open() => _computer.Open();
+
+    /// <summary>
+    /// The service starts at boot and can get there before the PawnIO driver has loaded (or the driver can be
+    /// reinstalled while it runs). Without this the CPU sensors would stay unavailable until the service restarted.
+    /// When PawnIO has started since the last check, rebuilds the hardware so the CPU sensors are created with it, and
+    /// returns true; the next <see cref="Update"/> then rebuilds the catalog.
+    /// </summary>
+    public bool RecheckPawnIo()
+    {
+        if (!IsElevated || IsPawnIoRunning)
+            return false;
+
+        PawnIo = CheckPawnIo();
+        if (!IsPawnIoRunning)
+            return false;
+
+        _computer.Reset();
+        _signature = string.Empty;
+        return true;
+    }
 
     /// <summary>Refreshes every sensor. Returns true when the set of sensors changed and <see cref="Catalog"/> was rebuilt.</summary>
     public bool Update()
@@ -166,16 +190,16 @@ internal sealed class SensorCollector : IDisposable
         return names.Select(n => list.FirstOrDefault(s => s.Name.Equals(n, StringComparison.OrdinalIgnoreCase))).FirstOrDefault(s => s is not null);
     }
 
-    private static bool CheckPawnIo()
+    private static ServiceControllerStatus? CheckPawnIo()
     {
         try
         {
             using var service = new ServiceController("PawnIO");
-            return service.Status == ServiceControllerStatus.Running;
+            return service.Status;
         }
         catch (InvalidOperationException)
         {
-            return false;
+            return null;
         }
     }
 
