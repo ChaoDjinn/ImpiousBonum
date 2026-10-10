@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using ImpiousBonum.Core.Providers;
 
 namespace ImpiousBonum.App.Shell;
 
@@ -27,6 +28,7 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _sensorRemove = new("Remove sensor service…");
     private readonly ToolStripMenuItem _claude = new("Claude usage");
     private readonly ToolStripMenuItem _claudeStatus = new() { Enabled = false };
+    private readonly ToolStripMenuItem _claudeHint = new("Needs Claude Code in a terminal: the Desktop app doesn't share usage") { Enabled = false };
     private readonly ToolStripMenuItem _claudeConnect = new() { ToolTipText = "Set Claude Code's status line to send your plan usage to the dashboard" };
     private readonly ToolStripMenuItem _header = new("Impious Bonum") { Enabled = false };
     private readonly ToolStripMenuItem _checkUpdates = new("Check for updates") { Visible = false };
@@ -67,6 +69,7 @@ public sealed class TrayIcon : IDisposable
         _sensorRemove.Click += (_, _) => SensorServiceChangeRequested?.Invoke(this, false);
 
         _claude.DropDownItems.Add(_claudeStatus);
+        _claude.DropDownItems.Add(_claudeHint);
         _claude.DropDownItems.Add(_claudeConnect);
         _claudeConnect.Click += (_, _) => ConnectClaudeCodeRequested?.Invoke(this, EventArgs.Empty);
 
@@ -159,6 +162,7 @@ public sealed class TrayIcon : IDisposable
     public void SetClaudeState(string status, bool connected)
     {
         _claudeStatus.Text = status;
+        _claudeHint.Visible = status != ClaudeUsageProvider.Connected;
         _claudeConnect.Text = connected ? "Reconnect Claude Code" : "Connect Claude Code…";
     }
 

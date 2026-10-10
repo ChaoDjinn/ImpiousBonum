@@ -47,7 +47,11 @@ public partial class EditorWindow : Window
         foreach (var descriptor in WidgetFactory.Descriptors)
         {
             var item = new MenuItem { Header = descriptor.Name, ToolTip = descriptor.Description };
-            item.Click += (_, _) => _session.AddWidget(descriptor);
+            item.Click += (_, _) =>
+            {
+                _session.AddWidget(descriptor);
+                WidgetAdded?.Invoke(this, descriptor);
+            };
             menu.Items.Add(item);
         }
         AddButton.ContextMenu = menu;
@@ -87,6 +91,9 @@ public partial class EditorWindow : Window
         item.Click += (_, _) => action();
         return item;
     }
+
+    /// <summary>A widget was added from the Add menu.</summary>
+    public event EventHandler<WidgetDescriptor>? WidgetAdded;
 
     public void Refresh(MetricStore store, DateTime now)
     {

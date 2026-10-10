@@ -28,9 +28,11 @@ public sealed class Sampler : IAsyncDisposable
         new MemoryProvider(),
         new GpuProvider(),
         new DriveProvider(),
+        new DiskActivityProvider(),
         new NetworkProvider(),
         new PingProvider(pingHost),
         new SensorHostProvider(frameRateTarget),
+        new SystemProvider(),
         .. claudeUsagePath is null ? Array.Empty<IMetricProvider>() : [new ClaudeUsageProvider(claudeUsagePath)],
     ];
 

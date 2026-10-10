@@ -4,10 +4,14 @@
 // Text templates use {metric.id} or {metric.id:spec}. Spec tokens: a number format (0.0, N0),
 // a byte unit (KB, MB, GB, TB) or "nounit". Missing readings show as "—".
 //
-// Metric ids: cpu.load, cpu.threads, mem.used, mem.total, mem.available, mem.load,
-// gpu.name, gpu.load, gpu.vram.used, gpu.vram.total,
-// disk.C.free, disk.C.used, disk.C.total, disk.C.usedPct, disk.C.label (any drive letter),
-// net.down, net.up, net.ping
+// Metric ids: cpu.load, cpu.threads, cpu.clock, cpu.core.0.load (each logical processor),
+// mem.used, mem.total, mem.available, mem.load, mem.commit.used, mem.commit.total, mem.commit.load,
+// gpu.name, gpu.load, gpu.load.3d, gpu.load.decode, gpu.load.encode, gpu.load.compute,
+// gpu.vram.used, gpu.vram.total, gpu.vram.free, gpu.vram.usedPct, gpu.shared.used,
+// disk.C.free, disk.C.used, disk.C.total, disk.C.usedPct, disk.C.label, disk.C.read, disk.C.write, disk.C.active
+// (any drive letter), disk.read, disk.write,
+// net.down, net.up, net.down.total, net.up.total, net.ip, net.adapter, net.ping,
+// sys.uptime, sys.name, sys.battery, sys.battery.status (laptops)
 // With the sensor service: cpu.temp, cpu.power, gpu.temp, gpu.hotspot, gpu.power, gpu.fan, fps, sensors.status,
 // plus every raw sensor as hw/... (run "sensors\ImpiousBonum.Sensors.exe list" to see them).
 {
