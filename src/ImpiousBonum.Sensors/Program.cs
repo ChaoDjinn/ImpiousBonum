@@ -1,4 +1,6 @@
 using System.ServiceProcess;
+using System.Text;
+using ImpiousBonum.Core.Claude;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Sensors;
 
@@ -21,6 +23,9 @@ switch (args.FirstOrDefault()?.ToLowerInvariant())
     case "list":
         return ListSensors();
 
+    case ClaudeStatusLine.Verb:
+        return ClaudeStatusLineCommand();
+
     case null or "run":
         return await RunInConsoleAsync();
 
@@ -32,10 +37,31 @@ switch (args.FirstOrDefault()?.ToLowerInvariant())
               list        Print every sensor and the aliases it resolves, then exit.
               install     Install and start the Windows service (admin).
               uninstall   Stop and remove the Windows service (admin).
+              claude-statusline
+                          Claude Code's status line: reads its JSON from stdin, records your plan usage for the
+                          dashboard and prints a status line. Set up from the dashboard's tray: Claude usage.
 
             Without admin rights, CPU and motherboard sensors are unavailable; GPU sensors usually still work.
             """);
         return 1;
+}
+
+// Claude Code runs this every few seconds, so it does as little as possible and always exits cleanly:
+// a failing status line command would show an error in Claude Code instead of the line.
+static int ClaudeStatusLineCommand()
+{
+    try
+    {
+        Console.InputEncoding = Encoding.UTF8;
+        Console.OutputEncoding = Encoding.UTF8;
+        var input = Console.In.ReadToEnd();
+        Console.Out.Write(ClaudeStatusLine.Handle(input, ClaudeUsageFile.DefaultPath, DateTimeOffset.UtcNow));
+    }
+    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+    {
+        Console.Out.Write("Claude Code");
+    }
+    return 0;
 }
 
 static async Task<int> RunInConsoleAsync()

@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using ImpiousBonum.App.Layout;
 
 namespace ImpiousBonum.App.Widgets;
@@ -46,7 +47,7 @@ public enum SettingKind
     /// <summary>One of the built-in icon names (<see cref="SettingDescriptor.Choices"/>).</summary>
     Icon,
 
-    /// <summary>A list of objects, each with <see cref="SettingDescriptor.ItemSettings"/>.</summary>
+    /// <summary>A list of objects, each with <see cref="SettingDescriptor.ItemSettings"/>. The default, if any, is a <see cref="JsonArray"/>.</summary>
     Items,
 
     /// <summary>An installed font family name.</summary>
@@ -107,8 +108,10 @@ public static class Setting
     public static SettingDescriptor Icon(string key, string label, string @default, string group = Content) =>
         new(key, label, SettingKind.Icon, @default, group, Choices: Icons.Names);
 
-    public static SettingDescriptor Items(string key, string label, IReadOnlyList<SettingDescriptor> itemSettings, string group = Content, string? help = null) =>
-        new(key, label, SettingKind.Items, null, group, help, ItemSettings: itemSettings);
+    /// <param name="defaults">Entries a new widget starts with; a layout that leaves the list out gets them too.</param>
+    public static SettingDescriptor Items(
+        string key, string label, IReadOnlyList<SettingDescriptor> itemSettings, string group = Content, string? help = null, IReadOnlyList<JsonObject>? defaults = null) =>
+        new(key, label, SettingKind.Items, defaults is null ? null : new JsonArray([.. defaults]), group, help, ItemSettings: itemSettings);
 
     public static readonly IReadOnlyList<string> HorizontalAlignments = ["left", "center", "right"];
 

@@ -13,7 +13,7 @@ public sealed class PreviewSurface : Border
 
     private readonly LayoutSession _session;
     private readonly Grid _stage = new();
-    private readonly DashboardView _view = new();
+    private readonly DashboardView _view = new() { Editing = true };
     private readonly EditOverlay _overlay;
     private readonly Viewbox _viewbox;
     private bool _rebuildQueued;

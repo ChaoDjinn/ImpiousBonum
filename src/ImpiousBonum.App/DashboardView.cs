@@ -10,6 +10,7 @@ namespace ImpiousBonum.App;
 public sealed class DashboardView : Canvas
 {
     private readonly List<Widget> _widgets = [];
+    private bool _editing;
 
     public DashboardView()
     {
@@ -30,12 +31,25 @@ public sealed class DashboardView : Canvas
         foreach (var definition in layout.Widgets)
         {
             var widget = WidgetFactory.Create(definition, theme);
+            widget.Editing = _editing;
             widget.Width = definition.GetDouble("width", 200);
             widget.Height = definition.GetDouble("height", 100);
             SetLeft(widget, definition.GetDouble("x", 0));
             SetTop(widget, definition.GetDouble("y", 0));
             Children.Add(widget);
             _widgets.Add(widget);
+        }
+    }
+
+    /// <summary>True while the layout is being edited: widgets that hide when they have nothing to show stay visible, faded.</summary>
+    public bool Editing
+    {
+        get => _editing;
+        set
+        {
+            _editing = value;
+            foreach (var widget in _widgets)
+                widget.Editing = value;
         }
     }
 

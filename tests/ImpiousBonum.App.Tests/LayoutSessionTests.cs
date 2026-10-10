@@ -154,6 +154,27 @@ public sealed class LayoutSessionTests
     }
 
     [Fact]
+    public void New_widgets_start_with_their_default_list_entries()
+    {
+        var session = Session();
+        session.AddWidget(BarsWidget.ClaudeDescriptor);
+
+        var bars = Assert.IsType<JsonArray>(session.SelectedWidget!["bars"]);
+        Assert.Equal(["claude.session", "claude.week"], bars.Select(b => b!["metric"]!.GetValue<string>()));
+    }
+
+    [Fact]
+    public void Editing_a_list_left_out_of_the_file_starts_from_its_defaults()
+    {
+        var session = new LayoutSession(new LayoutDocument { Widgets = [new JsonObject { ["type"] = "claude", ["x"] = 0, ["y"] = 0, ["width"] = 10, ["height"] = 10 }] });
+
+        session.EditItems(0, "bars", items => items.RemoveAt(1));
+
+        var bars = Assert.IsType<JsonArray>(session.Document.Widgets[0]["bars"]);
+        Assert.Equal("Session", Assert.Single(bars)!["label"]!.GetValue<string>());
+    }
+
+    [Fact]
     public void Writing_the_current_value_is_not_an_edit()
     {
         var session = Session();

@@ -12,6 +12,9 @@ public static class AppPaths
 
     public static string LogFile => Path.Combine(DataDirectory, "dashboard.log");
 
+    /// <summary>Written by Claude Code's status line (<see cref="Core.Claude.ClaudeStatusLine"/>), which always uses the default folder.</summary>
+    public static string ClaudeUsageFile => Path.Combine(DataDirectory, Core.Claude.ClaudeUsageFile.FileName);
+
     public static void UseDataDirectory(string directory) => DataDirectory = Path.GetFullPath(directory);
 
     public static void EnsureCreated() => Directory.CreateDirectory(DataDirectory);

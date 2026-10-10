@@ -139,6 +139,70 @@ Each entry in `rows`:
 | `label` | text | `Download` | Label |
 | `text` | template | `{net.down}` | Value |
 
+## Bars (`bars`)
+
+Labelled bars, one per metric, each filled to the metric's share of its maximum, e.g. CPU and RAM load.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `bars` | list | 2 entries | Bars |
+| `fontSize` | number (6–200) | `25` | Label size |
+| `valueFontSize` | number (6–200) | — | Value size. Empty uses 85% of the label size. |
+| `barHeight` | number (1–100) | `8` | Bar height |
+| `spacing` | number (0–200) | `12` | Bar spacing |
+| `hideUnavailable` | true/false | `true` | Hide without a reading. Hides a bar whose metric has no reading, and the whole widget when none has one. They show faded while you edit the layout. |
+| `thresholds` | list | — | Warning colours. Changes each bar. An empty metric uses that bar's metric. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `bars`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `CPU` | Label |
+| `metric` | metric | `cpu.load` | Metric. Fills the bar. |
+| `text` | template | — | Value. Shown on the right. Empty shows the metric's value. |
+| `max` | number | — | Maximum. A full bar. Empty uses the metric's natural maximum: 100 for percentages, the total for memory. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
+
+## Claude usage (`claude`)
+
+Your Claude plan's session (5-hour) and weekly usage, as Claude Code reports them. Shown only while Claude Code is open and reporting. Set it up from the tray: Claude usage → Connect Claude Code.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `bars` | list | 2 entries | Bars |
+| `fontSize` | number (6–200) | `25` | Label size |
+| `valueFontSize` | number (6–200) | — | Value size. Empty uses 85% of the label size. |
+| `barHeight` | number (1–100) | `8` | Bar height |
+| `spacing` | number (0–200) | `12` | Bar spacing |
+| `hideUnavailable` | true/false | `true` | Hide without a reading. Hides a bar whose metric has no reading, and the whole widget when none has one. They show faded while you edit the layout. |
+| `thresholds` | list | — | Warning colours. Changes each bar. An empty metric uses that bar's metric. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `bars`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `CPU` | Label |
+| `metric` | metric | `cpu.load` | Metric. Fills the bar. |
+| `text` | template | — | Value. Shown on the right. Empty shows the metric's value. |
+| `max` | number | — | Maximum. A full bar. Empty uses the metric's natural maximum: 100 for percentages, the total for memory. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
+
 ## Theme
 
 The layout's `theme` object sets the font and colours every widget uses, and the canvas background.

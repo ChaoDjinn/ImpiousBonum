@@ -89,6 +89,7 @@ public partial class DashboardWindow : Window
             return;
         _overlay = new EditOverlay(session, TouchHandleSize, () => EditOverlayScale.UnitsPerPixel(Scaler, session.Document));
         Stage.Children.Add(_overlay);
+        View.Editing = true;
         ApplyClickThrough();
         UpdateOutline();
     }
@@ -100,6 +101,7 @@ public partial class DashboardWindow : Window
         _overlay.Detach();
         Stage.Children.Remove(_overlay);
         _overlay = null;
+        View.Editing = false;
         ApplyClickThrough();
         UpdateOutline();
     }

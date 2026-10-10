@@ -20,7 +20,9 @@ public sealed class Sampler : IAsyncDisposable
 
     public MetricStore Store => _store;
 
-    public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(string pingHost = "1.1.1.1", Func<(int ProcessId, string? Name)>? frameRateTarget = null) =>
+    /// <param name="claudeUsagePath">Where Claude Code's status line writes plan usage; null leaves out the Claude metrics.</param>
+    public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(
+        string pingHost = "1.1.1.1", Func<(int ProcessId, string? Name)>? frameRateTarget = null, string? claudeUsagePath = null) =>
     [
         new CpuProvider(),
         new MemoryProvider(),
@@ -29,6 +31,7 @@ public sealed class Sampler : IAsyncDisposable
         new NetworkProvider(),
         new PingProvider(pingHost),
         new SensorHostProvider(frameRateTarget),
+        .. claudeUsagePath is null ? Array.Empty<IMetricProvider>() : [new ClaudeUsageProvider(claudeUsagePath)],
     ];
 
     public void Start()

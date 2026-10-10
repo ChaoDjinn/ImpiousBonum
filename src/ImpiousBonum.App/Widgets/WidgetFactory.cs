@@ -16,6 +16,8 @@ public static class WidgetFactory
         ClockWidget.Descriptor,
         DrivesWidget.Descriptor,
         RowsWidget.Descriptor,
+        BarsWidget.Descriptor,
+        BarsWidget.ClaudeDescriptor,
     ];
 
     public static WidgetDescriptor? Find(string? type) =>
