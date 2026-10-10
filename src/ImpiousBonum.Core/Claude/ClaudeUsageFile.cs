@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ImpiousBonum.Core.Metrics;
 
 namespace ImpiousBonum.Core.Claude;
 
@@ -39,16 +40,7 @@ public readonly record struct ClaudeUsageReading(double? UsedPercentage, TimeSpa
     /// <summary>"resets in 2h 14m", or "not started" for a window with nothing used yet.</summary>
     public string? ResetsText => UsedPercentage is null ? null : ResetsIn is { } span ? $"resets in {FormatDuration(span)}" : "not started";
 
-    public static string FormatDuration(TimeSpan span)
-    {
-        if (span < TimeSpan.FromMinutes(1))
-            return "<1m";
-        if (span < TimeSpan.FromHours(1))
-            return $"{(int)span.TotalMinutes}m";
-        if (span < TimeSpan.FromDays(1))
-            return $"{(int)span.TotalHours}h {span.Minutes}m";
-        return $"{(int)span.TotalDays}d {span.Hours}h";
-    }
+    public static string FormatDuration(TimeSpan span) => DurationText.Format(span);
 }
 
 /// <summary>

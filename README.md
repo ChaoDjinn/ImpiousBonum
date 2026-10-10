@@ -53,11 +53,16 @@ Every box is a widget you can move, resize, restyle or replace. Eight widget typ
 | Metric ids | Source |
 |---|---|
 | `cpu.load`, `cpu.threads` | `GetSystemTimes` |
+| `cpu.clock` (effective MHz, like Task Manager's *Speed*), `cpu.core.<N>.load` (each logical processor, from 0) | Processor performance counters |
 | `mem.used`, `mem.total`, `mem.available`, `mem.load` | `GlobalMemoryStatusEx` |
-| `gpu.name`, `gpu.load`, `gpu.vram.used`, `gpu.vram.total` | GPU performance counters + DXGI (same numbers as Task Manager) |
+| `mem.commit.used`, `mem.commit.total`, `mem.commit.load` (committed memory against RAM + page file) | `GlobalMemoryStatusEx` |
+| `gpu.name`, `gpu.load`, `gpu.vram.used`, `gpu.vram.total`, `gpu.vram.free`, `gpu.vram.usedPct`, `gpu.shared.used` | GPU performance counters + DXGI (same numbers as Task Manager) |
+| `gpu.load.3d`, `gpu.load.decode`, `gpu.load.encode`, `gpu.load.compute` | GPU engine counters, the busiest engine of each kind |
 | `disk.<L>.free/used/total/usedPct/label` | `DriveInfo`, follows drives as they come and go |
-| `net.down`, `net.up` | Adapters with a default gateway |
+| `disk.<L>.read/write/active`, `disk.read`, `disk.write` | Disk performance counters: speed per drive and in total, and % of time active |
+| `net.down`, `net.up`, `net.down.total`, `net.up.total`, `net.ip`, `net.adapter` | Adapters with a default gateway (totals count since the adapter connected) |
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
+| `sys.uptime`, `sys.name`, `sys.battery`, `sys.battery.status` | Windows; the battery ones only on PCs with a battery |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
 | `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
