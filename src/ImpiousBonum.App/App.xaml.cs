@@ -266,6 +266,11 @@ public partial class App : Application
             : null);
 
         session.Changed += (_, change) => MirrorToDashboard(session, change);
+        _editor.WidgetAdded += (_, descriptor) =>
+        {
+            if (descriptor == BarsWidget.ClaudeDescriptor && _editor is { } editor)
+                OfferClaudeCodeConnection(editor);
+        };
         _editor.Closed += (_, _) =>
         {
             _editor = null;
@@ -483,10 +488,29 @@ public partial class App : Application
     }
 
     /// <summary>
+    /// The Claude usage widget has nothing to show until Claude Code's status line feeds it, and that step is easy to
+    /// miss, so adding the widget offers it when it isn't set up yet.
+    /// </summary>
+    private void OfferClaudeCodeConnection(Window owner)
+    {
+        if (IsClaudeCodeConnected())
+            return;
+        var answer = MessageBox.Show(owner,
+            "The Claude usage widget gets your plan usage from Claude Code's status line, which isn't set up yet.\n\n"
+            + "Connect Claude Code now? This sets the status line in Claude Code's settings and keeps your other settings.\n\n"
+            + "The numbers come from Claude Code in a terminal. The Claude Desktop app doesn't share usage with other apps, "
+            + "though usage there still counts towards the bars.",
+            "Impious Bonum", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes);
+        if (answer == MessageBoxResult.Yes)
+            ConnectClaudeCode(owner);
+    }
+
+    /// <summary>
     /// Sets Claude Code's status line to the sensor host's <c>claude-statusline</c> command, which feeds the Claude usage
     /// metrics. Asks before replacing a status line someone else set up, and keeps a copy of the file it changes.
     /// </summary>
-    private void ConnectClaudeCode()
+    /// <param name="owner">The window to show the "replace your status line?" question over, if any.</param>
+    private void ConnectClaudeCode(Window? owner = null)
     {
         var helper = ClaudeCodeSetup.HelperPath;
         if (!File.Exists(helper))
@@ -502,11 +526,13 @@ public partial class App : Application
             var (kind, command) = ClaudeCodeSetup.Inspect(existing);
             if (kind == ClaudeCodeSetup.StatusLine.Other)
             {
-                var answer = MessageBox.Show(
+                var question =
                     $"Claude Code already has a status line:\n\n{command}\n\nReplace it with Impious Bonum's? It shows the model, context use "
                     + "and your plan usage, and passes the usage to the dashboard.\n\nTo keep yours, choose No: the README's Claude usage "
-                    + "section shows the line to add to your own script.",
-                    "Impious Bonum", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+                    + "section shows the line to add to your own script.";
+                var answer = owner is null
+                    ? MessageBox.Show(question, "Impious Bonum", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No)
+                    : MessageBox.Show(owner, question, "Impious Bonum", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
                 if (answer != MessageBoxResult.Yes)
                     return;
             }
@@ -517,7 +543,7 @@ public partial class App : Application
                 File.WriteAllText(path + ".impiousbonum.bak", existing);
             File.WriteAllText(path, updated);
             AppLog.Info($"Set Claude Code's status line in {path}");
-            _tray?.ShowInfo("Claude Code connected", "Usage appears after Claude Code's next reply. If Claude Code is already open, restart it.");
+            _tray?.ShowInfo("Claude Code connected", "Usage appears after Claude Code's next reply in a terminal. If Claude Code is already open, restart it.");
         }
         catch (JsonException ex)
         {

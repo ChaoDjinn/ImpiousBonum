@@ -16,6 +16,9 @@ public sealed class ClaudeUsageProvider(string usagePath, TimeProvider? time = n
     public const string WeekResets = "claude.week.resets";
     public const string Status = "claude.status";
 
+    /// <summary>The <see cref="Status"/> text while Claude Code is open and reporting limits.</summary>
+    public const string Connected = "Claude Code connected";
+
     /// <summary>
     /// How long after the status line last ran Claude Code still counts as open. The status line is set up to run every
     /// 15 seconds, so this allows a few missed runs.
@@ -49,7 +52,7 @@ public sealed class ClaudeUsageProvider(string usagePath, TimeProvider? time = n
         else if (!snapshot.HasLimits)
             status = "Waiting for Claude Code's first reply";
         else
-            status = "Claude Code connected";
+            status = Connected;
 
         var active = snapshot is not null && age <= StaleAfter && snapshot.HasLimits;
         Publish(store, Session, SessionResets, active ? snapshot!.Reading(snapshot.FiveHour, now) : default);

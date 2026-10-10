@@ -147,10 +147,10 @@ flowchart LR
 
 The *Claude usage* widget shows your Claude plan's session (5-hour) and weekly limits as two bars, e.g. *Session 24 % · resets in 2h 14m*. It's only on screen while Claude Code is open and reporting, and shows faded while you edit the layout so you can still place it.
 
-The numbers come from Claude Code: it passes them to its [status line](https://code.claude.com/docs/en/statusline), and only for Pro and Max plans. There's no official way for another app to read them, so Impious Bonum uses the status line:
+The numbers come from Claude Code: it passes them to its [status line](https://code.claude.com/docs/en/statusline), and only for Pro and Max plans. There's no official way for another app to read them, so Impious Bonum uses the status line. That means Claude Code in a terminal (the CLI): the Claude Desktop app doesn't run status lines or share usage with other apps. Usage in the Desktop app and on claude.ai still counts, because the limits are shared, and shows the next time the CLI reports.
 
-1. Tray → *Claude usage* → *Connect Claude Code…*. This sets the status line in Claude Code's `settings.json` (`%USERPROFILE%\.claude\settings.json`) to `ImpiousBonum.Sensors.exe claude-statusline`, re-run every 15 seconds. It keeps your other settings and saves a copy of the file first. If you already have a status line, it asks before replacing it.
-2. Restart Claude Code if it's open. The new status line shows the model, context use and your limits, e.g. *Opus 5.5 · context 8% · session 24% (2h 14m) · week 41%*.
+1. Tray → *Claude usage* → *Connect Claude Code…* (adding the widget in the editor offers this too, if it isn't set up yet). This sets the status line in Claude Code's `settings.json` (`%USERPROFILE%\.claude\settings.json`) to `ImpiousBonum.Sensors.exe claude-statusline`, re-run every 15 seconds. It keeps your other settings and saves a copy of the file first. If you already have a status line, it asks before replacing it.
+2. Start Claude Code in a terminal (`claude`), or restart it if it's open. The new status line shows the model, context use and your limits, e.g. *Opus 5.5 · context 8% · session 24% (2h 14m) · week 41%*.
 3. Add the widget: *Edit layout…* → add *Claude usage*. The usage appears after Claude Code's next reply.
 
 How it decides Claude Code is open: each status line run updates `claude-usage.json`, and Claude Code re-runs it every 15 seconds while it's open. If there's been no run for a minute, the widget hides. Usage you spend on claude.ai shows up the next time Claude Code reports. A window that has reset reads *0 % · not started* until you use Claude again.
