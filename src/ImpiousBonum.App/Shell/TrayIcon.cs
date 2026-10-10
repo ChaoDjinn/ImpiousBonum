@@ -25,6 +25,9 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _sensorStatus = new() { Enabled = false };
     private readonly ToolStripMenuItem _sensorInstall = new();
     private readonly ToolStripMenuItem _sensorRemove = new("Remove sensor service…");
+    private readonly ToolStripMenuItem _claude = new("Claude usage");
+    private readonly ToolStripMenuItem _claudeStatus = new() { Enabled = false };
+    private readonly ToolStripMenuItem _claudeConnect = new() { ToolTipText = "Set Claude Code's status line to send your plan usage to the dashboard" };
     private readonly ToolStripMenuItem _header = new("Impious Bonum") { Enabled = false };
     private readonly ToolStripMenuItem _checkUpdates = new("Check for updates") { Visible = false };
     private readonly ToolStripMenuItem _restartToUpdate = new() { Visible = false };
@@ -41,6 +44,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_displays);
         menu.Items.Add(_layouts);
         menu.Items.Add(_sensors);
+        menu.Items.Add(_claude);
         menu.Items.Add(_fpsSource);
         menu.Items.Add(new ToolStripMenuItem("Edit layout…", null, (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty)) { Font = new Font(menu.Font, FontStyle.Bold) });
         menu.Items.Add("Open layout file", null, (_, _) =>
@@ -61,6 +65,10 @@ public sealed class TrayIcon : IDisposable
         // Installing over an existing service replaces it, so "Update" is the same operation.
         _sensorInstall.Click += (_, _) => SensorServiceChangeRequested?.Invoke(this, true);
         _sensorRemove.Click += (_, _) => SensorServiceChangeRequested?.Invoke(this, false);
+
+        _claude.DropDownItems.Add(_claudeStatus);
+        _claude.DropDownItems.Add(_claudeConnect);
+        _claudeConnect.Click += (_, _) => ConnectClaudeCodeRequested?.Invoke(this, EventArgs.Empty);
 
         _tablet.DropDownItems.AddRange([_tabletOn, new ToolStripSeparator(), _tabletShowLink, _tabletCopyLink, _tabletNewLink]);
         _tabletOn.Click += (_, _) => TabletViewToggled?.Invoke(this, !_tabletOn.Checked);
@@ -141,6 +149,17 @@ public sealed class TrayIcon : IDisposable
         _sensorInstall.Text = serviceInstalled ? "Update sensor service…" : "Install sensor service…";
         _sensorInstall.Font = outdated ? new Font(_sensorInstall.Owner?.Font ?? SystemFonts.MenuFont!, FontStyle.Bold) : null;
         _sensorRemove.Visible = serviceInstalled;
+    }
+
+    /// <summary>Tray → Claude usage → Connect Claude Code.</summary>
+    public event EventHandler? ConnectClaudeCodeRequested;
+
+    /// <param name="status">What the dashboard last heard from Claude Code.</param>
+    /// <param name="connected">Claude Code's status line already points at Impious Bonum.</param>
+    public void SetClaudeState(string status, bool connected)
+    {
+        _claudeStatus.Text = status;
+        _claudeConnect.Text = connected ? "Reconnect Claude Code" : "Connect Claude Code…";
     }
 
     /// <summary>A saved layout's name.</summary>

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json.Nodes;
 using ImpiousBonum.App.Editor;
 using ImpiousBonum.App.Layout;
 
@@ -88,6 +89,7 @@ public static class WidgetDocs
         double d => $"`{Number(d)}`",
         bool b => b ? "`true`" : "`false`",
         string text => $"`{Escape(text)}`",
+        JsonArray items => items.Count == 1 ? "1 entry" : $"{items.Count} entries",
         var other => $"`{other}`",
     };
 

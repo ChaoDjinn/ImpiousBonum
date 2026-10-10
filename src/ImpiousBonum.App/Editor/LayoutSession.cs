@@ -249,6 +249,9 @@ public sealed class LayoutSession
             ["width"] = Number(width),
             ["height"] = Number(height),
         };
+        // Lists with default entries start with them in the file, so editing the list edits what's on screen.
+        foreach (var items in descriptor.Settings.Where(s => s.Default is JsonArray))
+            widget[items.Key] = ((JsonArray)items.Default!).DeepClone();
         Edit(ChangeKind.Structure, null, null, null, document => document.Widgets.Add(widget));
         Select(Document.Widgets.Count - 1);
     }
@@ -298,7 +301,11 @@ public sealed class LayoutSession
         {
             var widget = document.Widgets[widgetIndex];
             if (widget[key] is not JsonArray items)
-                widget[key] = items = [];
+            {
+                // A list left out of the file shows its default entries, so editing starts from those.
+                var defaults = WidgetFactory.Find(widget.GetString("type"))?.Find(key)?.Default as JsonArray;
+                widget[key] = items = defaults?.DeepClone().AsArray() ?? [];
+            }
             change(items);
         });
 

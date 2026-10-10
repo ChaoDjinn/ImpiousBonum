@@ -38,9 +38,8 @@ public sealed class WidgetSettings(JsonObject json, IReadOnlyList<SettingDescrip
     public IReadOnlyList<WidgetSettings> Items(string key)
     {
         var setting = Declared(key);
-        return json[key] is JsonArray array
-            ? array.OfType<JsonObject>().Select(item => new WidgetSettings(item, setting.ItemSettings ?? [])).ToList()
-            : [];
+        var array = json[key] as JsonArray ?? setting.Default as JsonArray;
+        return array is null ? [] : array.OfType<JsonObject>().Select(item => new WidgetSettings(item, setting.ItemSettings ?? [])).ToList();
     }
 
     private SettingDescriptor Declared(string key) =>

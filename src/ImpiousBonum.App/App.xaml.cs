@@ -94,7 +94,7 @@ public partial class App : Application
         if (!_settings.HardwareRendering)
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         _frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
-        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get));
+        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -106,6 +106,7 @@ public partial class App : Application
             var monitors = DisplayMonitor.GetAll();
             _tray.SetMonitors(monitors, DisplayMonitor.Resolve(_settings, monitors), CurrentWindowOptions());
             _tray.SetSensorState(SensorStatus(), SensorServiceControl.IsInstalled, SensorServiceControl.IsOutdated(SensorVersion()));
+            _tray.SetClaudeState(ClaudeStatus(), IsClaudeCodeConnected());
             _tray.SetFpsSources(monitors, _settings.FpsMonitorId);
             _tray.SetTabletView(_tablet?.IsRunning == true);
             if (_layouts is not null)
@@ -134,6 +135,7 @@ public partial class App : Application
         _tray.TabletLinkCopyRequested += (_, _) => CopyTabletLink();
         _tray.TabletNewLinkRequested += (_, _) => NewTabletLink();
         _tray.SensorServiceChangeRequested += async (_, install) => await ChangeSensorServiceAsync(install);
+        _tray.ConnectClaudeCodeRequested += (_, _) => ConnectClaudeCode();
         _tray.ReloadRequested += (_, _) => ApplyLayout();
         _tray.EditLayoutRequested += (_, _) => OpenEditor();
         _tray.ExitRequested += async (_, _) => await ExitAsync();
@@ -462,6 +464,71 @@ public partial class App : Application
             ? text
             : SensorHostProvider.NotRunning;
 
+    private string ClaudeStatus() =>
+        _sampler is not null && _sampler.Store.TryGet(ClaudeUsageProvider.Status, out var status) && status.Text is { } text
+            ? text
+            : "Not connected to Claude Code";
+
+    private static bool IsClaudeCodeConnected()
+    {
+        try
+        {
+            var path = ClaudeCodeSetup.SettingsPath;
+            return File.Exists(path) && ClaudeCodeSetup.Inspect(File.ReadAllText(path)).Kind == ClaudeCodeSetup.StatusLine.Ours;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Sets Claude Code's status line to the sensor host's <c>claude-statusline</c> command, which feeds the Claude usage
+    /// metrics. Asks before replacing a status line someone else set up, and keeps a copy of the file it changes.
+    /// </summary>
+    private void ConnectClaudeCode()
+    {
+        var helper = ClaudeCodeSetup.HelperPath;
+        if (!File.Exists(helper))
+        {
+            _tray?.ShowError("Couldn't connect Claude Code", $"{helper} is missing. Reinstalling Impious Bonum puts it back.");
+            return;
+        }
+
+        var path = ClaudeCodeSetup.SettingsPath;
+        try
+        {
+            var existing = File.Exists(path) ? File.ReadAllText(path) : null;
+            var (kind, command) = ClaudeCodeSetup.Inspect(existing);
+            if (kind == ClaudeCodeSetup.StatusLine.Other)
+            {
+                var answer = MessageBox.Show(
+                    $"Claude Code already has a status line:\n\n{command}\n\nReplace it with Impious Bonum's? It shows the model, context use "
+                    + "and your plan usage, and passes the usage to the dashboard.\n\nTo keep yours, choose No: the README's Claude usage "
+                    + "section shows the line to add to your own script.",
+                    "Impious Bonum", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+                if (answer != MessageBoxResult.Yes)
+                    return;
+            }
+
+            var updated = ClaudeCodeSetup.Apply(existing, ClaudeCodeSetup.Command(helper, ClaudeCodeSetup.GitBashInstalled()));
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            if (existing is not null)
+                File.WriteAllText(path + ".impiousbonum.bak", existing);
+            File.WriteAllText(path, updated);
+            AppLog.Info($"Set Claude Code's status line in {path}");
+            _tray?.ShowInfo("Claude Code connected", "Usage appears after Claude Code's next reply. If Claude Code is already open, restart it.");
+        }
+        catch (JsonException ex)
+        {
+            _tray?.ShowError("Couldn't read Claude Code's settings", $"{path}: {ex.Message}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _tray?.ShowError("Couldn't update Claude Code's settings", ex.Message);
+        }
+    }
+
     private async Task ChangeSensorServiceAsync(bool install)
     {
         var error = await SensorServiceControl.RunAsync(install);
@@ -767,7 +834,7 @@ public partial class App : Application
         if (name is null)
             return false;
 
-        await using var sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost));
+        await using var sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile));
         sampler.Start();
         await Task.Delay(warmup);
 
