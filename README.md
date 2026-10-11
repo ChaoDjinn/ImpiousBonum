@@ -7,7 +7,7 @@
 <p align="center">
   <em>Dog-Latin for "wicked good".</em><br>
   A lightweight system dashboard for a spare screen, like the little touchscreen strip under your main monitor.<br>
-  A native replacement for Rainmeter + HWiNFO setups, with no third-party monitoring software required.
+  A native replacement for Rainmeter + HWiNFO setups, with no other monitoring software to run alongside it.
 </p>
 
 <p align="center">
@@ -35,14 +35,14 @@
 Impious Bonum turns a spare screen into a live view of your PC: CPU, GPU, memory, temperatures, FPS, drives and
 network, alongside a clock, the weather, your calendar, what's playing and buttons to control it all. Lay it out how
 you like in a visual editor, pick from 43 themes, and it runs quietly in the tray using about 50 MB of memory. No
-spare screen? It works as a window too, on a tablet over Wi-Fi, or on a small USB screen.
+spare screen? It works as a window too, or on a tablet over Wi-Fi.
 
 ## Features
 
 **Your PC at a glance**
 - CPU, memory, GPU, drives and network out of the box; add the optional sensor service for temperatures, fans, clocks, power and per-app FPS with frame times and 1% lows, about 280 metrics on a typical PC. [More](<docs/guide.md#what-it-shows>)
 - Graphs, multi-line graphs, gauges, stat tiles, every CPU thread as a heatmap, drives, and the apps using the most CPU or memory. [More](<docs/guide.md#widgets-in-depth>)
-- Session recaps when you finish a game: average, lowest and highest FPS, loads and temperatures. [More](<docs/guide.md#session-recaps>)
+- Session recaps when you finish playing a game you've linked to a layout: average, lowest and highest FPS, loads and temperatures. [More](<docs/guide.md#session-recaps>)
 - Alerts when a reading stays out of bounds, and logging to CSV files for a spreadsheet. [More](<docs/guide.md#alerts>)
 
 **Your day**
@@ -53,13 +53,13 @@ spare screen? It works as a window too, on a tablet over Wi-Fi, or on a small US
 **Make it yours**
 - A layout editor with live preview, drag and resize, and a searchable picker for every metric, plus touch editing on the dashboard itself. [More](<docs/guide.md#layout-editor>)
 - 43 built-in themes, from clean to retro to neon, with gradients, glow, and picture, GIF or video backgrounds. [More](<docs/guide.md#layout-editor>)
-- A gallery of shared layouts to try with your own readings and import, and export to share yours. [More](<docs/guide.md#layout-gallery>)
+- A gallery of ready-made layouts to try with your own readings and import, and export to share yours. [More](<docs/guide.md#layout-gallery>)
 
 **It fits around you**
 - Different layouts for different games, a schedule for times of day or dark mode, pages to swipe between, and global hotkeys. [More](<docs/guide.md#automatic-behaviour>)
 - Dims or blacks out when you're away. [More](<docs/guide.md#dimming>)
-- On a spare monitor (or several, each with its own layout), as a window, on a tablet or phone in its browser, or on a small 3.5" USB screen. [More](<docs/guide.md#more-screens>)
-- About 50 MB of memory and well under 0.1% CPU when idle. A per-user installer with no admin prompt, and small automatic updates.
+- On a spare monitor (or several, each with its own layout), as a window, or on a tablet or phone in its browser. Support for small 3.5" USB screens is there too, but hasn't been tried on a real one yet. [More](<docs/guide.md#more-screens>)
+- Light: about 50 MB of memory and a fraction of a percent of the CPU. A per-user installer with no admin prompt, and small automatic updates.
 
 ## A look for every desk
 
@@ -90,7 +90,7 @@ Lay out your own in the editor, with a live preview, a searchable list of every 
 
 1. Download and run [`ImpiousBonum-win-Setup.exe`](https://github.com/ChaoDjinn/ImpiousBonum/releases/latest/download/ImpiousBonum-win-Setup.exe) (Windows 10 or 11). It installs for your user only and adds the .NET runtime if needed. SmartScreen may warn the first time, since the installer isn't code-signed yet: choose *More info → Run anyway*.
 2. The dashboard opens on your smallest secondary monitor, or as a window on your main screen if that's the only one. Right-click the tray icon to move it, make it a window, or turn on *Start with Windows*.
-3. For temperatures and FPS, tray → *Sensors* → *Install sensor service…* (one admin prompt).
+3. For temperatures and FPS, tray → *Sensors* → *Install sensor service…* (one admin prompt). CPU temperatures also need the free [PawnIO](https://pawnio.eu) driver (`winget install namazso.PawnIO`; HWiNFO and FanControl install it too). GPU temperatures and FPS work without it.
 4. Double-click the tray icon to open the layout editor, or try a ready-made layout from tray → *Layout* → *Gallery…*.
 
 The [user guide](<docs/guide.md>) covers everything else, and the [widget reference](docs/widgets.md) lists every widget's settings.
@@ -99,27 +99,55 @@ The [user guide](<docs/guide.md>) covers everything else, and the [widget refere
 
 - [User guide](<docs/guide.md>): installing, the editor, every feature and how to set it up
 - [Widget reference](docs/widgets.md): every widget and theme setting, its default and its range
-- [Layout gallery](gallery): shared layouts, and how to add yours
+- [Layout gallery](gallery): ready-made layouts, and how to add yours
 - [Changelog](CHANGELOG.md): what's new in each release
 - [Developing Impious Bonum](docs/development.md): building from source, releases, update signing and the code's layout
 - [Contributing](CONTRIBUTING.md) and [security](SECURITY.md)
 
+## Help and ideas
+
+Something not working, or an idea for a widget or a feature? [Open an issue](https://github.com/ChaoDjinn/ImpiousBonum/issues/new/choose),
+or from the app: tray → *Help* → *Report a problem…*. Please report security problems privately, as
+[SECURITY.md](SECURITY.md) explains.
+
+## Good to know
+
+Impious Bonum is young: it's at version 0.11, first released at the end of September 2026, and it changes quickly
+(installed copies update themselves). Some things it doesn't do yet, or does with a catch:
+
+- **Windows 10 and 11 only.**
+- **The installer isn't code-signed**, so SmartScreen warns the first time. Updates are signed with the project's own
+  key, and installed copies only take a release with a matching signature ([how](docs/development.md#update-signing)).
+- **USB screens haven't been tried on a real screen yet**, and only the 3.5" "revision A" kind is supported.
+- **CPU temperatures need the PawnIO driver** as well as the sensor service (above).
+- **The tablet view is plain HTTP** on your own network, updated once a second, and shows a still frame of moving
+  backgrounds. Anyone with its link can see the dashboard ([details](<docs/guide.md#tablet-view>)).
+- **Claude usage needs Claude Code in a terminal** on a Pro or Max plan; the Claude Desktop app doesn't report it.
+- **Calendars are read from iCal links** (Google, Outlook and iCloud all have one), not by signing in.
+
 ## Roadmap
+
+- [ ] Code signing
+- [ ] Tried and tested on real USB screens, and support for the 5" and 8.8" models
+- Ideas are welcome as [issues](https://github.com/ChaoDjinn/ImpiousBonum/issues/new/choose).
+
+<details>
+<summary>Done so far</summary>
 
 - [x] Borderless dashboard on a chosen monitor, remembered placement, the default layout
 - [x] Sensor host: elevated service (LibreHardwareMonitorLib) for temperatures, fans, clocks and power, over a named pipe
 - [x] Layout editor: live preview, drag/resize, generated properties, theme, undo/redo
 - [x] Metric picker: browse and search every metric with live values, insert into templates
 - [x] Touch edit mode on the dashboard itself, synced with the editor
-- [x] Installer and automatic updates (Velopack, GitHub Releases)
-- [ ] Code signing
+- [x] Installer and automatic updates (Velopack, GitHub Releases), with signed updates
 - [x] Vulkan/OpenGL frame counting
 - [x] Tablet view: the dashboard in a browser over the local network
 - [x] Bars, and Claude plan usage from Claude Code
 - [x] More widget types: 22 so far
 - [x] Themes: 43 built in, with gradients, glow and moving backgrounds
-- [ ] Tried and tested on real USB screens, and support for the 5" and 8.8" models
-- [x] Screenshots of the real dashboard and editor here and in the guide
+- [x] Screenshots of the real dashboard, the editor and the widgets, here and in the guide
+
+</details>
 
 ## License
 

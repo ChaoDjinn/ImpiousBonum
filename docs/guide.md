@@ -42,7 +42,7 @@ The menu follows Windows: dark or light with the taskbar (Settings → Personali
 | *Edit layout…* | Open the layout editor (or double-click the tray icon) |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
-| *Layout → Gallery…* | Browse layouts other people have shared, with a live preview, and import one (see [Layout gallery](#layout-gallery)) |
+| *Layout → Gallery…* | Browse ready-made layouts, with a live preview, and import one (see [Layout gallery](#layout-gallery)) |
 | *Layout → Pages* | Swipe across the dashboard to move between layouts, or rotate them on a timer (see [Pages](#pages)) |
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, turn automatic switching on or off, and recap each session (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
 | *Layout → Schedule* | Show a layout or theme at certain times of day, or while Windows is in dark or light mode (see [Schedule](#schedule)) |
@@ -140,12 +140,12 @@ An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder
 
 ### Layout gallery
 
-Tray → Layout → *Gallery…* lists layouts people have shared, each with its screen size and a description. Pick one to
+Tray → Layout → *Gallery…* lists ready-made layouts, each with its screen size and a description. Pick one to
 see it drawn live with your own readings, then *Import* adds it to your saved layouts and shows it, the same way as
 importing a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open
-programs. Pictures and fonts inside a shared layout show once it's imported. It starts with a gaming HUD, a desk
-companion (world clocks, calendar, weather, music), a system monitor, a focus timer and a layout for small 800 × 480
-screens.
+programs. Pictures and fonts inside a shared layout show once it's imported. So far it has five, made along with
+the app: a gaming HUD, a desk companion (world clocks, calendar, weather, music), a system monitor, a focus timer and
+a layout for small 800 × 480 screens. Yours could be next.
 
 The gallery is the [`gallery`](../gallery) folder of this repository. To share a layout, export it (*Layouts ▾ →
 Export…* in the editor), add the `.ibl` file and an entry in [`gallery/index.json`](../gallery/index.json), and open a
@@ -389,7 +389,7 @@ The *Image* widget shows a picture from a PNG, JPG, GIF (first frame), BMP or TI
 
 The *Shape* widget is a rounded panel, a circle or a divider line, for grouping widgets or separating them. Shapes are added behind the other widgets, so a panel sits under whatever you put on it; *Bring forward* and *Send back* change that. Their default colour is the theme's `track`, the same subtle shade as an empty bar.
 
-`track` and `background` now work as colour names everywhere, alongside `foreground`, `secondary`, `accent`, `warning` and `critical`.
+`track` and `background` work as colour names everywhere, like `foreground`, `secondary`, `accent`, `warning` and `critical`.
 
 Exported layouts carry their image widgets' pictures, like the background image and font.
 
@@ -542,4 +542,5 @@ so please report what happens.
 | `--snapshot <file.png>` | Render the layout with live data to a PNG and exit |
 | `--layout <name>` | With `--snapshot`, render this saved layout instead of the one being shown |
 | `--warmup <seconds>` | Sampling time before a snapshot (default 3) |
+| `--demo` | Made-up readings instead of this PC's, the ones the screenshots use: with `--snapshot`, or to run a copy of the dashboard with them (pair it with `--data-dir` to leave your own settings alone) |
 | `--widget-docs <file>` | Regenerate the widget reference from the widget descriptors |

@@ -30,7 +30,9 @@ The pictures in the README, the guide and the gallery are drawn with made-up rea
 pwsh build/screenshots.ps1
 ```
 
-It draws the default layout, each gallery layout and the themes collage with `ImpiousBonum.exe --snapshot <file> --layout <name> --demo`. The readings are in `src/ImpiousBonum.Core/Demo/DemoReadings.cs`. The editor's screenshot is taken by hand: `ImpiousBonum.exe --data-dir <an empty folder> --demo` runs a copy with those readings next to an installed one.
+It draws the default layout, each gallery layout, the themes collage and the widget pictures with `ImpiousBonum.exe --snapshot <file> --layout <name> --demo`. Each widget picture in `docs/images/widgets` is drawn from a small layout of the same name in `build/screenshots`; add a layout there for a new picture (a test checks they're valid and have every reading they show). The readings are in `src/ImpiousBonum.Core/Demo/DemoReadings.cs`. The editor's screenshot is taken by hand: `ImpiousBonum.exe --data-dir <an empty folder> --demo` runs a copy with those readings next to an installed one.
+
+Without a Windows PC to hand, run the **Screenshots** workflow from the Actions tab on your branch: it draws them on a Windows runner (in British English, on UK time) and commits the pictures that changed to that branch.
 
 ## Making a release
 
@@ -71,9 +73,11 @@ src/ImpiousBonum.App     WPF dashboard, widgets, editor, tray, monitor placement
 src/ImpiousBonum.Sensors elevated sensor service (LibreHardwareMonitor, ETW frame counting) serving the named pipe
 tests/                   unit tests for the core and the app (widgets, layout validation, editor)
 docs/widgets.md          widget reference, generated from the widget descriptors
-build/                   installer build (publish.ps1) and icon generator
+build/                   installer (publish.ps1), release notes, screenshots and the icon generator;
+                         screenshots/ has the layouts the widget pictures are drawn from
 tools/ReleaseSigning     creates the update signing key and signs releases
-.github/workflows/       CI (ci.yml), releases (release.yml) and release notes (release-notes.yml)
+.github/workflows/       CI (ci.yml), releases (release.yml), release notes (release-notes.yml) and screenshots
+                         (screenshots.yml)
 ```
 
 Inside `src/ImpiousBonum.App`:
