@@ -287,7 +287,7 @@ public sealed class PropertyPanel : StackPanel
         SettingKind.Font => FontEditor(target, setting),
         SettingKind.FontFile => FileEditor(target, setting, "Fonts (*.ttf;*.otf)|*.ttf;*.otf|All files|*.*", "Choose a font file"),
         SettingKind.ImageFile => FileEditor(target, setting, "Images (*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff)|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff|All files|*.*", "Choose a background image"),
-        SettingKind.Template or SettingKind.Metric => MetricTextEditor(target, setting),
+        SettingKind.Template or SettingKind.DriveTemplate or SettingKind.Metric => MetricTextEditor(target, setting),
         _ => TextEditor(target, setting),
     };
 
@@ -306,11 +306,12 @@ public sealed class PropertyPanel : StackPanel
 
     /// <summary>
     /// A template or metric id, with a button that opens the metric picker and a live preview underneath
-    /// ("→ 11.8 % / 16 threads") that also flags ids that don't exist.
+    /// ("→ 11.8 % / 16 threads") that also flags ids that don't exist. A per-drive template previews the first drive's row.
     /// </summary>
     private (FrameworkElement, Action) MetricTextEditor(SettingTarget target, SettingDescriptor setting)
     {
-        var isTemplate = setting.Kind == SettingKind.Template;
+        var perDrive = setting.Kind == SettingKind.DriveTemplate;
+        var isTemplate = setting.Kind == SettingKind.Template || perDrive;
         var panel = new StackPanel();
         var line = new DockPanel();
         var pick = new Button { Content = "{…}", ToolTip = isTemplate ? "Insert metric…" : "Choose metric…", Margin = new Thickness(6, 0, 0, 0), Padding = new Thickness(8, 2, 8, 2) };
@@ -336,6 +337,8 @@ public sealed class PropertyPanel : StackPanel
                 preview.Visibility = Visibility.Collapsed;
                 return;
             }
+            if (perDrive)
+                text = DriveTemplate.Expand(text, PreviewDrive(store));
 
             var ids = isTemplate ? ValueTemplate.Parse(text).MetricIds.ToList() : [text.Trim()];
             var unknown = ids.Where(id => !store.TryGet(id, out _)).Distinct().ToList();
@@ -365,6 +368,9 @@ public sealed class PropertyPanel : StackPanel
 
             if (isTemplate)
             {
+                // A drive's metric becomes a placeholder for each row's own drive.
+                if (perDrive)
+                    result = DriveTemplate.ForRow(result);
                 // Insert at the caret, replacing any selected text.
                 var caret = box.SelectionStart;
                 box.Text = box.Text.Remove(caret, box.SelectionLength).Insert(caret, result);
@@ -385,6 +391,12 @@ public sealed class PropertyPanel : StackPanel
             UpdatePreview();
         });
     }
+
+    /// <summary>The drive a per-drive template is previewed with: the first one the dashboard reports, else C.</summary>
+    private static string PreviewDrive(MetricStore store) =>
+        store.TryGet(Core.Providers.DriveProvider.Letters, out var letters) && letters.Text?.Split(',', StringSplitOptions.RemoveEmptyEntries) is [var first, ..]
+            ? first
+            : "C";
 
     private (FrameworkElement, Action) NumberEditor(SettingTarget target, SettingDescriptor setting)
     {

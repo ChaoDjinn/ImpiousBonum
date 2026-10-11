@@ -82,7 +82,7 @@ public static class LayoutValidator
                     $"should be between {setting.Min} and {setting.Max}",
                 SettingKind.Toggle when value.GetValueKind() is not (JsonValueKind.True or JsonValueKind.False) => "should be true or false",
                 SettingKind.Items when value is not JsonArray => "should be a list",
-                SettingKind.Text or SettingKind.Template or SettingKind.Metric or SettingKind.Color or SettingKind.Choice or SettingKind.Icon or SettingKind.Font or SettingKind.FontFile or SettingKind.ImageFile
+                SettingKind.Text or SettingKind.Template or SettingKind.DriveTemplate or SettingKind.Metric or SettingKind.Color or SettingKind.Choice or SettingKind.Icon or SettingKind.Font or SettingKind.FontFile or SettingKind.ImageFile
                     when value.GetValueKind() != JsonValueKind.String => "should be text",
                 SettingKind.Choice or SettingKind.Icon when !setting.Choices!.Contains(value.GetValue<string>()) =>
                     $"should be one of {string.Join(", ", setting.Choices!)}",

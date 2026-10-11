@@ -14,14 +14,19 @@ public sealed class DrivesWidget : Widget
         425, 230,
         [
             Setting.PlainText("drives", "Drives", "all", help: "\"all\", or letters separated by commas, e.g. \"C,D\"."),
-            Setting.PlainText("label", "Row label", "{letter}:/", help: "{letter} is replaced with the drive letter."),
-            Setting.PlainText("text", "Row value", "{free} free / {total}", help: "Placeholders: {free}, {used}, {total}, {label}."),
+            Setting.DriveTemplate("label", "Row label", "{letter}:/", help: RowHelp),
+            Setting.DriveTemplate("text", "Row value", "{free} free / {total}", help: RowHelp),
             Setting.Number("fontSize", "Font size", 25, 6, 200),
             Setting.Number("barHeight", "Bar height", 5, 1, 100, group: Setting.Appearance),
             Setting.Number("spacing", "Row spacing", 12, 0, 200, group: Setting.Appearance),
             Setting.Thresholds("Changes each drive's bar. An empty metric uses that drive's used percentage (disk.C.usedPct for C:)."),
         ],
         (settings, theme) => new DrivesWidget(settings, theme));
+
+    private const string RowHelp =
+        "Each row's own drive: {letter}, {free}, {used}, {total}, {usedPct}, {label}, {read}, {write}, {active}, and with the "
+        + "sensor service {life}, {temp}, {status}, {model}, {hours}. In a metric id, * is the row's drive, e.g. {disk.*.read}. "
+        + "Other metrics work too.";
 
     private readonly StackPanel _rows = new();
     private readonly HashSet<string>? _only;
@@ -60,6 +65,7 @@ public sealed class DrivesWidget : Widget
 
         foreach (var row in _current)
         {
+            row.LabelText.Text = row.Label.Render(store);
             row.Value.Text = row.Template.Render(store);
             var used = store.TryGet(DriveProvider.UsedPercent(row.Letter), out var pct) && pct.Value is double v ? Math.Clamp(v, 0, 100) : 0;
             row.Bar.ColumnDefinitions[0].Width = new GridLength(used, GridUnitType.Star);
@@ -77,7 +83,6 @@ public sealed class DrivesWidget : Widget
         {
             var header = new Grid();
             var label = CreateText(_fontSize);
-            label.Text = _labelFormat.Replace("{letter}", letter, StringComparison.OrdinalIgnoreCase);
             var value = CreateText(_fontSize * 0.9, Theme.Secondary, HorizontalAlignment.Right);
             value.VerticalAlignment = VerticalAlignment.Center;
             header.Children.Add(label);
@@ -94,14 +99,13 @@ public sealed class DrivesWidget : Widget
             row.Children.Add(bar);
             _rows.Children.Add(row);
 
-            var template = _textFormat
-                .Replace("{free}", $"{{{DriveProvider.Free(letter)}}}", StringComparison.OrdinalIgnoreCase)
-                .Replace("{total}", $"{{{DriveProvider.Total(letter)}}}", StringComparison.OrdinalIgnoreCase)
-                .Replace("{used}", $"{{{DriveProvider.Used(letter)}}}", StringComparison.OrdinalIgnoreCase)
-                .Replace("{label}", $"{{{DriveProvider.Label(letter)}}}", StringComparison.OrdinalIgnoreCase);
-            _current.Add(new Row(letter, ValueTemplate.Parse(template), value, bar, fill));
+            _current.Add(new Row(
+                letter,
+                ValueTemplate.Parse(DriveTemplate.Expand(_labelFormat, letter)), label,
+                ValueTemplate.Parse(DriveTemplate.Expand(_textFormat, letter)), value,
+                bar, fill));
         }
     }
 
-    private sealed record Row(string Letter, ValueTemplate Template, TextBlock Value, Grid Bar, Border Fill);
+    private sealed record Row(string Letter, ValueTemplate Label, TextBlock LabelText, ValueTemplate Template, TextBlock Value, Grid Bar, Border Fill);
 }

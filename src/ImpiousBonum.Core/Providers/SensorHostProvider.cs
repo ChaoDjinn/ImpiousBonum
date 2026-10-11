@@ -111,6 +111,8 @@ public sealed class SensorHostProvider(Func<(int ProcessId, string? Name)>? fram
             case SensorMessage.ValuesType when message.Values is not null:
                 foreach (var (id, value) in message.Values)
                     store.Set(id, value);
+                foreach (var (id, text) in message.Texts ?? new Dictionary<string, string?>())
+                    store.SetText(id, text);
                 ApplyFrameRate(store, message.Presenters);
                 break;
         }
@@ -133,7 +135,10 @@ public sealed class SensorHostProvider(Func<(int ProcessId, string? Name)>? fram
     private void ClearValues(MetricStore store)
     {
         foreach (var id in _hostIds.Concat(_aliases))
+        {
             store.Set(id, null);
+            store.SetText(id, null);
+        }
         store.SetText(SensorAliases.FramesPerSecondApp, null);
     }
 

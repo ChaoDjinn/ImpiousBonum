@@ -52,6 +52,9 @@ public sealed record SensorMessage
 
     public IReadOnlyDictionary<string, double?>? Values { get; init; }
 
+    /// <summary>For <c>values</c>: readings that are text, such as a drive's model or health status. Older dashboards ignore it.</summary>
+    public IReadOnlyDictionary<string, string?>? Texts { get; init; }
+
     /// <summary>
     /// For <c>values</c>: apps currently presenting frames and their rates. Null when frame counting is unavailable.
     /// The dashboard picks the foreground app from this list, since only it can see the user's desktop.

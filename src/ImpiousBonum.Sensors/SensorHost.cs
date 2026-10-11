@@ -85,6 +85,7 @@ internal sealed class SensorHost : IAsyncDisposable
                 {
                     Type = SensorMessage.ValuesType,
                     Values = _collector.ReadValues(),
+                    Texts = _collector.ReadTexts(),
                     Presenters = _frames.IsRunning ? _frames.Snapshot() : null,
                 });
             }

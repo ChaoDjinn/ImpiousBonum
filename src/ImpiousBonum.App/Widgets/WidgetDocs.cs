@@ -80,6 +80,7 @@ public static class WidgetDocs
         SettingKind.Toggle => "true/false",
         SettingKind.Choice or SettingKind.Icon => string.Join(" / ", s.Choices!.Select(c => $"`{c}`")),
         SettingKind.Items => "list",
+        SettingKind.DriveTemplate => "template (per drive)",
         _ => s.Kind.ToString().ToLowerInvariant(),
     };
 
