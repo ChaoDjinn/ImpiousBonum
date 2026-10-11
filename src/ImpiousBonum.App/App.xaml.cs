@@ -33,6 +33,7 @@ public partial class App : Application
     private Sampler? _sampler;
     private LayoutStore? _layouts;
     private TrayIcon? _tray;
+    private ActionRunner? _actions;
     private DashboardWindow? _window;
     private DispatcherTimer? _tick;
     private EditorWindow? _editor;
@@ -99,6 +100,8 @@ public partial class App : Application
 
         _window = new DashboardWindow();
         _window.EditRequested += (_, _) => OpenEditor();
+        _actions = new ActionRunner(SwitchLayoutFromButton);
+        _window.ActionRequested += (_, action) => RunAction(action);
         _window.PlacementChanged += (_, rect) => OnWindowMoved(rect);
         _tray = new TrayIcon();
         _tray.MenuOpening += (_, _) =>
@@ -297,6 +300,23 @@ public partial class App : Application
         window.Activate();
         window.Topmost = true;
         window.Topmost = false;
+    }
+
+    /// <summary>A tap on a dashboard button or media control. Problems show as a notification, since the tap gave no other feedback.</summary>
+    private void RunAction(WidgetAction action)
+    {
+        if (_actions?.Run(action) is not { } problem)
+            return;
+        AppLog.Warning($"Button ({action.Kind}): {problem}");
+        _tray?.ShowError("Impious Bonum", problem);
+    }
+
+    private string? SwitchLayoutFromButton(string name)
+    {
+        if (_layouts?.Library.Find(name) is not { } found)
+            return $"There's no layout called \"{name}\". Check the button's target in the editor.";
+        SelectLayout(found);
+        return null;
     }
 
     /// <summary>Tray → Layout. With the editor open, the editor switches (asking about unsaved changes first).</summary>

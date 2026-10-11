@@ -10,6 +10,7 @@ public sealed class MetricStore
 
     private readonly Lock _gate = new();
     private readonly Dictionary<string, Entry> _entries = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, object> _attachments = new(StringComparer.OrdinalIgnoreCase);
     private readonly int _historyLength;
 
     public MetricStore(int historyLength = DefaultHistoryLength) => _historyLength = historyLength;
@@ -51,6 +52,27 @@ public sealed class MetricStore
             if (_entries.TryGetValue(id, out var entry))
                 entry.Text = text;
         }
+    }
+
+    /// <summary>
+    /// Stores data that goes with the metrics but isn't a number or text, such as album art, under its own id.
+    /// Values are replaced, never changed in place, so readers can keep what they got. Null removes it.
+    /// </summary>
+    public void SetAttachment(string id, object? value)
+    {
+        lock (_gate)
+        {
+            if (value is null)
+                _attachments.Remove(id);
+            else
+                _attachments[id] = value;
+        }
+    }
+
+    public object? GetAttachment(string id)
+    {
+        lock (_gate)
+            return _attachments.GetValueOrDefault(id);
     }
 
     public bool TryGet(string id, out MetricSample sample)

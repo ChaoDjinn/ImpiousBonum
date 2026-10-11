@@ -191,6 +191,22 @@ public sealed class PropertyPanel : StackPanel
         });
     }
 
+    /// <summary>An icon's name after the icon itself.</summary>
+    private static DataTemplate IconItemTemplate()
+    {
+        var sample = new FrameworkElementFactory(typeof(IconSample));
+        sample.SetBinding(IconSample.IconNameProperty, new Binding());
+        sample.SetValue(MarginProperty, new Thickness(0, 0, 8, 0));
+        var name = new FrameworkElementFactory(typeof(TextBlock));
+        name.SetBinding(TextBlock.TextProperty, new Binding());
+        name.SetValue(VerticalAlignmentProperty, VerticalAlignment.Center);
+        var row = new FrameworkElementFactory(typeof(StackPanel));
+        row.SetValue(OrientationProperty, Orientation.Horizontal);
+        row.AppendChild(sample);
+        row.AppendChild(name);
+        return new DataTemplate { VisualTree = row };
+    }
+
     /// <summary>A theme's name after a sample of its colours, so a long list of themes is easy to scan.</summary>
     private static DataTemplate ThemeItemTemplate(ThemeLibrary themes)
     {
@@ -479,6 +495,8 @@ public sealed class PropertyPanel : StackPanel
     private (FrameworkElement, Action) ChoiceEditor(SettingTarget target, SettingDescriptor setting)
     {
         var combo = new ComboBox { ItemsSource = setting.Choices };
+        if (setting.Kind == SettingKind.Icon)
+            combo.ItemTemplate = IconItemTemplate();
         combo.SelectionChanged += (_, _) =>
         {
             if (combo.SelectedItem is string choice)

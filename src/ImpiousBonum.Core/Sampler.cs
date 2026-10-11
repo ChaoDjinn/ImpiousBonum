@@ -33,6 +33,7 @@ public sealed class Sampler : IAsyncDisposable
         new PingProvider(pingHost),
         new SensorHostProvider(frameRateTarget),
         new SystemProvider(),
+        new MediaProvider(),
         .. claudeUsagePath is null ? Array.Empty<IMetricProvider>() : [new ClaudeUsageProvider(claudeUsagePath)],
     ];
 

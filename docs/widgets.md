@@ -95,7 +95,7 @@ An accent-coloured line icon followed by a live value, e.g. a chip and the CPU t
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` | `cpu` | Icon |
+| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` | `cpu` | Icon |
 | `text` | template | `{cpu.temp:nounit} °C` | Text |
 | `fontSize` | number (6–400) | `64` | Font size |
 | `iconSize` | number (8–400) | `60` | Icon size |
@@ -197,6 +197,47 @@ Each entry in `thresholds`:
 | `above` | number | — | Above. Matches when the value is above this. |
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
+
+## Now playing (`media`)
+
+What's playing in Spotify, a browser, Media Player or any app in Windows' media controls: album art, title, artist, progress and buttons to skip or pause.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `title` | template | `{media.title}` | Title |
+| `subtitle` | template | `{media.artist}` | Second line. E.g. the artist, or {media.artist} · {media.album}. Empty hides it. |
+| `fontSize` | number (6–200) | `34` | Title size |
+| `subtitleSize` | number (6–200) | — | Second line size. Empty uses 70% of the title size. |
+| `showArt` | true/false | `true` | Album art |
+| `showProgress` | true/false | `true` | Progress bar. With the position and length under it. |
+| `showControls` | true/false | `true` | Buttons. Previous, play/pause and next. They work like the keyboard's media keys. |
+| `controlSize` | number (16–200) | `52` | Button size |
+| `hideIdle` | true/false | `true` | Hide when nothing is playing. It shows faded while you edit the layout. |
+
+## Buttons (`buttons`)
+
+Buttons to tap: play/pause, skip and volume, open a program, file or web address, send a keyboard shortcut to the app you're using, or switch layout.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `buttons` | list | 4 entries | Buttons |
+| `columns` | number (0–50) | `0` | Columns. 0 puts every button in one row. |
+| `fontSize` | number (6–200) | `20` | Label size |
+| `iconSize` | number (0–400) | `40` | Icon size |
+| `spacing` | number (0–200) | `10` | Spacing |
+| `style` | `tile` / `plain` | `tile` | Style. tile gives each button a background. |
+| `cornerRadius` | number (0–200) | `10` | Corner radius |
+| `color` | color | `accent` | Icon colour |
+
+Each entry in `buttons`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `Play/pause` | Label. Empty shows just the icon. |
+| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` | `play-pause` | Icon |
+| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `open` / `keys` / `layout` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys and layout use the target below. |
+| `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name. |
+| `arguments` | text | — | Arguments. open: command-line arguments for a program. |
 
 ## Claude usage (`claude`)
 

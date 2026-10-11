@@ -18,6 +18,8 @@ public static class WidgetFactory
         DrivesWidget.Descriptor,
         RowsWidget.Descriptor,
         BarsWidget.Descriptor,
+        MediaWidget.Descriptor,
+        ButtonsWidget.Descriptor,
         BarsWidget.ClaudeDescriptor,
     ];
 
