@@ -77,6 +77,9 @@ public sealed class ThemeSettings
     /// <summary>The glow's colour; unset glows in the accent colour.</summary>
     public string? GlowColor { get; set; }
 
+    /// <summary>A separate copy, to change without touching this one.</summary>
+    public ThemeSettings Copy() => (ThemeSettings)MemberwiseClone();
+
     /// <summary>These values as a theme object: every key that has a value (the optional files left out when unset).</summary>
     public JsonObject ToJson()
     {

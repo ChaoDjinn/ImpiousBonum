@@ -86,7 +86,8 @@ public static class LayoutValidator
                     when value.GetValueKind() != JsonValueKind.String => "should be text",
                 SettingKind.Choice or SettingKind.Icon when !setting.Choices!.Contains(value.GetValue<string>()) =>
                     $"should be one of {string.Join(", ", setting.Choices!)}",
-                SettingKind.Color when !IsColor(value.GetValue<string>()) =>
+                // Empty is what clearing a colour in the editor leaves: the default.
+                SettingKind.Color when value.GetValue<string>() is { Length: > 0 } color && !IsColor(color) =>
                     "should be foreground, secondary, accent, warning, critical, track, background or a colour like #FF9800",
                 SettingKind.Metric when !IsMetricId(value.GetValue<string>()) =>
                     "should be a metric id like cpu.temp, without braces or spaces",

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
@@ -19,6 +20,10 @@ public sealed class DrivesWidget : Widget
             Setting.Number("fontSize", "Font size", 25, 6, 200),
             Setting.Number("barHeight", "Bar height", 5, 1, 100, group: Setting.Appearance),
             Setting.Number("spacing", "Row spacing", 12, 0, 200, group: Setting.Appearance),
+            Setting.Color("color", "Bar colour", "accent"),
+            Setting.Color("trackColor", "Track colour", "track", help: "The empty part of each bar. track is the theme's bar track."),
+            Setting.Color("labelColor", "Label colour", "foreground"),
+            Setting.Color("valueColor", "Value colour", "secondary"),
             Setting.Thresholds("Changes each drive's bar. An empty metric uses that drive's used percentage (disk.C.usedPct for C:)."),
         ],
         (settings, theme) => new DrivesWidget(settings, theme));
@@ -36,6 +41,10 @@ public sealed class DrivesWidget : Widget
     private readonly double _barHeight;
     private readonly double _spacing;
     private readonly ThresholdColors _thresholds;
+    private readonly Brush _fill;
+    private readonly Brush _track;
+    private readonly Brush _label;
+    private readonly Brush _value;
     private readonly List<Row> _current = [];
     private string _letters = string.Empty;
 
@@ -51,6 +60,10 @@ public sealed class DrivesWidget : Widget
         _barHeight = settings.Number("barHeight");
         _spacing = settings.Number("spacing");
         _thresholds = new ThresholdColors(settings, theme);
+        _fill = theme.Resolve(settings.String("color"), theme.Accent);
+        _track = theme.Resolve(settings.String("trackColor"), theme.Track);
+        _label = theme.Resolve(settings.String("labelColor"), theme.Foreground);
+        _value = theme.Resolve(settings.String("valueColor"), theme.Secondary);
         Children.Add(_rows);
     }
 
@@ -70,7 +83,7 @@ public sealed class DrivesWidget : Widget
             var used = store.TryGet(DriveProvider.UsedPercent(row.Letter), out var pct) && pct.Value is double v ? Math.Clamp(v, 0, 100) : 0;
             row.Bar.ColumnDefinitions[0].Width = new GridLength(used, GridUnitType.Star);
             row.Bar.ColumnDefinitions[1].Width = new GridLength(100 - used, GridUnitType.Star);
-            row.Fill.Background = _thresholds.Pick(store, DriveProvider.UsedPercent(row.Letter), Theme.Accent);
+            row.Fill.Background = _thresholds.Pick(store, DriveProvider.UsedPercent(row.Letter), _fill);
         }
     }
 
@@ -82,16 +95,16 @@ public sealed class DrivesWidget : Widget
         foreach (var letter in letters.Where(l => _only is null || _only.Contains(l)))
         {
             var header = new Grid();
-            var label = CreateText(_fontSize);
-            var value = CreateText(_fontSize * 0.9, Theme.Secondary, HorizontalAlignment.Right);
+            var label = CreateText(_fontSize, _label);
+            var value = CreateText(_fontSize * 0.9, _value, HorizontalAlignment.Right);
             value.VerticalAlignment = VerticalAlignment.Center;
             header.Children.Add(label);
             header.Children.Add(value);
 
-            var bar = new Grid { Height = _barHeight, Background = Theme.Track, Margin = new Thickness(0, 2, 0, 0) };
+            var bar = new Grid { Height = _barHeight, Background = _track, Margin = new Thickness(0, 2, 0, 0) };
             bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) });
             bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100, GridUnitType.Star) });
-            var fill = new Border { Background = Theme.Accent };
+            var fill = new Border { Background = _fill };
             bar.Children.Add(fill);
 
             var row = new StackPanel { Margin = new Thickness(0, 0, 0, _spacing) };

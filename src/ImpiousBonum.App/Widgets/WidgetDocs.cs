@@ -27,6 +27,12 @@ public static class WidgetDocs
         md.AppendLine("`\"thresholds\": [{ \"above\": 80, \"color\": \"warning\" }, { \"above\": 90, \"color\": \"critical\" }]`.");
         md.AppendLine("Each rule checks its `metric` (empty means the widget's own) against `above` and/or `below`. When several rules match,");
         md.AppendLine("the last one in the list wins, so list them mildest first. A metric with no reading keeps the normal colour.");
+        md.AppendLine();
+        md.AppendLine("Every widget can also have its own font and colours instead of the layout theme's (*Widget theme* in the editor).");
+        md.AppendLine("Leave them out, or empty, to use the theme's. Named colours in the widget's other settings, such as `accent`, then");
+        md.AppendLine("mean the widget's own.");
+        md.AppendLine();
+        AppendTable(md, Setting.ThemeOverrides);
 
         foreach (var widget in WidgetFactory.Descriptors)
         {
@@ -35,7 +41,7 @@ public static class WidgetDocs
             md.AppendLine();
             md.AppendLine(widget.Description);
             md.AppendLine();
-            AppendTable(md, widget.Settings);
+            AppendTable(md, widget.Settings.Where(s => s.Group != Setting.WidgetTheme).ToList());
 
             foreach (var items in widget.Settings.Where(s => s.Kind == SettingKind.Items))
             {
