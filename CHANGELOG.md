@@ -3,17 +3,9 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
-## Unreleased
+## 0.11.0
 
-**A better first impression**
-- On a PC with only one screen, the dashboard now starts as a window you can move and resize, instead of covering the whole screen.
-- A tidier default layout for new installs: CPU, GPU and memory graphs, each labelled, with the temperatures and frame rate beside them, the clock centred, and drives and network on the right. Your own layouts aren't changed.
-- Drives are labelled `C:` rather than `C:/`.
-
-**Text that fits**
-- Text and *Icon and value* widgets shrink long text to fit their width instead of cutting it off, so 144 FPS fits where 60 did. *Shrink to fit* turns it off.
-- Text widgets can hide until one of their readings arrives (*Hide without a reading*), like the Gaming HUD's session lines before you've played.
-- The Gaming HUD gallery layout no longer cuts off its frame rate, or says "141 FPS FPS average".
+A polish release: a new tray menu with Help and About, a cleaner editor and dialogs, text that fits, a better first run, and fixes for the editor asking to save changes nobody made.
 
 **A tidier tray**
 - A new look for the tray menu: dark or light to match the taskbar, with Windows 11's rounded corners, roomier rows, an icon beside each main item, and check marks in the app's orange.
@@ -33,6 +25,16 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - *Show it as* in the metric picker appears once you've picked a metric.
 - The editor opens on your main screen, whichever screen you open it from. Opened from a dashboard on a short screen, it used to hang off it.
 - Selecting a widget in the editor no longer marks the layout as changed (and asks to save on closing), or writes its default colours into the layout.
+
+**A better first impression**
+- On a PC with only one screen, the dashboard now starts as a window you can move and resize, instead of covering the whole screen.
+- A tidier default layout for new installs: CPU, GPU and memory graphs, each labelled, with the temperatures and frame rate beside them, the clock centred, and drives and network on the right. Your own layouts aren't changed.
+- Drives are labelled `C:` rather than `C:/`.
+
+**Text that fits**
+- Text and *Icon and value* widgets shrink long text to fit their width instead of cutting it off, so 144 FPS fits where 60 did. *Shrink to fit* turns it off.
+- Text widgets can hide until one of their readings arrives (*Hide without a reading*), like the Gaming HUD's session lines before you've played.
+- The Gaming HUD gallery layout no longer cuts off its frame rate, or says "141 FPS FPS average".
 
 **Also**
 - Screenshots of the dashboard, the themes, the gallery's layouts and the editor in the README and the guide.
