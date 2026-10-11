@@ -458,6 +458,55 @@ public sealed class TrayIcon : IDisposable
         _displays.DropDownItems.Add(new ToolStripSeparator());
         _displays.DropDownItems.Add(_away);
         _displays.DropDownItems.Add(_tablet);
+        _displays.DropDownItems.Add(_usbScreen);
+    }
+
+    private readonly ToolStripMenuItem _usbScreen = new("USB screen") { ToolTipText = "Show a layout on a small USB screen (Turing Smart Screen 3.5\" and its clones)" };
+
+    /// <summary>Display → USB screen changed, with the new settings.</summary>
+    public event EventHandler<UsbScreenSettings>? UsbScreenChanged;
+
+    public void SetUsbScreen(UsbScreenSettings settings, IReadOnlyList<string> ports, IReadOnlyList<string> layouts, string status)
+    {
+        _usbScreen.DropDownItems.Clear();
+        _usbScreen.DropDownItems.Add(new ToolStripMenuItem(Escape(status)) { Enabled = false });
+        var on = new ToolStripMenuItem("Show on the USB screen") { Checked = settings.Enabled };
+        on.Click += (_, _) => UsbScreenChanged?.Invoke(this, settings with { Enabled = !settings.Enabled });
+        _usbScreen.DropDownItems.Add(on);
+        _usbScreen.DropDownItems.Add(new ToolStripSeparator());
+
+        var port = new ToolStripMenuItem("Port");
+        foreach (var (value, label) in ports.Select(p => (p, p)).Prepend((UsbScreenSettings.Auto, "Find it automatically")))
+        {
+            var item = new ToolStripMenuItem(label) { Checked = string.Equals(settings.Port, value, StringComparison.OrdinalIgnoreCase) };
+            item.Click += (_, _) => UsbScreenChanged?.Invoke(this, settings with { Port = value });
+            port.DropDownItems.Add(item);
+        }
+
+        var layout = new ToolStripMenuItem("Layout");
+        foreach (var (value, label) in layouts.Select(l => ((string?)l, Escape(l))).Prepend(((string?)null, "Same as the dashboard")))
+        {
+            var item = new ToolStripMenuItem(label) { Checked = string.Equals(settings.Layout, value, StringComparison.OrdinalIgnoreCase) };
+            item.Click += (_, _) => UsbScreenChanged?.Invoke(this, settings with { Layout = value });
+            layout.DropDownItems.Add(item);
+        }
+
+        var brightness = new ToolStripMenuItem("Brightness");
+        foreach (var level in new[] { 10, 25, 40, 60, 80, 100 })
+        {
+            var item = new ToolStripMenuItem($"{level}%") { Checked = settings.Brightness == level };
+            item.Click += (_, _) => UsbScreenChanged?.Invoke(this, settings with { Brightness = level });
+            brightness.DropDownItems.Add(item);
+        }
+
+        var orientation = new ToolStripMenuItem("Way up");
+        foreach (var (value, label) in UsbScreenSettings.Orientations)
+        {
+            var item = new ToolStripMenuItem(label) { Checked = settings.Orientation == value };
+            item.Click += (_, _) => UsbScreenChanged?.Invoke(this, settings with { Orientation = value });
+            orientation.DropDownItems.Add(item);
+        }
+        _usbScreen.DropDownItems.AddRange([port, layout, brightness, orientation]);
     }
 
     /// <summary>Tray → Display → Tablet view → Show on tablets: true to start serving, false to stop.</summary>

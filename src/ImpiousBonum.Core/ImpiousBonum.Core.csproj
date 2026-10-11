@@ -9,4 +9,9 @@
     <InternalsVisibleTo Include="ImpiousBonum.Core.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Small USB screens are serial devices (see Screens/UsbScreen.cs). -->
+    <PackageReference Include="System.IO.Ports" Version="10.0.0" />
+  </ItemGroup>
+
 </Project>
