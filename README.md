@@ -47,7 +47,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="docs/images/default-layout.svg" alt="Map of the default layout: CPU and memory graphs, GPU load and VRAM, CPU and GPU temperatures, FPS, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Seventeen widget types are available: `text`, `graph` (line or area history with a header), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock`, `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `weather` ([Weather](#weather)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Eighteen widget types are available: `text`, `graph` (line or area history with a header), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock`, `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `weather` ([Weather](#weather)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
 
 ## What it shows
 
@@ -217,6 +217,22 @@ The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a
 | `layout` | Switches to the layout named in *target* |
 
 Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything in the tablet view, which is read-only, or while you edit the layout. If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
+
+## Timers
+
+The `timer` widget is a stopwatch, a countdown or a count to a moment:
+
+- **countdown** (the default) counts down from a length such as `25:00` or `1:30:00`. Tap the time to start and pause it.
+  At zero it shows *Time's up* (or your own text) in the warning colour, blinking, and sends a Windows notification.
+  Tap it again to go back to the start.
+- **stopwatch** counts up; tap to start and pause.
+- **until** counts down to a time of day (`18:00`, which comes round again the next day) or a date (`2026-12-25`,
+  `2026-12-25 09:00`), on its own, with days shown once it's more than a day away.
+
+The *Reset* button underneath puts a countdown or stopwatch back to zero. A running timer keeps going when you swipe to
+another page, switch layouts or edit the layout: timers with the same label, mode and length share one clock, so a
+countdown on two pages is the same countdown. Timers start again from scratch when the app restarts. The notification
+only comes while the timer is on screen; if it's on a page you're not showing, it comes when you next show it.
 
 ## Alerts
 

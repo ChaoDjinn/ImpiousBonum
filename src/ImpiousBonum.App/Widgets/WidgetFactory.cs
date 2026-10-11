@@ -17,6 +17,7 @@ public static class WidgetFactory
         StatWidget.Descriptor,
         IconValueWidget.Descriptor,
         ClockWidget.Descriptor,
+        TimerWidget.Descriptor,
         DrivesWidget.Descriptor,
         ProcessesWidget.Descriptor,
         RowsWidget.Descriptor,

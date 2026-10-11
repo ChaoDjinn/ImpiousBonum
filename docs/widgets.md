@@ -172,6 +172,25 @@ The time with the date underneath, in your Windows language and region.
 | `uppercaseDate` | true/false | `true` | Uppercase date |
 | `align` | `left` / `center` / `right` | `center` | Alignment |
 
+## Timer (`timer`)
+
+A stopwatch, a countdown, or the time left until a time or date. Tap the time to start and pause; the button underneath resets it.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `mode` | `countdown` / `stopwatch` / `until` | `countdown` | Mode. countdown counts down from the length below; stopwatch counts up; until counts down to the time or date below and runs by itself. |
+| `duration` | text | `25:00` | Length. For countdown: minutes:seconds or hours:minutes:seconds, e.g. 5:00 or 1:30:00. A plain number is minutes. |
+| `target` | text | `18:00` | Until. For until: a time of day (the next one comes round daily) or a date and time, e.g. 2026-12-25 or 2026-12-25 09:00. |
+| `label` | text | — | Label. Shown above the time. Timers with the same label, mode and length share one clock, so pages and other layouts can show the same timer. |
+| `doneText` | text | `Time's up` | When done. For countdown and until: shown and sent as a notification when it reaches zero. Empty sends none. |
+| `notify` | true/false | `true` | Notify when done. A Windows notification when a countdown or until reaches zero, as long as the timer is on screen. |
+| `showReset` | true/false | `true` | Reset button. Not shown for until. |
+| `fontSize` | number (6–600) | `72` | Time size |
+| `labelSize` | number (6–200) | `22` | Label size |
+| `align` | `left` / `center` / `right` | `center` | Alignment |
+| `doneColor` | color | `critical` | Done colour. The time's colour once it has reached zero; it also blinks. |
+| `pausedColor` | color | `secondary` | Paused colour. The time's colour while stopped or paused. |
+
 ## Drives (`drives`)
 
 One row per drive with free space and a bar showing how full it is. Follows drives as they are plugged in or removed.
