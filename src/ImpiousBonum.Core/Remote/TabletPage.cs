@@ -1,6 +1,9 @@
 namespace ImpiousBonum.Core.Remote;
 
-/// <summary>The page a tablet opens: the dashboard picture scaled to fit, fetched again every second.</summary>
+/// <summary>
+/// The page a tablet opens: the dashboard picture scaled to fit, fetched again every second. Taps on the picture are
+/// sent to the PC, which presses a button there only if tablets have been allowed to (otherwise they're ignored).
+/// </summary>
 public static class TabletPage
 {
     /// <summary>Nothing but this page's own inline script and style, and pictures from this server.</summary>
@@ -29,6 +32,9 @@ public static class TabletPage
                   background: rgba(0, 0, 0, .6); color: #ccc; font: 14px system-ui, -apple-system, "Segoe UI", sans-serif;
                   transition: opacity .4s; }
           #full.hidden { opacity: 0; pointer-events: none; }
+          .ripple { position: fixed; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%;
+                    background: rgba(255, 255, 255, .35); pointer-events: none; animation: ripple .45s ease-out forwards; }
+          @keyframes ripple { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
         </style>
         </head>
         <body>
@@ -85,6 +91,28 @@ public static class TabletPage
             hideTimer = setTimeout(() => full.classList.add("hidden"), 4000);
           }
           full.addEventListener("click", () => enter.call(root));
+
+          // Where a tap lands on the picture itself, as 0–1 across and down (the picture is letterboxed to fit).
+          frame.addEventListener("click", async (e) => {
+            const box = frame.getBoundingClientRect();
+            if (!frame.naturalWidth) return;
+            const scale = Math.min(box.width / frame.naturalWidth, box.height / frame.naturalHeight);
+            const w = frame.naturalWidth * scale, h = frame.naturalHeight * scale;
+            const x = (e.clientX - box.left - (box.width - w) / 2) / w;
+            const y = (e.clientY - box.top - (box.height - h) / 2) / h;
+            if (x < 0 || x > 1 || y < 0 || y > 1) return;
+            try {
+              const response = await fetch("tap?k=" + encodeURIComponent(key) + "&x=" + x.toFixed(4) + "&y=" + y.toFixed(4), { method: "POST", cache: "no-store" });
+              if (response.status === 200) {
+                const ripple = document.createElement("div");
+                ripple.className = "ripple";
+                ripple.style.left = e.clientX + "px";
+                ripple.style.top = e.clientY + "px";
+                document.body.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 500);
+              }
+            } catch { }
+          });
           document.addEventListener("fullscreenchange", showButton);
           document.addEventListener("webkitfullscreenchange", showButton);
           document.addEventListener("pointerdown", showButton);

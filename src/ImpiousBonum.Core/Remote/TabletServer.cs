@@ -10,8 +10,8 @@ public sealed record TabletFrame(byte[] Image, string ContentType, long Sequence
 
 /// <summary>
 /// The tablet view's web server: a page that shows the dashboard, and the latest <see cref="Frame"/> for it to fetch
-/// once a second. Read-only, answers only local-network addresses that know the link's secret, and closes every
-/// connection after one response. Written on <see cref="TcpListener"/> because HttpListener needs an admin-registered
+/// once a second. Read-only unless <see cref="Tap"/> is set (an opt-in), answers only local-network addresses that know
+/// the link's secret, and closes every connection after one response. Written on <see cref="TcpListener"/> because HttpListener needs an admin-registered
 /// URL reservation to accept anything but localhost.
 /// </summary>
 public sealed class TabletServer : IDisposable
@@ -44,6 +44,12 @@ public sealed class TabletServer : IDisposable
         get => _token;
         set => _token = value;
     }
+
+    /// <summary>
+    /// Presses whatever is at a point of the picture (0–1 across and down), returning whether there was something to
+    /// press. Null, the default, means tablets can only look: <c>/tap</c> doesn't exist. Called on the thread pool.
+    /// </summary>
+    public Func<double, double, bool>? Tap { get; set; }
 
     /// <summary>The picture to serve. Set from any thread; read by requests on the thread pool.</summary>
     public TabletFrame? Frame { get; set; }
@@ -148,6 +154,8 @@ public sealed class TabletServer : IDisposable
     {
         if (request is null)
             return HttpResponse.Text(400, "Bad Request");
+        if (request.Method == "POST" && request.Path == "/tap")
+            return RespondToTap(request);
         if (request.Method != "GET")
             return HttpResponse.Text(405, "Method Not Allowed");
         // Without the secret, nothing here exists.
@@ -175,6 +183,25 @@ public sealed class TabletServer : IDisposable
                 return HttpResponse.Text(404, "Not Found");
         }
     }
+
+    /// <summary>
+    /// A tap from the page. Needs the secret like everything else, only exists while taps are allowed, and refuses a
+    /// request another site's page made (its Origin isn't this server), so a web page can't press buttons through it.
+    /// </summary>
+    private HttpResponse RespondToTap(HttpRequestHead request)
+    {
+        if (!TabletAccess.TokenMatches(request.Query.GetValueOrDefault("k"), _token) || Tap is not { } tap)
+            return HttpResponse.Text(404, "Not Found");
+        if (request.Headers.GetValueOrDefault("Origin") is { } origin
+            && (!Uri.TryCreate(origin, UriKind.Absolute, out var from) || !string.Equals(from.Authority, request.Headers.GetValueOrDefault("Host"), StringComparison.OrdinalIgnoreCase)))
+            return HttpResponse.Text(403, "Forbidden");
+        if (!TryFraction(request.Query.GetValueOrDefault("x"), out var x) || !TryFraction(request.Query.GetValueOrDefault("y"), out var y))
+            return HttpResponse.Text(400, "Bad Request");
+        return tap(x, y) ? HttpResponse.Text(200, "Pressed") : new HttpResponse(204, null, []);
+    }
+
+    private static bool TryFraction(string? text, out double value) =>
+        double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value) && value is >= 0 and <= 1;
 }
 
 public sealed record HttpResponse(int Status, string? ContentType, byte[] Body)
@@ -220,8 +247,10 @@ public sealed record HttpResponse(int Status, string? ContentType, byte[] Body)
     private static string Reason(int status) => status switch
     {
         200 => "OK",
+        204 => "No Content",
         304 => "Not Modified",
         400 => "Bad Request",
+        403 => "Forbidden",
         404 => "Not Found",
         405 => "Method Not Allowed",
         503 => "Service Unavailable",

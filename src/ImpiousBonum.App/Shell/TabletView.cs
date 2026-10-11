@@ -3,7 +3,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using ImpiousBonum.App.Layout;
+using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Remote;
 
@@ -31,10 +33,77 @@ public sealed class TabletView : IDisposable
     private bool _hasPrevious;
     private long _sequence;
 
+    private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
+    private bool _allowTaps;
+
     public TabletView()
     {
         // Behind a transparent theme the tablet would otherwise show black JPEG corners.
         _host = new Border { Child = _view, SnapsToDevicePixels = true };
+        // A button pressed from the tablet asks for its action like one on the real dashboard.
+        _host.AddHandler(Widget.ActionEvent, new EventHandler<WidgetActionEventArgs>((_, e) =>
+        {
+            e.Handled = true;
+            ActionRequested?.Invoke(this, e.Action);
+        }));
+    }
+
+    /// <summary>A button on the tablet was pressed (only while <see cref="AllowTaps"/>).</summary>
+    public event EventHandler<WidgetAction>? ActionRequested;
+
+    /// <summary>
+    /// Let tablets press the layout's buttons and media controls. Off by default: anyone with the link could then
+    /// press them. Nothing else on the dashboard can be pressed from a tablet.
+    /// </summary>
+    public bool AllowTaps
+    {
+        get => _allowTaps;
+        set
+        {
+            _allowTaps = value;
+            if (_server is not null)
+                _server.Tap = value ? TapFromServer : null;
+        }
+    }
+
+    /// <summary>From the server's thread: press on the UI thread, waiting a moment for the answer.</summary>
+    private bool TapFromServer(double x, double y)
+    {
+        try
+        {
+            return _dispatcher.Invoke(() => PressAt(x, y), TimeSpan.FromSeconds(2)) is true;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Presses the button at a point of the picture (0–1 across and down), if there's one there: a button in a
+    /// buttons widget, or a media control. Returns whether one was pressed.
+    /// </summary>
+    internal bool PressAt(double x, double y)
+    {
+        if (!_built || !_allowTaps || _view.Width <= 0 || _view.Height <= 0)
+            return false;
+        var point = new Point(x * _view.Width, y * _view.Height);
+        if (VisualTreeHelper.HitTest(_view, point)?.VisualHit is not DependencyObject hit)
+            return false;
+        TapTarget? target = null;
+        for (var node = hit; node is not null; node = VisualTreeHelper.GetParent(node))
+        {
+            if (target is null && node is TapTarget tap)
+                target = tap;
+            if (node is Widget widget)
+            {
+                if (target is null || widget is not (ButtonsWidget or MediaWidget))
+                    return false;
+                target.Tap();
+                return true;
+            }
+        }
+        return false;
     }
 
     public bool IsRunning => _server is not null;
@@ -43,7 +112,7 @@ public sealed class TabletView : IDisposable
     public void Start(int port, string token)
     {
         Stop();
-        var server = new TabletServer(port, token);
+        var server = new TabletServer(port, token) { Tap = _allowTaps ? TapFromServer : null };
         server.Start();
         _server = server;
     }

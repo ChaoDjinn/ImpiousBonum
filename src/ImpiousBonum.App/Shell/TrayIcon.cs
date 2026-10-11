@@ -16,6 +16,10 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _tablet = new("Tablet view");
     private readonly ToolStripMenuItem _away = new("When you're away") { ToolTipText = "Dim the dashboard when there's been no keyboard, mouse or touch input for a while" };
     private readonly ToolStripMenuItem _tabletOn = new("Show on tablets") { ToolTipText = "Serve the dashboard to browsers on your local network" };
+    private readonly ToolStripMenuItem _tabletButtons = new("Let tablets press buttons")
+    {
+        ToolTipText = "Taps on the tablet press the layout's buttons and media controls. Anyone with the link could press them.",
+    };
     private readonly ToolStripMenuItem _tabletShowLink = new("Show link…");
     private readonly ToolStripMenuItem _tabletCopyLink = new("Copy link");
     private readonly ToolStripMenuItem _tabletNewLink = new("New link") { ToolTipText = "Stops old links working" };
@@ -116,8 +120,9 @@ public sealed class TrayIcon : IDisposable
             _weatherUnits.DropDownItems.Add(item);
         }
 
-        _tablet.DropDownItems.AddRange([_tabletOn, new ToolStripSeparator(), _tabletShowLink, _tabletCopyLink, _tabletNewLink]);
+        _tablet.DropDownItems.AddRange([_tabletOn, _tabletButtons, new ToolStripSeparator(), _tabletShowLink, _tabletCopyLink, _tabletNewLink]);
         _tabletOn.Click += (_, _) => TabletViewToggled?.Invoke(this, !_tabletOn.Checked);
+        _tabletButtons.Click += (_, _) => TabletButtonsToggled?.Invoke(this, !_tabletButtons.Checked);
         _tabletShowLink.Click += (_, _) => TabletLinkRequested?.Invoke(this, EventArgs.Empty);
         _tabletCopyLink.Click += (_, _) => TabletLinkCopyRequested?.Invoke(this, EventArgs.Empty);
         _tabletNewLink.Click += (_, _) => TabletNewLinkRequested?.Invoke(this, EventArgs.Empty);
@@ -519,9 +524,14 @@ public sealed class TrayIcon : IDisposable
 
     public event EventHandler? TabletNewLinkRequested;
 
-    public void SetTabletView(bool on)
+    /// <summary>Display → Tablet view → Let tablets press buttons, with the new state.</summary>
+    public event EventHandler<bool>? TabletButtonsToggled;
+
+    public void SetTabletView(bool on, bool buttons)
     {
         _tabletOn.Checked = on;
+        _tabletButtons.Checked = buttons;
+        _tabletButtons.Enabled = on;
         _tabletShowLink.Enabled = _tabletCopyLink.Enabled = _tabletNewLink.Enabled = on;
     }
 
