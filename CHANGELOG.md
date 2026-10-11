@@ -13,8 +13,12 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 **Every widget can override the theme**
 - Each widget has its own *Widget theme* settings: font, weight, text, secondary, accent, bar track, warning and critical colours. Empty uses the layout's theme, as before.
 - Widgets that borrowed the theme's bar track for other things have their own colours now. The *Now playing* album-art background and progress bar no longer change with the bar track. Bars, drives, gauges, CPU threads and buttons each have their own track or tile colour, and bars, drives, buttons and *Now playing* their own text colours.
+
 **Set up widgets from the editor**
 - Select a weather, agenda, news or Claude usage widget and the top of its properties says what's set up and has a button for it: the weather location, calendars, news feeds or connecting Claude Code. The tray still has them too.
+
+**More dashboards**
+- With more than one spare screen, give each a dashboard with a layout of its own: tray → *Display* → *More dashboards*. Each fills its screen, and the editor's changes show live on every dashboard showing that layout.
 
 ## 0.9.0
 

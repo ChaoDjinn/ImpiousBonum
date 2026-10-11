@@ -20,6 +20,7 @@ public sealed class AppSettings
     private List<Hotkey> _hotkeys = [];
     private List<CalendarLink> _calendars = [];
     private List<NewsFeed> _newsFeeds = [];
+    private List<ExtraDashboard> _extraDashboards = [];
     private UsbScreenSettings _usbScreen = UsbScreenSettings.Default;
     private LogSettings _logging = LogSettings.Default;
 
@@ -126,6 +127,13 @@ public sealed class AppSettings
     {
         get => _newsFeeds;
         set => _newsFeeds = value ?? [];
+    }
+
+    /// <summary>More dashboards, each a layout filling a monitor of its own (tray → Display → More dashboards). None by default.</summary>
+    public List<ExtraDashboard> ExtraDashboards
+    {
+        get => _extraDashboards;
+        set => _extraDashboards = value ?? [];
     }
 
     /// <summary>A small USB screen to show a layout on too (tray → Display → USB screen). Off by default.</summary>
