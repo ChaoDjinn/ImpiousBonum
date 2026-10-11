@@ -20,7 +20,7 @@ public static class WidgetDocs
         md.AppendLine("Anything left out uses its default.");
         md.AppendLine();
         md.AppendLine("Templates are text with live values: `{metric.id}` or `{metric.id:spec}`, where spec can be a number format (`0.0`, `N0`),");
-        md.AppendLine("a byte unit (`MB`, `GB`, …) or `nounit`. Colours are `foreground`, `secondary`, `accent`, `warning`, `critical`");
+        md.AppendLine("a byte unit (`MB`, `GB`, …) or `nounit`. Colours are `foreground`, `secondary`, `accent`, `warning`, `critical`, `track`, `background`");
         md.AppendLine("or `#RRGGBB` / `#AARRGGBB`; the named ones come from the layout's theme.");
         md.AppendLine();
         md.AppendLine("Widgets with a `thresholds` list change colour when a value crosses a limit, e.g.");

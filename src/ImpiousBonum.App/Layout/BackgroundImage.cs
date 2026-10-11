@@ -16,7 +16,8 @@ public static class BackgroundImage
 
     public static readonly IReadOnlyList<string> Extensions = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff"];
 
-    private const int CacheSize = 2;
+    // The canvas background plus a few image widgets, each decoded at the size it's shown.
+    private const int CacheSize = 8;
 
     private static readonly List<(string Key, BitmapSource Bitmap)> Cache = [];
 
@@ -73,8 +74,8 @@ public static class BackgroundImage
 
     public static bool IsSupported(string path) => Extensions.Contains(Path.GetExtension(path).ToLowerInvariant());
 
-    /// <summary>The decoded image, or null if the file is missing or can't be read.</summary>
-    private static BitmapSource? Load(string path, string fit, double width, double height)
+    /// <summary>The decoded image, no bigger than <paramref name="width"/> × <paramref name="height"/> needs, or null if the file is missing or can't be read.</summary>
+    public static BitmapSource? Load(string path, string fit, double width, double height)
     {
         try
         {

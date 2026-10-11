@@ -21,6 +21,8 @@ public static class WidgetFactory
         MediaWidget.Descriptor,
         ButtonsWidget.Descriptor,
         WeatherWidget.Descriptor,
+        ImageWidget.Descriptor,
+        ShapeWidget.Descriptor,
         BarsWidget.ClaudeDescriptor,
     ];
 

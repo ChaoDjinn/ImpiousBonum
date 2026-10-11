@@ -6,7 +6,7 @@ Every widget in a layout file has `type`, `x`, `y`, `width` and `height` (in can
 Anything left out uses its default.
 
 Templates are text with live values: `{metric.id}` or `{metric.id:spec}`, where spec can be a number format (`0.0`, `N0`),
-a byte unit (`MB`, `GB`, …) or `nounit`. Colours are `foreground`, `secondary`, `accent`, `warning`, `critical`
+a byte unit (`MB`, `GB`, …) or `nounit`. Colours are `foreground`, `secondary`, `accent`, `warning`, `critical`, `track`, `background`
 or `#RRGGBB` / `#AARRGGBB`; the named ones come from the layout's theme.
 
 Widgets with a `thresholds` list change colour when a value crosses a limit, e.g.
@@ -253,6 +253,33 @@ The weather now and the days or hours ahead, from Open-Meteo.com. Set your locat
 | `fontSize` | number (6–400) | `80` | Temperature size |
 | `forecastSize` | number (6–200) | `22` | Forecast size |
 | `iconColor` | color | `accent` | Icon colour |
+
+## Image (`image`)
+
+A picture from a file: a logo, artwork or a photo. It's packed into exported layouts so it travels with them.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `file` | imagefile | — | Picture. A PNG, JPG, GIF, BMP or TIFF file. |
+| `fit` | `fill` / `fit` / `stretch` / `center` / `tile` | `fit` | Fit. fill covers the box (cropping), fit shows it all, stretch distorts to fit, center and tile keep its size. |
+| `opacity` | number (0–1) | `1` | Opacity |
+| `cornerRadius` | number (0–1000) | `0` | Corner radius |
+| `recolor` | true/false | `false` | Recolour. Draws the picture's shape in the colour below, e.g. a white logo in the theme's accent. |
+| `color` | color | `accent` | Colour |
+
+## Shape (`shape`)
+
+A rounded panel, a circle or a line, to group widgets or divide them. It's added behind the other widgets.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `shape` | `panel` / `circle` / `line` | `panel` | Shape. A line runs along the middle of the box, across its longer side. |
+| `color` | color | `track` | Colour. The fill of a panel or circle, or the colour of a line. |
+| `cornerRadius` | number (0–1000) | `16` | Corner radius. For a panel. |
+| `borderColor` | color | `accent` | Outline colour |
+| `borderThickness` | number (0–100) | `0` | Outline. 0 has no outline. |
+| `thickness` | number (0.5–100) | `2` | Line thickness. For a line. |
+| `opacity` | number (0–1) | `1` | Opacity |
 
 ## Claude usage (`claude`)
 
