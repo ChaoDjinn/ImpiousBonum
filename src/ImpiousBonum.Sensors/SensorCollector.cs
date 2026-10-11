@@ -3,6 +3,7 @@ using System.ServiceProcess;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Sensors;
 using LibreHardwareMonitor.Hardware;
+using LibreHardwareMonitor.Hardware.Storage;
 
 namespace ImpiousBonum.Sensors;
 
@@ -30,6 +31,7 @@ internal sealed class SensorCollector : IDisposable
 
     private List<Tracked> _tracked = [];
     private Dictionary<string, ISensor> _aliases = [];
+    private List<(string Letter, StorageDevice Device)> _drives = [];
     private string _signature = string.Empty;
 
     public IReadOnlyList<SensorInfo> Catalog { get; private set; } = [];
@@ -87,7 +89,8 @@ internal sealed class SensorCollector : IDisposable
         _signature = signature;
         _tracked = sensors.Select(Track).ToList();
         _aliases = ResolveAliases();
-        Catalog = SensorAliases.All.Concat(_tracked.Select(t => t.Info)).ToList();
+        _drives = FindDrives();
+        Catalog = SensorAliases.All.Concat(_tracked.Select(t => t.Info)).Concat(_drives.SelectMany(d => DriveInfos(d.Letter))).ToList();
         return true;
     }
 
@@ -101,7 +104,76 @@ internal sealed class SensorCollector : IDisposable
         foreach (var alias in SensorAliases.All.Where(a => !SensorAliases.IsComputedByDashboard(a.Id)))
             values[alias.Id] = _aliases.TryGetValue(alias.Id, out var sensor) && sensor.Value is float v ? v : null;
 
+        foreach (var (letter, device) in _drives)
+        {
+            var smart = Smart(device);
+            values[DriveMetric(letter, "life")] = smart?.Life is >= 0 and <= 100 and var life ? life : null;
+            values[DriveMetric(letter, "temp")] = smart?.Temperature is > 0 and var temp ? temp : null;
+            values[DriveMetric(letter, "hours")] = smart is null ? null : smart.DetectedPowerOnHours > 0 ? smart.DetectedPowerOnHours : smart.MeasuredPowerOnHours > 0 ? smart.MeasuredPowerOnHours : null;
+        }
+
         return values;
+    }
+
+    /// <summary>Per-drive readings that are text: the drive's health status (Good, Caution, Bad) and model.</summary>
+    public Dictionary<string, string?> ReadTexts()
+    {
+        var texts = new Dictionary<string, string?>(_drives.Count * 2);
+        foreach (var (letter, device) in _drives)
+        {
+            texts[DriveMetric(letter, "status")] = Smart(device)?.DiskStatus.ToString();
+            texts[DriveMetric(letter, "model")] = device.Storage?.Model?.Trim();
+        }
+        return texts;
+    }
+
+    /// <summary>
+    /// Each drive letter and the physical disk it's on, so a disk's health can be shown per drive (<c>disk.C.life</c>).
+    /// A disk with several partitions appears once per letter.
+    /// </summary>
+    private List<(string Letter, StorageDevice Device)> FindDrives()
+    {
+        var drives = new List<(string, StorageDevice)>();
+        foreach (var device in _computer.Hardware.OfType<StorageDevice>())
+        {
+            try
+            {
+                foreach (var partition in device.Storage?.Partitions ?? [])
+                {
+                    if (partition.DriveLetter is char letter && char.IsAsciiLetter(letter))
+                        drives.Add((char.ToUpperInvariant(letter).ToString(), device));
+                }
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or NullReferenceException)
+            {
+                // A disk that can't describe its partitions just doesn't get per-drive health.
+            }
+        }
+        return drives;
+    }
+
+    private static IEnumerable<SensorInfo> DriveInfos(string letter)
+    {
+        var category = $"Disk {letter}:";
+        yield return new SensorInfo(DriveMetric(letter, "life"), $"{letter}: life remaining (health)", category, MetricUnit.Percent, 100);
+        yield return new SensorInfo(DriveMetric(letter, "temp"), $"{letter}: temperature", category, MetricUnit.Celsius);
+        yield return new SensorInfo(DriveMetric(letter, "hours"), $"{letter}: power-on hours", category, MetricUnit.None);
+        yield return new SensorInfo(DriveMetric(letter, "status"), $"{letter}: health status", category, MetricUnit.Text);
+        yield return new SensorInfo(DriveMetric(letter, "model"), $"{letter}: model", category, MetricUnit.Text);
+    }
+
+    private static string DriveMetric(string letter, string name) => $"disk.{letter}.{name}";
+
+    private static DiskInfoToolkit.SmartInfo? Smart(StorageDevice device)
+    {
+        try
+        {
+            return device.Storage?.Smart;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or NullReferenceException)
+        {
+            return null;
+        }
     }
 
     private static void UpdateRecursive(IHardware hardware)

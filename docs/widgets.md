@@ -105,8 +105,8 @@ One row per drive with free space and a bar showing how full it is. Follows driv
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `drives` | text | `all` | Drives. "all", or letters separated by commas, e.g. "C,D". |
-| `label` | text | `{letter}:/` | Row label. {letter} is replaced with the drive letter. |
-| `text` | text | `{free} free / {total}` | Row value. Placeholders: {free}, {used}, {total}, {label}. |
+| `label` | template (per drive) | `{letter}:/` | Row label. Each row's own drive: {letter}, {free}, {used}, {total}, {usedPct}, {label}, {read}, {write}, {active}, and with the sensor service {life}, {temp}, {status}, {model}, {hours}. In a metric id, * is the row's drive, e.g. {disk.*.read}. Other metrics work too. |
+| `text` | template (per drive) | `{free} free / {total}` | Row value. Each row's own drive: {letter}, {free}, {used}, {total}, {usedPct}, {label}, {read}, {write}, {active}, and with the sensor service {life}, {temp}, {status}, {model}, {hours}. In a metric id, * is the row's drive, e.g. {disk.*.read}. Other metrics work too. |
 | `fontSize` | number (6–200) | `25` | Font size |
 | `barHeight` | number (1–100) | `5` | Bar height |
 | `spacing` | number (0–200) | `12` | Row spacing |

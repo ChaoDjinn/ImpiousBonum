@@ -31,6 +31,9 @@ public enum SettingKind
     /// <summary>Text with <c>{metric.id}</c> placeholders.</summary>
     Template,
 
+    /// <summary>A template for one drive's row: short placeholders and <c>*</c> stand for that drive (see <see cref="Core.Metrics.DriveTemplate"/>).</summary>
+    DriveTemplate,
+
     /// <summary>A single metric id, e.g. <c>cpu.load</c>.</summary>
     Metric,
 
@@ -85,6 +88,9 @@ public static class Setting
 
     public static SettingDescriptor Template(string key, string label, string? @default, string group = Content, string? help = null) =>
         new(key, label, SettingKind.Template, @default, group, help);
+
+    public static SettingDescriptor DriveTemplate(string key, string label, string? @default, string group = Content, string? help = null) =>
+        new(key, label, SettingKind.DriveTemplate, @default, group, help);
 
     public static SettingDescriptor Metric(string key, string label, string? @default, string group = Content, string? help = null) =>
         new(key, label, SettingKind.Metric, @default, group, help);

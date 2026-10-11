@@ -60,6 +60,7 @@ Every box is a widget you can move, resize, restyle or replace. Eight widget typ
 | `gpu.load.3d`, `gpu.load.decode`, `gpu.load.encode`, `gpu.load.compute` | GPU engine counters, the busiest engine of each kind |
 | `disk.<L>.free/used/total/usedPct/label` | `DriveInfo`, follows drives as they come and go |
 | `disk.<L>.read/write/active`, `disk.read`, `disk.write` | Disk performance counters: speed per drive and in total, and % of time active |
+| `disk.<L>.life`, `disk.<L>.temp`, `disk.<L>.status`, `disk.<L>.model`, `disk.<L>.hours` | Sensor service: the drive's health (life remaining %, like CrystalDiskInfo), temperature, status (Good / Caution / Bad), model and power-on hours, from its SMART data |
 | `net.down`, `net.up`, `net.down.total`, `net.up.total`, `net.ip`, `net.adapter` | Adapters with a default gateway (totals count since the adapter connected) |
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
 | `sys.uptime`, `sys.name`, `sys.battery`, `sys.battery.status` | Windows; the battery ones only on PCs with a battery |
