@@ -543,7 +543,7 @@ public sealed class PropertyPanel : StackPanel
     {
         _fontNames ??= Fonts.SystemFontFamilies.Select(f => f.Source).Distinct().Order().ToList();
         var combo = new ComboBox { ItemsSource = _fontNames, IsEditable = true, IsTextSearchEnabled = true };
-        combo.AddHandler(TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) => Write(target, setting.Key, JsonValue.Create(combo.Text))));
+        combo.AddHandler(TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) => WriteIfChanged(target, setting, combo.Text)));
         return (combo, Refresh);
 
         void Refresh()
@@ -593,7 +593,7 @@ public sealed class PropertyPanel : StackPanel
         if (setting.Choices is { Count: > 0 } choices)
         {
             var combo = new ComboBox { ItemsSource = choices, IsEditable = true };
-            combo.AddHandler(TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) => Write(target, setting.Key, JsonValue.Create(combo.Text))));
+            combo.AddHandler(TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) => WriteIfChanged(target, setting, combo.Text)));
             input = combo;
             read = () => combo.Text;
             show = text => combo.Text = text;
@@ -693,6 +693,17 @@ public sealed class PropertyPanel : StackPanel
         if (_updating)
             return;
         _session.SetValue(target, key, value, this);
+    }
+
+    /// <summary>
+    /// For editable drop-downs. Their text box catches up with the value a moment after it's shown, outside the
+    /// <see cref="_updating"/> guard, so only text that differs from what the setting shows already is written: looking at
+    /// a widget mustn't copy its defaults into the layout (and ask to save changes nobody made).
+    /// </summary>
+    private void WriteIfChanged(SettingTarget target, SettingDescriptor setting, string text)
+    {
+        if (text != CurrentString(target, setting))
+            Write(target, setting.Key, JsonValue.Create(text));
     }
 
     private string CurrentString(SettingTarget target, SettingDescriptor setting) =>

@@ -32,6 +32,7 @@ public partial class EditorWindow : Window
     public EditorWindow(LayoutSession session, LayoutStore layouts, Func<(int Width, int Height)?> dashboardSize)
     {
         InitializeComponent();
+        PlaceOnMainScreen();
         _session = session;
         _layouts = layouts;
 
@@ -95,6 +96,25 @@ public partial class EditorWindow : Window
         RefreshList();
         RefreshLayouts();
         UpdateState();
+    }
+
+    /// <summary>
+    /// Centred on the main screen and no bigger than it. WPF's CenterScreen uses the screen under the mouse, which when
+    /// the editor is opened from the dashboard is the dashboard's own screen: often a strip too short for the editor,
+    /// which then hung off it, and covered the dashboard it's editing anyway.
+    /// </summary>
+    private void PlaceOnMainScreen()
+    {
+        var (left, top, width, height) = Centred(SystemParameters.WorkArea, Width, Height);
+        (Left, Top, Width, Height) = (left, top, width, height);
+    }
+
+    /// <summary>A window of <paramref name="width"/>×<paramref name="height"/> centred in <paramref name="area"/>, shrunk to fit inside it.</summary>
+    internal static (double Left, double Top, double Width, double Height) Centred(Rect area, double width, double height)
+    {
+        width = Math.Min(width, area.Width * 0.95);
+        height = Math.Min(height, area.Height * 0.95);
+        return (area.Left + (area.Width - width) / 2, area.Top + (area.Height - height) / 2, width, height);
     }
 
     private static MenuItem MenuItemFor(string header, string? toolTip, Action action)

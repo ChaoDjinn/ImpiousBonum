@@ -31,6 +31,8 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - The *Close* buttons in *Alerts…* and *Custom data…* now close them (and so does Esc).
 - The colour picker opens in front of the editor, and the swatch shows the theme's *track* and *background* colours too.
 - *Show it as* in the metric picker appears once you've picked a metric.
+- The editor opens on your main screen, whichever screen you open it from. Opened from a dashboard on a short screen, it used to hang off it.
+- Selecting a widget in the editor no longer marks the layout as changed (and asks to save on closing), or writes its default colours into the layout.
 
 **Also**
 - Screenshots of the dashboard, the themes, the gallery's layouts and the editor in the README and the guide.

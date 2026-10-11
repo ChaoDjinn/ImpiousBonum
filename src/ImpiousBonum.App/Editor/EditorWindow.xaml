@@ -4,7 +4,7 @@
         Title="Impious Bonum layout editor"
         ThemeMode="System"
         Width="1500" Height="900" MinWidth="980" MinHeight="560"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="Manual">
     <Window.Resources>
         <!-- Toolbar buttons: an icon, and a label for the ones used most. -->
         <Style x:Key="ToolbarSeparator" TargetType="Border">
