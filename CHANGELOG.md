@@ -24,6 +24,14 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - A sharper tray icon at 125% and 150% scaling.
 - Clicking a notification about an error opens the log, and clicking *Impious Bonum x.y.z is ready* restarts into the update.
 
+**A cleaner editor and dialogs**
+- The editor's toolbar has icons, and *Add widget* groups widgets by what they're for: readings, time and calendar, media and controls, weather, news and Claude, and pictures and shapes. The widget reference has the same groups.
+- The widget list shows each widget's type and what tells it apart, without a scroll bar, and the preview sits on its own panel in light mode too.
+- Dialogs have their buttons along the bottom as in Windows 11, follow light and dark mode throughout, show hints in empty boxes (*Search by name, id or hardware…*) and say when a list is empty. They no longer open complaining about fields you haven't filled in yet.
+- The *Close* buttons in *Alerts…* and *Custom data…* now close them (and so does Esc).
+- The colour picker opens in front of the editor, and the swatch shows the theme's *track* and *background* colours too.
+- *Show it as* in the metric picker appears once you've picked a metric.
+
 **Also**
 - If `settings.json` can't be read, Impious Bonum says so and keeps a copy as `settings.unreadable.json` before starting with the defaults, rather than quietly replacing your settings.
 

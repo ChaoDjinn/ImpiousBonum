@@ -64,7 +64,9 @@ public partial class ScheduleRuleWindow : Window
 
     private void Update()
     {
-        if (OkButton is null)
+        // Checked and TextChanged fire while the window is still being built, before every control exists;
+        // the constructor calls this once it's ready.
+        if (!IsInitialized)
             return;
         FromBox.IsEnabled = ToBox.IsEnabled = Between.IsChecked == true;
         var problem = Problem();

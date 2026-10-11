@@ -34,6 +34,12 @@ public static class WidgetDocs
         md.AppendLine();
         AppendTable(md, Setting.ThemeOverrides);
 
+        md.AppendLine();
+        md.AppendLine("## Widgets");
+        md.AppendLine();
+        foreach (var category in WidgetFactory.Descriptors.GroupBy(d => d.Category))
+            md.AppendLine($"- **{category.Key}:** {string.Join(" · ", category.Select(d => $"[{d.Name}](#{Anchor($"{d.Name} {d.Type}")})"))}");
+
         foreach (var widget in WidgetFactory.Descriptors)
         {
             md.AppendLine();
@@ -67,6 +73,10 @@ public static class WidgetDocs
 
         return md.ToString();
     }
+
+    /// <summary>The link GitHub gives a heading, e.g. "icon-and-value-icon" for "Icon and value (`icon`)".</summary>
+    internal static string Anchor(string heading) =>
+        new string(heading.ToLowerInvariant().Where(c => char.IsLetterOrDigit(c) || c is ' ' or '-').ToArray()).Replace(' ', '-');
 
     private static void AppendTable(StringBuilder md, IReadOnlyList<SettingDescriptor> settings)
     {

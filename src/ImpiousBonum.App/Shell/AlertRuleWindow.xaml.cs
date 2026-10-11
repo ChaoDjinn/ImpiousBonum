@@ -78,7 +78,9 @@ public partial class AlertRuleWindow : Window
 
     private void Update()
     {
-        if (OkButton is null)
+        // Checked and TextChanged fire while the window is still being built, before every control exists;
+        // the constructor calls this once it's ready.
+        if (!IsInitialized)
             return;
         AboveBox.IsEnabled = AboveCheck.IsChecked == true;
         BelowBox.IsEnabled = BelowCheck.IsChecked == true;

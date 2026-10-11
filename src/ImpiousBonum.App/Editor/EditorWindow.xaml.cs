@@ -43,16 +43,28 @@ public partial class EditorWindow : Window
         SnapBox.ItemsSource = SnapSizes.Select(s => s <= 1 ? "Off" : $"{s} px").ToList();
         SnapBox.SelectedIndex = Array.IndexOf(SnapSizes, 10.0);
 
+        // Grouped by what the widgets are for, each group under a heading.
         var menu = new ContextMenu();
-        foreach (var descriptor in WidgetFactory.Descriptors)
+        foreach (var category in WidgetFactory.Descriptors.GroupBy(d => d.Category))
         {
-            var item = new MenuItem { Header = descriptor.Name, ToolTip = descriptor.Description };
-            item.Click += (_, _) =>
+            if (menu.Items.Count > 0)
+                menu.Items.Add(new Separator());
+            menu.Items.Add(new MenuItem
             {
-                _session.AddWidget(descriptor);
-                WidgetAdded?.Invoke(this, descriptor);
-            };
-            menu.Items.Add(item);
+                Header = new TextBlock { Text = category.Key, FontWeight = FontWeights.SemiBold, FontSize = 12 },
+                IsHitTestVisible = false,
+                Focusable = false,
+            });
+            foreach (var descriptor in category)
+            {
+                var item = new MenuItem { Header = descriptor.Name, ToolTip = descriptor.Description };
+                item.Click += (_, _) =>
+                {
+                    _session.AddWidget(descriptor);
+                    WidgetAdded?.Invoke(this, descriptor);
+                };
+                menu.Items.Add(item);
+            }
         }
         AddButton.ContextMenu = menu;
 
@@ -125,7 +137,7 @@ public partial class EditorWindow : Window
     private void RefreshList()
     {
         _syncingList = true;
-        WidgetList.ItemsSource = _session.Document.Widgets.Select((w, i) => $"{i + 1}. {Describe(w)}").ToList();
+        WidgetList.ItemsSource = _session.Document.Widgets.Select(ListEntry.Of).ToList();
         _syncingList = false;
         SyncListSelection();
     }
@@ -146,16 +158,25 @@ public partial class EditorWindow : Window
     }
 
     /// <summary>"Graph: CPU", "Text: {gpu.load}" — enough to tell widgets apart.</summary>
-    private static string Describe(System.Text.Json.Nodes.JsonObject widget)
+    private static string Describe(System.Text.Json.Nodes.JsonObject widget) =>
+        ListEntry.Of(widget) is var entry && entry.Detail.Length > 0 ? $"{entry.Name}:{entry.Detail}" : entry.Name;
+
+    /// <summary>A row of the widget list: the widget type's name, then what tells it apart, e.g. "Graph" and " CPU".</summary>
+    internal sealed record ListEntry(string Name, string Detail)
     {
-        var type = widget.GetString("type");
-        var name = WidgetFactory.Find(type)?.Name ?? $"Unknown ({type})";
-        var detail = widget.GetString("label") ?? widget.GetString("text") ?? widget.GetString("metric") ?? widget.GetString("icon")
-            ?? widget.GetString("drives") ?? widget.GetString("timeFormat")
-            ?? (widget["rows"] is System.Text.Json.Nodes.JsonArray rows
-                ? string.Join(", ", rows.OfType<System.Text.Json.Nodes.JsonObject>().Select(r => r.GetString("label")).Where(l => l is not null))
-                : null);
-        return string.IsNullOrWhiteSpace(detail) ? name : $"{name}: {detail}";
+        public string ToolTip => Detail.Length > 0 ? $"{Name}:{Detail}" : Name;
+
+        public static ListEntry Of(System.Text.Json.Nodes.JsonObject widget)
+        {
+            var type = widget.GetString("type");
+            var name = WidgetFactory.Find(type)?.Name ?? $"Unknown ({type})";
+            var detail = widget.GetString("label") ?? widget.GetString("text") ?? widget.GetString("metric") ?? widget.GetString("icon")
+                ?? widget.GetString("drives") ?? widget.GetString("timeFormat")
+                ?? (widget["rows"] is System.Text.Json.Nodes.JsonArray rows
+                    ? string.Join(", ", rows.OfType<System.Text.Json.Nodes.JsonObject>().Select(r => r.GetString("label")).Where(l => l is not null))
+                    : null);
+            return new(name, string.IsNullOrWhiteSpace(detail) ? string.Empty : $" {detail}");
+        }
     }
 
     // ---- Saved layouts ------------------------------------------------------------------------------
@@ -358,8 +379,9 @@ public partial class EditorWindow : Window
         }
 
         var issues = LayoutValidator.Validate(_session.Document, _session.Themes);
-        IssuesText.Text = issues.Count == 0 ? string.Empty : $"{issues.Count} problem{(issues.Count == 1 ? "" : "s")}";
-        IssuesText.ToolTip = issues.Count == 0 ? null : string.Join(Environment.NewLine, issues);
+        IssuesPanel.Visibility = issues.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        IssuesText.Text = $"{issues.Count} problem{(issues.Count == 1 ? "" : "s")}";
+        IssuesPanel.ToolTip = issues.Count == 0 ? null : string.Join(Environment.NewLine, issues);
     }
 
     // ---- Keyboard -------------------------------------------------------------------------------------

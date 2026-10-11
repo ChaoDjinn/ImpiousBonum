@@ -58,7 +58,9 @@ public partial class LoggingWindow : Window
 
     private void Update()
     {
-        if (OkButton is null)
+        // Checked and TextChanged fire while the window is still being built, before every control exists;
+        // the constructor calls this once it's ready.
+        if (!IsInitialized)
             return;
         RemoveButton.IsEnabled = MetricList.SelectedItem is not null;
         AddButton.IsEnabled = _store is not null;

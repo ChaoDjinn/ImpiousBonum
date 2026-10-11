@@ -1,0 +1,75 @@
+<!--
+    Shared look for the editor and dialogs, on top of WPF's Fluent theme (each window sets ThemeMode="System").
+    Colours come from the theme's own brushes, so everything follows Windows' light or dark mode; refer to these
+    styles with DynamicResource, since the theme's brushes live in each window's resources.
+    Only text and layout styles here: a keyed Button style would replace the Fluent one rather than add to it.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Room around a dialog's content, and between its buttons. -->
+    <Thickness x:Key="DialogPadding">24,20,24,20</Thickness>
+    <Thickness x:Key="ButtonGap">8,0,0,0</Thickness>
+    <sys:Double x:Key="DialogButtonWidth" xmlns:sys="clr-namespace:System;assembly=System.Runtime">96</sys:Double>
+
+    <!-- Less important text: explanations under a field, notes at the foot of a dialog. -->
+    <Style x:Key="SecondaryText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="NoteText" TargetType="TextBlock" BasedOn="{StaticResource SecondaryText}">
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- What stops a dialog being saved. Hidden until the user starts filling it in (see Dialog.ShowAfterInput). -->
+    <Style x:Key="ProblemText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="MinHeight" Value="18" />
+    </Style>
+
+    <Style x:Key="SectionHeading" TargetType="TextBlock">
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Margin" Value="0,0,0,6" />
+    </Style>
+
+    <Style x:Key="CodeText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+
+    <!-- An icon from Segoe Fluent Icons (Windows 11) or Segoe MDL2 Assets (Windows 10), e.g. inside a button. -->
+    <Style x:Key="Glyph" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale" />
+    </Style>
+
+    <Style x:Key="ButtonGlyph" TargetType="TextBlock" BasedOn="{StaticResource Glyph}">
+        <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+
+    <!-- The band along the bottom of a dialog that holds its buttons, as in Windows 11's own dialogs. -->
+    <Style x:Key="DialogFooter" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource SolidBackgroundFillColorSecondaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="24,16" />
+    </Style>
+
+    <!-- A group of related settings, raised slightly from the window. -->
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="12,10" />
+    </Style>
+
+    <Style x:Key="Divider" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource DividerStrokeColorDefaultBrush}" />
+    </Style>
+</ResourceDictionary>
