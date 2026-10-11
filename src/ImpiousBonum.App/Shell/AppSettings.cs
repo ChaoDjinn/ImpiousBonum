@@ -169,6 +169,9 @@ public sealed class AppSettings
 
     public int TabletPort { get; set; } = TabletServer.DefaultPort;
 
+    /// <summary>Let tablets press the layout's buttons and media controls (tray → Display → Tablet view). Off by default.</summary>
+    public bool TabletButtons { get; set; }
+
     /// <summary>The secret in the tablet link. Created when the tablet view is first turned on; replaced by "New link".</summary>
     public string? TabletToken { get; set; }
 

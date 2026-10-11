@@ -140,7 +140,7 @@ public partial class App : Application
             _tray.SetClaudeState(ClaudeStatus(), IsClaudeCodeConnected());
             _tray.SetWeatherState(WeatherStatus(), _settings.WeatherLocation is not null, _settings.WeatherUnits);
             _tray.SetFpsSources(monitors, _settings.FpsMonitorId);
-            _tray.SetTabletView(_tablet?.IsRunning == true);
+            _tray.SetTabletView(_tablet?.IsRunning == true, _settings.TabletButtons);
             _tray.SetUsbScreen(_settings.UsbScreen, System.IO.Ports.SerialPort.GetPortNames().Order().ToList(), _layouts?.List() ?? [], _usb?.Status ?? "Off");
             if (_layouts is not null)
             {
@@ -204,6 +204,14 @@ public partial class App : Application
         _tray.ResetWindowRequested += (_, _) => ResetWindow();
         _tray.BringToFrontRequested += (_, _) => _window?.BringForward();
         _tray.TabletViewToggled += (_, on) => SetTabletView(on);
+        _tray.TabletButtonsToggled += (_, on) =>
+        {
+            _settings.TabletButtons = on;
+            _settings.Save();
+            if (_tablet is not null)
+                _tablet.AllowTaps = on;
+            AppLog.Info($"Tablets {(on ? "can" : "can't")} press buttons");
+        };
         _tray.UsbScreenChanged += (_, usb) =>
         {
             _settings.UsbScreen = usb;
@@ -242,7 +250,8 @@ public partial class App : Application
         _tray.SetVersion(_updater.CurrentVersion, _updater.IsInstalled);
         StartUpdateChecks();
 
-        _tablet = new TabletView();
+        _tablet = new TabletView { AllowTaps = _settings.TabletButtons };
+        _tablet.ActionRequested += (_, action) => RunAction(action);
         _usb = new UsbScreenView();
         _layouts = new LayoutStore(_settings);
         _layouts.Changed += (_, _) => ApplyLayout();
