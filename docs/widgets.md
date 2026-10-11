@@ -337,6 +337,22 @@ What's playing in Spotify, a browser, Media Player or any app in Windows' media 
 | `controlSize` | number (16–200) | `52` | Button size |
 | `hideIdle` | true/false | `true` | Hide when nothing is playing. It shows faded while you edit the layout. |
 
+## Audio visualiser (`visualizer`)
+
+Bars that move with whatever the PC is playing, from low notes on the left to high on the right. Draws many times a second, so it uses a little more CPU than other widgets.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `bands` | number (4–128) | `32` | Bars |
+| `style` | `bars` / `mirror` | `bars` | Style. bars rise from the bottom; mirror grows up and down from the middle. |
+| `fps` | number (5–60) | `25` | Frames a second. Smoother as it goes up, and a little more CPU. 25 looks fluid. |
+| `gap` | number (0–50) | `3` | Gap |
+| `cornerRadius` | number (0–50) | `2` | Corner radius |
+| `fall` | number (0.01–1) | `0.06` | Fall speed. How far a bar can drop each frame, as a share of the height. Lower falls more gently. |
+| `peaks` | true/false | `true` | Peak markers. A line at each bar's recent highest, drifting down. |
+| `color` | color | `accent` | Colour |
+| `peakColor` | color | `foreground` | Peak colour |
+
 ## Buttons (`buttons`)
 
 Buttons to tap: play/pause, skip and volume, open a program, file or web address, send a keyboard shortcut to the app you're using, or switch layout.
