@@ -354,6 +354,24 @@ The weather now and the days or hours ahead, from Open-Meteo.com. Set your locat
 | `forecastSize` | number (6–200) | `22` | Forecast size |
 | `iconColor` | color | `accent` | Icon colour |
 
+## Agenda (`agenda`)
+
+What's coming up in your calendars (tray → Calendar…), by day, with what's on now in the accent colour.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `days` | number (1–15) | `3` | Days. How many days to show, starting today. |
+| `count` | number (1–50) | `8` | Most events |
+| `calendars` | text | `all` | Calendars. "all", or calendar names separated by commas, e.g. "Work, Family". |
+| `location` | true/false | `true` | Show where |
+| `dayHeaders` | true/false | `true` | Day headings. Today, Tomorrow, then the date, above each day's events. |
+| `emptyText` | text | `Nothing on` | When there's nothing. Empty shows nothing. |
+| `timeFormat` | text | `HH:mm` | Time format. .NET time format, e.g. HH:mm or h:mm tt. |
+| `fontSize` | number (6–200) | `20` | Font size |
+| `headerSize` | number (6–200) | `15` | Heading size |
+| `spacing` | number (0–100) | `6` | Event spacing |
+| `nowColor` | color | `accent` | What's on now. The colour of events that are happening now. |
+
 ## Image (`image`)
 
 A picture from a file: a logo, artwork or a photo. It's packed into exported layouts so it travels with them.

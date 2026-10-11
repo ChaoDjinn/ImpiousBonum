@@ -3,6 +3,7 @@ using System.IO;
 using System.Text.Json;
 using ImpiousBonum.Core.Alerts;
 using ImpiousBonum.Core.CustomData;
+using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
 using ImpiousBonum.Core.Weather;
 
@@ -17,6 +18,7 @@ public sealed class AppSettings
     private List<AlertRule> _alerts = [];
     private List<string> _pages = [];
     private List<Hotkey> _hotkeys = [];
+    private List<CalendarLink> _calendars = [];
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
     public string? MonitorId { get; set; }
@@ -95,6 +97,16 @@ public sealed class AppSettings
     {
         get => _alerts;
         set => _alerts = value ?? [];
+    }
+
+    /// <summary>
+    /// Calendars to show events from (tray → Calendar…). Replaced as a whole when edited, never changed in place, since
+    /// the sampler reads it from another thread.
+    /// </summary>
+    public List<CalendarLink> Calendars
+    {
+        get => _calendars;
+        set => _calendars = value ?? [];
     }
 
     /// <summary>Key combinations that work from anywhere (tray → Hotkeys…). None by default.</summary>
