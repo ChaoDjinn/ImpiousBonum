@@ -461,9 +461,60 @@ public sealed class TrayIcon : IDisposable
         _displays.DropDownItems.Add("Bring to front", null, (_, _) => BringToFrontRequested?.Invoke(this, EventArgs.Empty));
 
         _displays.DropDownItems.Add(new ToolStripSeparator());
+        _displays.DropDownItems.Add(_extraDashboards);
         _displays.DropDownItems.Add(_away);
         _displays.DropDownItems.Add(_tablet);
         _displays.DropDownItems.Add(_usbScreen);
+    }
+
+    private readonly ToolStripMenuItem _extraDashboards = new("More dashboards") { ToolTipText = "Fill other screens with layouts of their own" };
+
+    /// <summary>Display → More dashboards changed, with the new list.</summary>
+    public event EventHandler<List<ExtraDashboard>>? ExtraDashboardsChanged;
+
+    /// <param name="main">The main dashboard's monitor, which can't have another.</param>
+    /// <param name="active">The main dashboard's layout; a new dashboard starts with another.</param>
+    public void SetExtraDashboards(IReadOnlyList<ExtraDashboard> extras, IReadOnlyList<DisplayMonitor> monitors, DisplayMonitor? main, IReadOnlyList<string> layouts, string active)
+    {
+        _extraDashboards.DropDownItems.Clear();
+        var free = ExtraDashboard.FreeMonitors(monitors, main, extras);
+        for (var i = 0; i < extras.Count; i++)
+        {
+            var index = i;
+            var extra = extras[i];
+            var item = new ToolStripMenuItem(Escape($"{extra.Layout} on {extra.MonitorName(monitors)}"));
+
+            var layout = new ToolStripMenuItem("Layout");
+            foreach (var name in layouts)
+            {
+                var choice = new ToolStripMenuItem(Escape(name)) { Checked = string.Equals(name, extra.Layout, StringComparison.OrdinalIgnoreCase) };
+                choice.Click += (_, _) => Change(list => list[index] = extra with { Layout = name });
+                layout.DropDownItems.Add(choice);
+            }
+
+            var move = new ToolStripMenuItem("Move to") { Enabled = free.Count > 0 };
+            foreach (var monitor in free)
+                move.DropDownItems.Add(Escape(monitor.DisplayName), null, (_, _) => Change(list => list[index] = ExtraDashboard.On(monitor, extra.Layout)));
+
+            var remove = new ToolStripMenuItem("Remove");
+            remove.Click += (_, _) => Change(list => list.RemoveAt(index));
+            item.DropDownItems.AddRange([layout, move, remove]);
+            _extraDashboards.DropDownItems.Add(item);
+        }
+
+        if (extras.Count > 0)
+            _extraDashboards.DropDownItems.Add(new ToolStripSeparator());
+        var add = new ToolStripMenuItem("Add on") { Enabled = free.Count > 0, ToolTipText = free.Count > 0 ? null : "Every screen has a dashboard" };
+        foreach (var monitor in free)
+            add.DropDownItems.Add(Escape(monitor.DisplayName), null, (_, _) => Change(list => list.Add(ExtraDashboard.On(monitor, ExtraDashboard.FirstLayout(layouts, active)))));
+        _extraDashboards.DropDownItems.Add(add);
+
+        void Change(Action<List<ExtraDashboard>> change)
+        {
+            var list = extras.ToList();
+            change(list);
+            ExtraDashboardsChanged?.Invoke(this, list);
+        }
     }
 
     private readonly ToolStripMenuItem _usbScreen = new("USB screen") { ToolTipText = "Show a layout on a small USB screen (Turing Smart Screen 3.5\" and its clones)" };

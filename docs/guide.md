@@ -9,7 +9,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [dimming](#dimming), [logging](#logging)
-- [More screens](#more-screens): [tablet view](#tablet-view), [USB screens](#usb-screens)
+- [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
 - [Command line](#command-line)
 
 ## Getting started
@@ -38,6 +38,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | Item | |
 |---|---|
 | *Display* | Which monitor the dashboard is on, and how its window behaves (see [Windowed mode](#windowed-mode)) |
+| *Display → More dashboards* | Fill other screens with layouts of their own (see [More dashboards](#more-dashboards)) |
 | *Display → When you're away* | Dim the dashboard, or turn it black, after a while without input (see [Dimming](#dimming)) |
 | *Display → Tablet view* | Show the dashboard in a browser on a tablet or phone, and optionally let it press the layout's buttons (see [Tablet view](#tablet-view)) |
 | *Display → USB screen* | Show a layout on a small USB screen as well (see [USB screens](#usb-screens)) |
@@ -495,6 +496,15 @@ the day starts `2026-10-11 (2).csv`, so each file's header matches all its rows.
 are deleted once a day. Numbers use a dot for decimals whatever the Windows region, so any spreadsheet reads them.
 
 ## More screens
+
+### More dashboards
+
+With more than one spare screen, each can have a dashboard of its own: tray → *Display* → *More dashboards* → *Add on*, then pick a screen. The new dashboard fills it with a saved layout, starting with one the main dashboard isn't showing. Change it under that dashboard's *Layout*, move it with *Move to*, or *Remove* it.
+
+- A layout made for another screen's shape still fills it, scaled evenly. For a better fit, make a layout for that screen: in the editor, give it the screen's size under *Canvas*.
+- To edit an extra dashboard's layout, open the editor and pick that layout in its *Layout* list. Your changes show live on every dashboard showing that layout. The main dashboard shows it too while you edit, so switch back afterwards.
+- Pages, game layouts and the schedule's layouts only change the main dashboard; the others keep their layout. Dimming, *Always on top*, *Hide over fullscreen apps* and the show/hide hotkey apply to all of them, and buttons and media controls work on each.
+- A dashboard whose screen is unplugged or off hides until it's back, rather than landing on another screen. There's one dashboard to a screen: moving the main dashboard onto a screen that has another one removes the other.
 
 ### Tablet view
 

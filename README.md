@@ -63,7 +63,7 @@ spare screen? It works as a window too, on a tablet over Wi-Fi, or on a small US
 **It fits around you**
 - Different layouts for different games, a schedule for times of day or dark mode, pages to swipe between, and global hotkeys. [More](<docs/guide.md#automatic-behaviour>)
 - Dims or blacks out when you're away. [More](<docs/guide.md#dimming>)
-- On a spare monitor, as a window, on a tablet or phone in its browser, or on a small 3.5" USB screen. [More](<docs/guide.md#more-screens>)
+- On a spare monitor (or several, each with its own layout), as a window, on a tablet or phone in its browser, or on a small 3.5" USB screen. [More](<docs/guide.md#more-screens>)
 - About 50 MB of memory and well under 0.1% CPU when idle. A per-user installer with no admin prompt, and small automatic updates.
 
 ## Get started
