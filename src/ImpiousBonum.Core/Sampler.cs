@@ -2,6 +2,7 @@ using System.Diagnostics;
 using ImpiousBonum.Core.CustomData;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
+using ImpiousBonum.Core.Sessions;
 using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.Core;
@@ -26,10 +27,12 @@ public sealed class Sampler : IAsyncDisposable
     /// <param name="weather">Where to get the weather for; null, or returning null, fetches none.</param>
     /// <param name="customData">Your own sources of metrics; null for none.</param>
     /// <param name="calendars">Calendar links to show events from; null for none.</param>
+    /// <param name="gameInFront">The tracked game in front, for session recaps; null tracks none.</param>
+    /// <param name="sessionEnded">Hears each game session's recap as it ends, on the sampler's thread.</param>
     public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(
         string pingHost = "1.1.1.1", Func<(int ProcessId, string? Name)>? frameRateTarget = null, string? claudeUsagePath = null,
         Func<WeatherRequest?>? weather = null, Func<IReadOnlyList<CustomSource>>? customData = null,
-        Func<IReadOnlyList<CalendarLink>>? calendars = null) =>
+        Func<IReadOnlyList<CalendarLink>>? calendars = null, Func<string?>? gameInFront = null, Action<SessionRecap>? sessionEnded = null) =>
     [
         new CpuProvider(),
         new MemoryProvider(),
@@ -45,6 +48,7 @@ public sealed class Sampler : IAsyncDisposable
         new WeatherProvider(weather ?? (() => null)),
         new CustomDataProvider(customData ?? (() => [])),
         new CalendarProvider(calendars ?? (() => [])),
+        new SessionProvider(gameInFront ?? (() => null), sessionEnded),
         .. claudeUsagePath is null ? Array.Empty<IMetricProvider>() : [new ClaudeUsageProvider(claudeUsagePath)],
     ];
 

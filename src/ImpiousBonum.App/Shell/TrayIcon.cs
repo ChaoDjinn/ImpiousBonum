@@ -251,6 +251,9 @@ public sealed class TrayIcon : IDisposable
     /// <summary>Tray → Layout → Game layouts → Switch automatically.</summary>
     public event EventHandler<bool>? GameLayoutsToggled;
 
+    /// <summary>Game layouts → Recap each session, with the new state.</summary>
+    public event EventHandler<bool>? SessionRecapsToggled;
+
     /// <summary>Link a process name to a layout or a theme.</summary>
     public event EventHandler<GameLayoutRule>? GameLinkRequested;
 
@@ -347,12 +350,19 @@ public sealed class TrayIcon : IDisposable
         }
     }
 
-    public void SetGameLayouts(bool enabled, IReadOnlyList<GameLayoutRule> rules, string? recentApp, IReadOnlyList<string> names, IReadOnlyList<string> themes)
+    public void SetGameLayouts(bool enabled, bool recaps, IReadOnlyList<GameLayoutRule> rules, string? recentApp, IReadOnlyList<string> names, IReadOnlyList<string> themes)
     {
         _gameLayouts.DropDownItems.Clear();
         var toggle = new ToolStripMenuItem("Switch automatically") { Checked = enabled };
         toggle.Click += (_, _) => GameLayoutsToggled?.Invoke(this, !enabled);
         _gameLayouts.DropDownItems.Add(toggle);
+        var recap = new ToolStripMenuItem("Recap each session")
+        {
+            Checked = recaps,
+            ToolTipText = "After playing a linked game: a notification with its FPS, loads and temperatures, and a line in sessions.csv",
+        };
+        recap.Click += (_, _) => SessionRecapsToggled?.Invoke(this, !recaps);
+        _gameLayouts.DropDownItems.Add(recap);
 
         if (recentApp is { } app)
         {
