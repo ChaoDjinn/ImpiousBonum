@@ -64,6 +64,10 @@ public sealed class TrayIcon : IDisposable
         {
             ToolTipText = "Log readings to CSV files, with each one's average, lowest and highest",
         });
+        menu.Items.Add(new ToolStripMenuItem("News feeds…", null, (_, _) => NewsRequested?.Invoke(this, EventArgs.Empty))
+        {
+            ToolTipText = "News feeds whose headlines the news widget shows",
+        });
         menu.Items.Add(new ToolStripMenuItem("Calendar…", null, (_, _) => CalendarRequested?.Invoke(this, EventArgs.Empty))
         {
             ToolTipText = "Calendars whose events the agenda widget shows",
@@ -214,6 +218,8 @@ public sealed class TrayIcon : IDisposable
     public event EventHandler? HotkeysRequested;
 
     public event EventHandler? CalendarRequested;
+
+    public event EventHandler? NewsRequested;
 
     public event EventHandler? LoggingRequested;
 

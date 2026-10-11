@@ -19,6 +19,7 @@ public sealed class AppSettings
     private List<string> _pages = [];
     private List<Hotkey> _hotkeys = [];
     private List<CalendarLink> _calendars = [];
+    private List<NewsFeed> _newsFeeds = [];
     private LogSettings _logging = LogSettings.Default;
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
@@ -115,6 +116,16 @@ public sealed class AppSettings
 
     /// <summary>Where the layout gallery is (a web folder with an index.json); null for the Impious Bonum repository's.</summary>
     public string? GalleryAddress { get; set; }
+
+    /// <summary>
+    /// News feeds whose headlines the news widget shows (tray → News feeds…). Replaced as a whole when edited, never
+    /// changed in place, since the sampler reads it from another thread.
+    /// </summary>
+    public List<NewsFeed> NewsFeeds
+    {
+        get => _newsFeeds;
+        set => _newsFeeds = value ?? [];
+    }
 
     /// <summary>Logging readings to CSV files (tray → Logging…). Off by default.</summary>
     public LogSettings Logging

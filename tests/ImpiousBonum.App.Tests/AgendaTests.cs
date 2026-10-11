@@ -66,7 +66,8 @@ public sealed class AgendaTests
     {
         Sta.Run(() =>
         {
-            var window = new CalendarWindow([new CalendarLink("Work", "https://example.com/work.ics")]);
+            var window = new LinkListWindow([new NamedLink("Work", "https://example.com/work.ics")], "Calendars", "calendar",
+                LinkListWindow.CalendarIntro, LinkListWindow.CalendarNote, allowWebcal: true);
             window.LinkBox.Text = "not a link";
             Assert.NotNull(window.Problem());
             window.LinkBox.Text = "https://example.com/work.ics";
@@ -79,8 +80,8 @@ public sealed class AgendaTests
             window.Add();
 
             Assert.Equal(
-                [new CalendarLink("Work", "https://example.com/work.ics"), new CalendarLink("p01-caldav.icloud.com", "webcal://p01-caldav.icloud.com/published/2/abc"),
-                 new CalendarLink("Family", "https://calendar.google.com/calendar/ical/x/private-y/basic.ics")],
+                [new NamedLink("Work", "https://example.com/work.ics"), new NamedLink("p01-caldav.icloud.com", "webcal://p01-caldav.icloud.com/published/2/abc"),
+                 new NamedLink("Family", "https://calendar.google.com/calendar/ical/x/private-y/basic.ics")],
                 window.Links);
             window.Close();
         });

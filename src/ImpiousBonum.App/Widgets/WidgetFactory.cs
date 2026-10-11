@@ -28,6 +28,7 @@ public static class WidgetFactory
         ButtonsWidget.Descriptor,
         WeatherWidget.Descriptor,
         AgendaWidget.Descriptor,
+        NewsWidget.Descriptor,
         ImageWidget.Descriptor,
         ShapeWidget.Descriptor,
         BarsWidget.ClaudeDescriptor,
