@@ -48,6 +48,9 @@ public sealed class PropertyPanel : StackPanel
         Rebuild();
     }
 
+    /// <summary>What a widget needs set up outside the layout, shown as buttons when it's selected; none if not set.</summary>
+    public Func<WidgetDescriptor, IReadOnlyList<WidgetSetup>>? Setups { get; set; }
+
     public void Rebuild()
     {
         Children.Clear();
@@ -85,6 +88,7 @@ public sealed class PropertyPanel : StackPanel
             else
             {
                 AddHeading(descriptor.Name, descriptor.Description);
+                AddSetups(descriptor);
                 AddSettings(target, EditorDescriptors.Geometry);
                 AddSettings(target, descriptor.Settings);
             }
@@ -119,6 +123,28 @@ public sealed class PropertyPanel : StackPanel
     {
         Children.Add(new TextBlock { Text = title, FontSize = 20, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 4) });
         Children.Add(Secondary(new TextBlock { Text = description, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8) }));
+    }
+
+    /// <summary>The widget's setup buttons (weather location, calendars…), each with what's set up now.</summary>
+    private void AddSetups(WidgetDescriptor descriptor)
+    {
+        if (Setups?.Invoke(descriptor) is not { Count: > 0 } setups)
+            return;
+        var group = AddGroup("Set up");
+        foreach (var setup in setups)
+        {
+            var status = Secondary(new TextBlock { Text = setup.Status(), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 4) });
+            var button = new Button { Content = setup.Button, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 8), Padding = new Thickness(10, 3, 10, 3) };
+            button.Click += (_, _) =>
+            {
+                if (Window.GetWindow(this) is { } owner)
+                    setup.Open(owner);
+                // The button's text can change too ("Set location…" becomes "Change location…").
+                Rebuild();
+            };
+            group.Children.Add(status);
+            group.Children.Add(button);
+        }
     }
 
     private StackPanel AddGroup(string title)

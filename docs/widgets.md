@@ -413,7 +413,7 @@ Each entry in `buttons`:
 
 ## Weather (`weather`)
 
-The weather now and the days or hours ahead, from Open-Meteo.com. Set your location from the tray: Weather → Set location.
+The weather now and the days or hours ahead, from Open-Meteo.com. Set your location in the editor (select the widget) or from the tray: Weather → Set location.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
@@ -432,7 +432,7 @@ The weather now and the days or hours ahead, from Open-Meteo.com. Set your locat
 
 ## Agenda (`agenda`)
 
-What's coming up in your calendars (tray → Calendar…), by day, with what's on now in the accent colour.
+What's coming up in your calendars (set them in the editor, or tray → Calendar…), by day, with what's on now in the accent colour.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
@@ -450,7 +450,7 @@ What's coming up in your calendars (tray → Calendar…), by day, with what's o
 
 ## News (`news`)
 
-Headlines from your news feeds (tray → News feeds…), newest first, as a list or one at a time. Tap a headline to open it in your browser.
+Headlines from your news feeds (set them in the editor, or tray → News feeds…), newest first, as a list or one at a time. Tap a headline to open it in your browser.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
@@ -494,7 +494,7 @@ A rounded panel, a circle or a line, to group widgets or divide them. It's added
 
 ## Claude usage (`claude`)
 
-Your Claude plan's session (5-hour) and weekly usage, as Claude Code reports them. Shown only while Claude Code is open and reporting. Set it up from the tray: Claude usage → Connect Claude Code.
+Your Claude plan's session (5-hour) and weekly usage, as Claude Code reports them. Shown only while Claude Code is open and reporting. Set it up in the editor (select the widget) or from the tray: Claude usage → Connect Claude Code.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|

@@ -14,7 +14,7 @@ public sealed class AgendaWidget : Widget
 {
     public static WidgetDescriptor Descriptor { get; } = new(
         "agenda", "Agenda",
-        "What's coming up in your calendars (tray → Calendar…), by day, with what's on now in the accent colour.",
+        "What's coming up in your calendars (set them in the editor, or tray → Calendar…), by day, with what's on now in the accent colour.",
         420, 320,
         [
             Setting.Number("days", "Days", 3, 1, CalendarProvider.DaysAhead + 1, group: Setting.Content, help: "How many days to show, starting today."),

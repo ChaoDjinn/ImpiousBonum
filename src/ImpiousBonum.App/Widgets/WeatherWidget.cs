@@ -18,7 +18,7 @@ public sealed class WeatherWidget : Widget
 {
     public static WidgetDescriptor Descriptor { get; } = new(
         "weather", "Weather",
-        "The weather now and the days or hours ahead, from Open-Meteo.com. Set your location from the tray: Weather → Set location.",
+        "The weather now and the days or hours ahead, from Open-Meteo.com. Set your location in the editor (select the widget) or from the tray: Weather → Set location.",
         900, 180,
         [
             Setting.Toggle("showCurrent", "Weather now", true, group: Setting.Content,

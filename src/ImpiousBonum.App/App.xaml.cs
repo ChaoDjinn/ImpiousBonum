@@ -383,11 +383,12 @@ public partial class App : Application
             : null);
 
         session.Changed += (_, change) => MirrorToDashboard(session, change);
+        _editor.Setups = WidgetSetups;
         _editor.WidgetAdded += (_, descriptor) =>
         {
-            if (descriptor == BarsWidget.ClaudeDescriptor && _editor is { } editor)
+            if (descriptor.Type == BarsWidget.ClaudeDescriptor.Type && _editor is { } editor)
                 OfferClaudeCodeConnection(editor);
-            else if (descriptor == WeatherWidget.Descriptor && _settings.WeatherLocation is null && _editor is { } owner)
+            else if (descriptor.Type == WeatherWidget.Descriptor.Type && _settings.WeatherLocation is null && _editor is { } owner)
                 SetWeatherLocation(owner);
         };
         _editor.Closed += (_, _) =>
@@ -403,6 +404,35 @@ public partial class App : Application
         BringToFront(_editor);
         _window?.BeginEdit(session);
         Refresh();
+    }
+
+    /// <summary>The editor's buttons for what a widget needs set up outside the layout: the same as the tray's.</summary>
+    internal IReadOnlyList<WidgetSetup> WidgetSetups(WidgetDescriptor descriptor)
+    {
+        if (descriptor.Type == WeatherWidget.Descriptor.Type)
+        {
+            return [new(_settings.WeatherLocation is null ? "Set location…" : "Change location…",
+                () => _settings.WeatherLocation is { } place ? $"Forecasts for {place.Name}." : "No location yet, so there's no forecast.",
+                SetWeatherLocation)];
+        }
+        if (descriptor.Type == AgendaWidget.Descriptor.Type)
+            return [new("Calendars…", () => Count(_settings.Calendars.Count, "calendar", "No calendars yet, so the agenda is empty."), EditCalendars)];
+        if (descriptor.Type == NewsWidget.Descriptor.Type)
+            return [new("News feeds…", () => Count(_settings.NewsFeeds.Count, "news feed", "No news feeds yet, so there are no headlines."), EditNews)];
+        if (descriptor.Type == BarsWidget.ClaudeDescriptor.Type)
+        {
+            return [new(IsClaudeCodeConnected() ? "Reconnect Claude Code" : "Connect Claude Code…",
+                () => IsClaudeCodeConnected() ? "Claude Code is connected." : "Claude Code isn't connected yet, so there's no usage.",
+                owner => ConnectClaudeCode(owner))];
+        }
+        return [];
+
+        static string Count(int count, string what, string none) => count switch
+        {
+            0 => none,
+            1 => $"1 {what}.",
+            _ => $"{count} {what}s.",
+        };
     }
 
     /// <summary>
@@ -799,9 +829,9 @@ public partial class App : Application
     }
 
     /// <summary>Tray → News feeds…. The list is replaced, not changed in place, since the sampler reads it.</summary>
-    private void EditNews()
+    private void EditNews(Window? owner = null)
     {
-        if (LinkListWindow.AskFeeds(_settings.NewsFeeds) is not { } feeds)
+        if (LinkListWindow.AskFeeds(_settings.NewsFeeds, owner) is not { } feeds)
             return;
         _settings.NewsFeeds = [.. feeds];
         _settings.Save();
@@ -809,9 +839,9 @@ public partial class App : Application
     }
 
     /// <summary>Tray → Calendar…. The list is replaced, not changed in place, since the sampler reads it.</summary>
-    private void EditCalendars()
+    private void EditCalendars(Window? owner = null)
     {
-        if (LinkListWindow.AskCalendars(_settings.Calendars) is not { } links)
+        if (LinkListWindow.AskCalendars(_settings.Calendars, owner) is not { } links)
             return;
         _settings.Calendars = [.. links];
         _settings.Save();

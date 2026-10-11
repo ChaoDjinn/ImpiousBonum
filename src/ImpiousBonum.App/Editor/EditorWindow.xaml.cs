@@ -92,6 +92,17 @@ public partial class EditorWindow : Window
         return item;
     }
 
+    /// <summary>What a widget needs set up outside the layout, offered as buttons when it's selected.</summary>
+    public Func<WidgetDescriptor, IReadOnlyList<WidgetSetup>>? Setups
+    {
+        get => _properties.Setups;
+        set
+        {
+            _properties.Setups = value;
+            _properties.Rebuild();
+        }
+    }
+
     /// <summary>A widget was added from the Add menu.</summary>
     public event EventHandler<WidgetDescriptor>? WidgetAdded;
 

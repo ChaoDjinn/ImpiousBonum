@@ -33,14 +33,14 @@ public partial class LinkListWindow : Window
         Update();
     }
 
-    /// <summary>Tray → Calendar…: returns the new list, or null if cancelled.</summary>
-    public static IReadOnlyList<CalendarLink>? AskCalendars(IReadOnlyList<CalendarLink> links) =>
-        Ask(new LinkListWindow(links.Select(l => new NamedLink(l.Name, l.Url)), "Calendars", "calendar", CalendarIntro, CalendarNote, allowWebcal: true))
+    /// <summary>Tray → Calendar…, or the agenda widget's button in the editor: returns the new list, or null if cancelled.</summary>
+    public static IReadOnlyList<CalendarLink>? AskCalendars(IReadOnlyList<CalendarLink> links, Window? owner = null) =>
+        Ask(owner, new LinkListWindow(links.Select(l => new NamedLink(l.Name, l.Url)), "Calendars", "calendar", CalendarIntro, CalendarNote, allowWebcal: true))
             ?.Select(l => new CalendarLink(l.Name, l.Url)).ToList();
 
-    /// <summary>Tray → News feeds…: returns the new list, or null if cancelled.</summary>
-    public static IReadOnlyList<NewsFeed>? AskFeeds(IReadOnlyList<NewsFeed> feeds) =>
-        Ask(new LinkListWindow(feeds.Select(f => new NamedLink(f.Name, f.Url)), "News feeds", "feed", FeedIntro, FeedNote, allowWebcal: false))
+    /// <summary>Tray → News feeds…, or the news widget's button in the editor: returns the new list, or null if cancelled.</summary>
+    public static IReadOnlyList<NewsFeed>? AskFeeds(IReadOnlyList<NewsFeed> feeds, Window? owner = null) =>
+        Ask(owner, new LinkListWindow(feeds.Select(f => new NamedLink(f.Name, f.Url)), "News feeds", "feed", FeedIntro, FeedNote, allowWebcal: false))
             ?.Select(l => new NewsFeed(l.Name, l.Url)).ToList();
 
     internal const string CalendarIntro =
@@ -56,7 +56,15 @@ public partial class LinkListWindow : Window
 
     internal const string FeedNote = "Feeds are checked every 15 minutes.";
 
-    private static IReadOnlyList<NamedLink>? Ask(LinkListWindow window) => window.ShowDialog() == true ? window.Links : null;
+    private static IReadOnlyList<NamedLink>? Ask(Window? owner, LinkListWindow window)
+    {
+        if (owner is not null)
+        {
+            window.Owner = owner;
+            window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        }
+        return window.ShowDialog() == true ? window.Links : null;
+    }
 
     internal IReadOnlyList<NamedLink> Links => [.. _links];
 
