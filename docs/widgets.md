@@ -62,6 +62,29 @@ Each entry in `thresholds`:
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
 
+## Multi-line graph (`lines`)
+
+Several metrics' histories on one scale, each in its own colour, e.g. CPU and GPU load, or download and upload. A legend above shows each line's value.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `lines` | list | 2 entries | Lines |
+| `legend` | true/false | `true` | Legend. Each line's colour, label and value above the graph. |
+| `points` | number (2–240) | `120` | History (seconds) |
+| `min` | number | `0` | Minimum |
+| `max` | number | — | Maximum. Empty uses the metrics' natural maximum when they share one (100 for percentages), else scales to fit the highest line. |
+| `lineThickness` | number (0.5–20) | `2` | Line thickness |
+| `fontSize` | number (6–200) | `18` | Font size |
+
+Each entry in `lines`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `CPU` | Label |
+| `metric` | metric | `cpu.load` | Metric |
+| `color` | color | `accent` | Colour |
+| `text` | template | — | Value. Shown in the legend. Empty shows the metric's value. |
+
 ## Gauge (`gauge`)
 
 A dial filled to a metric's share of its range, with the value in the middle, e.g. GPU load or CPU temperature.
