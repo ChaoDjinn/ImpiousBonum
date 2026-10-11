@@ -384,6 +384,7 @@ The weather now and the days or hours ahead, from Open-Meteo.com. Set your locat
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
+| `showCurrent` | true/false | `true` | Weather now. The big icon and temperature for now. Off leaves just the forecast, e.g. for a widget of the hours ahead beside another of the days. |
 | `forecast` | `days` / `hours` / `none` | `days` | Forecast |
 | `count` | number (1–14) | `5` | Days or hours |
 | `hourStep` | number (1–12) | `1` | Hours apart. For an hourly forecast, e.g. 3 for every three hours. |
@@ -391,7 +392,10 @@ The weather now and the days or hours ahead, from Open-Meteo.com. Set your locat
 | `showLocation` | true/false | `false` | Location |
 | `fontSize` | number (6–400) | `80` | Temperature size |
 | `forecastSize` | number (6–200) | `22` | Forecast size |
-| `iconColor` | color | `accent` | Icon colour |
+| `iconStyle` | `outline` / `colour` | `outline` | Icons. outline draws them in the icon colour below; colour in their own: a yellow sun, white clouds, blue rain, white lightning. |
+| `iconColor` | color | `accent` | Icon colour. For outline icons. |
+| `textColor` | color | `foreground` | Text colour. The temperatures and conditions. |
+| `detailColor` | color | `secondary` | Detail colour. Highs and lows, feels like, times and days, and the chance of rain. |
 
 ## Agenda (`agenda`)
 

@@ -116,6 +116,90 @@ public static class Icons
         },
     };
 
+    /// <summary>One coloured layer of a full-colour weather icon: a shape, its fill (or none) and its outline.</summary>
+    private sealed record Layer(Geometry Shape, Color? Fill, Color Stroke, double StrokeScale = 1);
+
+    private static readonly Color SunFill = Color.FromRgb(0xFF, 0xC8, 0x3D);
+    private static readonly Color SunEdge = Color.FromRgb(0xF5, 0xA6, 0x23);
+    private static readonly Color MoonFill = Color.FromRgb(0xF4, 0xE7, 0xB0);
+    private static readonly Color MoonEdge = Color.FromRgb(0xD9, 0xC5, 0x7A);
+    private static readonly Color WhiteCloud = Color.FromRgb(0xF4, 0xF6, 0xF9);
+    private static readonly Color WhiteCloudEdge = Color.FromRgb(0xB9, 0xC2, 0xCE);
+    private static readonly Color GreyCloud = Color.FromRgb(0xC9, 0xD0, 0xD9);
+    private static readonly Color GreyCloudEdge = Color.FromRgb(0x95, 0x9F, 0xAC);
+    private static readonly Color RainCloudFill = Color.FromRgb(0x9A, 0xA4, 0xB1);
+    private static readonly Color RainCloudEdge = Color.FromRgb(0x6E, 0x78, 0x86);
+    private static readonly Color StormCloudFill = Color.FromRgb(0x5B, 0x64, 0x70);
+    private static readonly Color StormCloudEdge = Color.FromRgb(0x3E, 0x45, 0x4F);
+    private static readonly Color Rain = Color.FromRgb(0x4D, 0xA3, 0xFF);
+    private static readonly Color Snow = Color.FromRgb(0xE6, 0xF2, 0xFF);
+    private static readonly Color Bolt = Colors.White;
+    private static readonly Color Mist = Color.FromRgb(0xB4, 0xBC, 0xC7);
+
+    private const string SunRays = "M12,1.5 V4 M12,20 V22.5 M1.5,12 H4 M20,12 H22.5 M4.6,4.6 L6.3,6.3 M17.7,17.7 L19.4,19.4 M4.6,19.4 L6.3,17.7 M17.7,6.3 L19.4,4.6";
+    private const string SmallSun = "M4,8 A4,4 0 1 1 12,8 A4,4 0 1 1 4,8 Z";
+    private const string SmallSunRays = "M8,1.5 V2.8 M1.5,8 H2.8 M3.4,3.4 L4.3,4.3 M12.6,3.4 L11.7,4.3";
+
+    /// <summary>The full-colour weather icons, drawn back to front: a yellow sun, white clouds, grey rain clouds with blue rain, and so on.</summary>
+    private static readonly Dictionary<string, Layer[]> ColourWeather = new()
+    {
+        ["clear-day"] = [new(Parse(SunRays), null, SunEdge), new(Parse("M12,7.5 A4.5,4.5 0 1 1 11.99,7.5 Z"), SunFill, SunEdge)],
+        ["clear-night"] = [new(Parse("M19,15 A8,8 0 1 1 9,4.5 A6.2,6.2 0 0 0 19,15 Z"), MoonFill, MoonEdge), new(Parse("M17,3.5 V6.5 M15.5,5 H18.5"), null, MoonFill)],
+        ["partly-day"] = [new(Parse(SmallSunRays), null, SunEdge), new(Parse(SmallSun), SunFill, SunEdge), new(Parse(Cloud), WhiteCloud, WhiteCloudEdge)],
+        ["partly-night"] = [new(Parse("M10.8,7.2 A4.2,4.2 0 0 1 4.6,11.9 A5,5 0 0 1 7.6,3 A3.6,3.6 0 0 0 10.8,7.2 Z"), MoonFill, MoonEdge), new(Parse(Cloud), WhiteCloud, WhiteCloudEdge)],
+        ["cloud"] = [new(Parse("M6.5,19 H17.5 A4.5,4.5 0 0 0 17.4,10 A6,6 0 0 0 6.1,11.6 A3.75,3.75 0 0 0 6.5,19 Z"), GreyCloud, GreyCloudEdge)],
+        ["fog"] = [new(Parse("M6.5,13 A3.25,3.25 0 0 1 6.9,7.3 A5.25,5.25 0 0 1 16.9,6.5 A3.25,3.25 0 0 1 18,13 Z"), GreyCloud, GreyCloudEdge), new(Parse("M3,16.5 H21 M5,20 H19"), null, Mist)],
+        ["drizzle"] = [new(Parse(RainCloud), RainCloudFill, RainCloudEdge), new(Parse("M8,18.5 V19 M12,20 V20.5 M16,18.5 V19"), null, Rain, 1.2)],
+        ["rain"] = [new(Parse(RainCloud), RainCloudFill, RainCloudEdge), new(Parse("M8.5,17.5 L7,21.5 M12.5,17.5 L11,21.5 M16.5,17.5 L15,21.5"), null, Rain, 1.2)],
+        ["sleet"] = [new(Parse(RainCloud), RainCloudFill, RainCloudEdge), new(Parse("M8.5,17.5 L7.5,20 M16.5,17.5 L15.5,20"), null, Rain, 1.2), new(Parse("M12,19.5 V19.51 M12,22 V22.01"), null, Snow, 1.4)],
+        ["snow"] = [new(Parse(RainCloud), GreyCloud, GreyCloudEdge), new(Parse("M8,18.5 V18.51 M12,18.5 V18.51 M16,18.5 V18.51 M10,21.5 V21.51 M14,21.5 V21.51"), null, Snow, 1.6)],
+        ["storm"] = [new(Parse(RainCloud), StormCloudFill, StormCloudEdge), new(Parse("M13,15.5 L10.5,19 H13.5 L11,22.5"), null, Bolt, 1.2)],
+    };
+
+    /// <summary>Whether a weather icon has a full-colour version (every name <see cref="WeatherCodes"/> gives does).</summary>
+    public static bool HasColour(string? name) => name is not null && ColourWeather.ContainsKey(name);
+
+    /// <summary>
+    /// A weather icon in its natural colours, the same size and shape as <see cref="Create"/> draws it, falling back to the
+    /// plain icon in <paramref name="fallback"/> for a name with no colour version.
+    /// </summary>
+    public static FrameworkElement CreateColour(string? name, double size, double strokeWidth, Brush fallback)
+    {
+        if (name is null || !ColourWeather.TryGetValue(name, out var layers))
+            return Create(name, fallback, size, strokeWidth);
+        var canvas = new Canvas { Width = 24, Height = 24 };
+        foreach (var layer in layers)
+        {
+            canvas.Children.Add(new Path
+            {
+                Data = layer.Shape,
+                Fill = layer.Fill is { } fill ? Frozen(fill) : null,
+                Stroke = Frozen(layer.Stroke),
+                StrokeThickness = strokeWidth * layer.StrokeScale,
+                StrokeLineJoin = PenLineJoin.Round,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+            });
+        }
+        return new Viewbox { Width = size, Height = size, Child = canvas };
+    }
+
+    private static readonly Dictionary<Color, Brush> ColourBrushes = new();
+
+    private static Brush Frozen(Color color)
+    {
+        lock (ColourBrushes)
+        {
+            if (!ColourBrushes.TryGetValue(color, out var brush))
+            {
+                var solid = new SolidColorBrush(color);
+                solid.Freeze();
+                ColourBrushes[color] = brush = solid;
+            }
+            return brush;
+        }
+    }
+
     private static Geometry Parse(string data)
     {
         var geometry = Geometry.Parse(data);

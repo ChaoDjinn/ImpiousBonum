@@ -1,7 +1,14 @@
 # Changelog
 
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
-the app. The [user guide](docs/guide.md) has the details.
+the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
+
+## Unreleased
+
+**Weather widget**
+- *Weather now* can be turned off, leaving just the forecast: one widget of the hours ahead beside another of the days, say.
+- Full-colour icons: a yellow sun, white clouds, grey rain clouds with blue rain, white lightning. Outline icons in one colour are still the default.
+- Its own text and detail colours, instead of always the theme's.
 
 ## 0.9.0
 

@@ -229,6 +229,8 @@ The *Weather* widget shows an icon, the temperature and conditions now (with tod
 1. Tray → *Weather* → *Set location…* (adding the widget in the editor offers this too). Search for your town, or type latitude and longitude, e.g. `51.5, -0.12`.
 2. Add the widget: *Edit layout…* → add *Weather*.
 
+It's adjustable in the editor: turn off *Weather now* to leave just the forecast (say, one widget of the hours ahead beside another of the days), choose *colour* icons for a yellow sun, white clouds, grey rain clouds with blue rain and white lightning instead of outlines in one colour, and give the widget its own text and detail colours rather than the theme's.
+
 The location is set once for the PC, so every layout shows the same place. Units follow your Windows region (°C and km/h, or °F and mph); tray → *Weather* → *Units* changes them.
 
 Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-commercial use and needs no account. The coordinates of the place you pick go to Open-Meteo every 15 minutes, and the name you search for when you search; nothing else is sent, and nothing at all until you set a location. *Turn off weather* forgets the place and stops it. If the internet is down the last forecast stays for up to three hours. Weather data by Open-Meteo.com, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

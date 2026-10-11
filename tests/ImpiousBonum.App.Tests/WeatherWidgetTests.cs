@@ -62,6 +62,69 @@ public sealed class WeatherWidgetTests
     }
 
     [Fact]
+    public void The_weather_now_can_be_left_out_for_just_a_forecast()
+    {
+        Sta.Run(() =>
+        {
+            var widget = WidgetFactory.Create(new JsonObject { ["type"] = "weather", ["showCurrent"] = false, ["forecast"] = "hours" }, Theme.From(new ThemeSettings()));
+            var store = new MetricStore();
+            store.SetAttachment(WeatherProvider.Forecast, Report());
+            widget.Refresh(store, DateTime.Now);
+
+            var texts = Texts(widget);
+            Assert.DoesNotContain("11°", texts);
+            Assert.DoesNotContain("Cloudy", texts);
+            var hours = Descendants<UniformGrid>(widget).Single();
+            Assert.Equal(2, Grid.GetColumnSpan(hours));
+            Assert.Equal(2, hours.Children.Count);
+
+            var empty = WidgetFactory.Create(new JsonObject { ["type"] = "weather", ["showCurrent"] = false }, Theme.From(new ThemeSettings()));
+            empty.Refresh(new MetricStore(), DateTime.Now);
+            Assert.Contains(Texts(empty), t => t.Contains("Set location"));
+        });
+    }
+
+    [Fact]
+    public void Colour_icons_are_drawn_in_layers_and_text_takes_the_widgets_own_colours()
+    {
+        Sta.Run(() =>
+        {
+            var widget = WidgetFactory.Create(new JsonObject
+            {
+                ["type"] = "weather", ["iconStyle"] = "colour", ["textColor"] = "#FF0000", ["detailColor"] = "#00FF00",
+            }, Theme.From(new ThemeSettings()));
+            var store = new MetricStore();
+            store.SetAttachment(WeatherProvider.Forecast, Report());
+            widget.Refresh(store, DateTime.Now);
+
+            Assert.Contains(Descendants<Canvas>(widget), c => c.Children.Count >= 1);
+            var temperature = Descendants<TextBlock>(widget).First(t => t.Text == "11°");
+            Assert.Equal(Colors.Red, ((SolidColorBrush)temperature.Foreground).Color);
+            var feels = Descendants<TextBlock>(widget).First(t => t.Text.Contains("Feels"));
+            Assert.Equal(Colors.Lime, ((SolidColorBrush)feels.Foreground).Color);
+        });
+    }
+
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(0, false)]
+    [InlineData(2, true)]
+    [InlineData(2, false)]
+    [InlineData(3, true)]
+    [InlineData(45, true)]
+    [InlineData(51, true)]
+    [InlineData(61, true)]
+    [InlineData(66, true)]
+    [InlineData(71, true)]
+    [InlineData(95, true)]
+    public void Every_weather_icon_has_a_colour_version(int code, bool isDay)
+    {
+        var name = WeatherCodes.Icon(code, isDay);
+        Assert.True(Icons.HasColour(name), name);
+        Sta.Run(() => Assert.IsType<Viewbox>(Icons.CreateColour(name, 40, 1.6, Brushes.White)));
+    }
+
+    [Fact]
     public void An_hourly_forecast_starts_after_the_current_hour()
     {
         Sta.Run(() =>
