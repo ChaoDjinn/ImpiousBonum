@@ -3,7 +3,9 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
-## Unreleased
+## 0.10.0
+
+More than one dashboard, widgets with their own colours and theme, colour weather icons, and setting widgets up from the editor.
 
 **Weather widget**
 - *Weather now* can be turned off, leaving just the forecast: one widget of the hours ahead beside another of the days, say.
