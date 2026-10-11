@@ -2,7 +2,7 @@
 
 Thanks for helping. Bug reports, ideas, layouts for the gallery and pull requests are all welcome.
 
-- **Something wrong?** [Open an issue](https://github.com/ChaoDjinn/ImpiousBonum/issues/new/choose). Tray → *Help* → *About Impious Bonum* → *Copy details* gives the version details it asks for.
+- **Something wrong, or an idea?** [Open an issue](https://github.com/ChaoDjinn/ImpiousBonum/issues/new/choose) and pick *Something's wrong* or *An idea*. Tray → *Help* → *About Impious Bonum* → *Copy details* gives the version details a bug report asks for.
 - **A layout to share?** See [Sharing a layout](gallery/README.md#sharing-a-layout).
 - **Security problem?** Please report it privately: see [SECURITY.md](SECURITY.md).
 

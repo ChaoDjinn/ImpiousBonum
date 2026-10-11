@@ -276,7 +276,7 @@ public sealed class TrayIcon : IDisposable
         _layouts.DropDownItems.Add("Import…", null, (_, _) => ImportLayoutRequested?.Invoke(this, EventArgs.Empty));
         _layouts.DropDownItems.Add(new ToolStripMenuItem("Gallery…", null, (_, _) => GalleryRequested?.Invoke(this, EventArgs.Empty))
         {
-            ToolTipText = "Browse layouts other people have shared, and import one",
+            ToolTipText = "Browse ready-made layouts, and import one",
         });
         _layouts.DropDownItems.Add(_pages);
         _layouts.DropDownItems.Add(_gameLayouts);

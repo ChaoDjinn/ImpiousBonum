@@ -1,0 +1,12 @@
+// The three gauge shapes, for the README and the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 400,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "gauge", "x": 20, "y": 50, "width": 240, "height": 300, "label": "CPU °C", "metric": "cpu.temp", "text": "{cpu.temp:0 nounit}",
+      "max": 100, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }] },
+    { "type": "gauge", "x": 280, "y": 50, "width": 240, "height": 300, "label": "GPU", "metric": "gpu.load", "style": "half" },
+    { "type": "gauge", "x": 540, "y": 50, "width": 240, "height": 300, "label": "Memory", "metric": "mem.load", "style": "ring" }
+  ]
+}

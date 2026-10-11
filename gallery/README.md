@@ -1,7 +1,8 @@
 # Layout gallery
 
-Layouts people have shared. Browse them in the app with tray → *Layout* → *Gallery…*: each one is drawn live with
-your own readings, and *Import* adds it to your layouts. See [Layout gallery](../docs/guide.md#layout-gallery) in the
+Ready-made layouts to start from, and a place to share yours. Browse them in the app with tray → *Layout* →
+*Gallery…*: each one is drawn live with your own readings, and *Import* adds it to your layouts. The five so far were
+made along with the app; a layout of yours would be the first from someone else. See [Layout gallery](../docs/guide.md#layout-gallery) in the
 user guide.
 
 | Layout | Screen | What's on it |

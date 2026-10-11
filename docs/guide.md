@@ -1,6 +1,6 @@
 # Impious Bonum user guide
 
-Everything Impious Bonum does and how to set it up. New here? Start with [Getting started](#getting-started). Every widget's settings, defaults and ranges are in the [widget reference](widgets.md).
+Everything Impious Bonum does and how to set it up. New here? Start with [Getting started](#getting-started). Every widget's settings, defaults and ranges are in the [widget reference](widgets.md). The pictures are drawn by the app itself, from made-up readings, so they show what it really draws without showing anyone's PC.
 
 ## Contents
 
@@ -42,7 +42,7 @@ The menu follows Windows: dark or light with the taskbar (Settings → Personali
 | *Edit layout…* | Open the layout editor (or double-click the tray icon) |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
-| *Layout → Gallery…* | Browse layouts other people have shared, with a live preview, and import one (see [Layout gallery](#layout-gallery)) |
+| *Layout → Gallery…* | Browse ready-made layouts, with a live preview, and import one (see [Layout gallery](#layout-gallery)) |
 | *Layout → Pages* | Swipe across the dashboard to move between layouts, or rotate them on a timer (see [Pages](#pages)) |
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, turn automatic switching on or off, and recap each session (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
 | *Layout → Schedule* | Show a layout or theme at certain times of day, or while Windows is in dark or light mode (see [Schedule](#schedule)) |
@@ -88,6 +88,13 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 <p align="center"><img src="images/default-layout.svg" alt="Map of the default layout: CPU, GPU and memory graphs, CPU and GPU temperatures and the frame rate, a clock, drives, and network download, upload and ping"></p>
 
 Every box is a widget you can move, resize, restyle or replace. Twenty-two widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `weather` ([Weather](#weather)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
+
+<table>
+  <tr>
+    <td width="50%"><img src="images/widgets/gauges.png" alt="Three gauges: a 270° dial of the CPU temperature at 65, a half dial of GPU load at 90.4 % and a ring of memory use at 55 %"><br>Gauges: a dial, a half dial and a ring</td>
+    <td width="50%"><img src="images/widgets/cores.png" alt="Sixteen CPU threads as a four-by-four heatmap, brighter where busier, beside bars for CPU, GPU, RAM and GPU memory"><br>CPU threads as a heatmap, and bars</td>
+  </tr>
+</table>
 
 ### Layout editor
 
@@ -140,12 +147,12 @@ An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder
 
 ### Layout gallery
 
-Tray → Layout → *Gallery…* lists layouts people have shared, each with its screen size and a description. Pick one to
+Tray → Layout → *Gallery…* lists ready-made layouts, each with its screen size and a description. Pick one to
 see it drawn live with your own readings, then *Import* adds it to your saved layouts and shows it, the same way as
 importing a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open
-programs. Pictures and fonts inside a shared layout show once it's imported. It starts with a gaming HUD, a desk
-companion (world clocks, calendar, weather, music), a system monitor, a focus timer and a layout for small 800 × 480
-screens.
+programs. Pictures and fonts inside a shared layout show once it's imported. So far it has five, made along with
+the app: a gaming HUD, a desk companion (world clocks, calendar, weather, music), a system monitor, a focus timer and
+a layout for small 800 × 480 screens. Yours could be next.
 
 The gallery is the [`gallery`](../gallery) folder of this repository. To share a layout, export it (*Layouts ▾ →
 Export…* in the editor), add the `.ibl` file and an entry in [`gallery/index.json`](../gallery/index.json), and open a
@@ -226,11 +233,15 @@ Average FPS hides stutter: a game can average 120 FPS and still hitch. The senso
 - `fps.frametime.max`: the slowest frame in the last second. Put it in a `graph` widget for a frame-time graph: a flat line is smooth, each spike is a stutter you felt.
 - `fps.low1` and `fps.low01`: the 1% and 0.1% lows, the frame rate of the slowest 1% (or 0.1%) of frames over the last 30 seconds. A 1% low close to the average means smooth play. They appear once there are enough frames (100, and 1,000). Pauses longer than a second, like alt-tabbing or a loading screen, don't count.
 
+<p align="center"><img src="images/widgets/frame-times.png" width="600" alt="Stat tiles of the frame rate at 145 and the 1% and 0.1% lows, each with a trend line and its range, and a graph of the average and slowest frame times"></p>
+
 A sensor service from before 0.8 doesn't send these; *Sensors → Update sensor service…* brings it up to date.
 
 ### Weather
 
 The *Weather* widget shows an icon, the temperature and conditions now (with today's high and low and what it feels like), and a row of the days or hours ahead, every three hours if you like. Every `weather.*` metric works in other widgets too: `{weather.temp} · {weather.condition}` in a text widget, or a gauge of `weather.temp`.
+
+<p align="center"><img src="images/widgets/weather.png" width="600" alt="The weather widget with colour icons: 14° and partly cloudy now with the high, low and feels-like, four days ahead, and below it a second weather widget of every three hours ahead with the chance of rain"></p>
 
 1. Tray → *Weather* → *Set location…*, or in the editor select the widget and *Set location…* under *Set up* (adding the widget offers it too). Search for your town, or type latitude and longitude, e.g. `51.5, -0.12`.
 2. Add the widget: *Edit layout…* → add *Weather*.
@@ -245,6 +256,8 @@ Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-
 
 The `agenda` widget lists what's coming up, by day: each event's time (or *All day*) and title, and where it is.
 What's on now is in the accent colour, and something that started before today shows *Until* when it ends.
+
+<p align="center"><img src="images/widgets/agenda.png" width="600" alt="An agenda of today's and tomorrow's events with their times and places, and beside it text widgets showing the next event, Call with Sam at 22:15"></p>
 
 Add calendars in tray → *Calendar…* (or select the widget in the editor → *Calendars…*) by pasting their private iCal link:
 
@@ -267,6 +280,8 @@ tapping one opens the article in your browser. Add feeds in tray → *News feeds
 one (look for an RSS link, or try the site's address with `/feed` or `/rss` on the end), and so do YouTube channels
 and subreddits. Each feed is checked every 15 minutes, and the same story in two feeds shows once. A widget can show
 some feeds and not others (*Feeds*: `BBC, The Verge`), and `{news.title}` puts the newest headline anywhere.
+
+<p align="center"><img src="images/widgets/news.png" width="600" alt="Four headlines, newest first, each with where it's from and how long ago"></p>
 
 ### Custom data
 
@@ -292,6 +307,8 @@ Sources are stored in `settings.json` (`customData`) on this PC and never in a l
 ### Claude usage
 
 The *Claude usage* widget shows your Claude plan's session (5-hour) and weekly limits as two bars, e.g. *Session 24 % · resets in 2h 14m*. It's only on screen while Claude Code is open and reporting, and shows faded while you edit the layout so you can still place it.
+
+<p align="center"><img src="images/widgets/claude.png" width="600" alt="Two bars: the session at 38 %, resetting in 2 h 10 min, and the week at 61 %, resetting on Thursday"></p>
 
 The numbers come from Claude Code: it passes them to its [status line](https://code.claude.com/docs/en/statusline), and only for Pro and Max plans. There's no official way for another app to read them, so Impious Bonum uses the status line. That means Claude Code in a terminal (the CLI): the Claude Desktop app doesn't run status lines or share usage with other apps. Usage in the Desktop app and on claude.ai still counts, because the limits are shared, and shows the next time the CLI reports.
 
@@ -322,6 +339,8 @@ as other widgets. For a single figure elsewhere, use the metrics: `{top.cpu.1.na
 shows the busiest app. It reads every process in one call every 2 seconds, without opening any of them, so it costs
 about as much as Task Manager's Processes tab does.
 
+<p align="center"><img src="images/widgets/top-apps.png" width="600" alt="Six apps by CPU use, each with its process count, CPU share and memory: a game at 21.4 % and 7 GB, then Firefox, Discord, Music, Impious Bonum and Windows Explorer"></p>
+
 ### Multi-line graphs
 
 The `lines` widget draws several metrics' histories on one scale, so they can be compared at a glance: CPU against
@@ -329,6 +348,8 @@ GPU load, download against upload, CPU against GPU temperature. Each line has it
 theme colour such as `accent` or `warning`, or `#RRGGBB`), and the legend above shows each one's live value. Lines
 whose metrics share a natural maximum (percentages, say) are drawn out of it; otherwise the scale fits the highest
 line, or set *Maximum* yourself.
+
+<p align="center"><img src="images/widgets/graphs.png" width="600" alt="A line graph of CPU load and an area graph of memory, each with a label and value, beside a multi-line graph of CPU and GPU load in orange and blue with a legend"></p>
 
 ### World clocks
 
@@ -338,6 +359,8 @@ name such as `GMT Standard Time`. They sit side by side (label above time) or st
 their own size and format, with *+1* or *−1* when it's already tomorrow or still yesterday there. A zone that can't be
 found says so in red. The main time can be another place's too: set the clock's *Time zone*. Daylight saving is
 handled by Windows' time zone data.
+
+<p align="center"><img src="images/widgets/clocks.png" width="600" alt="A clock at 21:47 with the date, and under it the time in San Francisco, New York, Tokyo and Sydney, the last two marked +1 for tomorrow"></p>
 
 ### Timers
 
@@ -350,6 +373,8 @@ The `timer` widget is a stopwatch, a countdown or a count to a moment:
 - **until** counts down to a time of day (`18:00`, which comes round again the next day) or a date (`2026-12-25`,
   `2026-12-25 09:00`), on its own, with days shown once it's more than a day away.
 
+<p align="center"><img src="images/widgets/timers.png" width="600" alt="Three timers: a 25:00 focus countdown and a stopwatch, both paused with Reset under them, and 1:43:00 until bedtime"></p>
+
 The *Reset* button underneath puts a countdown or stopwatch back to zero. A running timer keeps going when you swipe to
 another page, switch layouts or edit the layout: timers with the same label, mode and length share one clock, so a
 countdown on two pages is the same countdown. Timers start again from scratch when the app restarts. The notification
@@ -358,6 +383,8 @@ only comes while the timer is on screen; if it's on a page you're not showing, i
 ### Now playing and buttons
 
 The *Now playing* widget (`media`) shows what's playing in any app that appears in Windows' media controls (the ones in the volume flyout): Spotify, YouTube in a browser, Media Player and so on. It has the album art, title and artist (both templates, so `{media.artist} · {media.album}` works too), a progress bar with the position and length, and previous / play-pause / next buttons. It hides while nothing is playing, and shows faded while you edit the layout. The `media.*` metrics work in any widget too, e.g. a gauge of `media.progress`.
+
+<p align="center"><img src="images/widgets/media.png" width="600" alt="Now playing: album art, the title and artist, a progress bar at 1:37 of 4:04 and previous, pause and next buttons, above four buttons: Mute mic, Screenshot, Gaming and Sound"></p>
 
 The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a label, an icon or both. Each button does one of:
 
@@ -389,7 +416,7 @@ The *Image* widget shows a picture from a PNG, JPG, GIF (first frame), BMP or TI
 
 The *Shape* widget is a rounded panel, a circle or a divider line, for grouping widgets or separating them. Shapes are added behind the other widgets, so a panel sits under whatever you put on it; *Bring forward* and *Send back* change that. Their default colour is the theme's `track`, the same subtle shade as an empty bar.
 
-`track` and `background` now work as colour names everywhere, alongside `foreground`, `secondary`, `accent`, `warning` and `critical`.
+`track` and `background` work as colour names everywhere, like `foreground`, `secondary`, `accent`, `warning` and `critical`.
 
 Exported layouts carry their image widgets' pictures, like the background image and font.
 
@@ -542,4 +569,5 @@ so please report what happens.
 | `--snapshot <file.png>` | Render the layout with live data to a PNG and exit |
 | `--layout <name>` | With `--snapshot`, render this saved layout instead of the one being shown |
 | `--warmup <seconds>` | Sampling time before a snapshot (default 3) |
+| `--demo` | Made-up readings instead of this PC's, the ones the screenshots use: with `--snapshot`, or to run a copy of the dashboard with them (pair it with `--data-dir` to leave your own settings alone) |
 | `--widget-docs <file>` | Regenerate the widget reference from the widget descriptors |

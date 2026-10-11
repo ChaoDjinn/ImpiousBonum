@@ -25,7 +25,7 @@
                     <Button Content="Close" IsCancel="True" MinWidth="{DynamicResource DialogButtonWidth}" Margin="{DynamicResource ButtonGap}" />
                 </StackPanel>
                 <TextBlock x:Name="StatusText" VerticalAlignment="Center" Style="{DynamicResource NoteText}"
-                           Text="Layouts shared by other people. The preview shows your own readings; pictures and fonts in a layout show once it's imported." />
+                           Text="Ready-made layouts to try. The preview shows your own readings; pictures and fonts in a layout show once it's imported." />
             </DockPanel>
         </Border>
         <Grid Margin="16">

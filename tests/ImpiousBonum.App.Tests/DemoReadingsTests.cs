@@ -13,16 +13,17 @@ public sealed class DemoReadingsTests
 {
     private static readonly DateTime Evening = new(2026, 10, 11, 21, 47, 0);
 
-    /// <summary>The screenshots in the README use these, so a reading they lack shows as a dash there.</summary>
+    /// <summary>The screenshots in the README and the guide use these, so a reading they lack shows as a dash there.</summary>
     [Fact]
-    public void The_default_and_gallery_layouts_have_every_reading_they_show()
+    public void The_layouts_in_the_screenshots_have_every_reading_they_show()
     {
         var store = new MetricStore();
         DemoReadings.Fill(store, Evening, [1, 2, 3]);
 
         var layouts = new List<(string Name, LayoutDocument Layout)> { ("default", LayoutStore.LoadDefault()) };
-        foreach (var file in Directory.GetFiles(GalleryFolder(), "*.json").Where(f => !f.EndsWith("index.json")))
-            layouts.Add((Path.GetFileName(file), JsonSerializer.Deserialize<LayoutDocument>(File.ReadAllText(file), JsonDefaults.Options)!));
+        layouts.AddRange(LayoutsIn("gallery"));
+        layouts.AddRange(LayoutsIn(Path.Combine("build", "screenshots")));
+        layouts.AddRange(LayoutsIn("build"));
 
         var missing = layouts
             .SelectMany(l => l.Layout.Widgets.SelectMany(MetricsIn).Select(id => (l.Name, Id: id)))
@@ -31,6 +32,16 @@ public sealed class DemoReadingsTests
             .Distinct()
             .ToList();
         Assert.Empty(missing);
+    }
+
+    /// <summary>The layouts the widget pictures and the social preview are drawn from (build/screenshots.ps1).</summary>
+    [Fact]
+    public void The_picture_layouts_are_valid()
+    {
+        var layouts = LayoutsIn(Path.Combine("build", "screenshots")).Concat(LayoutsIn("build")).ToList();
+        Assert.NotEmpty(layouts);
+        foreach (var (name, layout) in layouts)
+            Assert.True(LayoutValidator.Validate(layout) is { Count: 0 }, $"{name}: {string.Join(" ", LayoutValidator.Validate(layout))}");
     }
 
     [Fact]
@@ -98,13 +109,18 @@ public sealed class DemoReadingsTests
         }
     }
 
-    private static string GalleryFolder()
+    /// <summary>The layout files in a folder of the repository, found by walking up from the test's output folder.</summary>
+    private static List<(string Name, LayoutDocument Layout)> LayoutsIn(string folder)
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {
-            if (Directory.Exists(Path.Combine(dir.FullName, "gallery")) && File.Exists(Path.Combine(dir.FullName, "ImpiousBonum.slnx")))
-                return Path.Combine(dir.FullName, "gallery");
+            if (File.Exists(Path.Combine(dir.FullName, "ImpiousBonum.slnx")))
+            {
+                return [.. Directory.GetFiles(Path.Combine(dir.FullName, folder), "*.json")
+                    .Where(f => !f.EndsWith("index.json"))
+                    .Select(f => (Path.GetFileName(f), JsonSerializer.Deserialize<LayoutDocument>(File.ReadAllText(f), JsonDefaults.Options)!))];
+            }
         }
-        throw new DirectoryNotFoundException("The repository's gallery folder");
+        throw new DirectoryNotFoundException($"The repository's {folder} folder");
     }
 }

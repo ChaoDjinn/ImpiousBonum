@@ -1,0 +1,9 @@
+// Headlines from news feeds, for the README and the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 400,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "news", "x": 30, "y": 30, "width": 740, "height": 340, "count": 4, "fontSize": 30, "spacing": 24 }
+  ]
+}

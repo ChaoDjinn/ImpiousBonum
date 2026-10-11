@@ -1,0 +1,9 @@
+// Claude plan usage from Claude Code, for the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 200,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "claude", "x": 30, "y": 30, "width": 740, "height": 140, "fontSize": 26, "spacing": 24, "barHeight": 10 }
+  ]
+}

@@ -1,0 +1,19 @@
+// The picture GitHub shows when the repository's link is shared (Settings → Social preview), drawn by
+// build/screenshots.ps1 into docs/images/social-preview.png. 1280 × 640, as GitHub asks.
+{
+  "width": 1280,
+  "height": 640,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "text", "x": 60, "y": 40, "width": 1160, "height": 130, "fontSize": 104, "text": "Impious Bonum" },
+    { "type": "text", "x": 64, "y": 170, "width": 1160, "height": 56, "fontSize": 36, "color": "secondary",
+      "text": "A system dashboard for a spare screen, for Windows" },
+    { "type": "graph", "x": 60, "y": 280, "width": 380, "height": 140, "label": "CPU", "metric": "cpu.load", "style": "line" },
+    { "type": "graph", "x": 60, "y": 450, "width": 380, "height": 140, "label": "GPU", "metric": "gpu.load", "style": "line" },
+    { "type": "icon", "x": 490, "y": 290, "width": 320, "height": 130, "icon": "cpu", "text": "{cpu.temp:0 nounit} °C",
+      "fontSize": 56, "iconSize": 52, "gap": 32 },
+    { "type": "icon", "x": 490, "y": 460, "width": 320, "height": 130, "icon": "fps", "text": "{fps:0 nounit} FPS",
+      "fontSize": 56, "iconSize": 52, "gap": 32 },
+    { "type": "clock", "x": 850, "y": 270, "width": 370, "height": 330, "timeSize": 120, "dateSize": 22 }
+  ]
+}

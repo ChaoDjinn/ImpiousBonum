@@ -1,0 +1,15 @@
+// A clock with the time in other places, for the README and the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 400,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "clock", "x": 0, "y": 10, "width": 800, "height": 380, "timeSize": 130, "dateSize": 26, "zoneSize": 26,
+      "zones": [
+        { "label": "San Francisco", "zone": "America/Los_Angeles" },
+        { "label": "New York", "zone": "America/New_York" },
+        { "label": "Tokyo", "zone": "Asia/Tokyo" },
+        { "label": "Sydney", "zone": "Australia/Sydney" }
+      ] }
+  ]
+}

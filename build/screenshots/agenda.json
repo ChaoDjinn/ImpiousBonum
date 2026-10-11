@@ -1,0 +1,12 @@
+// The calendar's agenda and the next event, for the README and the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 400,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "agenda", "x": 30, "y": 20, "width": 420, "height": 360, "days": 2, "count": 6, "fontSize": 24, "headerSize": 16 },
+    { "type": "text", "x": 490, "y": 90, "width": 280, "height": 40, "fontSize": 24, "text": "Next up", "color": "secondary" },
+    { "type": "text", "x": 490, "y": 130, "width": 280, "height": 70, "fontSize": 48, "text": "{calendar.next.title}" },
+    { "type": "text", "x": 490, "y": 200, "width": 280, "height": 50, "fontSize": 30, "text": "{calendar.next.time}", "color": "accent" }
+  ]
+}
