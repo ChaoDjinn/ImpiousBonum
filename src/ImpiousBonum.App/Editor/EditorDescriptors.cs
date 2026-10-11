@@ -39,6 +39,7 @@ public static class EditorDescriptors
         var defaults = new ThemeSettings();
         const string font = "Font";
         const string colours = "Colours";
+        const string effects = "Gradients and glow";
         return
         [
             new("fontFamily", "Font", SettingKind.Font, defaults.FontFamily, font),
@@ -58,6 +59,13 @@ public static class EditorDescriptors
                 "fill covers the canvas (cropping), fit shows it all, stretch distorts to fit, center and tile keep its size."),
             Setting.Number("backgroundOpacity", "Opacity", defaults.BackgroundOpacity, 0, 1, BackgroundGroup,
                 "Below 1 the background colour shows through, e.g. 0.4 to dim a busy picture on black."),
+            new("accent2", "Accent fades to", SettingKind.Color, defaults.Accent2, effects,
+                "A second accent colour: graphs, bars, gauges and icons fade from the accent to this, left to right. Empty is a plain accent."),
+            new("backgroundGradient", "Background fades to", SettingKind.Color, defaults.BackgroundGradient, effects,
+                "The background fades from its colour at the top to this at the bottom. Empty is a plain background."),
+            Setting.Number("glow", "Glow", defaults.Glow, 0, 1, effects,
+                "A soft neon glow around every widget's text and shapes: 0.3 is subtle, 1 is strong. Empty or 0 is none. Uses a little more CPU."),
+            new("glowColor", "Glow colour", SettingKind.Color, defaults.GlowColor, effects, "Empty glows in the accent colour."),
         ];
     }
 }

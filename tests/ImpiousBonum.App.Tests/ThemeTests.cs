@@ -107,6 +107,16 @@ public sealed class ThemeTests : IDisposable
             Assert.True(Contrast(theme.Foreground, theme.Background) >= 4.5, $"{name}: foreground is hard to read.");
             foreach (var (key, value) in new[] { ("secondary", theme.Secondary), ("accent", theme.Accent), ("warning", theme.Warning), ("critical", theme.Critical) })
                 Assert.True(Contrast(value, theme.Background) >= 3, $"{name}: {key} is hard to see.");
+
+            // A gradient's second colours have to hold up too: the accent's end on the background, everything on its bottom.
+            if (theme.Accent2 is { } accent2)
+                Assert.True(Contrast(accent2, theme.Background) >= 3, $"{name}: accent2 is hard to see.");
+            if (theme.BackgroundGradient is { } bottom)
+            {
+                Assert.True(Contrast(theme.Foreground, bottom) >= 4.5, $"{name}: foreground is hard to read at the bottom.");
+                foreach (var (key, value) in new[] { ("secondary", theme.Secondary), ("accent", theme.Accent), ("accent2", theme.Accent2 ?? theme.Accent), ("warning", theme.Warning), ("critical", theme.Critical) })
+                    Assert.True(Contrast(value, bottom) >= 3, $"{name}: {key} is hard to see at the bottom.");
+            }
         }
     }
 

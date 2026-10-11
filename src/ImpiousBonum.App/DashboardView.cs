@@ -32,6 +32,7 @@ public sealed class DashboardView : Canvas
         {
             var widget = WidgetFactory.Create(definition, theme);
             widget.Editing = _editing;
+            widget.Effect = theme.Glow;
             widget.Width = definition.GetDouble("width", 200);
             widget.Height = definition.GetDouble("height", 100);
             SetLeft(widget, definition.GetDouble("x", 0));

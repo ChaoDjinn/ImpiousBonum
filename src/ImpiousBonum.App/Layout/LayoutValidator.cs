@@ -162,6 +162,14 @@ public static class LayoutValidator
             issues.Add($"Theme: 'backgroundFit' should be one of {string.Join(", ", BackgroundImage.Fits)}.");
         if (theme.BackgroundOpacity is < 0 or > 1 || double.IsNaN(theme.BackgroundOpacity))
             issues.Add("Theme: 'backgroundOpacity' should be between 0 and 1.");
+
+        foreach (var (name, value) in new[] { ("accent2", theme.Accent2), ("backgroundGradient", theme.BackgroundGradient), ("glowColor", theme.GlowColor) })
+        {
+            if (!string.IsNullOrWhiteSpace(value) && !IsColor(value, allowNamed: false))
+                issues.Add($"Theme: '{name}' should be a colour like #FF9800, or empty.");
+        }
+        if (theme.Glow is < 0 or > 1 || theme.Glow is { } glow && double.IsNaN(glow))
+            issues.Add("Theme: 'glow' should be between 0 and 1.");
     }
 
     /// <summary>
