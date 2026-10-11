@@ -13,6 +13,7 @@ public static class WidgetFactory
         TextWidget.Descriptor,
         GraphWidget.Descriptor,
         GaugeWidget.Descriptor,
+        CoresWidget.Descriptor,
         IconValueWidget.Descriptor,
         ClockWidget.Descriptor,
         DrivesWidget.Descriptor,

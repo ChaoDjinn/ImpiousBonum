@@ -89,6 +89,28 @@ Each entry in `thresholds`:
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
 
+## CPU threads (`cores`)
+
+Every logical processor's load at once, as bars or a heatmap: shows whether work is spread out or stuck on a few threads.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `style` | `bars` / `heatmap` | `bars` | Style. bars fill up from the bottom; heatmap is a grid of cells that go from the track colour to the accent as they get busy. |
+| `rows` | number (0–64) | `0` | Heatmap rows. 0 picks a grid that suits the box. |
+| `gap` | number (0–50) | `3` | Gap |
+| `cornerRadius` | number (0–50) | `2` | Corner radius |
+| `color` | color | `accent` | Busy colour |
+| `thresholds` | list | — | Warning colours. Changes a thread's colour. An empty metric uses that thread's load. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
+
 ## Icon and value (`icon`)
 
 An accent-coloured line icon followed by a live value, e.g. a chip and the CPU temperature.
