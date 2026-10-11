@@ -170,6 +170,22 @@ public static class LayoutPackage
         }
     }
 
+    /// <summary>
+    /// A bare layout file (no package around it), as the gallery can list: it carries no fonts or pictures, so any
+    /// the theme or image widgets point at, which would be paths on someone else's PC, are dropped.
+    /// </summary>
+    public static LayoutPackageContents FromLayoutJson(byte[] json, string name)
+    {
+        if (json.Length > MaxLayoutBytes)
+            throw new InvalidDataException($"The layout is bigger than {MaxLayoutBytes / (1024 * 1024)} MB.");
+        var layout = ParseLayout(json);
+        ThemeLibrary.SetString(layout.Theme, "fontFile", null);
+        ThemeLibrary.SetString(layout.Theme, "backgroundImage", null);
+        foreach (var (widget, _) in ImageWidgets(layout))
+            widget.Remove(ImageFileKey);
+        return new LayoutPackageContents { Name = ValidName(name), Layout = layout };
+    }
+
     public static LayoutPackageContents Read(string path)
     {
         using var file = File.OpenRead(path);
@@ -263,7 +279,13 @@ public static class LayoutPackage
             }
         }
 
-        foreach (var candidate in new[] { name, fallbackName, "Imported layout" })
+        return ValidName(name, fallbackName);
+    }
+
+    /// <summary>The first of these that's a valid layout name, else "Imported layout".</summary>
+    private static string ValidName(params string?[] candidates)
+    {
+        foreach (var candidate in candidates)
         {
             var trimmed = candidate?.Trim();
             if (trimmed is not null && LayoutLibrary.ValidateName(trimmed) is null)

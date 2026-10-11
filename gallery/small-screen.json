@@ -1,0 +1,13 @@
+// Small screen: for a 5" or 7" 800 × 480 display. The time, loads and the CPU temperature.
+{
+  "width": 800,
+  "height": 480,
+  "theme": "Aurora",
+  "widgets": [
+    { "type": "clock", "x": 20, "y": 10, "width": 760, "height": 220, "timeSize": 140, "dateSize": 26 },
+    { "type": "stat", "x": 20, "y": 250, "width": 240, "height": 210, "label": "CPU", "metric": "cpu.load", "fontSize": 48, "showRange": false },
+    { "type": "stat", "x": 280, "y": 250, "width": 240, "height": 210, "label": "GPU", "metric": "gpu.load", "fontSize": 48, "showRange": false },
+    { "type": "gauge", "x": 540, "y": 250, "width": 240, "height": 210, "label": "CPU °C", "metric": "cpu.temp", "text": "{cpu.temp:nounit}",
+      "max": 100, "fontSize": 44, "labelSize": 20 }
+  ]
+}

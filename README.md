@@ -115,6 +115,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Display → Tablet view* | Show the dashboard in a browser on a tablet or phone (see [Tablet view](#tablet-view)) |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
+| *Layout → Gallery…* | Browse layouts other people have shared, with a live preview, and import one (see [Layout gallery](#layout-gallery)) |
 | *Layout → Pages* | Swipe across the dashboard to move between layouts, or rotate them on a timer (see [Pages](#pages)) |
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, turn automatic switching on or off, and recap each session (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
 | *Layout → Schedule* | Show a layout or theme at certain times of day, or while Windows is in dark or light mode (see [Schedule](#schedule)) |
@@ -365,6 +366,21 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 A layout from someone else could have a harmless-looking button that runs any program, so if it has buttons that open something, the import lists what they'd open and asks whether to keep them or clear them.
 
 An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder. Imports only take the layout and the font (`.ttf`, `.otf`) and images it names, reject a file with `..` or absolute paths in it, and cap sizes (1 MB for the layout, 50 MB per file).
+
+## Layout gallery
+
+Tray → Layout → *Gallery…* lists layouts people have shared, each with its screen size and a description. Pick one to
+see it drawn live with your own readings, then *Import* adds it to your saved layouts and shows it, the same way as
+importing a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open
+programs. Pictures and fonts inside a shared layout show once it's imported. It starts with a gaming HUD, a desk
+companion (world clocks, calendar, weather, music), a system monitor, a focus timer and a layout for small 800 × 480
+screens.
+
+The gallery is the [`gallery`](gallery) folder of this repository. To share a layout, export it (*Layouts ▾ →
+Export…* in the editor), add the `.ibl` file and an entry in [`gallery/index.json`](gallery/index.json), and open a
+pull request. A plain layout `.json` works too if it has no pictures or fonts. The tests check every gallery layout
+opens and is valid. To use a gallery of your own instead, set `"galleryAddress"` in `settings.json` to a web folder
+with an `index.json` in it.
 
 ## Pages
 
