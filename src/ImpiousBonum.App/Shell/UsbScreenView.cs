@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -13,7 +14,13 @@ namespace ImpiousBonum.App.Shell;
 /// <param name="Layout">The layout to show on it, or null for the one the dashboard shows.</param>
 /// <param name="Brightness">0–100.</param>
 /// <param name="Orientation">landscape, portrait, or either with "-reversed" for a screen mounted upside down.</param>
-public sealed record UsbScreenSettings(bool Enabled, string Port, string? Layout, int Brightness, string Orientation)
+public sealed record UsbScreenSettings(
+    bool Enabled,
+    string Port,
+    // Left out rather than written as null, like game links' layouts: settings.json stays tidy to edit by hand.
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Layout,
+    int Brightness,
+    string Orientation)
 {
     public static readonly UsbScreenSettings Default = new(false, Auto, null, 60, "landscape");
 
