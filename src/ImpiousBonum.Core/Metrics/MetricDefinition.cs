@@ -6,4 +6,5 @@ namespace ImpiousBonum.Core.Metrics;
 /// <param name="Category">Grouping for pickers, e.g. "CPU", "Disk".</param>
 /// <param name="Unit">Controls formatting.</param>
 /// <param name="Max">Known upper bound for graphs and bars, if any.</param>
-public sealed record MetricDefinition(string Id, string Name, string Category, MetricUnit Unit, double? Max = null);
+/// <param name="Format">The number format to use when a template doesn't give one, instead of the unit's (e.g. <c>0</c> for whole degrees).</param>
+public sealed record MetricDefinition(string Id, string Name, string Category, MetricUnit Unit, double? Max = null, string? Format = null);

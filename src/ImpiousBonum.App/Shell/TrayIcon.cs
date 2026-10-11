@@ -30,6 +30,11 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _claudeStatus = new() { Enabled = false };
     private readonly ToolStripMenuItem _claudeHint = new("Needs Claude Code in a terminal: the Desktop app doesn't share usage") { Enabled = false };
     private readonly ToolStripMenuItem _claudeConnect = new() { ToolTipText = "Set Claude Code's status line to send your plan usage to the dashboard" };
+    private readonly ToolStripMenuItem _weather = new("Weather");
+    private readonly ToolStripMenuItem _weatherStatus = new() { Enabled = false };
+    private readonly ToolStripMenuItem _weatherSet = new("Set location…") { ToolTipText = "Where the weather widget's forecast is for" };
+    private readonly ToolStripMenuItem _weatherUnits = new("Units");
+    private readonly ToolStripMenuItem _weatherOff = new("Turn off weather") { ToolTipText = "Forget the location and stop fetching forecasts" };
     private readonly ToolStripMenuItem _header = new("Impious Bonum") { Enabled = false };
     private readonly ToolStripMenuItem _checkUpdates = new("Check for updates") { Visible = false };
     private readonly ToolStripMenuItem _restartToUpdate = new() { Visible = false };
@@ -47,6 +52,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_layouts);
         menu.Items.Add(_sensors);
         menu.Items.Add(_claude);
+        menu.Items.Add(_weather);
         menu.Items.Add(_fpsSource);
         menu.Items.Add(new ToolStripMenuItem("Edit layout…", null, (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty)) { Font = new Font(menu.Font, FontStyle.Bold) });
         menu.Items.Add("Open layout file", null, (_, _) =>
@@ -72,6 +78,16 @@ public sealed class TrayIcon : IDisposable
         _claude.DropDownItems.Add(_claudeHint);
         _claude.DropDownItems.Add(_claudeConnect);
         _claudeConnect.Click += (_, _) => ConnectClaudeCodeRequested?.Invoke(this, EventArgs.Empty);
+
+        _weather.DropDownItems.AddRange([_weatherStatus, _weatherSet, _weatherUnits, _weatherOff]);
+        _weatherSet.Click += (_, _) => WeatherLocationRequested?.Invoke(this, EventArgs.Empty);
+        _weatherOff.Click += (_, _) => WeatherTurnedOff?.Invoke(this, EventArgs.Empty);
+        foreach (var (units, label) in new[] { (AppSettings.WeatherUnitsAuto, "Automatic (your region)"), (AppSettings.WeatherUnitsMetric, "°C and km/h"), (AppSettings.WeatherUnitsImperial, "°F and mph") })
+        {
+            var item = new ToolStripMenuItem(label) { Tag = units };
+            item.Click += (_, _) => WeatherUnitsSelected?.Invoke(this, units);
+            _weatherUnits.DropDownItems.Add(item);
+        }
 
         _tablet.DropDownItems.AddRange([_tabletOn, new ToolStripSeparator(), _tabletShowLink, _tabletCopyLink, _tabletNewLink]);
         _tabletOn.Click += (_, _) => TabletViewToggled?.Invoke(this, !_tabletOn.Checked);
@@ -164,6 +180,22 @@ public sealed class TrayIcon : IDisposable
         _claudeStatus.Text = status;
         _claudeHint.Visible = status != ClaudeUsageProvider.Connected;
         _claudeConnect.Text = connected ? "Reconnect Claude Code" : "Connect Claude Code…";
+    }
+
+    public event EventHandler? WeatherLocationRequested;
+
+    public event EventHandler? WeatherTurnedOff;
+
+    /// <summary>One of <see cref="AppSettings.WeatherUnitsAuto"/>, <see cref="AppSettings.WeatherUnitsMetric"/> or <see cref="AppSettings.WeatherUnitsImperial"/>.</summary>
+    public event EventHandler<string>? WeatherUnitsSelected;
+
+    public void SetWeatherState(string status, bool hasLocation, string units)
+    {
+        _weatherStatus.Text = status;
+        _weatherSet.Text = hasLocation ? "Change location…" : "Set location…";
+        _weatherOff.Visible = hasLocation;
+        foreach (ToolStripMenuItem item in _weatherUnits.DropDownItems)
+            item.Checked = string.Equals((string?)item.Tag, units, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>A saved layout's name.</summary>

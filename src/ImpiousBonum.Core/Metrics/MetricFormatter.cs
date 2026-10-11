@@ -27,7 +27,7 @@ public static class MetricFormatter
             {
                 var exponent = spec.ByteUnit is { } forced ? (int)forced : AutoByteExponent(value);
                 var scaled = value / Math.Pow(1024, exponent);
-                var number = scaled.ToString(spec.NumberFormat ?? "0.0", culture);
+                var number = scaled.ToString(spec.NumberFormat ?? sample.Definition.Format ?? "0.0", culture);
                 if (spec.NoUnit)
                     return number;
                 var suffix = ByteSuffixes[exponent];
@@ -46,9 +46,12 @@ public static class MetricFormatter
                     MetricUnit.Rpm => ("0", "RPM"),
                     MetricUnit.Volts => ("0.000", "V"),
                     MetricUnit.Watts => ("0.0", "W"),
+                    MetricUnit.Fahrenheit => ("0.0", "°F"),
+                    MetricUnit.KilometresPerHour => ("0", "km/h"),
+                    MetricUnit.MilesPerHour => ("0", "mph"),
                     _ => ("0.##", ""),
                 };
-                var number = value.ToString(spec.NumberFormat ?? defaultFormat, culture);
+                var number = value.ToString(spec.NumberFormat ?? sample.Definition.Format ?? defaultFormat, culture);
                 return spec.NoUnit || suffix.Length == 0 ? number : $"{number} {suffix}";
             }
         }

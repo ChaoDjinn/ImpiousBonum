@@ -60,7 +60,29 @@ public static class Icons
         ["power"] = Parse("M12,3 V11 M7,5.8 A8,8 0 1 0 17,5.8"),
         ["moon"] = Parse("M20,14.5 A8.5,8.5 0 1 1 9.5,4 A6.5,6.5 0 0 0 20,14.5 Z"),
         ["link"] = Parse("M10,14 L14,10 M8.5,11 L6.5,13 A3.5,3.5 0 0 0 11,17.5 L13,15.5 M15.5,13 L17.5,11 A3.5,3.5 0 0 0 13,6.5 L11,8.5"),
+
+        // Weather, named as WeatherCodes.Icon returns them.
+        ["clear-day"] = Parse("M12,7.5 A4.5,4.5 0 1 1 11.99,7.5 Z M12,1.5 V4 M12,20 V22.5 M1.5,12 H4 M20,12 H22.5 " +
+                              "M4.6,4.6 L6.3,6.3 M17.7,17.7 L19.4,19.4 M4.6,19.4 L6.3,17.7 M17.7,6.3 L19.4,4.6"),
+        ["clear-night"] = Parse("M19,15 A8,8 0 1 1 9,4.5 A6.2,6.2 0 0 0 19,15 Z M17,3.5 V6.5 M15.5,5 H18.5"),
+        ["partly-day"] = Parse("M4.6,11.6 A4,4 0 0 1 12.2,7.4 M8,2 V3.5 M2,8 H3.5 M3.8,3.8 L4.8,4.8 M12.2,3.8 L11.2,4.8 " + Cloud),
+        ["partly-night"] = Parse("M10.8,7.2 A4.2,4.2 0 0 1 4.6,11.9 A5,5 0 0 1 7.6,3 A3.6,3.6 0 0 0 10.8,7.2 Z " + Cloud),
+        ["cloud"] = Parse("M6.5,19 H17.5 A4.5,4.5 0 0 0 17.4,10 A6,6 0 0 0 6.1,11.6 A3.75,3.75 0 0 0 6.5,19 Z"),
+        ["fog"] = Parse("M6.5,13 A3.25,3.25 0 0 1 6.9,7.3 A5.25,5.25 0 0 1 16.9,6.5 A3.25,3.25 0 0 1 18,13 M3,16.5 H21 M5,20 H19"),
+        ["drizzle"] = Parse(RainCloud + " M8,18.5 V19 M12,20 V20.5 M16,18.5 V19"),
+        ["rain"] = Parse(RainCloud + " M8.5,17.5 L7,21.5 M12.5,17.5 L11,21.5 M16.5,17.5 L15,21.5"),
+        ["sleet"] = Parse(RainCloud + " M8.5,17.5 L7.5,20 M16.5,17.5 L15.5,20 M12,19.5 V19.51 M12,22 V22.01"),
+        ["snow"] = Parse(RainCloud + " M8,18.5 V18.51 M12,18.5 V18.51 M16,18.5 V18.51 M10,21.5 V21.51 M14,21.5 V21.51"),
+        ["storm"] = Parse(RainCloud + " M13,15.5 L10.5,19 H13.5 L11,22.5"),
+        ["drop"] = Parse("M12,3 C12,3 5.5,10.5 5.5,14.5 A6.5,6.5 0 0 0 18.5,14.5 C18.5,10.5 12,3 12,3 Z"),
+        ["wind"] = Parse("M3,9 H14.5 A2.75,2.75 0 1 0 11.75,6.25 M3,13 H18.5 A2.75,2.75 0 1 1 15.75,15.75 M3,17 H10"),
     };
+
+    /// <summary>A cloud in the lower right, in front of a sun or moon.</summary>
+    private const string Cloud = "M9,20 H18 A3.75,3.75 0 0 0 18,12.5 A5,5 0 0 0 8.6,13.6 A3.2,3.2 0 0 0 9,20 Z";
+
+    /// <summary>A cloud in the upper part, with room underneath for rain or snow.</summary>
+    private const string RainCloud = "M6.5,15 H17.5 A4,4 0 0 0 17.4,7 A5.5,5.5 0 0 0 6.9,8.5 A3.25,3.25 0 0 0 6.5,15 Z";
 
     /// <summary>A loudspeaker, for the volume icons to add waves or a cross to.</summary>
     private const string Speaker = "M3.5,9.5 H7.5 L12.5,5.5 V18.5 L7.5,14.5 H3.5 Z";
