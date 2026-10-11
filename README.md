@@ -108,7 +108,7 @@ Lay out your own in the editor, with a live preview, a searchable list of every 
 
 1. Download and run [`ImpiousBonum-win-Setup.exe`](https://github.com/ChaoDjinn/ImpiousBonum/releases/latest/download/ImpiousBonum-win-Setup.exe) (Windows 10 or 11). It installs for your user only and adds the .NET runtime if needed. SmartScreen may warn the first time, since the installer isn't code-signed yet: choose *More info → Run anyway*.
 2. The dashboard opens on your smallest secondary monitor, or as a window on your main screen if that's the only one. Right-click the tray icon to move it, make it a window, or turn on *Start with Windows*.
-3. For temperatures and FPS, tray → *Sensors* → *Install sensor service…* (one admin prompt). CPU temperatures also need the free [PawnIO](https://pawnio.eu) driver (`winget install namazso.PawnIO`; HWiNFO and FanControl install it too). GPU temperatures and FPS work without it.
+3. For temperatures and FPS, tray → *Sensors* → *Install sensor service…* (one admin prompt). CPU temperatures also need one small free driver, [PawnIO](https://pawnio.eu): `winget install namazso.PawnIO` (recent FanControl versions install it too, so you may have it already). GPU temperatures and FPS work without it. Nothing else is needed: no HWiNFO, no FanControl.
 4. Double-click the tray icon to open the layout editor, or try a ready-made layout from tray → *Layout* → *Gallery…*.
 
 The [user guide](<docs/guide.md>) covers everything else, and the [widget reference](docs/widgets.md) lists every widget's settings.
