@@ -47,7 +47,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="docs/images/default-layout.svg" alt="Map of the default layout: CPU and memory graphs, GPU load and VRAM, CPU and GPU temperatures, FPS, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Sixteen widget types are available: `text`, `graph` (line or area history with a header), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock`, `drives`, `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `weather` ([Weather](#weather)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Seventeen widget types are available: `text`, `graph` (line or area history with a header), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock`, `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `weather` ([Weather](#weather)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
 
 ## What it shows
 
@@ -65,6 +65,7 @@ Every box is a widget you can move, resize, restyle or replace. Sixteen widget t
 | `net.down`, `net.up`, `net.down.total`, `net.up.total`, `net.ip`, `net.adapter` | Adapters with a default gateway (totals count since the adapter connected) |
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
 | `sys.uptime`, `sys.name`, `sys.battery`, `sys.battery.status` | Windows; the battery ones only on PCs with a battery |
+| `top.cpu.<N>`, `top.cpu.<N>.name`, `top.memory.<N>`, `top.memory.<N>.name` (N = 1 to 5) | The apps using the most CPU and memory, every 2 seconds, from one `NtQuerySystemInformation` call like Task Manager's. An app's processes count together (all of Chrome's are one); CPU is a share of the whole processor, memory is the private working set (Task Manager's *Memory* column) |
 | `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set in tray → *Weather*, every 15 minutes |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up in tray → *Custom data…* (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
@@ -74,6 +75,15 @@ Every box is a widget you can move, resize, restyle or replace. Sixteen widget t
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
 | `claude.session`, `claude.week`, `claude.session.resets`, `claude.week.resets`, `claude.status` | Your Claude plan's usage limits, from Claude Code's status line (see [Claude usage](#claude-usage)) |
+
+### Top apps
+
+The `processes` widget is a small Task Manager: the apps using the most CPU or memory, one row each with both numbers.
+An app's processes count together, so a browser with thirty tabs is one row (with the count in brackets). Sort it by CPU
+or memory, choose how many rows and whether to show both numbers, and give the CPU figure warning colours the same way
+as other widgets. For a single figure elsewhere, use the metrics: `{top.cpu.1.name}` at `{top.cpu.1}` in a `text` widget
+shows the busiest app. It reads every process in one call every 2 seconds, without opening any of them, so it costs
+about as much as Task Manager's Processes tab does.
 
 ## Installing
 
