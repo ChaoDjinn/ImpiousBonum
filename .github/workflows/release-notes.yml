@@ -1,0 +1,26 @@
+name: Release notes
+
+# Puts a version's section of CHANGELOG.md on its GitHub release. Releases do this themselves; run this to fix up
+# notes afterwards, or with "all" to fill in every release the changelog covers. Builds and signs nothing.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version, e.g. 0.9.0, or "all" for every release in CHANGELOG.md'
+        required: true
+        default: all
+
+permissions:
+  contents: write
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set the notes
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: ./build/release-notes.ps1 -Version $env:VERSION -Apply -Repo $env:GITHUB_REPOSITORY

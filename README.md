@@ -80,6 +80,7 @@ The [user guide](<docs/guide.md>) covers everything else, and the [widget refere
 - [User guide](<docs/guide.md>): installing, the editor, every feature and how to set it up
 - [Widget reference](docs/widgets.md): every widget and theme setting, its default and its range
 - [Layout gallery](gallery): shared layouts, and how to add yours
+- [Changelog](CHANGELOG.md): what's new in each release
 - [Developing Impious Bonum](docs/development.md): building from source, releases, update signing and the code's layout
 
 ## Roadmap
