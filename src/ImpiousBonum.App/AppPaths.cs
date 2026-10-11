@@ -12,6 +12,9 @@ public static class AppPaths
 
     public static string LogFile => Path.Combine(DataDirectory, "dashboard.log");
 
+    /// <summary>One line per game session (see <see cref="Core.Sessions.SessionLog"/>).</summary>
+    public static string SessionsFile => Path.Combine(DataDirectory, "sessions.csv");
+
     /// <summary>Written by Claude Code's status line (<see cref="Core.Claude.ClaudeStatusLine"/>), which always uses the default folder.</summary>
     public static string ClaudeUsageFile => Path.Combine(DataDirectory, Core.Claude.ClaudeUsageFile.FileName);
 

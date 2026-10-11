@@ -68,6 +68,7 @@ Every box is a widget you can move, resize, restyle or replace. Twenty widget ty
 | `top.cpu.<N>`, `top.cpu.<N>.name`, `top.memory.<N>`, `top.memory.<N>.name` (N = 1 to 5) | The apps using the most CPU and memory, every 2 seconds, from one `NtQuerySystemInformation` call like Task Manager's. An app's processes count together (all of Chrome's are one); CPU is a share of the whole processor, memory is the private working set (Task Manager's *Memory* column) |
 | `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set in tray → *Weather*, every 15 minutes |
 | `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set in tray → *Calendar…*, every 15 minutes (see [Calendar](#calendar)) |
+| `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up in tray → *Custom data…* (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
@@ -115,7 +116,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
 | *Layout → Pages* | Swipe across the dashboard to move between layouts, or rotate them on a timer (see [Pages](#pages)) |
-| *Layout → Game layouts* | Link the app you were just using to a layout, remove links, and turn automatic switching on or off (see [Game layouts](#game-layouts)) |
+| *Layout → Game layouts* | Link the app you were just using to a layout, remove links, turn automatic switching on or off, and recap each session (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
 | *Layout → Schedule* | Show a layout or theme at certain times of day, or while Windows is in dark or light mode (see [Schedule](#schedule)) |
 | *Sensors* | Sensor service status, and install, update or remove it |
 | *Claude usage* | Whether Claude Code is reporting, and *Connect Claude Code…* (see [Claude usage](#claude-usage)) |
@@ -395,6 +396,22 @@ Links live in `settings.json` (tray → *Open settings folder*) and can be edite
 ],
 "gameLayoutsEnabled": true
 ```
+
+## Session recaps
+
+When you stop playing a game linked under *Game layouts*, a notification sums up how it went: how long you played,
+the average, lowest and highest FPS and the average 1% low, CPU and GPU load (average and peak), and the hottest the
+CPU and GPU got. Each session is also added to `sessions.csv` in the settings folder, one line per session, ready for
+a spreadsheet.
+
+A session starts once the game has been in front for a few seconds and ends when it's been gone for a minute, so
+alt-tabbing to a chat app doesn't split it, and readings only count while the game is in front. Sessions under a
+minute (a launcher, a quick look) aren't recapped. FPS and temperatures need the [sensor service](#sensor-service-temperatures-fans-power-fps).
+
+The `session.*` metrics show the session so far while you play, and the last one afterwards, so a layout can show
+it: `{session.game}` · `{session.minutes} min` · `{session.fps.avg} average`, or a `stat` of `session.fps.avg`.
+`session.playing` reads *Playing* or *Last played*. Tray → Layout → Game layouts → *Recap each session* turns it off.
+This works whether or not *Switch automatically* is on.
 
 ## Schedule
 

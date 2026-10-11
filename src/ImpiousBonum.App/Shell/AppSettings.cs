@@ -59,6 +59,9 @@ public sealed class AppSettings
     /// <summary>Switch to a game's linked layout automatically. Off leaves the links in place but unused.</summary>
     public bool GameLayoutsEnabled { get; set; } = true;
 
+    /// <summary>Recap each session of a linked game: a notification, a line in sessions.csv, and the session.* metrics.</summary>
+    public bool SessionRecaps { get; set; } = true;
+
     /// <summary>Layouts and themes shown at times of day or with Windows in dark or light mode (see <see cref="ScheduleRule"/>).</summary>
     public List<ScheduleRule> Schedule
     {

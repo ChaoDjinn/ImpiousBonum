@@ -16,6 +16,7 @@ using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
 using ImpiousBonum.Core.Sensors;
+using ImpiousBonum.Core.Sessions;
 using Microsoft.Win32;
 
 namespace ImpiousBonum.App;
@@ -52,6 +53,9 @@ public partial class App : Application
     private DateTime _lastTouch = DateTime.MinValue;
     private DateTime _lastPageChange = DateTime.UtcNow;
     private string? _recentApp;
+
+    /// <summary>The linked game in front, for session recaps; written on the UI thread, read by the sampler's.</summary>
+    private volatile string? _trackedGame;
     private DispatcherTimer? _updateTimer;
     private bool _warnedOutdatedService;
     private bool _mirrorQueued;
@@ -103,7 +107,8 @@ public partial class App : Application
         if (!_settings.HardwareRendering)
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         _frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
-        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData, () => _settings.Calendars));
+        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData, () => _settings.Calendars,
+            () => _trackedGame, recap => Dispatcher.BeginInvoke(() => OnSessionEnded(recap))));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -133,7 +138,7 @@ public partial class App : Application
             {
                 var names = _layouts.List();
                 _tray.SetLayouts(names, _layouts.Active, _layouts.ActivePath);
-                _tray.SetGameLayouts(_settings.GameLayoutsEnabled, _settings.GameLayouts, _recentApp, names, _layouts.Themes.List());
+                _tray.SetGameLayouts(_settings.GameLayoutsEnabled, _settings.SessionRecaps, _settings.GameLayouts, _recentApp, names, _layouts.Themes.List());
                 _tray.SetPages(_settings.SwipePages, _settings.RotatePagesSeconds, _settings.Pages, names);
                 _tray.SetSchedule(_settings.ScheduleEnabled, _settings.Schedule,
                     ScheduledLook.Active(_settings.Schedule, TimeOnly.FromDateTime(DateTime.Now), WindowsColourMode.IsDark()));
@@ -143,6 +148,12 @@ public partial class App : Application
         _tray.LayoutSelected += (_, name) => SelectLayout(name);
         _tray.ImportLayoutRequested += (_, _) => ImportLayout();
         _tray.GameLayoutsToggled += (_, enabled) => SetGameLayoutsEnabled(enabled);
+        _tray.SessionRecapsToggled += (_, on) =>
+        {
+            _settings.SessionRecaps = on;
+            _settings.Save();
+            AppLog.Info($"Session recaps {(on ? "on" : "off")}");
+        };
         _tray.ScheduleToggled += (_, enabled) =>
         {
             _settings.ScheduleEnabled = enabled;
@@ -446,6 +457,9 @@ public partial class App : Application
         var (_, app) = _frameRateTarget.Get();
         if (app is not null && !NotGames.Contains(app))
             _recentApp = app;
+        _trackedGame = _settings.SessionRecaps && GameLayoutSwitcher.Match(_settings.GameLayouts, app) is { } game
+            ? game.Layout ?? GameLayoutRule.Normalize(game.Process)
+            : null;
 
         if (_settings.GameLayoutsEnabled && _gameSwitcher.Update(_settings.GameLayouts, app, DateTime.UtcNow))
             ApplyGameLayout();
@@ -669,6 +683,21 @@ public partial class App : Application
                 _tray?.ShowAlert(alert.Text);
         }
         _window.ShowAlerts(_alerts.Active.Where(rule => rule.Flash).Select(rule => (rule.Describe(), rule.Text(_sampler.Store))).ToList());
+    }
+
+    /// <summary>A game session ended: tell the user how it went and add it to sessions.csv.</summary>
+    private void OnSessionEnded(SessionRecap recap)
+    {
+        AppLog.Info($"Session recap: {recap.Describe().ReplaceLineEndings("; ")}");
+        try
+        {
+            SessionLog.Append(AppPaths.SessionsFile, recap);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            AppLog.Warning($"Couldn't add the session to {AppPaths.SessionsFile}: {ex.Message}");
+        }
+        _tray?.ShowInfo("Session recap", recap.Describe());
     }
 
     /// <summary>Tray → Calendar…. The list is replaced, not changed in place, since the sampler reads it.</summary>
