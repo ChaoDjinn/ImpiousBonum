@@ -15,7 +15,7 @@ public partial class GalleryWindow : Window
     private readonly LayoutStore _layouts;
     private readonly MetricStore? _store;
     private readonly Dictionary<GalleryEntry, LayoutPackageContents> _downloaded = new();
-    private readonly DashboardView _preview = new();
+    private readonly DashboardView _preview = new() { AnimateBackground = false };
     private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromSeconds(1) };
     private CancellationTokenSource? _loading;
 

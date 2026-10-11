@@ -54,7 +54,7 @@ public static class EditorDescriptors
             Setting.Color("warning", "Warning", defaults.Warning, colours, "Used by warning colour rules that say \"warning\".", named: false),
             Setting.Color("critical", "Critical", defaults.Critical, colours, "Used by warning colour rules that say \"critical\".", named: false),
             new("backgroundImage", "Image", SettingKind.ImageFile, defaults.BackgroundImage, BackgroundGroup,
-                "A PNG or JPG drawn behind the widgets, over the background colour."),
+                "A picture drawn behind the widgets, over the background colour. An animated GIF or a video (MP4, WMV) moves."),
             Setting.Choice("backgroundFit", "Fit", defaults.BackgroundFit, BackgroundImage.Fits, BackgroundGroup,
                 "fill covers the canvas (cropping), fit shows it all, stretch distorts to fit, center and tile keep its size."),
             Setting.Number("backgroundOpacity", "Opacity", defaults.BackgroundOpacity, 0, 1, BackgroundGroup,

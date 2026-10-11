@@ -57,6 +57,10 @@ public sealed class Theme
     public Brush CanvasBackground(double width, double height) =>
         BackgroundImage.CreateBrush(_settings, Background, width, height);
 
+    /// <summary>As above, with an animated GIF or video moving, kept going by <paramref name="player"/>.</summary>
+    public Brush CanvasBackground(double width, double height, bool animate, out BackgroundPlayer? player) =>
+        BackgroundImage.CreateBrush(_settings, Background, width, height, animate, out player);
+
     /// <summary>
     /// Resolves a widget colour setting: <c>foreground</c>, <c>secondary</c>, <c>accent</c>, <c>warning</c>, <c>critical</c>,
     /// <c>track</c>, <c>background</c> or a <c>#RRGGBB</c>/<c>#AARRGGBB</c> value.

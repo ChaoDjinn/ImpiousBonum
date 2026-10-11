@@ -49,7 +49,7 @@ public sealed record UsbScreenSettings(
 /// </summary>
 public sealed class UsbScreenView : IDisposable
 {
-    private readonly DashboardView _view = new();
+    private readonly DashboardView _view = new() { AnimateBackground = false };
     private readonly Viewbox _fit;
     private readonly Border _host;
     private UsbScreen? _screen;

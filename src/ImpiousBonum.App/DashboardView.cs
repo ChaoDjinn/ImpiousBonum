@@ -12,10 +12,45 @@ public sealed class DashboardView : Canvas
     private readonly List<Widget> _widgets = [];
     private bool _editing;
 
+    private BackgroundPlayer? _background;
+
     public DashboardView()
     {
         ClipToBounds = true;
         SnapsToDevicePixels = true;
+        // A moving background only moves while it can be seen.
+        IsVisibleChanged += (_, _) => PlayBackground();
+        // Closed (the editor's preview, say): let a video player go now rather than whenever it's collected.
+        Unloaded += (_, _) =>
+        {
+            _background?.Dispose();
+            _background = null;
+        };
+        Loaded += (_, _) =>
+        {
+            if (_background is null && _backgroundTheme is not null)
+                Background = _backgroundTheme.CanvasBackground(Width, Height, AnimateBackground, out _background);
+            PlayBackground();
+        };
+    }
+
+    /// <summary>The theme the background was made from, to make it again if the view is shown again after closing.</summary>
+    private Theme? _backgroundTheme;
+
+    /// <summary>
+    /// Whether an animated GIF or video background moves. Off for copies that are never on screen (the tablet view,
+    /// a USB screen, the gallery's preview), which show a still frame instead and don't hold a GIF's frames or a video player.
+    /// </summary>
+    public bool AnimateBackground { get; init; } = true;
+
+    private void PlayBackground()
+    {
+        if (_background is null)
+            return;
+        if (IsVisible)
+            _background.Play();
+        else
+            _background.Pause();
     }
 
     /// <param name="themeSettings">The layout's theme once resolved (see <see cref="ThemeLibrary.Resolve"/>).</param>
@@ -26,7 +61,10 @@ public sealed class DashboardView : Canvas
         _widgets.Clear();
         Width = layout.Width;
         Height = layout.Height;
-        Background = theme.CanvasBackground(layout.Width, layout.Height);
+        _background?.Dispose();
+        _backgroundTheme = theme;
+        Background = theme.CanvasBackground(layout.Width, layout.Height, AnimateBackground, out _background);
+        PlayBackground();
 
         foreach (var definition in layout.Widgets)
         {

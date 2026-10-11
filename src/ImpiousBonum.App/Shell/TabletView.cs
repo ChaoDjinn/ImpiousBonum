@@ -19,7 +19,7 @@ public sealed class TabletView : IDisposable
 {
     private const int JpegQuality = 85;
 
-    private readonly DashboardView _view = new();
+    private readonly DashboardView _view = new() { AnimateBackground = false };
     private readonly Border _host;
     private TabletServer? _server;
     private LayoutDocument? _layout;
