@@ -45,10 +45,28 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 - Session recaps when you finish playing a game you've linked to a layout: average, lowest and highest FPS, loads and temperatures. [More](<docs/guide.md#session-recaps>)
 - Alerts when a reading stays out of bounds, and logging to CSV files for a spreadsheet. [More](<docs/guide.md#alerts>)
 
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/widgets/frame-times.png" alt="Stat tiles of the frame rate at 145 and the 1% and 0.1% lows, each with a trend line and its range, and a graph of the average and slowest frame times"><br><b>Frame rate</b>: FPS, 1% and 0.1% lows, and frame times</td>
+    <td width="50%"><img src="docs/images/widgets/gauges.png" alt="Three gauges: a 270° dial of the CPU temperature at 65, a half dial of GPU load at 90.4 % and a ring of memory use at 55 %"><br><b>Gauges</b>: a dial, a half dial or a ring</td>
+  </tr>
+</table>
+
 **Your day**
 - Clocks with other time zones, timers and countdowns, the weather (no account needed), your calendar's agenda, and news headlines. [More](<docs/guide.md#world-clocks>)
 - What's playing, with album art and controls, an audio visualiser, and buttons that open programs, send shortcuts or switch layouts. [More](<docs/guide.md#now-playing-and-buttons>)
 - Your own data from any web address or command. [More](<docs/guide.md#custom-data>)
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/widgets/weather.png" alt="The weather widget with colour icons: 14° and partly cloudy now with the high, low and feels-like, four days ahead, and every three hours ahead with the chance of rain"><br><b>Weather</b>: now, the days ahead and the hours ahead</td>
+    <td width="50%"><img src="docs/images/widgets/agenda.png" alt="An agenda of today's and tomorrow's events with their times and places, and the next event, Call with Sam at 22:15"><br><b>Calendar</b>: today, tomorrow and what's next</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/widgets/media.png" alt="Now playing: album art, the title and artist, a progress bar and previous, pause and next buttons, above four buttons: Mute mic, Screenshot, Gaming and Sound"><br><b>Now playing</b>, and buttons for shortcuts, apps and layouts</td>
+    <td width="50%"><img src="docs/images/widgets/clocks.png" alt="A clock at 21:47 with the date, and the time in San Francisco, New York, Tokyo and Sydney"><br><b>Clock</b> with the time in other places</td>
+  </tr>
+</table>
 
 **Make it yours**
 - A layout editor with live preview, drag and resize, and a searchable picker for every metric, plus touch editing on the dashboard itself. [More](<docs/guide.md#layout-editor>)
@@ -84,7 +102,7 @@ Lay out your own in the editor, with a live preview, a searchable list of every 
 
 <p align="center"><img src="docs/images/editor.png" alt="The layout editor: the widget list, the layout's preview with the GPU graph selected, and the graph's settings"></p>
 
-<sub>Screenshots use made-up readings (`build/screenshots.ps1`).</sub>
+<sub>Every picture here is drawn by the app itself from made-up readings (`build/screenshots.ps1`), so it shows what the app really draws without showing anyone's PC. The [user guide](<docs/guide.md>) has more.</sub>
 
 ## Get started
 

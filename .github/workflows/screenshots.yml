@@ -28,27 +28,13 @@ jobs:
         run: |
           Set-Culture en-GB
           Set-TimeZone -Id 'GMT Standard Time'
+      # TEMPORARY: CI's checks, since CI runs only on pull requests and main. Remove before merging.
+      - name: Check formatting
+        run: dotnet format whitespace ImpiousBonum.slnx --verify-no-changes
+      - name: Run the tests
+        run: dotnet test ImpiousBonum.slnx -c Release
       - name: Draw
         run: ./build/screenshots.ps1
-      # TEMPORARY: how much memory and CPU the default layout uses here, for the README's claim. Remove before merging.
-      - name: Measure
-        run: |
-          $exe = Resolve-Path 'src/ImpiousBonum.App/bin/Release/net10.0-windows/ImpiousBonum.exe'
-          $data = Join-Path $env:RUNNER_TEMP 'measure'
-          New-Item -ItemType Directory -Force $data | Out-Null
-          $app = Start-Process $exe -ArgumentList '--data-dir', "`"$data`"" -PassThru
-          Start-Sleep 90
-          for ($i = 0; $i -lt 3; $i++) {
-              $app.Refresh(); $cpu = $app.TotalProcessorTime; $start = Get-Date
-              Start-Sleep 60
-              $app.Refresh()
-              $share = ($app.TotalProcessorTime - $cpu).TotalSeconds / ((Get-Date) - $start).TotalSeconds / [Environment]::ProcessorCount * 100
-              $private = try { (Get-Counter "\Process($($app.ProcessName))\Working Set - Private").CounterSamples[0].CookedValue } catch { 0 }
-              'Private working set {0:N1} MB, private bytes {1:N1} MB, working set {2:N1} MB, CPU {3:N3} % of {4} logical processors' -f `
-                  ($private / 1MB), ($app.PrivateMemorySize64 / 1MB), ($app.WorkingSet64 / 1MB), $share, [Environment]::ProcessorCount
-          }
-          Stop-Process $app
-          Get-Content (Join-Path $data 'dashboard.log') -ErrorAction SilentlyContinue
       - name: Commit what changed
         run: |
           git add docs/images gallery/images

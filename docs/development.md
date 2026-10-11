@@ -32,6 +32,8 @@ pwsh build/screenshots.ps1
 
 It draws the default layout, each gallery layout, the themes collage and the widget pictures with `ImpiousBonum.exe --snapshot <file> --layout <name> --demo`. Each widget picture in `docs/images/widgets` is drawn from a small layout of the same name in `build/screenshots`; add a layout there for a new picture (a test checks they're valid and have every reading they show). The readings are in `src/ImpiousBonum.Core/Demo/DemoReadings.cs`. The editor's screenshot is taken by hand: `ImpiousBonum.exe --data-dir <an empty folder> --demo` runs a copy with those readings next to an installed one.
 
+It also draws `docs/images/social-preview.png` from `build/social-preview.json`: the picture shown when the repository's link is shared. Upload it by hand in the repository's **Settings → General → Social preview**.
+
 Without a Windows PC to hand, run the **Screenshots** workflow from the Actions tab on your branch: it draws them on a Windows runner (in British English, on UK time) and commits the pictures that changed to that branch.
 
 ## Making a release
