@@ -1,0 +1,12 @@
+// Blue, yellow and red on cream: form follows function.
+{
+  "fontFamily": "Bahnschrift",
+  "fontWeight": "SemiBold",
+  "foreground": "#1A1A1A",
+  "secondary": "#B31A1A1A",
+  "accent": "#1F4E9C",
+  "background": "#F1E9DA",
+  "track": "#DED3C0",
+  "warning": "#B06400",
+  "critical": "#D62828"
+}

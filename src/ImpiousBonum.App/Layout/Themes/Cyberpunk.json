@@ -1,0 +1,12 @@
+// Acid yellow and cyan on gunmetal: chrome, neon and rain.
+{
+  "fontFamily": "Bahnschrift",
+  "fontWeight": "SemiBold",
+  "foreground": "#F4F4F4",
+  "secondary": "#CC00F0FF",
+  "accent": "#FCEE0A",
+  "background": "#0B0B12",
+  "track": "#22222E",
+  "warning": "#FF8A00",
+  "critical": "#FF003C"
+}

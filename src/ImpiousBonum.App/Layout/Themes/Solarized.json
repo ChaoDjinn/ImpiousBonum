@@ -1,0 +1,12 @@
+// The Solarized dark palette: blue on deep teal.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "Normal",
+  "foreground": "#EEE8D5",
+  "secondary": "#93A1A1",
+  "accent": "#268BD2",
+  "background": "#002B36",
+  "track": "#073642",
+  "warning": "#B58900",
+  "critical": "#DC322F"
+}

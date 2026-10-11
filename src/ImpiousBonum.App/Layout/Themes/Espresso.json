@@ -1,0 +1,12 @@
+// Crema, caramel and dark roast, warm as a coffee shop.
+{
+  "fontFamily": "Cambria",
+  "fontWeight": "Normal",
+  "foreground": "#F3E9DC",
+  "secondary": "#B3DAB49D",
+  "accent": "#C8814B",
+  "background": "#1C120D",
+  "track": "#33241B",
+  "warning": "#F2C14E",
+  "critical": "#E4572E"
+}

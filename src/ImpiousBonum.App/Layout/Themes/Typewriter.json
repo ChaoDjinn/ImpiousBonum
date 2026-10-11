@@ -1,0 +1,12 @@
+// Courier on cream paper: the black half of the ribbon for numbers, the red half for warnings.
+{
+  "fontFamily": "Courier New",
+  "fontWeight": "Bold",
+  "foreground": "#262421",
+  "secondary": "#B0262421",
+  "accent": "#262421",
+  "background": "#F2EADB",
+  "track": "#DDD2BE",
+  "warning": "#C46A00",
+  "critical": "#C1121F"
+}

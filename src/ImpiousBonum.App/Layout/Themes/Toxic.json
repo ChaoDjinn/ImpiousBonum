@@ -1,0 +1,12 @@
+// Radioactive lime glowing on black. Handle with care.
+{
+  "fontFamily": "Bahnschrift",
+  "fontWeight": "Bold",
+  "foreground": "#EFFFD6",
+  "secondary": "#B3EFFFD6",
+  "accent": "#A6FF00",
+  "background": "#070A05",
+  "track": "#1B2410",
+  "warning": "#FFC400",
+  "critical": "#FF2D55"
+}

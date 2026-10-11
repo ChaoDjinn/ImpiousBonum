@@ -1,0 +1,12 @@
+// Molten orange over cooling black rock.
+{
+  "fontFamily": "Bahnschrift",
+  "fontWeight": "SemiBold",
+  "foreground": "#FFEADB",
+  "secondary": "#B3FFB08A",
+  "accent": "#FF4D00",
+  "background": "#110302",
+  "track": "#2C0D07",
+  "warning": "#FFD000",
+  "critical": "#FF2E93"
+}

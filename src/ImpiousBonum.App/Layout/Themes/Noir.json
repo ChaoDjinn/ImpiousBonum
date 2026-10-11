@@ -1,0 +1,12 @@
+// Black and white with a single red, like a hard-boiled detective film.
+{
+  "fontFamily": "Georgia",
+  "fontWeight": "Normal",
+  "foreground": "#F2F2F2",
+  "secondary": "#A6F2F2F2",
+  "accent": "#D9D9D9",
+  "background": "#050505",
+  "track": "#1E1E1E",
+  "warning": "#FF8A80",
+  "critical": "#E50914"
+}

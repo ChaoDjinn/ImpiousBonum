@@ -1,0 +1,12 @@
+// The Nord palette: frosty blues on arctic slate.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "Light",
+  "foreground": "#ECEFF4",
+  "secondary": "#B3D8DEE9",
+  "accent": "#88C0D0",
+  "background": "#2E3440",
+  "track": "#3B4252",
+  "warning": "#EBCB8B",
+  "critical": "#BF616A"
+}

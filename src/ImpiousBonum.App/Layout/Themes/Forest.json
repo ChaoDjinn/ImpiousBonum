@@ -1,0 +1,12 @@
+// Moss, fern and bark: calm greens for a long session.
+{
+  "fontFamily": "Candara",
+  "fontWeight": "Normal",
+  "foreground": "#E7EFE0",
+  "secondary": "#B3C9D8BE",
+  "accent": "#7CB342",
+  "background": "#0F1A12",
+  "track": "#1E2E22",
+  "warning": "#F2C14E",
+  "critical": "#E4572E"
+}

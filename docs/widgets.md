@@ -210,7 +210,7 @@ A `backgroundImage` is drawn over the `background` colour and behind the widgets
 
 Instead of its own values, a layout can use a saved theme by name: `"theme": "Ice"`. To change a few of the theme's
 values for one layout, name it as `base` and add the ones to change: `"theme": { "base": "Ice", "accent": "#FF4081" }`.
-Built-in themes: `Ice`, `Orange`, `Terminal`. Your own are in `themes\<name>.json` in the
+Built-in themes: `8-Bit`, `Amber`, `Aurora`, `Bauhaus`, `Blue Screen`, `Blueprint`, `Catppuccin`, `Chalkboard`, `Cockpit`, `Cyberpunk`, `Desktop 95`, `Dracula`, `Dune`, `Espresso`, `Forest`, `Gatsby`, `Glacier`, `Grimoire`, `Gruvbox`, `Handheld`, `High Contrast`, `Ice`, `Magma`, `Monokai`, `Night Watch`, `Noir`, `Nord`, `Notebook`, `Orange`, `Outrun`, `Rose Pine`, `Sakura`, `Solarized`, `Solarized Light`, `Stadium`, `Swiss`, `Tactical`, `Terminal`, `Tokyo Night`, `Toxic`, `Tropical`, `Typewriter`, `Vaporwave`. Your own are in `themes\<name>.json` in the
 settings folder, each holding the settings below; changing one restyles every layout that uses it.
 
 | Setting | Type | Default | Description |

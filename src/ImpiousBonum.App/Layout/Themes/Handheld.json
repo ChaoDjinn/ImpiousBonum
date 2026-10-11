@@ -1,0 +1,12 @@
+// Four shades of pea-soup green, like the screen of an original pocket games console.
+{
+  "fontFamily": "Consolas",
+  "fontWeight": "Bold",
+  "foreground": "#0F380F",
+  "secondary": "#306230",
+  "accent": "#306230",
+  "background": "#9BBC0F",
+  "track": "#4D306230",
+  "warning": "#7A4B00",
+  "critical": "#A4161A"
+}

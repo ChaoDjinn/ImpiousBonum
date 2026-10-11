@@ -1,0 +1,12 @@
+// The Tokyo Night palette: city-light blues on midnight.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "Normal",
+  "foreground": "#C0CAF5",
+  "secondary": "#A9B1D6",
+  "accent": "#7AA2F7",
+  "background": "#1A1B26",
+  "track": "#292E42",
+  "warning": "#E0AF68",
+  "critical": "#F7768E"
+}

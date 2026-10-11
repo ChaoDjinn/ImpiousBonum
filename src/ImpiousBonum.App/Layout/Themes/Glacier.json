@@ -1,0 +1,12 @@
+// A crisp light theme: ink-blue text and glacier blues on snow.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "SemiLight",
+  "foreground": "#0B2540",
+  "secondary": "#B30B2540",
+  "accent": "#2F80ED",
+  "background": "#EEF4F8",
+  "track": "#D2E0EA",
+  "warning": "#AD6800",
+  "critical": "#D62839"
+}

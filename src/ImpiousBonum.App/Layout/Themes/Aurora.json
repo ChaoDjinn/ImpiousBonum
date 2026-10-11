@@ -1,0 +1,12 @@
+// Northern lights: green and violet glowing over a polar night.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "Light",
+  "foreground": "#E6FFF6",
+  "secondary": "#CCB9A5FF",
+  "accent": "#3DFFA8",
+  "background": "#040A14",
+  "track": "#10202C",
+  "warning": "#FFD166",
+  "critical": "#FF4D6D"
+}

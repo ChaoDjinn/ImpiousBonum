@@ -1,0 +1,12 @@
+// Electric cyan and hot pink on a midnight grid, for driving into a neon sunset.
+{
+  "fontFamily": "Bahnschrift",
+  "fontWeight": "SemiBold",
+  "foreground": "#FFE8F7",
+  "secondary": "#E6FF3CAC",
+  "accent": "#2DE2E6",
+  "background": "#0B0221",
+  "track": "#261447",
+  "warning": "#FFD319",
+  "critical": "#FF1E3C"
+}

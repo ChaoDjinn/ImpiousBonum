@@ -1,0 +1,12 @@
+// Black on white with red kept for trouble, like an International Style poster.
+{
+  "fontFamily": "Arial",
+  "fontWeight": "Bold",
+  "foreground": "#111111",
+  "secondary": "#B3111111",
+  "accent": "#111111",
+  "background": "#F5F5F2",
+  "track": "#DCDCD8",
+  "warning": "#B86500",
+  "critical": "#E30613"
+}

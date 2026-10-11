@@ -1,0 +1,12 @@
+// Grey window chrome, black text and navy progress bars from a 1995 PC.
+{
+  "fontFamily": "Tahoma",
+  "fontWeight": "Normal",
+  "foreground": "#000000",
+  "secondary": "#B3000000",
+  "accent": "#000080",
+  "background": "#C0C0C0",
+  "track": "#FFFFFF",
+  "warning": "#8A5A00",
+  "critical": "#C00000"
+}

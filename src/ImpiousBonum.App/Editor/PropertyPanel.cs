@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using ImpiousBonum.App.Layout;
@@ -137,7 +138,7 @@ public sealed class PropertyPanel : StackPanel
         const string own = "None (this layout's own)";
         var group = AddGroup("Theme");
         var themes = _session.Themes;
-        var combo = new ComboBox { ItemsSource = themes.List().Prepend(own).ToList() };
+        var combo = new ComboBox { ItemsSource = themes.List().Prepend(own).ToList(), ItemTemplate = ThemeItemTemplate(themes) };
         combo.SelectionChanged += (_, _) =>
         {
             if (_updating || combo.SelectedItem is not string choice)
@@ -188,6 +189,23 @@ public sealed class PropertyPanel : StackPanel
                 : "Save this layout's changes into the theme, restyling every layout that uses it";
             detach.IsEnabled = name is not null;
         });
+    }
+
+    /// <summary>A theme's name after a sample of its colours, so a long list of themes is easy to scan.</summary>
+    private static DataTemplate ThemeItemTemplate(ThemeLibrary themes)
+    {
+        var sample = new FrameworkElementFactory(typeof(ThemeSample));
+        sample.SetValue(ThemeSample.LibraryProperty, themes);
+        sample.SetBinding(ThemeSample.ThemeNameProperty, new Binding());
+        sample.SetValue(MarginProperty, new Thickness(0, 0, 8, 0));
+        var name = new FrameworkElementFactory(typeof(TextBlock));
+        name.SetBinding(TextBlock.TextProperty, new Binding());
+        name.SetValue(VerticalAlignmentProperty, VerticalAlignment.Center);
+        var row = new FrameworkElementFactory(typeof(StackPanel));
+        row.SetValue(OrientationProperty, Orientation.Horizontal);
+        row.AppendChild(sample);
+        row.AppendChild(name);
+        return new DataTemplate { VisualTree = row };
     }
 
     private void SaveTheme(string name)

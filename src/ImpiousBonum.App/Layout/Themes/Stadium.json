@@ -1,0 +1,12 @@
+// Scoreboard lights: big Impact numbers, gold and white on navy.
+{
+  "fontFamily": "Impact",
+  "fontWeight": "Normal",
+  "foreground": "#FFFFFF",
+  "secondary": "#CCFFFFFF",
+  "accent": "#FFC72C",
+  "background": "#0A1F44",
+  "track": "#1C3462",
+  "warning": "#FF8C00",
+  "critical": "#FF3B3B"
+}

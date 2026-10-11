@@ -1,0 +1,12 @@
+// Pink, cyan and purple: the aesthetic of an empty shopping mall at 3 a.m. in 1993.
+{
+  "fontFamily": "Trebuchet MS",
+  "fontWeight": "Normal",
+  "foreground": "#FFE6FB",
+  "secondary": "#D001CDFE",
+  "accent": "#FF71CE",
+  "background": "#1D0B33",
+  "track": "#35195C",
+  "warning": "#FFFB96",
+  "critical": "#FF2A2A"
+}

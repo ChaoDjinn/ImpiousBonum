@@ -90,6 +90,52 @@ public sealed class ThemeTests : IDisposable
     }
 
     [Fact]
+    public void Built_in_themes_set_every_colour_and_stay_readable()
+    {
+        var library = Library();
+        string[] keys = ["fontFamily", "fontWeight", "foreground", "secondary", "accent", "background", "track", "warning", "critical"];
+
+        foreach (var name in ThemeLibrary.BuiltInNames)
+        {
+            // Every value set, so none quietly falls back to the orange defaults.
+            var values = library.Load(name);
+            foreach (var key in keys)
+                Assert.True(ThemeLibrary.GetString(values, key) is not null, $"{name} doesn't set {key}.");
+
+            // WCAG contrast against the background: 4.5:1 for text, 3:1 for the rest (large text and graphics).
+            var theme = library.Resolve(new JsonObject { ["base"] = name });
+            Assert.True(Contrast(theme.Foreground, theme.Background) >= 4.5, $"{name}: foreground is hard to read.");
+            foreach (var (key, value) in new[] { ("secondary", theme.Secondary), ("accent", theme.Accent), ("warning", theme.Warning), ("critical", theme.Critical) })
+                Assert.True(Contrast(value, theme.Background) >= 3, $"{name}: {key} is hard to see.");
+        }
+    }
+
+    /// <summary>The WCAG contrast ratio of a colour (blended over the background if translucent) against the background.</summary>
+    private static double Contrast(string color, string background)
+    {
+        var fore = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color);
+        var back = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(background);
+        var alpha = fore.A / 255.0;
+        double Blend(byte f, byte b) => f * alpha + b * (1 - alpha);
+        var lighter = Luminance(Blend(fore.R, back.R), Blend(fore.G, back.G), Blend(fore.B, back.B));
+        var darker = Luminance(back.R, back.G, back.B);
+        if (lighter < darker)
+            (lighter, darker) = (darker, lighter);
+        return (lighter + 0.05) / (darker + 0.05);
+    }
+
+    private static double Luminance(double r, double g, double b)
+    {
+        static double Linear(double channel)
+        {
+            channel /= 255;
+            return channel <= 0.03928 ? channel / 12.92 : Math.Pow((channel + 0.055) / 1.055, 2.4);
+        }
+
+        return 0.2126 * Linear(r) + 0.7152 * Linear(g) + 0.0722 * Linear(b);
+    }
+
+    [Fact]
     public void A_file_named_like_a_built_in_theme_is_ignored()
     {
         var library = Library();
