@@ -16,6 +16,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - The Gaming HUD gallery layout no longer cuts off its frame rate.
 
 **A tidier tray**
+- A new look for the tray menu: dark or light to match the taskbar, with Windows 11's rounded corners, roomier rows, an icon beside each main item, and check marks in the app's orange.
 - The tray menu is grouped: *Edit layout…*, *Layout* and *Display* first, then where readings come from (*Sensors*, *Weather*, *Calendar…*, *News feeds…*, *Claude usage*, *Custom data…*), then *Alerts…*, *Hotkeys…* and *Logging…*.
 - *FPS from* is under *Sensors*, and *Open layout file* and *Reload* under *Layout*.
 - A new *Help* menu has the user guide, widget reference and what's new for your version, *Report a problem…*, *Open settings folder*, and *About Impious Bonum* (with *Copy details* for a problem report).

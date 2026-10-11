@@ -1,4 +1,6 @@
+using System.Windows.Forms;
 using ImpiousBonum.App.Shell;
+using Color = System.Drawing.Color;
 
 namespace ImpiousBonum.App.Tests;
 
@@ -56,5 +58,58 @@ public sealed class TrayTests
         var decoder = new System.Windows.Media.Imaging.IconBitmapDecoder(stream, System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad);
         var sizes = decoder.Frames.Select(f => f.PixelWidth).ToHashSet();
         Assert.Superset(new HashSet<int> { 16, 20, 24, 32, 40, 48, 256 }, sizes);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void The_menu_palettes_are_easy_to_read(bool dark)
+    {
+        var palette = dark ? TrayMenuPalette.Dark : TrayMenuPalette.Light;
+        Assert.True(Contrast(palette.Text, palette.Background) >= 7, "text");
+        Assert.True(Contrast(palette.Text, palette.Hover) >= 7, "text on the highlight");
+        Assert.True(Contrast(palette.SecondaryText, palette.Background) >= 4.5, "secondary text");
+        Assert.True(Contrast(palette.Accent, palette.Background) >= 3, "check marks");
+    }
+
+    [Fact]
+    public void Styling_reaches_submenus_and_draws_icons()
+    {
+        TrayMenuPalette.Override = TrayMenuPalette.Light;
+        try
+        {
+            using var menu = new ContextMenuStrip();
+            var edit = new ToolStripMenuItem("Edit layout…").WithIcon(TrayMenuStyle.Icons.Edit);
+            var plain = new ToolStripMenuItem("Start with Windows");
+            var parent = new ToolStripMenuItem("Display");
+            var child = new ToolStripMenuItem("When you're away");
+            child.DropDownItems.Add("Don't dim");
+            parent.DropDownItems.Add(child);
+            menu.Items.AddRange([edit, plain, new ToolStripSeparator(), parent]);
+
+            TrayMenuStyle.Attach(menu);
+
+            Assert.NotNull(edit.Image);
+            Assert.Null(plain.Image);
+            Assert.Equal(TrayMenuPalette.Light.Background, menu.BackColor);
+            Assert.Same(menu.Renderer, parent.DropDown.Renderer);
+            Assert.Same(menu.Renderer, child.DropDown.Renderer);
+        }
+        finally
+        {
+            TrayMenuPalette.Override = null;
+        }
+    }
+
+    /// <summary>WCAG contrast ratio, 1 to 21.</summary>
+    private static double Contrast(Color a, Color b)
+    {
+        static double Luminance(Color c)
+        {
+            static double Channel(byte v) => v / 255.0 is var s && s <= 0.03928 ? s / 12.92 : Math.Pow((s + 0.055) / 1.055, 2.4);
+            return 0.2126 * Channel(c.R) + 0.7152 * Channel(c.G) + 0.0722 * Channel(c.B);
+        }
+        var (la, lb) = (Luminance(a), Luminance(b));
+        return (Math.Max(la, lb) + 0.05) / (Math.Min(la, lb) + 0.05);
     }
 }

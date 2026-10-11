@@ -41,7 +41,7 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _weatherSet = new("Set location…") { ToolTipText = "Where the weather widget's forecast is for" };
     private readonly ToolStripMenuItem _weatherUnits = new("Units");
     private readonly ToolStripMenuItem _weatherOff = new("Turn off weather") { ToolTipText = "Forget the location and stop fetching forecasts" };
-    private readonly ToolStripMenuItem _header = new("Impious Bonum") { Enabled = false };
+    private readonly ToolStripMenuItem _header = new("Impious Bonum") { Enabled = false, Tag = TrayMenuStyle.HeaderTag.Instance };
     private readonly ToolStripMenuItem _checkUpdates = new("Check for updates") { Visible = false };
     private readonly ToolStripMenuItem _restartToUpdate = new() { Visible = false };
     private readonly ToolStripMenuItem _help = new("Help");
@@ -59,29 +59,38 @@ public sealed class TrayIcon : IDisposable
         // readings, then the app itself. The bold item is what double-clicking the icon does.
         var menu = new ContextMenuStrip();
         _bold = new Font(menu.Font, FontStyle.Bold);
+        _header.Font = _bold;
+        _header.Image = AppIconBitmap(menu.DeviceDpi);
         menu.Items.Add(_header);
-        menu.Items.Add(_restartToUpdate);
+        menu.Items.Add(_restartToUpdate.WithIcon(TrayMenuStyle.Icons.Restart));
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(new ToolStripMenuItem("Edit layout…", null, (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty)) { Font = _bold });
-        menu.Items.Add(_layouts);
-        menu.Items.Add(_displays);
+        menu.Items.Add(new ToolStripMenuItem("Edit layout…", null, (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty)) { Font = _bold }
+            .WithIcon(TrayMenuStyle.Icons.Edit));
+        menu.Items.Add(_layouts.WithIcon(TrayMenuStyle.Icons.Layout));
+        menu.Items.Add(_displays.WithIcon(TrayMenuStyle.Icons.Display));
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(_sensors);
-        menu.Items.Add(_weather);
-        menu.Items.Add(Item("Calendar…", "Calendars whose events the agenda widget shows", () => CalendarRequested?.Invoke(this, EventArgs.Empty)));
-        menu.Items.Add(Item("News feeds…", "News feeds whose headlines the news widget shows", () => NewsRequested?.Invoke(this, EventArgs.Empty)));
-        menu.Items.Add(_claude);
-        menu.Items.Add(Item("Custom data…", "Your own metrics from web addresses and commands", () => CustomDataRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(_sensors.WithIcon(TrayMenuStyle.Icons.Sensors));
+        menu.Items.Add(_weather.WithIcon(TrayMenuStyle.Icons.Weather));
+        menu.Items.Add(Item("Calendar…", "Calendars whose events the agenda widget shows", () => CalendarRequested?.Invoke(this, EventArgs.Empty))
+            .WithIcon(TrayMenuStyle.Icons.Calendar));
+        menu.Items.Add(Item("News feeds…", "News feeds whose headlines the news widget shows", () => NewsRequested?.Invoke(this, EventArgs.Empty))
+            .WithIcon(TrayMenuStyle.Icons.News));
+        menu.Items.Add(_claude.WithIcon(TrayMenuStyle.Icons.Chat));
+        menu.Items.Add(Item("Custom data…", "Your own metrics from web addresses and commands", () => CustomDataRequested?.Invoke(this, EventArgs.Empty))
+            .WithIcon(TrayMenuStyle.Icons.Globe));
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(Item("Alerts…", "Be told when a reading is out of bounds for a while", () => AlertsRequested?.Invoke(this, EventArgs.Empty)));
-        menu.Items.Add(Item("Hotkeys…", "Keys that show or hide the dashboard, turn pages or switch layouts from anywhere", () => HotkeysRequested?.Invoke(this, EventArgs.Empty)));
-        menu.Items.Add(Item("Logging…", "Log readings to CSV files, with each one's average, lowest and highest", () => LoggingRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(Item("Alerts…", "Be told when a reading is out of bounds for a while", () => AlertsRequested?.Invoke(this, EventArgs.Empty))
+            .WithIcon(TrayMenuStyle.Icons.Bell));
+        menu.Items.Add(Item("Hotkeys…", "Keys that show or hide the dashboard, turn pages or switch layouts from anywhere", () => HotkeysRequested?.Invoke(this, EventArgs.Empty))
+            .WithIcon(TrayMenuStyle.Icons.Keyboard));
+        menu.Items.Add(Item("Logging…", "Log readings to CSV files, with each one's average, lowest and highest", () => LoggingRequested?.Invoke(this, EventArgs.Empty))
+            .WithIcon(TrayMenuStyle.Icons.History));
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_startup);
-        menu.Items.Add(_checkUpdates);
-        menu.Items.Add(_help);
+        menu.Items.Add(_checkUpdates.WithIcon(TrayMenuStyle.Icons.Sync));
+        menu.Items.Add(_help.WithIcon(TrayMenuStyle.Icons.Help));
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Exit", null, (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty));
+        menu.Items.Add(new ToolStripMenuItem("Exit", null, (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty)).WithIcon(TrayMenuStyle.Icons.Power));
 
         _help.DropDownItems.Add(Item("User guide", "How to use everything, on GitHub", () => OpenLink(Links.Guide(_version))));
         _help.DropDownItems.Add(Item("Widget reference", "Every widget's settings, on GitHub", () => OpenLink(Links.Widgets(_version))));
@@ -135,6 +144,9 @@ public sealed class TrayIcon : IDisposable
             MenuOpening?.Invoke(this, EventArgs.Empty);
         };
 
+        // Dark or light with the taskbar, rounded, with icons: Windows 11's look rather than Windows Forms' default.
+        TrayMenuStyle.Attach(menu);
+
         _icon = new NotifyIcon { Icon = _image, Text = "Impious Bonum", ContextMenuStrip = menu, Visible = true };
         _icon.DoubleClick += (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty);
         _icon.BalloonTipClicked += (_, _) => _onNotificationClicked?.Invoke();
@@ -166,7 +178,8 @@ public sealed class TrayIcon : IDisposable
     public void SetVersion(string? version, bool updatesAvailable)
     {
         _version = version;
-        _header.Text = version is null ? "Impious Bonum (development build)" : $"Impious Bonum {version}";
+        // The name, with the version on the right in the secondary colour.
+        _header.ShortcutKeyDisplayString = version ?? "development build";
         _checkUpdates.Visible = updatesAvailable;
     }
 
@@ -669,6 +682,15 @@ public sealed class TrayIcon : IDisposable
     }
 
     internal const string IconResource = "ImpiousBonum.icon.ico";
+
+    /// <summary>The app's icon at menu-icon size for this <paramref name="dpi"/>, for the menu's header.</summary>
+    private static Bitmap AppIconBitmap(int dpi)
+    {
+        using var stream = typeof(TrayIcon).Assembly.GetManifestResourceStream(IconResource)!;
+        var size = (int)Math.Round(16 * dpi / 96f);
+        using var icon = new Icon(stream, size, size);
+        return icon.ToBitmap();
+    }
 
     public void Dispose()
     {

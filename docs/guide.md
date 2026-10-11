@@ -35,7 +35,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 ### Tray menu
 
-The menu is grouped: the layout and where it shows, where its readings come from, what watches them, then the app itself.
+The menu follows Windows: dark or light with the taskbar (Settings → Personalisation → Colours → *Choose your mode*). It's grouped into the layout and where it shows, where its readings come from, what watches them, then the app itself.
 
 | Item | |
 |---|---|
