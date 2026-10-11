@@ -5,10 +5,6 @@ name: Screenshots
 # a widget looks, a gallery layout or a layout in build/screenshots. The editor's picture is still taken by hand.
 on:
   workflow_dispatch:
-  # TEMPORARY, to draw the first widget pictures before this workflow is on main: remove before merging.
-  push:
-    branches: [ccr-48b69e4f-qm7phn]
-    paths: [build/screenshots/**, build/screenshots.ps1, .github/workflows/screenshots.yml]
 
 permissions:
   contents: write
@@ -28,11 +24,6 @@ jobs:
         run: |
           Set-Culture en-GB
           Set-TimeZone -Id 'GMT Standard Time'
-      # TEMPORARY: CI's checks, since CI runs only on pull requests and main. Remove before merging.
-      - name: Check formatting
-        run: dotnet format whitespace ImpiousBonum.slnx --verify-no-changes
-      - name: Run the tests
-        run: dotnet test ImpiousBonum.slnx -c Release
       - name: Draw
         run: ./build/screenshots.ps1
       - name: Commit what changed
