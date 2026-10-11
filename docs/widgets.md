@@ -161,7 +161,7 @@ Each entry in `thresholds`:
 
 ## Clock (`clock`)
 
-The time with the date underneath, in your Windows language and region.
+The time with the date underneath, in your Windows language and region, and the time in other places if you add them.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
@@ -171,6 +171,18 @@ The time with the date underneath, in your Windows language and region.
 | `dateSize` | number (6–200) | `30` | Date size |
 | `uppercaseDate` | true/false | `true` | Uppercase date |
 | `align` | `left` / `center` / `right` | `center` | Alignment |
+| `timeZone` | text | — | Time zone. Empty is this PC's. A place's time zone, e.g. Europe/London, America/Los_Angeles, Asia/Tokyo, or a Windows name such as GMT Standard Time. |
+| `zones` | list | — | Other places. Smaller clocks under the date, each with its own time zone: a world clock. |
+| `zoneFormat` | text | `HH:mm` | Other places' format. .NET date/time format, e.g. HH:mm, h:mm tt, dddd d MMMM. |
+| `zoneSize` | number (6–200) | `26` | Other places' size |
+| `zoneLayout` | `columns` / `rows` | `columns` | Other places' layout. columns puts them side by side, label above time; rows stacks them, label left and time right. |
+
+Each entry in `zones`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `New York` | Label |
+| `zone` | text | `America/New_York` | Time zone. A place's time zone, e.g. Europe/London, America/Los_Angeles, Asia/Tokyo, or a Windows name such as GMT Standard Time. |
 
 ## Timer (`timer`)
 
