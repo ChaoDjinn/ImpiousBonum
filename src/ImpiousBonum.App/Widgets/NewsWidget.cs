@@ -13,7 +13,7 @@ public sealed class NewsWidget : Widget
 {
     public static WidgetDescriptor Descriptor { get; } = new(
         "news", "News",
-        "Headlines from your news feeds (tray → News feeds…), newest first, as a list or one at a time. Tap a headline to open it in your browser.",
+        "Headlines from your news feeds (set them in the editor, or tray → News feeds…), newest first, as a list or one at a time. Tap a headline to open it in your browser.",
         600, 220,
         [
             Setting.Choice("style", "Style", "list", ["list", "ticker"], group: Setting.Content,

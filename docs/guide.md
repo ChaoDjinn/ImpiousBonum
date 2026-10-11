@@ -90,6 +90,7 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 - **Preview:** click a widget to select it, drag to move, drag the handles to resize. Moves snap to a grid (toolbar); hold Alt to place freely. Arrow keys nudge, Shift+arrows by 10.
 - **Metrics:** template and metric fields have a `{…}` button that opens a searchable list of every metric (about 280 on a typical PC, including every raw sensor) with live values. Pick one and choose how to show it (e.g. `18.7 GB`, `19,138 MB` or just `18.7`) and it's inserted at the cursor. Under each field a live preview shows what it renders now and flags unknown metric ids.
 - **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme.
+- **Setting a widget up:** the weather, agenda, news and Claude usage widgets need something set up outside the layout. Select one and *Set up*, at the top of its properties, says what's set up now and has a button for it: *Set location…*, *Calendars…*, *News feeds…* or *Connect Claude Code…*. They're the same as the tray's.
 - **Widgets:** add, duplicate (Ctrl+D), delete, and bring forward / send back.
 - **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
 - **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout, each shown with a sample of its colours. *Orange* (the default look) and 42 others are built in: clean ones like *High Contrast*, *Swiss* and *Glacier*, retro ones like *Amber*, *8-Bit*, *Desktop 95* and *Blue Screen*, moods like *Outrun*, *Cyberpunk*, *Grimoire*, *Aurora* and *Gatsby*, a *Night Watch* theme in dim reds for a screen you keep on at night, and well-known editor palettes such as *Dracula*, *Nord*, *Gruvbox*, *Solarized* and *Catppuccin*. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
@@ -227,7 +228,7 @@ A sensor service from before 0.8 doesn't send these; *Sensors → Update sensor 
 
 The *Weather* widget shows an icon, the temperature and conditions now (with today's high and low and what it feels like), and a row of the days or hours ahead, every three hours if you like. Every `weather.*` metric works in other widgets too: `{weather.temp} · {weather.condition}` in a text widget, or a gauge of `weather.temp`.
 
-1. Tray → *Weather* → *Set location…* (adding the widget in the editor offers this too). Search for your town, or type latitude and longitude, e.g. `51.5, -0.12`.
+1. Tray → *Weather* → *Set location…*, or in the editor select the widget and *Set location…* under *Set up* (adding the widget offers it too). Search for your town, or type latitude and longitude, e.g. `51.5, -0.12`.
 2. Add the widget: *Edit layout…* → add *Weather*.
 
 It's adjustable in the editor: turn off *Weather now* to leave just the forecast (say, one widget of the hours ahead beside another of the days), choose *colour* icons for a yellow sun, white clouds, grey rain clouds with blue rain and white lightning instead of outlines in one colour, and give the widget its own text and detail colours rather than the theme's.
@@ -241,7 +242,7 @@ Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-
 The `agenda` widget lists what's coming up, by day: each event's time (or *All day*) and title, and where it is.
 What's on now is in the accent colour, and something that started before today shows *Until* when it ends.
 
-Add calendars in tray → *Calendar…* by pasting their private iCal link:
+Add calendars in tray → *Calendar…* (or select the widget in the editor → *Calendars…*) by pasting their private iCal link:
 
 - **Google Calendar:** Settings → your calendar → *Secret address in iCal format*.
 - **Outlook / Microsoft 365:** Settings → Calendar → Shared calendars → *Publish a calendar*, then the ICS link.
@@ -258,7 +259,7 @@ The metrics put the next event anywhere: `{calendar.next.title}` at `{calendar.n
 
 The `news` widget shows headlines from news feeds (RSS or Atom), newest first: a list of the latest few, or a
 *ticker* that shows one at a time and moves on every few seconds. Each shows where it's from and how old it is, and
-tapping one opens the article in your browser. Add feeds in tray → *News feeds…*: most news sites and blogs have
+tapping one opens the article in your browser. Add feeds in tray → *News feeds…* (or select the widget in the editor → *News feeds…*): most news sites and blogs have
 one (look for an RSS link, or try the site's address with `/feed` or `/rss` on the end), and so do YouTube channels
 and subreddits. Each feed is checked every 15 minutes, and the same story in two feeds shows once. A widget can show
 some feeds and not others (*Feeds*: `BBC, The Verge`), and `{news.title}` puts the newest headline anywhere.
@@ -290,7 +291,7 @@ The *Claude usage* widget shows your Claude plan's session (5-hour) and weekly l
 
 The numbers come from Claude Code: it passes them to its [status line](https://code.claude.com/docs/en/statusline), and only for Pro and Max plans. There's no official way for another app to read them, so Impious Bonum uses the status line. That means Claude Code in a terminal (the CLI): the Claude Desktop app doesn't run status lines or share usage with other apps. Usage in the Desktop app and on claude.ai still counts, because the limits are shared, and shows the next time the CLI reports.
 
-1. Tray → *Claude usage* → *Connect Claude Code…* (adding the widget in the editor offers this too, if it isn't set up yet). This sets the status line in Claude Code's `settings.json` (`%USERPROFILE%\.claude\settings.json`) to `ImpiousBonum.Sensors.exe claude-statusline`, re-run every 15 seconds. It keeps your other settings and saves a copy of the file first. If you already have a status line, it asks before replacing it.
+1. Tray → *Claude usage* → *Connect Claude Code…* (or select the widget in the editor → *Connect Claude Code…*; adding the widget offers this too, if it isn't set up yet). This sets the status line in Claude Code's `settings.json` (`%USERPROFILE%\.claude\settings.json`) to `ImpiousBonum.Sensors.exe claude-statusline`, re-run every 15 seconds. It keeps your other settings and saves a copy of the file first. If you already have a status line, it asks before replacing it.
 2. Start Claude Code in a terminal (`claude`), or restart it if it's open. The new status line shows the model, context use and your limits, e.g. *Opus 5.5 · context 8% · session 24% (2h 14m) · week 41%*.
 3. Add the widget: *Edit layout…* → add *Claude usage*. The usage appears after Claude Code's next reply.
 

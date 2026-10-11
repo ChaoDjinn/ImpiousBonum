@@ -22,7 +22,7 @@ public sealed class BarsWidget : Widget
     public static WidgetDescriptor ClaudeDescriptor { get; } = Describe(
         "claude", "Claude usage",
         "Your Claude plan's session (5-hour) and weekly usage, as Claude Code reports them. Shown only while Claude Code is open "
-        + "and reporting. Set it up from the tray: Claude usage → Connect Claude Code.",
+        + "and reporting. Set it up in the editor (select the widget) or from the tray: Claude usage → Connect Claude Code.",
         [
             Bar("Session", ClaudeUsageProvider.Session, $"{{{ClaudeUsageProvider.Session}:0}} · {{{ClaudeUsageProvider.SessionResets}}}"),
             Bar("Week", ClaudeUsageProvider.Week, $"{{{ClaudeUsageProvider.Week}:0}} · {{{ClaudeUsageProvider.WeekResets}}}"),
