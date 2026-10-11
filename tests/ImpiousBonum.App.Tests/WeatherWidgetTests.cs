@@ -71,9 +71,9 @@ public sealed class WeatherWidgetTests
             store.SetAttachment(WeatherProvider.Forecast, Report());
             widget.Refresh(store, DateTime.Now);
 
-            var texts = Texts(widget);
-            Assert.DoesNotContain("11°", texts);
-            Assert.DoesNotContain("Cloudy", texts);
+            // The hours ahead have temperatures of their own; it's the big one for now (80 by default) that's gone.
+            Assert.DoesNotContain(Descendants<TextBlock>(widget), t => t.FontSize >= 80);
+            Assert.DoesNotContain("Cloudy", Texts(widget));
             var hours = Descendants<UniformGrid>(widget).Single();
             Assert.Equal(2, Grid.GetColumnSpan(hours));
             Assert.Equal(2, hours.Children.Count);
