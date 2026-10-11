@@ -22,30 +22,60 @@ public static class BackgroundImage
     private static readonly List<(string Key, BitmapSource Bitmap)> Cache = [];
 
     /// <summary>A brush for a canvas of the given size. Falls back to the plain colour if there's no usable image.</summary>
-    public static Brush CreateBrush(ThemeSettings theme, Brush color, double width, double height)
+    public static Brush CreateBrush(ThemeSettings theme, Brush color, double width, double height) =>
+        CreateBrush(theme, color, width, height, animate: false, out _);
+
+    /// <summary>
+    /// As above; with <paramref name="animate"/>, an animated GIF or a video moves, kept going by
+    /// <paramref name="player"/> (which the caller plays, pauses and disposes). Without it, a GIF shows its first frame
+    /// and a video just the colour.
+    /// </summary>
+    public static Brush CreateBrush(ThemeSettings theme, Brush color, double width, double height, bool animate, out BackgroundPlayer? player)
     {
+        player = null;
         if (string.IsNullOrWhiteSpace(theme.BackgroundImage) || width <= 0 || height <= 0)
             return color;
         var opacity = Math.Clamp(theme.BackgroundOpacity, 0, 1);
         if (opacity == 0)
             return color;
-
         var fit = NormalizeFit(theme.BackgroundFit);
-        var bitmap = Load(theme.BackgroundImage, fit, width, height);
+        var path = theme.BackgroundImage;
+
+        if (animate && AnimatedBackground.IsVideo(path) && File.Exists(path))
+        {
+            var drawing = new VideoDrawing();
+            var video = new DrawingBrush(drawing) { Stretch = StretchFor(fit), AlignmentX = AlignmentX.Center, AlignmentY = AlignmentY.Center };
+            player = new BackgroundPlayer(drawing, path);
+            return Layer(color, video, opacity, width, height, freeze: false);
+        }
+        if (animate && AnimatedBackground.IsGif(path) && AnimatedBackground.LoadGif(path, fit, width, height) is { } gif)
+        {
+            var frames = new ImageBrush(gif.Frames[0]);
+            Place(frames, fit, gif.Frames[0], width, height);
+            player = new BackgroundPlayer(frames, gif);
+            return Layer(color, frames, opacity, width, height, freeze: false);
+        }
+
+        var bitmap = Load(path, fit, width, height);
         if (bitmap is null)
             return color;
+        var image = new ImageBrush(bitmap);
+        Place(image, fit, bitmap, width, height);
+        return Layer(color, image, opacity, width, height, freeze: true);
+    }
 
-        var image = new ImageBrush(bitmap)
-        {
-            Stretch = fit switch
-            {
-                "fill" => Stretch.UniformToFill,
-                "fit" => Stretch.Uniform,
-                _ => Stretch.Fill,
-            },
-            AlignmentX = AlignmentX.Center,
-            AlignmentY = AlignmentY.Center,
-        };
+    private static Stretch StretchFor(string fit) => fit switch
+    {
+        "fill" => Stretch.UniformToFill,
+        "fit" => Stretch.Uniform,
+        _ => Stretch.Fill,
+    };
+
+    private static void Place(ImageBrush image, string fit, BitmapSource bitmap, double width, double height)
+    {
+        image.Stretch = StretchFor(fit);
+        image.AlignmentX = AlignmentX.Center;
+        image.AlignmentY = AlignmentY.Center;
         if (fit is "center" or "tile")
         {
             // One image pixel per canvas unit, whatever DPI the file claims.
@@ -55,19 +85,31 @@ public static class BackgroundImage
                 : new Rect((width - bitmap.PixelWidth) / 2, (height - bitmap.PixelHeight) / 2, bitmap.PixelWidth, bitmap.PixelHeight);
             image.TileMode = fit == "tile" ? TileMode.Tile : TileMode.None;
         }
+    }
 
-        // Colour first, then the image over it; one frozen brush so the canvas needs no extra elements.
+    /// <summary>
+    /// Colour first, then the picture over it, as one brush so the canvas needs no extra elements. Frozen for a still
+    /// image; a moving one has to stay changeable.
+    /// </summary>
+    private static Brush Layer(Brush color, Brush picture, double opacity, double width, double height, bool freeze)
+    {
         var bounds = new RectangleGeometry(new Rect(0, 0, width, height));
         var layers = new DrawingGroup();
         layers.Children.Add(new GeometryDrawing(color, null, bounds));
-        var picture = new DrawingGroup { Opacity = opacity, ClipGeometry = bounds };
-        picture.Children.Add(new GeometryDrawing(image, null, bounds));
-        layers.Children.Add(picture);
+        var group = new DrawingGroup { Opacity = opacity, ClipGeometry = bounds };
+        group.Children.Add(new GeometryDrawing(picture, null, bounds));
+        layers.Children.Add(group);
 
         var brush = new DrawingBrush(layers) { Stretch = Stretch.Fill, ViewboxUnits = BrushMappingMode.Absolute, Viewbox = bounds.Rect };
-        brush.Freeze();
+        if (freeze)
+            brush.Freeze();
         return brush;
     }
+
+    /// <summary>What a theme's background can be: a picture, an animated GIF or a video.</summary>
+    public static readonly IReadOnlyList<string> BackgroundExtensions = [.. Extensions, .. AnimatedBackground.VideoExtensions];
+
+    public static bool IsSupportedBackground(string path) => BackgroundExtensions.Contains(Path.GetExtension(path).ToLowerInvariant());
 
     public static string NormalizeFit(string? fit) =>
         fit is not null && Fits.Contains(fit.ToLowerInvariant()) ? fit.ToLowerInvariant() : "fill";

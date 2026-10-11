@@ -154,8 +154,8 @@ public static class LayoutValidator
         {
             if (!File.Exists(theme.BackgroundImage))
                 issues.Add($"Theme: background image not found: {theme.BackgroundImage}");
-            else if (!BackgroundImage.IsSupported(theme.BackgroundImage))
-                issues.Add($"Theme: background image should be one of {string.Join(", ", BackgroundImage.Extensions)}: {theme.BackgroundImage}");
+            else if (!BackgroundImage.IsSupportedBackground(theme.BackgroundImage))
+                issues.Add($"Theme: background image should be one of {string.Join(", ", BackgroundImage.BackgroundExtensions)}: {theme.BackgroundImage}");
         }
 
         if (!BackgroundImage.Fits.Contains(theme.BackgroundFit))

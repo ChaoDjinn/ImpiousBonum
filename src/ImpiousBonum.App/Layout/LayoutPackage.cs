@@ -74,7 +74,7 @@ public static class LayoutPackage
 
         using var zip = new ZipArchive(destination, ZipArchiveMode.Create, leaveOpen: true);
         ThemeLibrary.SetString(copy.Theme, "fontFile", Pack(zip, theme.FontFile, "font", FontExtensions, "font file", warnings));
-        ThemeLibrary.SetString(copy.Theme, "backgroundImage", Pack(zip, theme.BackgroundImage, "background", BackgroundImage.Extensions, "background image", warnings));
+        ThemeLibrary.SetString(copy.Theme, "backgroundImage", Pack(zip, theme.BackgroundImage, "background", BackgroundImage.BackgroundExtensions, "background image", warnings));
         foreach (var (widget, index) in ImageWidgets(copy))
         {
             if (Pack(zip, widget.GetString(ImageFileKey), $"image{index}", BackgroundImage.Extensions, "image", warnings) is { } entry)
@@ -154,7 +154,7 @@ public static class LayoutPackage
 
             var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { LayoutEntry, ManifestEntry };
             var font = Unpack(entries, ThemeLibrary.GetString(layout.Theme, "fontFile"), FontExtensions, "font file", used, skipped);
-            var background = Unpack(entries, ThemeLibrary.GetString(layout.Theme, "backgroundImage"), BackgroundImage.Extensions, "background image", used, skipped);
+            var background = Unpack(entries, ThemeLibrary.GetString(layout.Theme, "backgroundImage"), BackgroundImage.BackgroundExtensions, "background image", used, skipped);
             ThemeLibrary.SetString(layout.Theme, "fontFile", null);
             ThemeLibrary.SetString(layout.Theme, "backgroundImage", null);
             var images = new Dictionary<int, PackagedFile>();

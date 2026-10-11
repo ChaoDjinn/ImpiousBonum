@@ -509,7 +509,7 @@ settings folder, each holding the settings below; changing one restyles every la
 | `track` | color | `#1A1A1A` | Bar track. The unfilled part of bars. |
 | `warning` | color | `#FFC107` | Warning. Used by warning colour rules that say "warning". |
 | `critical` | color | `#F44336` | Critical. Used by warning colour rules that say "critical". |
-| `backgroundImage` | imagefile | — | Image. A PNG or JPG drawn behind the widgets, over the background colour. |
+| `backgroundImage` | imagefile | — | Image. A picture drawn behind the widgets, over the background colour. An animated GIF or a video (MP4, WMV) moves. |
 | `backgroundFit` | `fill` / `fit` / `stretch` / `center` / `tile` | `fill` | Fit. fill covers the canvas (cropping), fit shows it all, stretch distorts to fit, center and tile keep its size. |
 | `backgroundOpacity` | number (0–1) | `1` | Opacity. Below 1 the background colour shows through, e.g. 0.4 to dim a busy picture on black. |
 | `accent2` | color | — | Accent fades to. A second accent colour: graphs, bars, gauges and icons fade from the accent to this, left to right. Empty is a plain accent. |
