@@ -46,7 +46,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="docs/images/default-layout.svg" alt="Map of the default layout: CPU and memory graphs, GPU load and VRAM, CPU and GPU temperatures, FPS, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Eight widget types are available: `text`, `graph` (line or area history with a header), `icon` (accent icon + value), `clock`, `drives`, `rows`, `bars` (labelled progress bars) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Nine widget types are available: `text`, `graph` (line or area history with a header), `gauge` (a dial: 270° arc, semicircle or ring), `icon` (accent icon + value), `clock`, `drives`, `rows`, `bars` (labelled progress bars) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
 
 ## What it shows
 

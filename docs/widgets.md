@@ -62,6 +62,33 @@ Each entry in `thresholds`:
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
 
+## Gauge (`gauge`)
+
+A dial filled to a metric's share of its range, with the value in the middle, e.g. GPU load or CPU temperature.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `CPU` | Label |
+| `metric` | metric | `cpu.load` | Metric. Fills the dial. |
+| `text` | template | — | Value text. Shown in the middle. Empty shows the metric's value. |
+| `style` | `arc` / `half` / `ring` | `arc` | Shape. arc is a 270° dial with the label in the gap, half a semicircle, ring a full circle. |
+| `min` | number | `0` | Minimum. An empty dial. |
+| `max` | number | — | Maximum. A full dial. Empty uses the metric's natural maximum: 100 for percentages, the total for memory. |
+| `thickness` | number (1–200) | `16` | Thickness |
+| `color` | color | `accent` | Colour. The filled part of the dial. |
+| `fontSize` | number (6–400) | `56` | Value size. Shrinks to fit inside the dial. |
+| `labelSize` | number (6–200) | `24` | Label size |
+| `thresholds` | list | — | Warning colours. Changes the dial and the value. An empty metric uses the gauge's metric. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
+
 ## Icon and value (`icon`)
 
 An accent-coloured line icon followed by a live value, e.g. a chip and the CPU temperature.
