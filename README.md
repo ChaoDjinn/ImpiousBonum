@@ -66,6 +66,7 @@ Every box is a widget you can move, resize, restyle or replace. Fourteen widget 
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
 | `sys.uptime`, `sys.name`, `sys.battery`, `sys.battery.status` | Windows; the battery ones only on PCs with a battery |
 | `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set in tray → *Weather*, every 15 minutes |
+| `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up in tray → *Custom data…* (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
 | `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
@@ -89,7 +90,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
 
@@ -107,6 +108,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Sensors* | Sensor service status, and install, update or remove it |
 | *Claude usage* | Whether Claude Code is reporting, and *Connect Claude Code…* (see [Claude usage](#claude-usage)) |
 | *Weather* | The weather now, *Set location…*, units, and *Turn off weather* (see [Weather](#weather)) |
+| *Custom data…* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
 | *FPS from* | Follow the foreground app, or the top app on a chosen monitor |
 | *Edit layout…* | Open the layout editor (or double-click the tray icon) |
 | *Open layout file*, *Open settings folder*, *Reload layout* | Work with the files directly (*Open layout file* opens the one being shown) |
@@ -203,6 +205,27 @@ The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a
 | `layout` | Switches to the layout named in *target* |
 
 Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything in the tablet view, which is read-only, or while you edit the layout. If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
+
+## Custom data
+
+Anything that can answer a web request or print to a console can feed the dashboard: Home Assistant sensors, a server's health page, a script that checks your backups. Tray → *Custom data…* lists your sources; *Add…* sets one up:
+
+- **Where from:** a web address (`GET`, with optional headers such as an access token) or a command with arguments, run without a window. Either can return JSON or plain text.
+- **How often:** every 5 seconds or more. Each source runs on its own, and gives up after 15 seconds.
+- **Fields:** one per line, as `name = path : unit`. The path finds a value in JSON (`state`, `attributes.humidity`, `items[0].value`, `$["odd key"]`); with no fields, the whole output is the value. Units are `auto` (a number if it looks like one, else text), `text`, `number`, `percent`, `celsius`, `fahrenheit`, `bytes`, `bytespersecond`, `milliseconds`, `watts`, `volts`, `megahertz`, `rpm` and `fps`.
+- **Test** reads it once and shows the metrics it gives.
+
+Each field becomes the metric `custom.<source>.<field>`, for any widget: text, a gauge, a graph. `custom.<source>.status` says `OK` or why the last read failed, e.g. `HTTP 401 Unauthorized`. True and false read as 1 and 0.
+
+Some examples:
+
+| Source | Set up as |
+|---|---|
+| A Home Assistant sensor | Web address `http://homeassistant.local:8123/api/states/sensor.outside_temperature`, header `Authorization: Bearer <long-lived token>`, fields `temp = state : celsius` and `humidity = attributes.humidity : percent` |
+| A PowerShell script | Command `powershell`, arguments `-NoProfile -File C:\Scripts\backup-age.ps1` printing a number of hours, no fields: the output is `custom.backup.value` |
+| A JSON API | Web address `https://api.github.com/repos/<owner>/<repo>`, fields `stars = stargazers_count` and `issues = open_issues_count` |
+
+Sources are stored in `settings.json` (`customData`) on this PC and never in a layout, so a layout from someone else can't add a command to run. Headers, tokens included, are stored there as plain text.
 
 ## Images and shapes
 

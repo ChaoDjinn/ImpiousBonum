@@ -98,7 +98,7 @@ public partial class App : Application
         if (!_settings.HardwareRendering)
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         _frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
-        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest()));
+        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -173,6 +173,7 @@ public partial class App : Application
         _tray.SensorServiceChangeRequested += async (_, install) => await ChangeSensorServiceAsync(install);
         _tray.ConnectClaudeCodeRequested += (_, _) => ConnectClaudeCode();
         _tray.WeatherLocationRequested += (_, _) => SetWeatherLocation(null);
+        _tray.CustomDataRequested += (_, _) => OpenCustomData();
         _tray.WeatherTurnedOff += (_, _) =>
         {
             _settings.WeatherLocation = null;
@@ -596,6 +597,22 @@ public partial class App : Application
         return $"{place.Name.Split(',')[0]}: {MetricFormatter.Format(temperature)} {condition.Text}".TrimEnd();
     }
 
+    private CustomDataWindow? _customData;
+
+    /// <summary>Tray → Custom data…: one window at a time.</summary>
+    private void OpenCustomData()
+    {
+        if (_customData is not null)
+        {
+            BringToFront(_customData);
+            return;
+        }
+        _customData = new CustomDataWindow(_settings, id => _sampler?.Store.TryGet(id, out var status) == true ? status.Text : null);
+        _customData.Closed += (_, _) => _customData = null;
+        _customData.Show();
+        BringToFront(_customData);
+    }
+
     /// <summary>Tray → Weather → Set location…, or adding a weather widget when there's no location yet.</summary>
     private void SetWeatherLocation(Window? owner)
     {
@@ -998,7 +1015,7 @@ public partial class App : Application
         if (name is null)
             return false;
 
-        await using var sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest));
+        await using var sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest, customData: () => settings.CustomData));
         sampler.Start();
         await Task.Delay(warmup);
 
