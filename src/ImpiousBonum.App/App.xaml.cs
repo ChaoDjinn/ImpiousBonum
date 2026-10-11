@@ -261,6 +261,11 @@ public partial class App : Application
         _tray.RestartToUpdateRequested += async (_, _) => await RestartToUpdateAsync();
         _tray.SetVersion(_updater.CurrentVersion, _updater.IsInstalled);
         StartUpdateChecks();
+        if (_settings.LoadProblem is { } problem)
+        {
+            AppLog.Warning($"Started with default settings: {problem}");
+            _tray.ShowError("Settings couldn't be read", "Impious Bonum started with its default settings. Details are in dashboard.log (tray → Open settings folder).");
+        }
 
         _tablet = new TabletView { AllowTaps = _settings.TabletButtons };
         _tablet.ActionRequested += (_, action) => RunAction(action);
@@ -1245,9 +1250,17 @@ public partial class App : Application
 
         if (_settings.MonitorId is null)
         {
-            _settings.MonitorId = monitor.Id;
-            _settings.MonitorDevice = monitor.Device;
+            var windowed = _settings.PlaceFirstTime(monitor);
+            _settings.MonitorId ??= monitor.Id;
+            _settings.MonitorDevice ??= monitor.Device;
             _settings.Save();
+            if (windowed)
+            {
+                AppLog.Info("No spare screen, so the dashboard starts as a window on the main screen");
+                ApplyWindowBehaviour();
+                _tray?.ShowInfo("The dashboard is a window for now",
+                    "There's no spare screen, so it's on your main screen. Drag it where you like and resize it from its edges, then tray → Display → Lock position.");
+            }
         }
 
         var b = monitor.Bounds;

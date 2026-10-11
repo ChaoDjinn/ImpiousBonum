@@ -3,6 +3,21 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+**A better first impression**
+- On a PC with only one screen, the dashboard now starts as a window you can move and resize, instead of covering the whole screen.
+- A tidier default layout for new installs: CPU, GPU and memory graphs, each labelled, with the temperatures and frame rate beside them, the clock centred, and drives and network on the right. Your own layouts aren't changed.
+- Drives are labelled `C:` rather than `C:/`.
+
+**Text that fits**
+- Text and *Icon and value* widgets shrink long text to fit their width instead of cutting it off, so 144 FPS fits where 60 did. *Shrink to fit* turns it off.
+- Text widgets can hide until one of their readings arrives (*Hide without a reading*), like the Gaming HUD's session lines before you've played.
+- The Gaming HUD gallery layout no longer cuts off its frame rate.
+
+**Also**
+- If `settings.json` can't be read, Impious Bonum says so and keeps a copy as `settings.unreadable.json` before starting with the defaults, rather than quietly replacing your settings.
+
 ## 0.10.0
 
 More than one dashboard, widgets with their own colours and theme, colour weather icons, and setting widgets up from the editor.

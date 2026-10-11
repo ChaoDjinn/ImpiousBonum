@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ImpiousBonum.Core.Alerts;
 using ImpiousBonum.Core.CustomData;
 using ImpiousBonum.Core.Providers;
@@ -32,6 +33,24 @@ public sealed class AppSettings
 
     /// <summary>Fill the whole monitor. When false, <see cref="Area"/> is used.</summary>
     public bool Fill { get; set; } = true;
+
+    /// <summary>
+    /// Remembers the monitor the dashboard first lands on (see <see cref="DisplayMonitor.Resolve"/>). Without a spare
+    /// screen that's the main one, and filling it would cover everything else, so the dashboard starts as an unlocked
+    /// window to put where you like. Returns true if it did. Does nothing once a monitor has been chosen.
+    /// </summary>
+    public bool PlaceFirstTime(DisplayMonitor monitor)
+    {
+        if (MonitorId is not null || MonitorDevice is not null)
+            return false;
+        MonitorId = monitor.Id;
+        MonitorDevice = monitor.Device;
+        if (!monitor.IsPrimary || !Fill)
+            return false;
+        Fill = false;
+        Locked = false;
+        return true;
+    }
 
     /// <summary>Area relative to the monitor's top-left, in physical pixels.</summary>
     public PixelRect? Area { get; set; }
@@ -221,10 +240,32 @@ public sealed class AppSettings
         }
         catch (Exception ex) when (ex is JsonException or IOException)
         {
-            // A corrupt settings file shouldn't stop the dashboard starting; it will be rewritten on next save.
+            // A broken settings file (a hand edit gone wrong, say) shouldn't stop the dashboard starting. The defaults
+            // replace it at the next save, so keep a copy first: it has calendars, alerts and hotkeys worth getting back.
+            return new AppSettings { LoadProblem = $"{Path.GetFileName(AppPaths.SettingsFile)} couldn't be read ({ex.Message}). {KeepUnreadable()}" };
         }
 
         return new AppSettings();
+    }
+
+    /// <summary>Why the settings file couldn't be read, when <see cref="Load"/> fell back to the defaults; null when it could.</summary>
+    [JsonIgnore]
+    public string? LoadProblem { get; private init; }
+
+    /// <summary>The name of the copy kept of a settings file that couldn't be read.</summary>
+    public const string UnreadableCopyName = "settings.unreadable.json";
+
+    private static string KeepUnreadable()
+    {
+        try
+        {
+            File.Copy(AppPaths.SettingsFile, Path.Combine(AppPaths.DataDirectory, UnreadableCopyName), overwrite: true);
+            return $"It's been kept as {UnreadableCopyName}.";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return $"A copy couldn't be kept: {ex.Message}";
+        }
     }
 
     public void Save()

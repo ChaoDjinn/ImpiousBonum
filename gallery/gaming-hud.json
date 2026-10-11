@@ -5,7 +5,7 @@
   "height": 480,
   "theme": "Outrun",
   "widgets": [
-    { "type": "text", "x": 40, "y": 10, "width": 420, "height": 190, "fontSize": 160, "text": "{fps:0}",
+    { "type": "text", "x": 40, "y": 10, "width": 420, "height": 190, "fontSize": 160, "text": "{fps:0 nounit}",
       "thresholds": [{ "below": 50, "color": "warning" }, { "below": 30, "color": "critical" }] },
     { "type": "text", "x": 40, "y": 200, "width": 420, "height": 40, "fontSize": 30, "text": "FPS · {fps.app}", "color": "secondary" },
     { "type": "stat", "x": 40, "y": 260, "width": 420, "height": 200, "label": "1% low", "metric": "fps.low1", "fontSize": 64 },
@@ -22,8 +22,9 @@
       "max": 100, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }] },
     { "type": "gauge", "x": 1540, "y": 20, "width": 350, "height": 230, "label": "GPU °C", "metric": "gpu.temp", "text": "{gpu.temp:nounit}",
       "max": 100, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 88, "color": "critical" }] },
-    { "type": "text", "x": 1160, "y": 300, "width": 730, "height": 50, "fontSize": 30, "color": "secondary", "text": "{session.playing}: {session.game}" },
+    { "type": "text", "x": 1160, "y": 300, "width": 730, "height": 50, "fontSize": 30, "color": "secondary", "text": "{session.playing}: {session.game}",
+      "hideUnavailable": true },
     { "type": "text", "x": 1160, "y": 350, "width": 730, "height": 110, "fontSize": 44,
-      "text": "{session.minutes} min · {session.fps.avg} FPS average" }
+      "text": "{session.minutes} min · {session.fps.avg} FPS average", "hideUnavailable": true }
   ]
 }

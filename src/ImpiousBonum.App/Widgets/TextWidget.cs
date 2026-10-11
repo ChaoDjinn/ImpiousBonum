@@ -17,14 +17,21 @@ public sealed class TextWidget : Widget
             Setting.Number("fontSize", "Font size", 48, 6, 400),
             Setting.Choice("align", "Alignment", "left", Setting.HorizontalAlignments),
             Setting.Toggle("uppercase", "Uppercase", false),
+            Setting.Toggle("shrinkToFit", "Shrink to fit", true, help: ShrinkHelp),
+            Setting.Toggle("hideUnavailable", "Hide without a reading", false, group: Setting.Appearance,
+                help: "Hides the text while none of its metrics has a reading, e.g. a game's session before you've played. It shows faded while you edit the layout."),
             Setting.Color("color", "Colour", "foreground"),
             Setting.Thresholds("Changes the text colour. An empty metric uses the first metric in the text."),
         ],
         (settings, theme) => new TextWidget(settings, theme));
 
+    /// <summary>Help for the <c>shrinkToFit</c> setting, shared with the other widgets that have it.</summary>
+    internal const string ShrinkHelp = "Text too long for the widget gets smaller to fit its width, instead of being cut off.";
+
     private readonly ValueTemplate _template;
     private readonly TextBlock _text;
     private readonly bool _uppercase;
+    private readonly bool _hideUnavailable;
     private readonly Brush _color;
     private readonly ThresholdColors _thresholds;
 
@@ -32,11 +39,12 @@ public sealed class TextWidget : Widget
     {
         _template = ValueTemplate.Parse(settings.String("text"));
         _uppercase = settings.Bool("uppercase");
+        _hideUnavailable = settings.Bool("hideUnavailable");
         _color = theme.Resolve(settings.String("color"), theme.Foreground);
         _thresholds = new ThresholdColors(settings, theme);
         _text = CreateText(settings.Number("fontSize"), _color, ParseAlignment(settings.String("align")));
         _text.VerticalAlignment = VerticalAlignment.Center;
-        Children.Add(_text);
+        Children.Add(settings.Bool("shrinkToFit") ? ShrinkToFit(_text) : _text);
     }
 
     public override void Refresh(MetricStore store, DateTime now)
@@ -44,5 +52,6 @@ public sealed class TextWidget : Widget
         var text = _template.Render(store);
         _text.Text = _uppercase ? text.ToUpper() : text;
         _text.Foreground = _thresholds.Pick(store, _template.MetricIds.FirstOrDefault(), _color);
+        SetUnavailable(_hideUnavailable && !_template.HasReading(store));
     }
 }

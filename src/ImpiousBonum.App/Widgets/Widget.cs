@@ -83,6 +83,25 @@ public abstract class Widget : Grid
         TextWrapping = TextWrapping.NoWrap,
     };
 
+    /// <summary>
+    /// Puts <paramref name="text"/> in a <see cref="ShrinkToWidth"/> that takes over its alignment, margin and grid cell,
+    /// so it gets smaller to fit the widget's width rather than being cut off.
+    /// </summary>
+    protected static FrameworkElement ShrinkToFit(TextBlock text)
+    {
+        var box = new ShrinkToWidth
+        {
+            HorizontalAlignment = text.HorizontalAlignment,
+            VerticalAlignment = text.VerticalAlignment,
+            Margin = text.Margin,
+        };
+        SetColumn(box, GetColumn(text));
+        SetRow(box, GetRow(text));
+        text.Margin = default;
+        box.Child = text;
+        return box;
+    }
+
     protected static HorizontalAlignment ParseAlignment(string? value) => value?.ToLowerInvariant() switch
     {
         "right" => HorizontalAlignment.Right,
