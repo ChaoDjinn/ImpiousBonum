@@ -156,7 +156,7 @@ public sealed class NewsProvider(
     private static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("ImpiousBonum (+https://github.com/ChaoDjinn/ImpiousBonum)");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(WebIdentity.UserAgent);
         return client;
     }
 

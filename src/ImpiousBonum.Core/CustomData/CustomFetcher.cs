@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Net.Http;
 using System.Text;
 
 namespace ImpiousBonum.Core.CustomData;
@@ -119,7 +118,7 @@ public static class CustomFetcher
     private static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("ImpiousBonum (+https://github.com/ChaoDjinn/ImpiousBonum)");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(WebIdentity.UserAgent);
         return client;
     }
 }

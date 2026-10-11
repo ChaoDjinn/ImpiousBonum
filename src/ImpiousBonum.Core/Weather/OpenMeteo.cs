@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Net.Http;
 using System.Text.Json;
 
 namespace ImpiousBonum.Core.Weather;
@@ -71,7 +70,7 @@ public static class OpenMeteo
     private static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("ImpiousBonum (+https://github.com/ChaoDjinn/ImpiousBonum)");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(WebIdentity.UserAgent);
         return client;
     }
 }

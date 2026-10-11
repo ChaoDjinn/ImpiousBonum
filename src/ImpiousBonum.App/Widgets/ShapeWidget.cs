@@ -26,7 +26,10 @@ public sealed class ShapeWidget : Widget
             Setting.Number("thickness", "Line thickness", 2, 0.5, 100, group: Setting.Appearance, help: "For a line."),
             Setting.Number("opacity", "Opacity", 1, 0, 1, group: Setting.Appearance),
         ],
-        (settings, theme) => new ShapeWidget(settings, theme)) { AddBehind = true };
+        (settings, theme) => new ShapeWidget(settings, theme))
+    {
+        AddBehind = true,
+    };
 
     public ShapeWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {

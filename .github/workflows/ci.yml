@@ -13,5 +13,8 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
+      - name: Check formatting
+        # The layout rules in .editorconfig. To fix: dotnet format whitespace ImpiousBonum.slnx
+        run: dotnet format whitespace ImpiousBonum.slnx --verify-no-changes
       - name: Build and test
         run: dotnet test ImpiousBonum.slnx -c Release

@@ -359,11 +359,13 @@ public sealed class PropertyPanel : StackPanel
     {
         var box = new TextBox { IsUndoEnabled = false };
         box.TextChanged += (_, _) => Write(target, setting.Key, JsonValue.Create(box.Text));
-        return (box, () =>
+        return (box, Refresh);
+
+        void Refresh()
         {
             if (!box.IsKeyboardFocusWithin)
                 box.Text = CurrentString(target, setting);
-        });
+        }
     }
 
     /// <summary>
@@ -444,12 +446,14 @@ public sealed class PropertyPanel : StackPanel
         };
 
         _liveRefreshers.Add(UpdatePreview);
-        return (panel, () =>
+        return (panel, Refresh);
+
+        void Refresh()
         {
             if (!box.IsKeyboardFocusWithin)
                 box.Text = CurrentString(target, setting);
             UpdatePreview();
-        });
+        }
     }
 
     /// <summary>The drive a per-drive template is previewed with: the first one the dashboard reports, else C.</summary>
@@ -495,7 +499,9 @@ public sealed class PropertyPanel : StackPanel
             e.Handled = true;
         };
 
-        return (box, () =>
+        return (box, Refresh);
+
+        void Refresh()
         {
             if (box.IsKeyboardFocusWithin)
                 return;
@@ -504,18 +510,20 @@ public sealed class PropertyPanel : StackPanel
                 : DefaultOf(target, setting) is double d ? Format(d)
                 : string.Empty;
             box.ClearValue(Control.BorderBrushProperty);
-        });
+        }
     }
 
     private (FrameworkElement, Action) ToggleEditor(SettingTarget target, SettingDescriptor setting)
     {
         var box = new CheckBox { VerticalAlignment = VerticalAlignment.Center };
         box.Click += (_, _) => Write(target, setting.Key, JsonValue.Create(box.IsChecked == true));
-        return (box, () =>
+        return (box, Refresh);
+
+        void Refresh()
         {
             var current = _session.GetValue(target, setting.Key);
             box.IsChecked = current is JsonValue v && v.TryGetValue<bool>(out var b) ? b : setting.Default is true;
-        });
+        }
     }
 
     private (FrameworkElement, Action) ChoiceEditor(SettingTarget target, SettingDescriptor setting)
@@ -536,11 +544,13 @@ public sealed class PropertyPanel : StackPanel
         _fontNames ??= Fonts.SystemFontFamilies.Select(f => f.Source).Distinct().Order().ToList();
         var combo = new ComboBox { ItemsSource = _fontNames, IsEditable = true, IsTextSearchEnabled = true };
         combo.AddHandler(TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) => Write(target, setting.Key, JsonValue.Create(combo.Text))));
-        return (combo, () =>
+        return (combo, Refresh);
+
+        void Refresh()
         {
             if (!combo.IsKeyboardFocusWithin)
                 combo.Text = CurrentString(target, setting);
-        });
+        }
     }
 
     private (FrameworkElement, Action) FileEditor(SettingTarget target, SettingDescriptor setting, string filter, string title)
@@ -559,11 +569,13 @@ public sealed class PropertyPanel : StackPanel
             if (dialog.ShowDialog(Window.GetWindow(this)) == true)
                 _session.SetValue(target, setting.Key, JsonValue.Create(dialog.FileName), this);
         };
-        return (panel, () =>
+        return (panel, Refresh);
+
+        void Refresh()
         {
             if (!box.IsKeyboardFocusWithin)
                 box.Text = CurrentString(target, setting);
-        });
+        }
     }
 
     private (FrameworkElement, Action) ColorEditor(SettingTarget target, SettingDescriptor setting)
@@ -609,13 +621,15 @@ public sealed class PropertyPanel : StackPanel
             _session.SetValue(target, setting.Key, JsonValue.Create(hex), this);
         };
 
-        return (panel, () =>
+        return (panel, Refresh);
+
+        void Refresh()
         {
             var value = CurrentString(target, setting);
             if (!input.IsKeyboardFocusWithin)
                 show(value);
             swatch.Background = ResolveColor(input.IsKeyboardFocusWithin ? read() : value) is { } color ? new SolidColorBrush(color) : Brushes.Transparent;
-        });
+        }
     }
 
     private void AddItems(Panel parent, SettingTarget target, SettingDescriptor setting)

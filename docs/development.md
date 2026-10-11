@@ -12,6 +12,8 @@ dotnet run --project src/ImpiousBonum.App -c Release
 
 Tests: `dotnet test ImpiousBonum.slnx -c Release` (CI runs the same on every push to `main` and every pull request).
 
+Code layout follows `.editorconfig`, and CI checks it with `dotnet format whitespace ImpiousBonum.slnx --verify-no-changes`. Running `dotnet format whitespace ImpiousBonum.slnx` fixes anything it finds. The build treats warnings as errors.
+
 A build run from source shows *development build* in the tray and never checks for updates; only installed copies do.
 
 `docs/widgets.md` is generated from the widget descriptors, and a test fails if it's out of date. After changing a widget's settings, regenerate it:
@@ -61,5 +63,23 @@ tests/                   unit tests for the core and the app (widgets, layout va
 docs/widgets.md          widget reference, generated from the widget descriptors
 build/                   installer build (publish.ps1) and icon generator
 tools/ReleaseSigning     creates the update signing key and signs releases
-.github/workflows/       CI (ci.yml) and releases (release.yml)
+.github/workflows/       CI (ci.yml), releases (release.yml) and release notes (release-notes.yml)
+```
+
+Inside `src/ImpiousBonum.App`:
+
+```
+App.xaml.cs              startup, the once-a-second tick, shutdown and --snapshot
+App.Tray.cs              what each tray menu item does
+App.Layouts.cs           the editor, saved layouts, the gallery, game layouts, the schedule and pages
+App.Screens.cs           window placement, more dashboards, dimming, the tablet view and USB screens
+App.Sources.cs           the sensor service, weather, calendars, news, Claude Code and custom data
+App.Automation.cs        alerts, logging, session recaps and hotkeys
+App.Updates.cs           update checks and restarting into an update
+Widgets/                 one class per widget type, each with a WidgetDescriptor listing its settings
+Layout/                  layout and theme files, the built-in themes, backgrounds and the gallery
+Editor/                  the layout editor: session (undo, selection), preview, generated property panel
+Shell/                   tray, dialogs, settings, monitors, hotkeys, updates and the other windows
+Controls/                small WPF helpers shared by the windows (placeholders, dialog behaviour)
+Styles.xaml              the shared look of the editor and dialogs, on top of WPF's Fluent theme
 ```
