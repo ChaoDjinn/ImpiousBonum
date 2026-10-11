@@ -8,6 +8,9 @@
   With -GitHubToken, the previous release is downloaded first (so a small delta update is produced) and the
   new release is uploaded to GitHub Releases, where installed copies pick it up automatically.
 
+  Publishing to GitHub needs a section for the version in CHANGELOG.md, which becomes the release's notes
+  (see release-notes.ps1).
+
   When UPDATE_SIGNING_KEY holds the update signing key, the full package is signed and the signature uploaded with the
   release; installed copies only take releases that carry a valid signature. Publishing to GitHub requires it.
 
@@ -37,7 +40,11 @@ try {
         throw 'UPDATE_SIGNING_KEY is not set. Installed copies refuse unsigned releases, so this one would never reach anyone.'
     }
     if (($GitHubToken -or $sign) -and -not (Test-Path $publicKey)) {
-        throw "$publicKey is missing. Create the update signing key first (README, Update signing)."
+        throw "$publicKey is missing. Create the update signing key first (docs/development.md, Update signing)."
+    }
+    if ($GitHubToken) {
+        # Before anything is built or tagged: a release without notes would just show its last commit message.
+        ./build/release-notes.ps1 -Version $Version | Out-Null
     }
 
     dotnet tool restore
@@ -98,6 +105,7 @@ try {
         # Copies that check in the moment between these two steps find no signature, skip the update and try again later.
         $env:GH_TOKEN = $GitHubToken
         gh release upload "v$Version" $signature --clobber --repo ($RepoUrl -replace '^https://github.com/', '')
+        ./build/release-notes.ps1 -Version $Version -Apply -Repo ($RepoUrl -replace '^https://github.com/', '')
     }
 
     Write-Host ''
