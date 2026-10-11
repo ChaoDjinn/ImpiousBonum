@@ -15,7 +15,7 @@ public sealed class DrivesWidget : Widget
         425, 230,
         [
             Setting.PlainText("drives", "Drives", "all", help: "\"all\", or letters separated by commas, e.g. \"C,D\"."),
-            Setting.DriveTemplate("label", "Row label", "{letter}:/", help: RowHelp),
+            Setting.DriveTemplate("label", "Row label", "{letter}:", help: RowHelp),
             Setting.DriveTemplate("text", "Row value", "{free} free / {total}", help: RowHelp),
             Setting.Number("fontSize", "Font size", 25, 6, 200),
             Setting.Number("barHeight", "Bar height", 5, 1, 100, group: Setting.Appearance),

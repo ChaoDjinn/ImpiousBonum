@@ -39,6 +39,8 @@ A line of text with live values, e.g. "{gpu.load}" or "{cpu.temp:nounit} °C".
 | `fontSize` | number (6–400) | `48` | Font size |
 | `align` | `left` / `center` / `right` | `left` | Alignment |
 | `uppercase` | true/false | `false` | Uppercase |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too long for the widget gets smaller to fit its width, instead of being cut off. |
+| `hideUnavailable` | true/false | `false` | Hide without a reading. Hides the text while none of its metrics has a reading, e.g. a game's session before you've played. It shows faded while you edit the layout. |
 | `color` | color | `foreground` | Colour |
 | `thresholds` | list | — | Warning colours. Changes the text colour. An empty metric uses the first metric in the text. When several rules match, the last one wins, so list them mildest first. |
 
@@ -185,6 +187,7 @@ An accent-coloured line icon followed by a live value, e.g. a chip and the CPU t
 | `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` | `cpu` | Icon |
 | `text` | template | `{cpu.temp:nounit} °C` | Text |
 | `fontSize` | number (6–400) | `64` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too long for the widget gets smaller to fit its width, instead of being cut off. |
 | `iconSize` | number (8–400) | `60` | Icon size |
 | `iconStroke` | number (0.5–6) | `2` | Icon line width. On the icon's 24×24 grid. |
 | `gap` | number (0–400) | `50` | Gap after icon |
@@ -250,7 +253,7 @@ One row per drive with free space and a bar showing how full it is. Follows driv
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `drives` | text | `all` | Drives. "all", or letters separated by commas, e.g. "C,D". |
-| `label` | template (per drive) | `{letter}:/` | Row label. Each row's own drive: {letter}, {free}, {used}, {total}, {usedPct}, {label}, {read}, {write}, {active}, and with the sensor service {life}, {temp}, {status}, {model}, {hours}. In a metric id, * is the row's drive, e.g. {disk.*.read}. Other metrics work too. |
+| `label` | template (per drive) | `{letter}:` | Row label. Each row's own drive: {letter}, {free}, {used}, {total}, {usedPct}, {label}, {read}, {write}, {active}, and with the sensor service {life}, {temp}, {status}, {model}, {hours}. In a metric id, * is the row's drive, e.g. {disk.*.read}. Other metrics work too. |
 | `text` | template (per drive) | `{free} free / {total}` | Row value. Each row's own drive: {letter}, {free}, {used}, {total}, {usedPct}, {label}, {read}, {write}, {active}, and with the sensor service {life}, {temp}, {status}, {model}, {hours}. In a metric id, * is the row's drive, e.g. {disk.*.read}. Other metrics work too. |
 | `fontSize` | number (6–200) | `25` | Font size |
 | `barHeight` | number (1–100) | `5` | Bar height |

@@ -40,7 +40,7 @@ network, alongside a clock, the weather, your calendar, what's playing and butto
 you like in a visual editor, pick from 43 themes, and it runs quietly in the tray using about 50 MB of memory. No
 spare screen? It works as a window too, on a tablet over Wi-Fi, or on a small USB screen.
 
-<p align="center"><img src="docs/images/default-layout.svg" alt="Map of the default layout: CPU and memory graphs, GPU load and VRAM, CPU and GPU temperatures, FPS, a clock, drives, and network download, upload and ping"></p>
+<p align="center"><img src="docs/images/default-layout.svg" alt="Map of the default layout: CPU, GPU and memory graphs, CPU and GPU temperatures and the frame rate, a clock, drives, and network download, upload and ping"></p>
 
 ## Features
 
@@ -69,7 +69,7 @@ spare screen? It works as a window too, on a tablet over Wi-Fi, or on a small US
 ## Get started
 
 1. Download and run [`ImpiousBonum-win-Setup.exe`](https://github.com/ChaoDjinn/ImpiousBonum/releases/latest/download/ImpiousBonum-win-Setup.exe) (Windows 10 or 11). It installs for your user only and adds the .NET runtime if needed. SmartScreen may warn the first time, since the installer isn't code-signed yet: choose *More info → Run anyway*.
-2. The dashboard opens on your smallest secondary monitor. Right-click the tray icon to move it, make it a window, or turn on *Start with Windows*.
+2. The dashboard opens on your smallest secondary monitor, or as a window on your main screen if that's the only one. Right-click the tray icon to move it, make it a window, or turn on *Start with Windows*.
 3. For temperatures and FPS, tray → *Sensors* → *Install sensor service…* (one admin prompt).
 4. Double-click the tray icon to open the layout editor, or try a ready-made layout from tray → *Layout* → *Gallery…*.
 

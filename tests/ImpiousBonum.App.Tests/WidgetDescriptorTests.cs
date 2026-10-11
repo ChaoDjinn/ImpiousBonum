@@ -96,7 +96,8 @@ public sealed class WidgetDescriptorTests
                     new JsonObject { ["above"] = 90, ["color"] = "critical" }),
             };
             var widget = WidgetFactory.Create(definition, theme);
-            var text = Assert.IsType<TextBlock>(Assert.Single(widget.Children.Cast<object>()));
+            var fit = Assert.IsType<ShrinkToWidth>(Assert.Single(widget.Children.Cast<object>()));
+            var text = Assert.IsType<TextBlock>(fit.Child);
             var store = new MetricStore();
 
             widget.Refresh(store, DateTime.Now);

@@ -15,6 +15,10 @@ public sealed class ValueTemplate
 
     public IEnumerable<string> MetricIds => _parts.Where(p => p.MetricId is not null).Select(p => p.MetricId!);
 
+    /// <summary>True when any of the template's metrics has a reading, or it has none to wait for (plain text).</summary>
+    public bool HasReading(MetricStore store) =>
+        !MetricIds.Any() || MetricIds.Any(id => store.TryGet(id, out var sample) && sample.HasValue);
+
     public static ValueTemplate Parse(string? template)
     {
         var parts = new List<Part>();

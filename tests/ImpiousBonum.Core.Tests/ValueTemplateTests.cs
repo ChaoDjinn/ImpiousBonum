@@ -25,6 +25,15 @@ public sealed class ValueTemplateTests : IDisposable
         Assert.Equal("11.8 % / 16 threads", ValueTemplate.Parse("{cpu.load} / {cpu.threads} threads").Render(_store));
 
     [Fact]
+    public void Has_a_reading_when_any_metric_has_one_or_there_are_none()
+    {
+        Assert.True(ValueTemplate.Parse("{cpu.temp} / {cpu.load}").HasReading(_store));
+        Assert.False(ValueTemplate.Parse("{cpu.temp} / {gpu.unknown}").HasReading(_store));
+        Assert.True(ValueTemplate.Parse("Just words").HasReading(_store));
+        Assert.True(ValueTemplate.Parse("").HasReading(_store));
+    }
+
+    [Fact]
     public void Applies_format_spec() =>
         Assert.Equal("12", ValueTemplate.Parse("{cpu.load:0 nounit}").Render(_store));
 
