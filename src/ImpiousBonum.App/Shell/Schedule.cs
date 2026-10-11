@@ -104,12 +104,18 @@ public sealed record ScheduledLook(string? Layout, string? Theme, int? Brightnes
 /// <summary>Whether Windows is in dark mode for apps (Settings → Personalisation → Colours).</summary>
 public static class WindowsColourMode
 {
-    public static bool IsDark()
+    /// <summary>Apps are dark (Settings → Personalisation → Colours → app mode).</summary>
+    public static bool IsDark() => IsDark("AppsUseLightTheme");
+
+    /// <summary>Windows itself is dark: the taskbar, Start and the notification area, which the tray menu matches.</summary>
+    public static bool IsSystemDark() => IsDark("SystemUsesLightTheme");
+
+    private static bool IsDark(string value)
     {
         try
         {
             using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-            return key?.GetValue("AppsUseLightTheme") is int light && light == 0;
+            return key?.GetValue(value) is int light && light == 0;
         }
         catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or System.IO.IOException)
         {
