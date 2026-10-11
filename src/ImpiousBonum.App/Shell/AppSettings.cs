@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
+using ImpiousBonum.Core.Alerts;
 using ImpiousBonum.Core.CustomData;
 using ImpiousBonum.Core.Remote;
 using ImpiousBonum.Core.Weather;
@@ -13,6 +14,7 @@ public sealed class AppSettings
     private List<GameLayoutRule> _gameLayouts = [];
     private List<ScheduleRule> _schedule = [];
     private List<CustomSource> _customData = [];
+    private List<AlertRule> _alerts = [];
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
     public string? MonitorId { get; set; }
@@ -73,6 +75,13 @@ public sealed class AppSettings
         set => _customData = value ?? [];
     }
 
+    /// <summary>Notifications and flashing banners when a reading is out of bounds for a while (tray → Alerts…).</summary>
+    public List<AlertRule> Alerts
+    {
+        get => _alerts;
+        set => _alerts = value ?? [];
+    }
+
     /// <summary>Dim the dashboard after this many minutes without keyboard, mouse or touch input; 0 never does.</summary>
     public int AwayDimMinutes { get; set; }
 
@@ -128,6 +137,7 @@ public sealed class AppSettings
                 settings.GameLayouts.RemoveAll(rule => rule is null || !rule.IsUsable);
                 settings.Schedule.RemoveAll(rule => rule is null || !rule.IsUsable);
                 settings.CustomData.RemoveAll(source => source is null);
+                settings.Alerts.RemoveAll(rule => rule is null || !rule.IsUsable);
                 return settings;
             }
         }

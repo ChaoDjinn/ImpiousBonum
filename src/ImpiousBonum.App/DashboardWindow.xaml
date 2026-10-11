@@ -19,6 +19,11 @@
         </Viewbox>
         <!-- Dims the dashboard (schedule, away). Catches taps only when the screen is too dark to see what they'd press. -->
         <Rectangle x:Name="DimOverlay" Fill="Black" Opacity="0" IsHitTestVisible="False" />
+        <!-- Alerts that flash: a pulsing outline and a banner, above the dimming so they show on a dark screen. Tap the banner to dismiss. -->
+        <Rectangle x:Name="AlertOutline" Visibility="Collapsed" IsHitTestVisible="False" Stroke="#FFE53935" StrokeThickness="6" />
+        <Border x:Name="AlertBanner" Visibility="Collapsed" VerticalAlignment="Top" Background="#F0B71C1C" Padding="16,6" Cursor="Hand">
+            <TextBlock x:Name="AlertText" Foreground="White" FontFamily="Segoe UI" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+        </Border>
         <!-- Shown while the windowed dashboard is unlocked, so it's clear it can be dragged and resized. -->
         <Rectangle x:Name="MoveOutline" Visibility="Collapsed" IsHitTestVisible="False"
                    Stroke="#B0FFFFFF" StrokeThickness="2" StrokeDashArray="4 3" />

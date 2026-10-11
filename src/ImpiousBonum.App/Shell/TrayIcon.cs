@@ -55,6 +55,10 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_sensors);
         menu.Items.Add(_claude);
         menu.Items.Add(_weather);
+        menu.Items.Add(new ToolStripMenuItem("Alerts…", null, (_, _) => AlertsRequested?.Invoke(this, EventArgs.Empty))
+        {
+            ToolTipText = "Be told when a reading is out of bounds for a while",
+        });
         menu.Items.Add(new ToolStripMenuItem("Custom data…", null, (_, _) => CustomDataRequested?.Invoke(this, EventArgs.Empty))
         {
             ToolTipText = "Your own metrics from web addresses and commands",
@@ -191,6 +195,8 @@ public sealed class TrayIcon : IDisposable
     public event EventHandler? WeatherLocationRequested;
 
     public event EventHandler? CustomDataRequested;
+
+    public event EventHandler? AlertsRequested;
 
     public event EventHandler? WeatherTurnedOff;
 
@@ -400,6 +406,10 @@ public sealed class TrayIcon : IDisposable
 
     public void ShowError(string title, string message) =>
         _icon.ShowBalloonTip(5000, title, message, ToolTipIcon.Warning);
+
+    /// <summary>An alert: a notification that stands out from the app's own messages.</summary>
+    public void ShowAlert(string message) =>
+        _icon.ShowBalloonTip(10000, "Impious Bonum alert", message, ToolTipIcon.Warning);
 
     public void ShowInfo(string title, string message) =>
         _icon.ShowBalloonTip(5000, title, message, ToolTipIcon.Info);

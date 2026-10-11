@@ -11,6 +11,7 @@ using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core;
+using ImpiousBonum.Core.Alerts;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
@@ -174,6 +175,7 @@ public partial class App : Application
         _tray.ConnectClaudeCodeRequested += (_, _) => ConnectClaudeCode();
         _tray.WeatherLocationRequested += (_, _) => SetWeatherLocation(null);
         _tray.CustomDataRequested += (_, _) => OpenCustomData();
+        _tray.AlertsRequested += (_, _) => OpenAlerts();
         _tray.WeatherTurnedOff += (_, _) =>
         {
             _settings.WeatherLocation = null;
@@ -252,6 +254,7 @@ public partial class App : Application
         _editor?.Refresh(_sampler!.Store, now);
         _tablet?.Refresh(_sampler!.Store, now);
         UpdateGameLayout();
+        UpdateAlerts();
         UpdateDimming();
         UpdateFullscreenHide();
 
@@ -598,6 +601,36 @@ public partial class App : Application
     }
 
     private CustomDataWindow? _customData;
+    private AlertsWindow? _alertsWindow;
+    private readonly AlertMonitor _alerts = new();
+
+    /// <summary>Checks the alert rules each second: notifies when one goes off, and keeps the dashboard's banner current.</summary>
+    private void UpdateAlerts()
+    {
+        if (_sampler is null || _window is null)
+            return;
+        foreach (var alert in _alerts.Update(_settings.Alerts, _sampler.Store, DateTime.UtcNow))
+        {
+            AppLog.Info(alert.Started ? $"Alert: {alert.Rule.Describe()}: {alert.Text}" : $"Alert over: {alert.Rule.Describe()}");
+            if (alert.Started && alert.Rule.Notify)
+                _tray?.ShowAlert(alert.Text);
+        }
+        _window.ShowAlerts(_alerts.Active.Where(rule => rule.Flash).Select(rule => (rule.Describe(), rule.Text(_sampler.Store))).ToList());
+    }
+
+    /// <summary>Tray → Alerts…: one window at a time.</summary>
+    private void OpenAlerts()
+    {
+        if (_alertsWindow is not null)
+        {
+            BringToFront(_alertsWindow);
+            return;
+        }
+        _alertsWindow = new AlertsWindow(_settings, () => _sampler?.Store);
+        _alertsWindow.Closed += (_, _) => _alertsWindow = null;
+        _alertsWindow.Show();
+        BringToFront(_alertsWindow);
+    }
 
     /// <summary>Tray → Custom data…: one window at a time.</summary>
     private void OpenCustomData()
