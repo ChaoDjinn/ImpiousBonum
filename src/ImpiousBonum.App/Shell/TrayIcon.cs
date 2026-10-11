@@ -60,6 +60,10 @@ public sealed class TrayIcon : IDisposable
         {
             ToolTipText = "Be told when a reading is out of bounds for a while",
         });
+        menu.Items.Add(new ToolStripMenuItem("Hotkeys…", null, (_, _) => HotkeysRequested?.Invoke(this, EventArgs.Empty))
+        {
+            ToolTipText = "Keys that show or hide the dashboard, turn pages or switch layouts from anywhere",
+        });
         menu.Items.Add(new ToolStripMenuItem("Custom data…", null, (_, _) => CustomDataRequested?.Invoke(this, EventArgs.Empty))
         {
             ToolTipText = "Your own metrics from web addresses and commands",
@@ -198,6 +202,8 @@ public sealed class TrayIcon : IDisposable
     public event EventHandler? CustomDataRequested;
 
     public event EventHandler? AlertsRequested;
+
+    public event EventHandler? HotkeysRequested;
 
     public event EventHandler? WeatherTurnedOff;
 

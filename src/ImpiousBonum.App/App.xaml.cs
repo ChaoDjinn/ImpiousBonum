@@ -58,6 +58,8 @@ public partial class App : Application
     private bool _started;
     private bool _reportedError;
     private bool _hiddenForFullscreen;
+    private bool _hiddenByUser;
+    private GlobalHotkeys? _hotkeys;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -190,6 +192,7 @@ public partial class App : Application
         _tray.WeatherLocationRequested += (_, _) => SetWeatherLocation(null);
         _tray.CustomDataRequested += (_, _) => OpenCustomData();
         _tray.AlertsRequested += (_, _) => OpenAlerts();
+        _tray.HotkeysRequested += (_, _) => EditHotkeys();
         _tray.WeatherTurnedOff += (_, _) =>
         {
             _settings.WeatherLocation = null;
@@ -230,6 +233,9 @@ public partial class App : Application
 
         ApplyWindowBehaviour();
         Place();
+        _hotkeys = new GlobalHotkeys();
+        _hotkeys.Pressed += (_, hotkey) => RunHotkey(hotkey);
+        ApplyHotkeys();
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
 
         _tick = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
@@ -664,6 +670,74 @@ public partial class App : Application
         _window.ShowAlerts(_alerts.Active.Where(rule => rule.Flash).Select(rule => (rule.Describe(), rule.Text(_sampler.Store))).ToList());
     }
 
+    /// <summary>Registers the hotkeys from settings; any that can't be set are reported once.</summary>
+    private void ApplyHotkeys()
+    {
+        if (_hotkeys is null)
+            return;
+        var problems = _hotkeys.Apply(_settings.Hotkeys);
+        foreach (var problem in problems)
+            AppLog.Warning($"Hotkey not set: {problem}");
+        if (problems.Count > 0)
+            _tray?.ShowError(problems.Count == 1 ? "A hotkey isn't working" : "Some hotkeys aren't working", string.Join("\n", problems));
+    }
+
+    /// <summary>Tray → Hotkeys…. The current ones are let go while it's open, so pressing them sets them again rather than running them.</summary>
+    private void EditHotkeys()
+    {
+        if (_layouts is null)
+            return;
+        _hotkeys?.Clear();
+        var chosen = HotkeysWindow.Ask(_settings.Hotkeys, _layouts.List());
+        if (chosen is not null)
+        {
+            _settings.Hotkeys = [.. chosen];
+            _settings.Save();
+            AppLog.Info(chosen.Count == 0 ? "Hotkeys: none" : $"Hotkeys: {string.Join(", ", chosen.Select(h => $"{h.Keys} = {h.Describe()}"))}");
+        }
+        ApplyHotkeys();
+    }
+
+    private void RunHotkey(Hotkey hotkey)
+    {
+        // Settings have the latest: a layout may have been renamed since the keys were registered.
+        hotkey = _settings.Hotkeys.FirstOrDefault(h => string.Equals(h.Keys, hotkey.Keys, StringComparison.OrdinalIgnoreCase)) ?? hotkey;
+        switch (hotkey.Action)
+        {
+            case Hotkey.ShowHide:
+                ShowOrHide();
+                break;
+            case Hotkey.NextPage:
+                TurnPage(1);
+                break;
+            case Hotkey.PreviousPage:
+                TurnPage(-1);
+                break;
+            case Hotkey.Edit:
+                OpenEditor();
+                break;
+            case Hotkey.SwitchLayout when hotkey.Layout is { } name:
+                if (_layouts?.Library.Find(name) is { } found)
+                    SelectLayout(found);
+                else
+                    _tray?.ShowError("Impious Bonum", $"There's no layout called \"{name}\" any more. Change its hotkey in tray → Hotkeys.");
+                break;
+        }
+    }
+
+    /// <summary>The show/hide hotkey. Hidden stays hidden (until pressed again or the app restarts), whatever else would show it.</summary>
+    private void ShowOrHide()
+    {
+        if (_window is null)
+            return;
+        _hiddenByUser = !_hiddenByUser;
+        AppLog.Info(_hiddenByUser ? "Dashboard hidden by hotkey" : "Dashboard shown by hotkey");
+        if (_hiddenByUser)
+            _window.Hide();
+        else
+            Place();
+    }
+
     /// <summary>Tray → Alerts…: one window at a time.</summary>
     private void OpenAlerts()
     {
@@ -946,7 +1020,7 @@ public partial class App : Application
         }
 
         _window.PlaceOn(rect);
-        if (!_window.IsVisible && !_hiddenForFullscreen)
+        if (!_window.IsVisible && !_hiddenForFullscreen && !_hiddenByUser)
             _window.Show();
     }
 
@@ -1072,6 +1146,8 @@ public partial class App : Application
         _tick?.Stop();
         _updateTimer?.Stop();
         _layouts?.Dispose();
+        _hotkeys?.Dispose();
+        _hotkeys = null;
         _tray?.Dispose();
         _tray = null;
         _tabletLink?.Close();

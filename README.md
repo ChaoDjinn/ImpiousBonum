@@ -120,6 +120,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Claude usage* | Whether Claude Code is reporting, and *Connect Claude Code…* (see [Claude usage](#claude-usage)) |
 | *Weather* | The weather now, *Set location…*, units, and *Turn off weather* (see [Weather](#weather)) |
 | *Alerts…* | Be told when a reading stays out of bounds (see [Alerts](#alerts)) |
+| *Hotkeys…* | Keys that show or hide the dashboard, turn pages, open the editor or switch layouts from anywhere (see [Hotkeys](#hotkeys)) |
 | *Custom data…* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
 | *FPS from* | Follow the foreground app, or the top app on a chosen monitor |
 | *Edit layout…* | Open the layout editor (or double-click the tray icon) |
@@ -330,6 +331,21 @@ A small strip fits more when it has pages. Tray → *Layout* → *Pages*:
 - **The pages are:** tick the layouts that are pages, in the *Layout* menu's order. With none ticked, every layout is a page.
 
 Turning a page is the same as picking that layout from the tray, so it's remembered. Swiping is off while the window can be dragged (windowed and unlocked) and while you edit the layout. Stored as `swipePages`, `rotatePagesSeconds` and `pages` in `settings.json`.
+
+## Hotkeys
+
+Tray → *Hotkeys…* sets key combinations that work from anywhere in Windows, even while a game has focus:
+
+- **Show or hide the dashboard.** Hidden stays hidden until you press it again (or restart the app).
+- **Next page** and **Previous page**, through the same layouts as swiping (see [Pages](#pages)).
+- **Edit the layout.**
+- **Show** a particular layout: there's a row for each saved one.
+
+Click a box and press the keys; Backspace clears it. A hotkey needs Ctrl, Alt or Win, so it doesn't take a key away from
+every other app, except F13 to F24, which macro pads and programmable keyboards can send. If another app already
+uses a combination, the tray says so and the rest still work. Hotkeys are saved in `settings.json` as
+`"hotkeys": [{ "action": "show-hide", "keys": "Ctrl+Alt+D" }, { "action": "layout", "keys": "Ctrl+Alt+1", "layout": "Gaming" }]`
+(the actions are `show-hide`, `next-page`, `previous-page`, `edit` and `layout`), and they follow a layout when you rename it.
 
 ## Game layouts
 

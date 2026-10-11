@@ -16,6 +16,7 @@ public sealed class AppSettings
     private List<CustomSource> _customData = [];
     private List<AlertRule> _alerts = [];
     private List<string> _pages = [];
+    private List<Hotkey> _hotkeys = [];
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
     public string? MonitorId { get; set; }
@@ -94,6 +95,13 @@ public sealed class AppSettings
     {
         get => _alerts;
         set => _alerts = value ?? [];
+    }
+
+    /// <summary>Key combinations that work from anywhere (tray → Hotkeys…). None by default.</summary>
+    public List<Hotkey> Hotkeys
+    {
+        get => _hotkeys;
+        set => _hotkeys = value ?? [];
     }
 
     /// <summary>Dim the dashboard after this many minutes without keyboard, mouse or touch input; 0 never does.</summary>
