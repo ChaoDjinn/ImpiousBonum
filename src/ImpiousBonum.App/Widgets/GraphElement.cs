@@ -19,7 +19,7 @@ public sealed class GraphElement : FrameworkElement
     /// <summary>Number of points across the full width; fewer values draw right-aligned, like a scrolling chart.</summary>
     public int Points { get; init; } = 120;
 
-    public double Minimum { get; init; }
+    public double Minimum { get; set; }
 
     /// <summary>Upper bound; <c>null</c> scales to the largest visible value.</summary>
     public double? Maximum { get; set; }

@@ -111,6 +111,31 @@ Each entry in `thresholds`:
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
 
+## Stat tile (`stat`)
+
+A big value with a small trend line and its lowest and highest readings over the last minute or so.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `CPU` | Label |
+| `metric` | metric | `cpu.load` | Metric |
+| `text` | template | — | Value text. Empty shows the metric's value. |
+| `points` | number (2–240) | `60` | History (seconds) |
+| `style` | `area` / `line` / `none` | `area` | Trend line |
+| `showRange` | true/false | `true` | Lowest and highest |
+| `fontSize` | number (6–400) | `56` | Value size |
+| `labelSize` | number (6–200) | `20` | Label size |
+| `thresholds` | list | — | Warning colours. Changes the value and the trend line. An empty metric uses the tile's metric. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
+
 ## Icon and value (`icon`)
 
 An accent-coloured line icon followed by a live value, e.g. a chip and the CPU temperature.
