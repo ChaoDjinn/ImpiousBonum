@@ -52,13 +52,42 @@ public sealed class ScheduleTests : IDisposable
     }
 
     [Fact]
-    public void The_first_rule_that_applies_wins()
+    public void Rules_combine_and_for_each_setting_the_first_rule_that_sets_it_wins()
     {
-        ScheduleRule[] rules = [Night, DarkMode];
-        Assert.Same(Night, ScheduleRule.Match(rules, new TimeOnly(23, 0), windowsDark: true));
-        Assert.Same(DarkMode, ScheduleRule.Match(rules, new TimeOnly(12, 0), windowsDark: true));
-        Assert.Null(ScheduleRule.Match(rules, new TimeOnly(12, 0), windowsDark: false));
+        ScheduleRule[] rules = [Night, DarkMode, new("23:00", "06:00", null, "Bedside", null, 30), new("00:00", "05:00", null, null, null, 0)];
+
+        Assert.Equal(new ScheduledLook(null, "Night Watch", null), ScheduledLook.From(rules, new TimeOnly(22, 30), windowsDark: false));
+        Assert.Equal(new ScheduledLook("Bedside", "Night Watch", 30), ScheduledLook.From(rules, new TimeOnly(1, 0), windowsDark: true));
+        Assert.Equal(new ScheduledLook(null, "Nord", null), ScheduledLook.From(rules, new TimeOnly(12, 0), windowsDark: true));
+        Assert.Null(ScheduledLook.From(rules, new TimeOnly(12, 0), windowsDark: false));
+        Assert.Equal(new[] { Night, DarkMode }, ScheduledLook.Active(rules, new TimeOnly(22, 30), windowsDark: true));
+        Assert.Equal("Bedside, theme Night Watch, 30% brightness", new ScheduledLook("Bedside", "Night Watch", 30).Describe());
     }
+
+    [Fact]
+    public void A_rule_can_just_dim_the_screen()
+    {
+        var dim = new ScheduleRule("23:00", "07:00", null, null, null, 0);
+        Assert.True(dim.IsUsable);
+        Assert.Equal("23:00–07:00: screen off", dim.Describe());
+        Assert.False((dim with { Brightness = 100 }).IsUsable);
+        Assert.False((dim with { Brightness = -5 }).IsUsable);
+    }
+
+    [Theory]
+    // scheduled, idle minutes, away after, away level, game drawing, peeking, editing → brightness
+    [InlineData(null, 0, 0, 20, false, false, false, 1.0)]
+    [InlineData(30, 0, 0, 20, false, false, false, 0.3)]
+    [InlineData(null, 16, 15, 20, false, false, false, 0.2)]
+    [InlineData(null, 14, 15, 20, false, false, false, 1.0)]
+    [InlineData(30, 16, 15, 0, false, false, false, 0.0)]
+    [InlineData(10, 16, 15, 40, false, false, false, 0.1)]
+    [InlineData(null, 60, 15, 20, true, false, false, 1.0)]
+    [InlineData(0, 60, 15, 0, false, true, false, 1.0)]
+    [InlineData(0, 60, 15, 0, false, false, true, 1.0)]
+    public void Brightness_takes_the_dimmest_of_the_schedule_and_being_away(
+        int? scheduled, int idleMinutes, int awayMinutes, int awayLevel, bool gameDrawing, bool peeking, bool editing, double expected) =>
+        Assert.Equal(expected, Dimming.Brightness(scheduled, TimeSpan.FromMinutes(idleMinutes), awayMinutes, awayLevel, gameDrawing, peeking, editing), 6);
 
     [Fact]
     public void Rules_need_a_when_and_a_what()
@@ -119,6 +148,11 @@ public sealed class ScheduleTests : IDisposable
             window.LayoutBox.SelectedIndex = 0;
             window.ThemeBox.SelectedIndex = 0;
             Assert.NotNull(window.Problem());
+
+            // Dimming alone is enough.
+            window.BrightnessBox.SelectedIndex = 3;
+            Assert.Null(window.Problem());
+            Assert.Equal(new ScheduleRule(null, null, "dark", null, null, 30), window.Rule());
             window.Close();
         });
     }

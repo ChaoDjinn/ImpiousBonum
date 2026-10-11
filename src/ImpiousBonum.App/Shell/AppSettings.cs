@@ -61,6 +61,12 @@ public sealed class AppSettings
     /// <summary>Follow <see cref="Schedule"/>. Off leaves the rules in place but unused.</summary>
     public bool ScheduleEnabled { get; set; } = true;
 
+    /// <summary>Dim the dashboard after this many minutes without keyboard, mouse or touch input; 0 never does.</summary>
+    public int AwayDimMinutes { get; set; }
+
+    /// <summary>How far to dim when away, in percent; 0 turns it black.</summary>
+    public int AwayBrightness { get; set; } = 20;
+
     /// <summary>Monitor whose top app the FPS reading follows (a <see cref="DisplayMonitor.Id"/>), or null for the foreground app.</summary>
     public string? FpsMonitorId { get; set; }
 

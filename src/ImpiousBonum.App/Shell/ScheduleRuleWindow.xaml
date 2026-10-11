@@ -20,10 +20,11 @@
         <TextBlock Text="Show" FontWeight="SemiBold" Margin="0,16,0,6" />
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="70" />
+                <ColumnDefinition Width="90" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
@@ -31,6 +32,8 @@
             <ComboBox x:Name="LayoutBox" Grid.Column="1" SelectionChanged="OnChanged" />
             <TextBlock Text="Theme" Grid.Row="1" VerticalAlignment="Center" Margin="0,8,0,0" />
             <ComboBox x:Name="ThemeBox" Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" SelectionChanged="OnChanged" />
+            <TextBlock Text="Brightness" Grid.Row="2" VerticalAlignment="Center" Margin="0,8,0,0" />
+            <ComboBox x:Name="BrightnessBox" Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" SelectionChanged="OnChanged" />
         </Grid>
 
         <TextBlock x:Name="ProblemText" Foreground="IndianRed" TextWrapping="Wrap" Margin="0,10,0,0" MinHeight="18" />

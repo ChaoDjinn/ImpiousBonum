@@ -89,7 +89,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
 
@@ -98,6 +98,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | Item | |
 |---|---|
 | *Display* | Which monitor the dashboard is on, and how its window behaves (see [Windowed mode](#windowed-mode)) |
+| *Display → When you're away* | Dim the dashboard, or turn it black, after a while without input (see [Dimming](#dimming)) |
 | *Display → Tablet view* | Show the dashboard in a browser on a tablet or phone (see [Tablet view](#tablet-view)) |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
@@ -262,9 +263,9 @@ Links live in `settings.json` (tray → *Open settings folder*) and can be edite
 
 ## Schedule
 
-The dashboard can change with the time of day: the dim red *Night Watch* theme from 22:00 to 07:00, say, or a calmer layout during working hours. It can also follow Windows' dark and light mode, e.g. *Nord* while Windows is dark and *Glacier* while it's light.
+The dashboard can change with the time of day: the dim red *Night Watch* theme from 22:00 to 07:00, say, a calmer layout during working hours, or the screen at 30% overnight. It can also follow Windows' dark and light mode, e.g. *Nord* while Windows is dark and *Glacier* while it's light.
 
-Tray → *Layout* → *Schedule* → *Add…* picks when (between two times, which may cross midnight, or while Windows is in dark or light mode) and what to show: a layout, a theme, or both. The menu lists the rules, with the one that applies now in bold, and *Follow the schedule* turns them all off and on. When several rules apply, the first one listed wins.
+Tray → *Layout* → *Schedule* → *Add…* picks when (between two times, which may cross midnight, or while Windows is in dark or light mode) and what to do: show a layout, a theme, dim the screen (see [Dimming](#dimming)), or any mix. The menu lists the rules, with the ones that apply now in bold, and *Follow the schedule* turns them all off and on. Rules combine: when several apply, the layout comes from the first of them that names a layout, the theme from the first that names a theme, and the brightness likewise.
 
 A game linked under *Game layouts* still wins while it's in front, and the schedule fills in what its link doesn't set: a game linked to a layout gets the night theme at night. Like game layouts, scheduled ones are temporary: picking a layout from the tray makes it your choice, and renaming a layout updates the rules. The schedule is in `settings.json` too:
 
@@ -272,10 +273,20 @@ A game linked under *Game layouts* still wins while it's in front, and the sched
 "schedule": [
   { "from": "22:00", "to": "07:00", "theme": "Night Watch" },
   { "when": "dark", "theme": "Nord" },
-  { "from": "09:00", "to": "17:30", "layout": "Work" }
+  { "from": "09:00", "to": "17:30", "layout": "Work" },
+  { "from": "00:00", "to": "06:00", "brightness": 0 }
 ],
 "scheduleEnabled": true
 ```
+
+### Dimming
+
+A bright strip beside your bed or in a dark room is the most common complaint about these screens. Two things dim it, and the darker of the two wins:
+
+- **The schedule:** a rule's brightness, from 75% down to black (above).
+- **Being away:** tray → *Display* → *When you're away* dims the dashboard after 5 to 60 minutes without keyboard, mouse or touch input, to 40%, 20% or black. Any input brings it straight back. A game or video drawing frames in front counts as someone there, since a gamepad doesn't count as input to Windows. Stored as `awayDimMinutes` and `awayBrightness` in `settings.json`.
+
+Dimming fades in and out. When the screen is too dark to see (20% or less), a tap shows it at full brightness for 30 seconds instead of pressing whatever is under your finger. Nothing dims while you edit the layout, and the tablet view isn't dimmed.
 
 ## Editing layouts by hand
 
