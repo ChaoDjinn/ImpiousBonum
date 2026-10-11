@@ -1,0 +1,60 @@
+name: Screenshots
+
+# Draws the pictures in the README, the guide and the gallery again with build/screenshots.ps1, from made-up readings,
+# and commits any that changed to the branch it ran on. Run it from the Actions tab on your branch after changing how
+# a widget looks, a gallery layout or a layout in build/screenshots. The editor's picture is still taken by hand.
+on:
+  workflow_dispatch:
+  # TEMPORARY, to draw the first widget pictures before this workflow is on main: remove before merging.
+  push:
+    branches: [ccr-48b69e4f-qm7phn]
+    paths: [build/screenshots/**, build/screenshots.ps1, .github/workflows/screenshots.yml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots-${{ github.ref }}
+
+jobs:
+  draw:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - name: British English on UK time, like the pictures drawn so far
+        run: |
+          Set-Culture en-GB
+          Set-TimeZone -Id 'GMT Standard Time'
+      - name: Draw
+        run: ./build/screenshots.ps1
+      # TEMPORARY: how much memory and CPU the default layout uses here, for the README's claim. Remove before merging.
+      - name: Measure
+        run: |
+          $exe = Resolve-Path 'src/ImpiousBonum.App/bin/Release/net10.0-windows/ImpiousBonum.exe'
+          $data = Join-Path $env:RUNNER_TEMP 'measure'
+          New-Item -ItemType Directory -Force $data | Out-Null
+          $app = Start-Process $exe -ArgumentList '--data-dir', "`"$data`"" -PassThru
+          Start-Sleep 90
+          for ($i = 0; $i -lt 3; $i++) {
+              $app.Refresh(); $cpu = $app.TotalProcessorTime; $start = Get-Date
+              Start-Sleep 60
+              $app.Refresh()
+              $share = ($app.TotalProcessorTime - $cpu).TotalSeconds / ((Get-Date) - $start).TotalSeconds / [Environment]::ProcessorCount * 100
+              $private = try { (Get-Counter "\Process($($app.ProcessName))\Working Set - Private").CounterSamples[0].CookedValue } catch { 0 }
+              'Private working set {0:N1} MB, private bytes {1:N1} MB, working set {2:N1} MB, CPU {3:N3} % of {4} logical processors' -f `
+                  ($private / 1MB), ($app.PrivateMemorySize64 / 1MB), ($app.WorkingSet64 / 1MB), $share, [Environment]::ProcessorCount
+          }
+          Stop-Process $app
+          Get-Content (Join-Path $data 'dashboard.log') -ErrorAction SilentlyContinue
+      - name: Commit what changed
+        run: |
+          git add docs/images gallery/images
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { 'The pictures are the same.'; exit 0 }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Screenshots drawn again by the Screenshots workflow'
+          git push

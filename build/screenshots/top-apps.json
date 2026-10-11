@@ -1,0 +1,9 @@
+// The apps using the most CPU and memory, for the README and the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 400,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "processes", "x": 30, "y": 30, "width": 740, "height": 340, "count": 6, "fontSize": 28, "spacing": 10 }
+  ]
+}

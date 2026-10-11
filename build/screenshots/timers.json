@@ -1,0 +1,12 @@
+// A countdown, a stopwatch and a count to a time of day, for the README and the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 400,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "timer", "x": 20, "y": 60, "width": 240, "height": 280, "label": "Focus", "duration": "25:00", "fontSize": 60 },
+    { "type": "timer", "x": 280, "y": 60, "width": 240, "height": 280, "label": "Stopwatch", "mode": "stopwatch", "fontSize": 60 },
+    { "type": "timer", "x": 540, "y": 60, "width": 240, "height": 280, "label": "Until bedtime", "mode": "until", "target": "23:30",
+      "fontSize": 52 }
+  ]
+}
