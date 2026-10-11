@@ -53,6 +53,39 @@ public sealed class Theme
 
     public static Theme From(ThemeSettings settings) => new(settings);
 
+    /// <summary>
+    /// This theme with a widget's own font and colours (see <see cref="Widgets.Setting.ThemeOverrides"/>) in place of its
+    /// values, or this theme itself when the widget has none.
+    /// </summary>
+    public Theme WithOverrides(System.Text.Json.Nodes.JsonObject widget)
+    {
+        var changed = false;
+        var copy = _settings.Copy();
+        string? Get(string key) => widget.GetString(key) is { } value && !string.IsNullOrWhiteSpace(value) ? value.Trim() : null;
+        void Set(string key, Action<string> apply)
+        {
+            if (Get(key) is { } value)
+            {
+                apply(value);
+                changed = true;
+            }
+        }
+
+        Set("fontFamily", v => { copy.FontFamily = v; copy.FontFile = null; });
+        if (Get("fontWeight") is { } weight && weight != Widgets.Setting.FromTheme)
+        {
+            copy.FontWeight = weight;
+            changed = true;
+        }
+        Set("foreground", v => copy.Foreground = v);
+        Set("secondary", v => copy.Secondary = v);
+        Set("accent", v => { copy.Accent = v; copy.Accent2 = null; });
+        Set("track", v => copy.Track = v);
+        Set("warning", v => copy.Warning = v);
+        Set("critical", v => copy.Critical = v);
+        return changed ? new Theme(copy) : this;
+    }
+
     /// <summary>The background colour with the theme's background image (if any) over it, for a canvas of this size.</summary>
     public Brush CanvasBackground(double width, double height) =>
         BackgroundImage.CreateBrush(_settings, Background, width, height);

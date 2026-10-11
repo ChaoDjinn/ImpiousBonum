@@ -8,7 +8,7 @@ namespace ImpiousBonum.App.Widgets;
 public static class WidgetFactory
 {
     /// <summary>Every widget type, in the order the editor offers them.</summary>
-    public static readonly IReadOnlyList<WidgetDescriptor> Descriptors =
+    public static readonly IReadOnlyList<WidgetDescriptor> Descriptors = WithThemeOverrides(
     [
         TextWidget.Descriptor,
         GraphWidget.Descriptor,
@@ -32,7 +32,11 @@ public static class WidgetFactory
         ImageWidget.Descriptor,
         ShapeWidget.Descriptor,
         BarsWidget.ClaudeDescriptor,
-    ];
+    ]);
+
+    /// <summary>Every widget can also have its own font and colours (<see cref="Setting.ThemeOverrides"/>).</summary>
+    private static IReadOnlyList<WidgetDescriptor> WithThemeOverrides(IReadOnlyList<WidgetDescriptor> descriptors) =>
+        [.. descriptors.Select(d => d with { Settings = [.. d.Settings, .. Setting.ThemeOverrides] })];
 
     public static WidgetDescriptor? Find(string? type) =>
         Descriptors.FirstOrDefault(d => d.Type.Equals(type, StringComparison.OrdinalIgnoreCase));
@@ -41,7 +45,7 @@ public static class WidgetFactory
     {
         var type = definition.GetString("type");
         return Find(type) is { } descriptor
-            ? descriptor.Create(new WidgetSettings(definition, descriptor.Settings), theme)
+            ? descriptor.Create(new WidgetSettings(definition, descriptor.Settings), theme.WithOverrides(definition))
             : new UnknownWidget(type, theme);
     }
 

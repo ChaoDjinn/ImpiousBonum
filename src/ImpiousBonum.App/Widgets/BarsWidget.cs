@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
@@ -46,6 +47,10 @@ public sealed class BarsWidget : Widget
             Setting.Number("spacing", "Bar spacing", 12, 0, 200, group: Setting.Appearance),
             Setting.Toggle("hideUnavailable", "Hide without a reading", true, group: Setting.Appearance,
                 help: "Hides a bar whose metric has no reading, and the whole widget when none has one. They show faded while you edit the layout."),
+            Setting.Color("color", "Bar colour", "accent"),
+            Setting.Color("trackColor", "Track colour", "track", help: "The empty part of each bar. track is the theme's bar track."),
+            Setting.Color("labelColor", "Label colour", "foreground"),
+            Setting.Color("valueColor", "Value colour", "secondary"),
             Setting.Thresholds("Changes each bar. An empty metric uses that bar's metric."),
         ],
         (settings, theme) => new BarsWidget(settings, theme));
@@ -61,6 +66,7 @@ public sealed class BarsWidget : Widget
     private readonly List<Row> _rows = [];
     private readonly bool _hideUnavailable;
     private readonly ThresholdColors _thresholds;
+    private readonly Brush _fill;
 
     public BarsWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
@@ -70,23 +76,27 @@ public sealed class BarsWidget : Widget
         var spacing = settings.Number("spacing");
         _hideUnavailable = settings.Bool("hideUnavailable");
         _thresholds = new ThresholdColors(settings, theme);
+        _fill = theme.Resolve(settings.String("color"), theme.Accent);
+        var trackBrush = theme.Resolve(settings.String("trackColor"), theme.Track);
+        var labelBrush = theme.Resolve(settings.String("labelColor"), theme.Foreground);
+        var valueBrush = theme.Resolve(settings.String("valueColor"), theme.Secondary);
 
         var stack = new StackPanel();
         foreach (var bar in settings.Items("bars"))
         {
             var metric = bar.String("metric");
             var header = new Grid();
-            var label = CreateText(fontSize);
+            var label = CreateText(fontSize, labelBrush);
             label.Text = bar.String("label");
-            var value = CreateText(valueFontSize, theme.Secondary, HorizontalAlignment.Right);
+            var value = CreateText(valueFontSize, valueBrush, HorizontalAlignment.Right);
             value.VerticalAlignment = VerticalAlignment.Center;
             header.Children.Add(label);
             header.Children.Add(value);
 
-            var track = new Grid { Height = barHeight, Background = theme.Track, Margin = new Thickness(0, 2, 0, 0) };
+            var track = new Grid { Height = barHeight, Background = trackBrush, Margin = new Thickness(0, 2, 0, 0) };
             track.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) });
             track.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            var fill = new Border { Background = theme.Accent };
+            var fill = new Border { Background = _fill };
             track.Children.Add(fill);
 
             var row = new StackPanel { Margin = new Thickness(0, 0, 0, spacing) };
@@ -113,7 +123,7 @@ public sealed class BarsWidget : Widget
             var fraction = available[i] && store.TryGet(row.Metric, out var sample) ? Fraction(sample, row.Max) : 0;
             row.Track.ColumnDefinitions[0].Width = new GridLength(fraction, GridUnitType.Star);
             row.Track.ColumnDefinitions[1].Width = new GridLength(1 - fraction, GridUnitType.Star);
-            row.Fill.Background = _thresholds.Pick(store, row.Metric, Theme.Accent);
+            row.Fill.Background = _thresholds.Pick(store, row.Metric, _fill);
 
             // While editing, an unreadable bar fades rather than disappears (unless the whole widget is already faded).
             var hidden = _hideUnavailable && !available[i];

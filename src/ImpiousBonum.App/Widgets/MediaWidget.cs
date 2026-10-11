@@ -32,6 +32,12 @@ public sealed class MediaWidget : Widget
             Setting.Number("controlSize", "Button size", 52, 16, 200, group: Setting.Appearance),
             Setting.Toggle("hideIdle", "Hide when nothing is playing", true, group: Setting.Appearance,
                 help: "It shows faded while you edit the layout."),
+            Setting.Color("textColor", "Title colour", "foreground"),
+            Setting.Color("detailColor", "Second line colour", "secondary", help: "The second line, the times under the progress bar, and the music note when there's no album art."),
+            Setting.Color("artColor", "Album art background", "track", help: "Behind the music note when there's no album art. track is the theme's bar track."),
+            Setting.Color("progressColor", "Progress colour", "accent"),
+            Setting.Color("trackColor", "Progress track colour", "track", help: "The rest of the progress bar. track is the theme's bar track."),
+            Setting.Color("buttonColor", "Button colour", "foreground"),
         ],
         (settings, theme) => new MediaWidget(settings, theme));
 
@@ -51,6 +57,8 @@ public sealed class MediaWidget : Widget
     private readonly FrameworkElement? _playIcon;
     private readonly FrameworkElement? _pauseIcon;
     private object? _artwork;
+    private readonly Brush _artBackground;
+    private readonly Brush _buttons;
 
     public MediaWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
@@ -59,6 +67,10 @@ public sealed class MediaWidget : Widget
         _hideIdle = settings.Bool("hideIdle");
         var fontSize = settings.Number("fontSize");
         var subtitleSize = settings.OptionalNumber("subtitleSize") ?? fontSize * 0.7;
+        var text = theme.Resolve(settings.String("textColor"), theme.Foreground);
+        var detail = theme.Resolve(settings.String("detailColor"), theme.Secondary);
+        _artBackground = theme.Resolve(settings.String("artColor"), theme.Track);
+        _buttons = theme.Resolve(settings.String("buttonColor"), theme.Foreground);
 
         ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -67,9 +79,9 @@ public sealed class MediaWidget : Widget
         if (settings.Bool("showArt"))
         {
             // A square as tall as the widget; the picture fills it, cropped to the middle.
-            _art = new Border { CornerRadius = new CornerRadius(8), Background = theme.Track, Margin = new Thickness(0, 0, fontSize * 0.6, 0) };
+            _art = new Border { CornerRadius = new CornerRadius(8), Background = _artBackground, Margin = new Thickness(0, 0, fontSize * 0.6, 0) };
             _art.SetBinding(WidthProperty, new Binding(nameof(ActualHeight)) { RelativeSource = RelativeSource.Self });
-            _artPlaceholder = Icons.Create("music", theme.Secondary, fontSize * 1.4, 1.5);
+            _artPlaceholder = Icons.Create("music", detail, fontSize * 1.4, 1.5);
             _artPlaceholder.HorizontalAlignment = HorizontalAlignment.Center;
             _artPlaceholder.VerticalAlignment = VerticalAlignment.Center;
             _art.Child = _artPlaceholder;
@@ -80,27 +92,27 @@ public sealed class MediaWidget : Widget
         SetColumn(info, 1);
         Children.Add(info);
 
-        _titleText = CreateText(fontSize);
+        _titleText = CreateText(fontSize, text);
         _titleText.TextTrimming = TextTrimming.CharacterEllipsis;
         info.Children.Add(_titleText);
         if (_subtitle is not null)
         {
-            _subtitleText = CreateText(subtitleSize, theme.Secondary);
+            _subtitleText = CreateText(subtitleSize, detail);
             _subtitleText.TextTrimming = TextTrimming.CharacterEllipsis;
             info.Children.Add(_subtitleText);
         }
 
         if (settings.Bool("showProgress"))
         {
-            _progress = new Grid { Height = Math.Max(3, fontSize * 0.15), Background = theme.Track, Margin = new Thickness(0, fontSize * 0.35, 0, 0) };
+            _progress = new Grid { Height = Math.Max(3, fontSize * 0.15), Background = theme.Resolve(settings.String("trackColor"), theme.Track), Margin = new Thickness(0, fontSize * 0.35, 0, 0) };
             _progress.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) });
             _progress.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            _progress.Children.Add(new Border { Background = theme.Accent });
+            _progress.Children.Add(new Border { Background = theme.Resolve(settings.String("progressColor"), theme.Accent) });
             info.Children.Add(_progress);
 
             var times = new Grid { Margin = new Thickness(0, 2, 0, 0) };
-            _position = CreateText(subtitleSize * 0.75, theme.Secondary);
-            _duration = CreateText(subtitleSize * 0.75, theme.Secondary, HorizontalAlignment.Right);
+            _position = CreateText(subtitleSize * 0.75, detail);
+            _duration = CreateText(subtitleSize * 0.75, detail, HorizontalAlignment.Right);
             times.Children.Add(_position);
             times.Children.Add(_duration);
             info.Children.Add(times);
@@ -111,8 +123,8 @@ public sealed class MediaWidget : Widget
             var size = settings.Number("controlSize");
             var controls = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(fontSize * 0.5, 0, 0, 0) };
             controls.Children.Add(Control("previous", WidgetAction.Previous, size * 0.7));
-            _playIcon = Icons.Create("play", theme.Foreground, size, 1.5, filled: true);
-            _pauseIcon = Icons.Create("pause", theme.Foreground, size, 1.5, filled: true);
+            _playIcon = Icons.Create("play", _buttons, size, 1.5, filled: true);
+            _pauseIcon = Icons.Create("pause", _buttons, size, 1.5, filled: true);
             _playPause = new ContentControl { Content = _playIcon, Focusable = false };
             controls.Children.Add(Tap(_playPause, WidgetAction.PlayPause, size));
             controls.Children.Add(Control("next", WidgetAction.Next, size * 0.7));
@@ -121,7 +133,7 @@ public sealed class MediaWidget : Widget
         }
     }
 
-    private FrameworkElement Control(string icon, string action, double size) => Tap(Icons.Create(icon, Theme.Foreground, size, 1.5, filled: true), action, size);
+    private FrameworkElement Control(string icon, string action, double size) => Tap(Icons.Create(icon, _buttons, size, 1.5, filled: true), action, size);
 
     private TapTarget Tap(FrameworkElement content, string action, double size)
     {
@@ -168,7 +180,7 @@ public sealed class MediaWidget : Widget
             return;
         _artwork = artwork;
         var image = artwork is byte[] bytes ? Decode(bytes, ActualHeight) : null;
-        _art!.Background = image is null ? Theme.Track : new ImageBrush(image) { Stretch = Stretch.UniformToFill };
+        _art!.Background = image is null ? _artBackground : new ImageBrush(image) { Stretch = Stretch.UniformToFill };
         _art.Child = image is null ? _artPlaceholder : null;
     }
 

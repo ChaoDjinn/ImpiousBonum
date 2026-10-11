@@ -10,6 +10,10 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - Full-colour icons: a yellow sun, white clouds, grey rain clouds with blue rain, white lightning. Outline icons in one colour are still the default.
 - Its own text and detail colours, instead of always the theme's.
 
+**Every widget can override the theme**
+- Each widget has its own *Widget theme* settings: font, weight, text, secondary, accent, bar track, warning and critical colours. Empty uses the layout's theme, as before.
+- Widgets that borrowed the theme's bar track for other things have their own colours now. The *Now playing* album-art background and progress bar no longer change with the bar track. Bars, drives, gauges, CPU threads and buttons each have their own track or tile colour, and bars, drives, buttons and *Now playing* their own text colours.
+
 ## 0.9.0
 
 Fifteen new features and seven new widgets, from top apps to a layout gallery.

@@ -45,6 +45,8 @@ public sealed class ButtonsWidget : Widget
             Setting.Choice("style", "Style", "tile", ["tile", "plain"], group: Setting.Appearance, help: "tile gives each button a background."),
             Setting.Number("cornerRadius", "Corner radius", 10, 0, 200, group: Setting.Appearance),
             Setting.Color("color", "Icon colour", "accent"),
+            Setting.Color("tileColor", "Tile colour", "track", help: "Each button's background, with the tile style. track is the theme's bar track."),
+            Setting.Color("labelColor", "Label colour", "foreground"),
         ],
         (settings, theme) => new ButtonsWidget(settings, theme));
 
@@ -61,6 +63,8 @@ public sealed class ButtonsWidget : Widget
         var tile = settings.String("style") != "plain";
         var radius = new CornerRadius(settings.Number("cornerRadius"));
         var iconBrush = theme.Resolve(settings.String("color"), theme.Accent);
+        var tileBrush = theme.Resolve(settings.String("tileColor"), theme.Track);
+        var labelBrush = theme.Resolve(settings.String("labelColor"), theme.Foreground);
 
         var grid = new UniformGrid
         {
@@ -75,7 +79,7 @@ public sealed class ButtonsWidget : Widget
                 content.Children.Add(Icons.Create(button.String("icon"), iconBrush, iconSize, filled: WidgetAction.MediaKinds.Contains(action.Kind)));
             if (button.String("label") is { Length: > 0 } label)
             {
-                var text = CreateText(fontSize, alignment: HorizontalAlignment.Center);
+                var text = CreateText(fontSize, labelBrush, HorizontalAlignment.Center);
                 text.Text = label;
                 text.TextTrimming = TextTrimming.CharacterEllipsis;
                 if (content.Children.Count > 0)
@@ -86,7 +90,7 @@ public sealed class ButtonsWidget : Widget
             var target = new TapTarget
             {
                 Child = content,
-                Background = tile ? theme.Track : Brushes.Transparent,
+                Background = tile ? tileBrush : Brushes.Transparent,
                 CornerRadius = radius,
                 Margin = new Thickness(spacing / 2),
                 Padding = new Thickness(spacing / 2),

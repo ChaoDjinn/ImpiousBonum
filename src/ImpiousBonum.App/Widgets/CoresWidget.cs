@@ -23,6 +23,7 @@ public sealed class CoresWidget : Widget
             Setting.Number("gap", "Gap", 3, 0, 50, group: Setting.Appearance),
             Setting.Number("cornerRadius", "Corner radius", 2, 0, 50, group: Setting.Appearance),
             Setting.Color("color", "Busy colour", "accent"),
+            Setting.Color("trackColor", "Idle colour", "track", help: "An idle thread's bar track or heatmap cell. track is the theme's bar track."),
             Setting.Thresholds("Changes a thread's colour. An empty metric uses that thread's load."),
         ],
         (settings, theme) => new CoresWidget(settings, theme));
@@ -41,7 +42,7 @@ public sealed class CoresWidget : Widget
             Rows = (int)settings.Number("rows"),
             Gap = settings.Number("gap"),
             Radius = settings.Number("cornerRadius"),
-            Track = theme.Track,
+            Track = theme.Resolve(settings.String("trackColor"), theme.Track),
         };
         Children.Add(_cores);
     }

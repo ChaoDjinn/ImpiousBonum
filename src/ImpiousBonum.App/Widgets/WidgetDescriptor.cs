@@ -127,6 +127,29 @@ public static class Setting
 
     public const string ThresholdsKey = "thresholds";
 
+    /// <summary>The group every widget's theme overrides are in.</summary>
+    public const string WidgetTheme = "Widget theme";
+
+    /// <summary>Picks the layout's font weight in <see cref="ThemeOverrides"/>.</summary>
+    public const string FromTheme = "theme";
+
+    /// <summary>
+    /// Settings every widget has (the factory adds them): its own font and colours instead of the layout theme's.
+    /// Empty, or "theme" for the weight, uses the theme's. Named colours in the widget's other settings, such as
+    /// "accent", then mean the widget's own.
+    /// </summary>
+    public static readonly IReadOnlyList<SettingDescriptor> ThemeOverrides =
+    [
+        new("fontFamily", "Font", SettingKind.Font, null, WidgetTheme, "Empty uses the theme's."),
+        Choice("fontWeight", "Weight", FromTheme, [FromTheme, .. Editor.EditorDescriptors.FontWeights], WidgetTheme),
+        Color("foreground", "Text", null!, WidgetTheme, "Empty uses the theme's.", named: false),
+        Color("secondary", "Secondary text", null!, WidgetTheme, "Empty uses the theme's.", named: false),
+        Color("accent", "Accent", null!, WidgetTheme, "Empty uses the theme's.", named: false),
+        Color("track", "Bar track", null!, WidgetTheme, "Empty uses the theme's.", named: false),
+        Color("warning", "Warning", null!, WidgetTheme, "Empty uses the theme's.", named: false),
+        Color("critical", "Critical", null!, WidgetTheme, "Empty uses the theme's.", named: false),
+    ];
+
     /// <summary>The <c>thresholds</c> list read by <see cref="ThresholdColors"/>. <paramref name="help"/> says what it colours and what "own metric" means.</summary>
     public static SettingDescriptor Thresholds(string help) =>
         Items(ThresholdsKey, "Warning colours",

@@ -14,6 +14,21 @@ Widgets with a `thresholds` list change colour when a value crosses a limit, e.g
 Each rule checks its `metric` (empty means the widget's own) against `above` and/or `below`. When several rules match,
 the last one in the list wins, so list them mildest first. A metric with no reading keeps the normal colour.
 
+Every widget can also have its own font and colours instead of the layout theme's (*Widget theme* in the editor).
+Leave them out, or empty, to use the theme's. Named colours in the widget's other settings, such as `accent`, then
+mean the widget's own.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `fontFamily` | font | — | Font. Empty uses the theme's. |
+| `fontWeight` | `theme` / `Thin` / `ExtraLight` / `Light` / `Normal` / `Medium` / `SemiBold` / `Bold` / `ExtraBold` / `Black` | `theme` | Weight |
+| `foreground` | color | — | Text. Empty uses the theme's. |
+| `secondary` | color | — | Secondary text. Empty uses the theme's. |
+| `accent` | color | — | Accent. Empty uses the theme's. |
+| `track` | color | — | Bar track. Empty uses the theme's. |
+| `warning` | color | — | Warning. Empty uses the theme's. |
+| `critical` | color | — | Critical. Empty uses the theme's. |
+
 ## Text (`text`)
 
 A line of text with live values, e.g. "{gpu.load}" or "{cpu.temp:nounit} °C".
@@ -99,6 +114,7 @@ A dial filled to a metric's share of its range, with the value in the middle, e.
 | `max` | number | — | Maximum. A full dial. Empty uses the metric's natural maximum: 100 for percentages, the total for memory. |
 | `thickness` | number (1–200) | `16` | Thickness |
 | `color` | color | `accent` | Colour. The filled part of the dial. |
+| `trackColor` | color | `track` | Track colour. The empty part of the dial. track is the theme's bar track. |
 | `fontSize` | number (6–400) | `56` | Value size. Shrinks to fit inside the dial. |
 | `labelSize` | number (6–200) | `24` | Label size |
 | `thresholds` | list | — | Warning colours. Changes the dial and the value. An empty metric uses the gauge's metric. When several rules match, the last one wins, so list them mildest first. |
@@ -123,6 +139,7 @@ Every logical processor's load at once, as bars or a heatmap: shows whether work
 | `gap` | number (0–50) | `3` | Gap |
 | `cornerRadius` | number (0–50) | `2` | Corner radius |
 | `color` | color | `accent` | Busy colour |
+| `trackColor` | color | `track` | Idle colour. An idle thread's bar track or heatmap cell. track is the theme's bar track. |
 | `thresholds` | list | — | Warning colours. Changes a thread's colour. An empty metric uses that thread's load. When several rules match, the last one wins, so list them mildest first. |
 
 Each entry in `thresholds`:
@@ -238,6 +255,10 @@ One row per drive with free space and a bar showing how full it is. Follows driv
 | `fontSize` | number (6–200) | `25` | Font size |
 | `barHeight` | number (1–100) | `5` | Bar height |
 | `spacing` | number (0–200) | `12` | Row spacing |
+| `color` | color | `accent` | Bar colour |
+| `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
+| `labelColor` | color | `foreground` | Label colour |
+| `valueColor` | color | `secondary` | Value colour |
 | `thresholds` | list | — | Warning colours. Changes each drive's bar. An empty metric uses that drive's used percentage (disk.C.usedPct for C:). When several rules match, the last one wins, so list them mildest first. |
 
 Each entry in `thresholds`:
@@ -301,6 +322,10 @@ Labelled bars, one per metric, each filled to the metric's share of its maximum,
 | `barHeight` | number (1–100) | `8` | Bar height |
 | `spacing` | number (0–200) | `12` | Bar spacing |
 | `hideUnavailable` | true/false | `true` | Hide without a reading. Hides a bar whose metric has no reading, and the whole widget when none has one. They show faded while you edit the layout. |
+| `color` | color | `accent` | Bar colour |
+| `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
+| `labelColor` | color | `foreground` | Label colour |
+| `valueColor` | color | `secondary` | Value colour |
 | `thresholds` | list | — | Warning colours. Changes each bar. An empty metric uses that bar's metric. When several rules match, the last one wins, so list them mildest first. |
 
 Each entry in `bars`:
@@ -336,6 +361,12 @@ What's playing in Spotify, a browser, Media Player or any app in Windows' media 
 | `showControls` | true/false | `true` | Buttons. Previous, play/pause and next. They work like the keyboard's media keys. |
 | `controlSize` | number (16–200) | `52` | Button size |
 | `hideIdle` | true/false | `true` | Hide when nothing is playing. It shows faded while you edit the layout. |
+| `textColor` | color | `foreground` | Title colour |
+| `detailColor` | color | `secondary` | Second line colour. The second line, the times under the progress bar, and the music note when there's no album art. |
+| `artColor` | color | `track` | Album art background. Behind the music note when there's no album art. track is the theme's bar track. |
+| `progressColor` | color | `accent` | Progress colour |
+| `trackColor` | color | `track` | Progress track colour. The rest of the progress bar. track is the theme's bar track. |
+| `buttonColor` | color | `foreground` | Button colour |
 
 ## Audio visualiser (`visualizer`)
 
@@ -367,6 +398,8 @@ Buttons to tap: play/pause, skip and volume, open a program, file or web address
 | `style` | `tile` / `plain` | `tile` | Style. tile gives each button a background. |
 | `cornerRadius` | number (0–200) | `10` | Corner radius |
 | `color` | color | `accent` | Icon colour |
+| `tileColor` | color | `track` | Tile colour. Each button's background, with the tile style. track is the theme's bar track. |
+| `labelColor` | color | `foreground` | Label colour |
 
 Each entry in `buttons`:
 
@@ -471,6 +504,10 @@ Your Claude plan's session (5-hour) and weekly usage, as Claude Code reports the
 | `barHeight` | number (1–100) | `8` | Bar height |
 | `spacing` | number (0–200) | `12` | Bar spacing |
 | `hideUnavailable` | true/false | `true` | Hide without a reading. Hides a bar whose metric has no reading, and the whole widget when none has one. They show faded while you edit the layout. |
+| `color` | color | `accent` | Bar colour |
+| `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
+| `labelColor` | color | `foreground` | Label colour |
+| `valueColor` | color | `secondary` | Value colour |
 | `thresholds` | list | — | Warning colours. Changes each bar. An empty metric uses that bar's metric. When several rules match, the last one wins, so list them mildest first. |
 
 Each entry in `bars`:
