@@ -38,7 +38,7 @@ public sealed class WidgetSetupTests
         {
             string? place = null;
             Window? openedOver = null;
-            IReadOnlyList<WidgetSetup> Setups(WidgetDescriptor descriptor) => descriptor == WeatherWidget.Descriptor
+            IReadOnlyList<WidgetSetup> Setups(WidgetDescriptor descriptor) => descriptor.Type == "weather"
                 ? [new(place is null ? "Set location…" : "Change location…", () => place is null ? "No location yet." : $"Forecasts for {place}.", owner =>
                 {
                     openedOver = owner;

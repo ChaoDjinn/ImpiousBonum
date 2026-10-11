@@ -386,9 +386,9 @@ public partial class App : Application
         _editor.Setups = WidgetSetups;
         _editor.WidgetAdded += (_, descriptor) =>
         {
-            if (descriptor == BarsWidget.ClaudeDescriptor && _editor is { } editor)
+            if (descriptor.Type == BarsWidget.ClaudeDescriptor.Type && _editor is { } editor)
                 OfferClaudeCodeConnection(editor);
-            else if (descriptor == WeatherWidget.Descriptor && _settings.WeatherLocation is null && _editor is { } owner)
+            else if (descriptor.Type == WeatherWidget.Descriptor.Type && _settings.WeatherLocation is null && _editor is { } owner)
                 SetWeatherLocation(owner);
         };
         _editor.Closed += (_, _) =>
@@ -409,17 +409,17 @@ public partial class App : Application
     /// <summary>The editor's buttons for what a widget needs set up outside the layout: the same as the tray's.</summary>
     internal IReadOnlyList<WidgetSetup> WidgetSetups(WidgetDescriptor descriptor)
     {
-        if (descriptor == WeatherWidget.Descriptor)
+        if (descriptor.Type == WeatherWidget.Descriptor.Type)
         {
             return [new(_settings.WeatherLocation is null ? "Set location…" : "Change location…",
                 () => _settings.WeatherLocation is { } place ? $"Forecasts for {place.Name}." : "No location yet, so there's no forecast.",
                 SetWeatherLocation)];
         }
-        if (descriptor == AgendaWidget.Descriptor)
+        if (descriptor.Type == AgendaWidget.Descriptor.Type)
             return [new("Calendars…", () => Count(_settings.Calendars.Count, "calendar", "No calendars yet, so the agenda is empty."), EditCalendars)];
-        if (descriptor == NewsWidget.Descriptor)
+        if (descriptor.Type == NewsWidget.Descriptor.Type)
             return [new("News feeds…", () => Count(_settings.NewsFeeds.Count, "news feed", "No news feeds yet, so there are no headlines."), EditNews)];
-        if (descriptor == BarsWidget.ClaudeDescriptor)
+        if (descriptor.Type == BarsWidget.ClaudeDescriptor.Type)
         {
             return [new(IsClaudeCodeConnected() ? "Reconnect Claude Code" : "Connect Claude Code…",
                 () => IsClaudeCodeConnected() ? "Claude Code is connected." : "Claude Code isn't connected yet, so there's no usage.",
