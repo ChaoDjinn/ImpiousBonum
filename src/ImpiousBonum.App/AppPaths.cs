@@ -12,6 +12,9 @@ public static class AppPaths
 
     public static string LogFile => Path.Combine(DataDirectory, "dashboard.log");
 
+    /// <summary>Where tray → Logging… writes its daily CSV files.</summary>
+    public static string LogsFolder => Path.Combine(DataDirectory, "logs");
+
     /// <summary>One line per game session (see <see cref="Core.Sessions.SessionLog"/>).</summary>
     public static string SessionsFile => Path.Combine(DataDirectory, "sessions.csv");
 
