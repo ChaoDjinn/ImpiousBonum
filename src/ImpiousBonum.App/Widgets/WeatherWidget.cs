@@ -21,6 +21,8 @@ public sealed class WeatherWidget : Widget
         "The weather now and the days or hours ahead, from Open-Meteo.com. Set your location from the tray: Weather → Set location.",
         900, 180,
         [
+            Setting.Toggle("showCurrent", "Weather now", true, group: Setting.Content,
+                help: "The big icon and temperature for now. Off leaves just the forecast, e.g. for a widget of the hours ahead beside another of the days."),
             Setting.Choice("forecast", "Forecast", "days", ["days", "hours", "none"]),
             Setting.Number("count", "Days or hours", 5, 1, 14, group: Setting.Content),
             Setting.Number("hourStep", "Hours apart", 1, 1, 12, group: Setting.Content, help: "For an hourly forecast, e.g. 3 for every three hours."),
@@ -28,7 +30,11 @@ public sealed class WeatherWidget : Widget
             Setting.Toggle("showLocation", "Location", false, group: Setting.Content),
             Setting.Number("fontSize", "Temperature size", 80, 6, 400),
             Setting.Number("forecastSize", "Forecast size", 22, 6, 200),
-            Setting.Color("iconColor", "Icon colour", "accent"),
+            Setting.Choice("iconStyle", "Icons", "outline", ["outline", "colour"], group: Setting.Appearance,
+                help: "outline draws them in the icon colour below; colour in their own: a yellow sun, white clouds, blue rain, white lightning."),
+            Setting.Color("iconColor", "Icon colour", "accent", help: "For outline icons."),
+            Setting.Color("textColor", "Text colour", "foreground", help: "The temperatures and conditions."),
+            Setting.Color("detailColor", "Detail colour", "secondary", help: "Highs and lows, feels like, times and days, and the chance of rain."),
         ],
         (settings, theme) => new WeatherWidget(settings, theme));
 
@@ -39,6 +45,10 @@ public sealed class WeatherWidget : Widget
     private readonly double _fontSize;
     private readonly double _forecastSize;
     private readonly Brush _iconBrush;
+    private readonly bool _colourIcons;
+    private readonly Brush _text;
+    private readonly Brush _detail;
+    private readonly bool _showCurrent;
     private readonly ContentControl _icon;
     private readonly TextBlock _temperature;
     private readonly StackPanel? _details;
@@ -55,10 +65,14 @@ public sealed class WeatherWidget : Widget
         _fontSize = settings.Number("fontSize");
         _forecastSize = settings.Number("forecastSize");
         _iconBrush = theme.Resolve(settings.String("iconColor"), theme.Accent);
+        _colourIcons = settings.String("iconStyle") == "colour";
+        _text = theme.Resolve(settings.String("textColor"), theme.Foreground);
+        _detail = theme.Resolve(settings.String("detailColor"), theme.Secondary);
+        _showCurrent = settings.Bool("showCurrent");
 
         var now = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         _icon = new ContentControl { Focusable = false, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, _fontSize * 0.2, 0) };
-        _temperature = CreateText(_fontSize);
+        _temperature = CreateText(_fontSize, _text);
         _temperature.VerticalAlignment = VerticalAlignment.Center;
         now.Children.Add(_icon);
         now.Children.Add(_temperature);
@@ -70,12 +84,16 @@ public sealed class WeatherWidget : Widget
 
         ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        Children.Add(now);
+        if (_showCurrent)
+            Children.Add(now);
 
         if (_forecast != "none")
         {
-            _ahead = new UniformGrid { Rows = 1, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(_fontSize * 0.5, 0, 0, 0) };
-            SetColumn(_ahead, 1);
+            // Without the weather now, the forecast has the whole width.
+            _ahead = new UniformGrid { Rows = 1, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(_showCurrent ? _fontSize * 0.5 : 0, 0, 0, 0) };
+            SetColumn(_ahead, _showCurrent ? 1 : 0);
+            if (!_showCurrent)
+                SetColumnSpan(_ahead, 2);
             Children.Add(_ahead);
         }
         ShowEmpty();
@@ -104,9 +122,12 @@ public sealed class WeatherWidget : Widget
         _icon.Content = Icon("cloud", _fontSize * 0.9, Theme.Secondary);
         _temperature.Text = "—";
         _details?.Children.Clear();
-        _details?.Children.Add(Line("No weather yet", _fontSize * 0.3, Theme.Foreground));
-        _details?.Children.Add(Line("Tray → Weather → Set location", _fontSize * 0.22, Theme.Secondary));
+        _details?.Children.Add(Line("No weather yet", _fontSize * 0.3, _text));
+        _details?.Children.Add(Line("Tray → Weather → Set location", _fontSize * 0.22, _detail));
         _ahead?.Children.Clear();
+        // With only a forecast showing, say why it's empty there instead.
+        if (!_showCurrent && _ahead is not null)
+            _ahead.Children.Add(Line("No weather yet: tray → Weather → Set location", _forecastSize, _detail));
     }
 
     private void Show(WeatherReport report, string? location)
@@ -119,12 +140,12 @@ public sealed class WeatherWidget : Widget
             _details.Children.Clear();
             if (Settings.Bool("showDetails"))
             {
-                _details.Children.Add(Line(WeatherCodes.Describe(report.Code), _fontSize * 0.3, Theme.Foreground));
+                _details.Children.Add(Line(WeatherCodes.Describe(report.Code), _fontSize * 0.3, _text));
                 var range = report.Today is { } today ? $"H {Degrees(today.Temperature)} · L {Degrees(today.Low)}" : null;
-                _details.Children.Add(Line(string.Join("  ·  ", new[] { range, $"Feels {Degrees(report.FeelsLike)}" }.OfType<string>()), _fontSize * 0.22, Theme.Secondary));
+                _details.Children.Add(Line(string.Join("  ·  ", new[] { range, $"Feels {Degrees(report.FeelsLike)}" }.OfType<string>()), _fontSize * 0.22, _detail));
             }
             if (_showLocation && !string.IsNullOrEmpty(location))
-                _details.Children.Add(Line(location.Split(',')[0], _fontSize * 0.22, Theme.Secondary));
+                _details.Children.Add(Line(location.Split(',')[0], _fontSize * 0.22, _detail));
         }
 
         if (_ahead is null)
@@ -144,7 +165,7 @@ public sealed class WeatherWidget : Widget
         var when = _forecast == "hours"
             ? period.Time.ToString("t", CultureInfo.CurrentCulture)
             : period.Time.Date == report.Time.Date ? "Today" : period.Time.ToString("ddd", CultureInfo.CurrentCulture);
-        column.Children.Add(Line(when, _forecastSize * 0.85, Theme.Secondary, HorizontalAlignment.Center));
+        column.Children.Add(Line(when, _forecastSize * 0.85, _detail, HorizontalAlignment.Center));
 
         var icon = Icon(WeatherCodes.Icon(period.Code, period.IsDay), _forecastSize * 1.7, _iconBrush);
         icon.HorizontalAlignment = HorizontalAlignment.Center;
@@ -152,18 +173,19 @@ public sealed class WeatherWidget : Widget
         column.Children.Add(icon);
 
         var temperature = new TextBlock { HorizontalAlignment = HorizontalAlignment.Center };
-        temperature.Inlines.Add(Run(Degrees(period.Temperature), Theme.Foreground));
+        temperature.Inlines.Add(Run(Degrees(period.Temperature), _text));
         if (period.Low is { } low)
-            temperature.Inlines.Add(Run(" " + Degrees(low), Theme.Secondary));
+            temperature.Inlines.Add(Run(" " + Degrees(low), _detail));
         ApplyFont(temperature, _forecastSize);
         column.Children.Add(temperature);
 
         if (period.RainChance is >= 30 and var chance)
-            column.Children.Add(Line($"{chance:0}%", _forecastSize * 0.75, Theme.Secondary, HorizontalAlignment.Center));
+            column.Children.Add(Line($"{chance:0}%", _forecastSize * 0.75, _detail, HorizontalAlignment.Center));
         return column;
     }
 
-    private FrameworkElement Icon(string name, double size, Brush brush) => Icons.Create(name, brush, size, 1.6);
+    private FrameworkElement Icon(string name, double size, Brush brush) =>
+        _colourIcons ? Icons.CreateColour(name, size, 1.6, brush) : Icons.Create(name, brush, size, 1.6);
 
     private TextBlock Line(string text, double size, Brush brush, HorizontalAlignment alignment = HorizontalAlignment.Left)
     {

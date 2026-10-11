@@ -22,7 +22,7 @@ dotnet run --project src/ImpiousBonum.App -c Release -- --widget-docs docs/widge
 
 ## Making a release
 
-1. Add a `## x.y.z` section to [`CHANGELOG.md`](../CHANGELOG.md) saying what's new, for people using the app: it becomes the release notes. Set `<Version>` in `Directory.Build.props` to the new version, and merge both to `main`.
+1. In [`CHANGELOG.md`](../CHANGELOG.md), rename *Unreleased* to `## x.y.z` (it should already say what's new, for people using the app): it becomes the release notes. Set `<Version>` in `Directory.Build.props` to the new version, and merge both to `main`.
 2. In the repository's **Actions** tab, open **Release**, choose **Run workflow**, leave the branch on `main` and press **Run workflow**.
 
 The [release workflow](../.github/workflows/release.yml) reads the version from `Directory.Build.props`, runs the tests, downloads the previous release so it can build a delta package, packs the installer with Velopack, tags the commit (for example `v0.4.0`) and publishes the GitHub release *Impious Bonum 0.4.0*. Installed copies pick it up on their next update check. A version number can only be released once, so the run stops straight away if that tag already exists.
