@@ -1,0 +1,12 @@
+// Blue ballpoint on white paper.
+{
+  "fontFamily": "Ink Free",
+  "fontWeight": "Normal",
+  "foreground": "#1F3A68",
+  "secondary": "#B31F3A68",
+  "accent": "#2B59C3",
+  "background": "#FBFBF6",
+  "track": "#DCE3EC",
+  "warning": "#B36700",
+  "critical": "#D7263D"
+}

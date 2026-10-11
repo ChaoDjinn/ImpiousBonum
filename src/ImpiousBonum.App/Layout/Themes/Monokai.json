@@ -1,0 +1,12 @@
+// The Monokai palette: lime, yellow and pink on olive black.
+{
+  "fontFamily": "Cascadia Mono, Consolas",
+  "fontWeight": "Normal",
+  "foreground": "#F8F8F2",
+  "secondary": "#B3F8F8F2",
+  "accent": "#A6E22E",
+  "background": "#272822",
+  "track": "#3E3D32",
+  "warning": "#E6DB74",
+  "critical": "#F92672"
+}

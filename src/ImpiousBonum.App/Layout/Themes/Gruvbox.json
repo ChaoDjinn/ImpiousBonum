@@ -1,0 +1,12 @@
+// The Gruvbox palette: warm retro yellows and greens on dark brown-grey.
+{
+  "fontFamily": "Cascadia Mono, Consolas",
+  "fontWeight": "Normal",
+  "foreground": "#EBDBB2",
+  "secondary": "#B3EBDBB2",
+  "accent": "#B8BB26",
+  "background": "#282828",
+  "track": "#3C3836",
+  "warning": "#FABD2F",
+  "critical": "#FB4934"
+}

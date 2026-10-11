@@ -1,0 +1,12 @@
+// Champagne and gold on deep emerald, all Art Deco glamour.
+{
+  "fontFamily": "Constantia",
+  "fontWeight": "Normal",
+  "foreground": "#F3E5AB",
+  "secondary": "#B3F3E5AB",
+  "accent": "#D4AF37",
+  "background": "#0B2A22",
+  "track": "#164034",
+  "warning": "#FF9E44",
+  "critical": "#FF5A5F"
+}

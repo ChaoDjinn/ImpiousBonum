@@ -1,0 +1,12 @@
+// The Dracula palette: purple, pink and cyan on night grey.
+{
+  "fontFamily": "Cascadia Mono, Consolas",
+  "fontWeight": "Normal",
+  "foreground": "#F8F8F2",
+  "secondary": "#CCF8F8F2",
+  "accent": "#BD93F9",
+  "background": "#282A36",
+  "track": "#44475A",
+  "warning": "#FFB86C",
+  "critical": "#FF5555"
+}

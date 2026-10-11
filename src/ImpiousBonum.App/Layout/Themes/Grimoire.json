@@ -1,0 +1,12 @@
+// Candlelit parchment and old gold on dark leather, for fantasy RPGs.
+{
+  "fontFamily": "Palatino Linotype",
+  "fontWeight": "Normal",
+  "foreground": "#EFE3C4",
+  "secondary": "#B3EFE3C4",
+  "accent": "#D4A541",
+  "background": "#17110C",
+  "track": "#2E241A",
+  "warning": "#E8833A",
+  "critical": "#E5484D"
+}

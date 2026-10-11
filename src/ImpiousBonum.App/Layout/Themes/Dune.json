@@ -1,0 +1,12 @@
+// Sun-baked sand and spice gold under a desert sky.
+{
+  "fontFamily": "Corbel",
+  "fontWeight": "Normal",
+  "foreground": "#F7E7C6",
+  "secondary": "#B3F7E7C6",
+  "accent": "#E8A23B",
+  "background": "#2A1C12",
+  "track": "#432F1F",
+  "warning": "#FF6B35",
+  "critical": "#E0283F"
+}

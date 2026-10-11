@@ -1,0 +1,12 @@
+// Cherry-blossom pinks on dark plum.
+{
+  "fontFamily": "Yu Gothic UI",
+  "fontWeight": "Light",
+  "foreground": "#FFE4EC",
+  "secondary": "#B3FFC4D6",
+  "accent": "#FFB7C5",
+  "background": "#1E1018",
+  "track": "#3A2231",
+  "warning": "#FFD59E",
+  "critical": "#FF4F6D"
+}

@@ -1,0 +1,12 @@
+// Chalk on a school blackboard, with yellow and pink chalk for warnings.
+{
+  "fontFamily": "Segoe Print",
+  "fontWeight": "Normal",
+  "foreground": "#F2F2EA",
+  "secondary": "#BFF2F2EA",
+  "accent": "#F2F2EA",
+  "background": "#22392D",
+  "track": "#2F4C3D",
+  "warning": "#F7E26B",
+  "critical": "#F4978E"
+}

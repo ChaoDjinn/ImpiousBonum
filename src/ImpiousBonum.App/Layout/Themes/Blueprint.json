@@ -1,0 +1,12 @@
+// White technical lines on drafting-table blue.
+{
+  "fontFamily": "Bahnschrift",
+  "fontWeight": "Light",
+  "foreground": "#FFFFFF",
+  "secondary": "#C0DCEBFF",
+  "accent": "#FFFFFF",
+  "background": "#1A4C8B",
+  "track": "#2E64A6",
+  "warning": "#FFE066",
+  "critical": "#FF8A8A"
+}

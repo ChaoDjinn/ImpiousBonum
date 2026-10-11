@@ -1,0 +1,12 @@
+// Light blue on dark blue, straight from a 1982 home computer's READY prompt.
+{
+  "fontFamily": "Consolas",
+  "fontWeight": "Bold",
+  "foreground": "#B3A9FF",
+  "secondary": "#B3B3A9FF",
+  "accent": "#8E82E8",
+  "background": "#352879",
+  "track": "#4A3D99",
+  "warning": "#E8E86A",
+  "critical": "#FF7272"
+}

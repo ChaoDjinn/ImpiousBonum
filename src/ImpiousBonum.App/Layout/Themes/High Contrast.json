@@ -1,0 +1,12 @@
+// Bold white on black with yellow graphs: readable from across the room.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "SemiBold",
+  "foreground": "#FFFFFF",
+  "secondary": "#FFFFFF",
+  "accent": "#FFEA00",
+  "background": "#000000",
+  "track": "#3A3A3A",
+  "warning": "#FF9100",
+  "critical": "#FF3B3B"
+}

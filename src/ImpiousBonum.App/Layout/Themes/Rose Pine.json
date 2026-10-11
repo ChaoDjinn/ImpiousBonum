@@ -1,0 +1,12 @@
+// The Rosé Pine palette: rose and gold on deep pine.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "Normal",
+  "foreground": "#E0DEF4",
+  "secondary": "#908CAA",
+  "accent": "#EBBCBA",
+  "background": "#191724",
+  "track": "#26233A",
+  "warning": "#F6C177",
+  "critical": "#EB6F92"
+}

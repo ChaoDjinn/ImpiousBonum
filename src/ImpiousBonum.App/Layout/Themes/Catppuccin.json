@@ -1,0 +1,12 @@
+// The Catppuccin Mocha palette: soft pastel mauve on dark.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "Normal",
+  "foreground": "#CDD6F4",
+  "secondary": "#BAC2DE",
+  "accent": "#CBA6F7",
+  "background": "#1E1E2E",
+  "track": "#313244",
+  "warning": "#F9E2AF",
+  "critical": "#F38BA8"
+}

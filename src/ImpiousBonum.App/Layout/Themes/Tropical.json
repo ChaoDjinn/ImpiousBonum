@@ -1,0 +1,12 @@
+// Coral and lagoon teal, with a hand-lettered beach-bar font.
+{
+  "fontFamily": "MV Boli",
+  "fontWeight": "Normal",
+  "foreground": "#FFF4E0",
+  "secondary": "#B3FFF4E0",
+  "accent": "#FF7F50",
+  "background": "#06302B",
+  "track": "#0F4840",
+  "warning": "#FFD23F",
+  "critical": "#FF3B5C"
+}

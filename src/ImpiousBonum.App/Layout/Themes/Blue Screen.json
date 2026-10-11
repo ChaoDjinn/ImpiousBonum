@@ -1,0 +1,12 @@
+// White on DOS blue in the old 16-colour palette, as seen on many a bad day.
+{
+  "fontFamily": "Lucida Console",
+  "fontWeight": "Normal",
+  "foreground": "#FFFFFF",
+  "secondary": "#AAAAAA",
+  "accent": "#55FFFF",
+  "background": "#0000AA",
+  "track": "#1A1AC8",
+  "warning": "#FFFF55",
+  "critical": "#FF5555"
+}

@@ -1,0 +1,12 @@
+// Amber phosphor on warm black, like a 1980s monochrome monitor.
+{
+  "fontFamily": "Lucida Console",
+  "fontWeight": "Normal",
+  "foreground": "#FFB000",
+  "secondary": "#B3FFB000",
+  "accent": "#FFB000",
+  "background": "#0C0700",
+  "track": "#2B1D00",
+  "warning": "#FFF0B3",
+  "critical": "#FF4A1C"
+}

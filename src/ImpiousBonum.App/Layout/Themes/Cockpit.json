@@ -1,0 +1,12 @@
+// A cyan heads-up display over a black visor.
+{
+  "fontFamily": "Bahnschrift",
+  "fontWeight": "Normal",
+  "foreground": "#D6F8FF",
+  "secondary": "#A600E5FF",
+  "accent": "#00E5FF",
+  "background": "#01080D",
+  "track": "#0B2733",
+  "warning": "#FFB300",
+  "critical": "#FF3D3D"
+}

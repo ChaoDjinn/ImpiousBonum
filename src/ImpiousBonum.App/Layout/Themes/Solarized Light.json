@@ -1,0 +1,12 @@
+// The Solarized light palette: blue on warm off-white.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "Normal",
+  "foreground": "#073642",
+  "secondary": "#586E75",
+  "accent": "#268BD2",
+  "background": "#FDF6E3",
+  "track": "#EEE8D5",
+  "warning": "#A57C00",
+  "critical": "#DC322F"
+}

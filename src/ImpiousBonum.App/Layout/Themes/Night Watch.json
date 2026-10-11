@@ -1,0 +1,12 @@
+// Dim reds only, so a screen beside you at night doesn't spoil your dark-adapted eyes.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "SemiLight",
+  "foreground": "#E83C3C",
+  "secondary": "#CCE83C3C",
+  "accent": "#C42727",
+  "background": "#000000",
+  "track": "#1C0606",
+  "warning": "#FF8A3D",
+  "critical": "#FFC9C9"
+}

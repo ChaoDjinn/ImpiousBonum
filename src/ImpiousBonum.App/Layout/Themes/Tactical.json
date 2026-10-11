@@ -1,0 +1,12 @@
+// Olive drab and khaki with low glare, for squad shooters.
+{
+  "fontFamily": "Franklin Gothic",
+  "fontWeight": "Medium",
+  "foreground": "#E3E1C8",
+  "secondary": "#B3E3E1C8",
+  "accent": "#A4B85C",
+  "background": "#12150D",
+  "track": "#262B1B",
+  "warning": "#F2B134",
+  "critical": "#E5482F"
+}
