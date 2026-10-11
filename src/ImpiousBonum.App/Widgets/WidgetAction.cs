@@ -23,6 +23,9 @@ public sealed record WidgetAction(string Kind, string Target = "", string Argume
     public const string VolumeDown = "volume-down";
     public const string Mute = "mute";
 
+    /// <summary>A Windows notification with <see cref="Target"/> as its message, for widgets with news to give (a finished timer). Not a button action.</summary>
+    public const string Notify = "notify";
+
     /// <summary>Every kind, in the order the editor offers them.</summary>
     public static readonly IReadOnlyList<string> Kinds = [PlayPause, Next, Previous, Stop, VolumeUp, VolumeDown, Mute, Open, Keys, Layout];
 

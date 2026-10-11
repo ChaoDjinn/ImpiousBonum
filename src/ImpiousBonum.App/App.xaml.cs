@@ -372,6 +372,11 @@ public partial class App : Application
     /// <summary>A tap on a dashboard button or media control. Problems show as a notification, since the tap gave no other feedback.</summary>
     private void RunAction(WidgetAction action)
     {
+        if (action.Kind == WidgetAction.Notify)
+        {
+            _tray?.ShowAlert(action.Target);
+            return;
+        }
         if (_actions?.Run(action) is not { } problem)
             return;
         AppLog.Warning($"Button ({action.Kind}): {problem}");
