@@ -51,6 +51,8 @@
 
   <ItemGroup>
     <!-- QR code for the tablet view's link (tray → Display → Tablet view → Show link). -->
+    <!-- What the PC is playing, for the audio visualiser (WASAPI loopback). -->
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
     <PackageReference Include="QRCoder" Version="1.8.0" />
     <PackageReference Include="Velopack" Version="1.2.158" />
   </ItemGroup>

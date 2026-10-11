@@ -47,7 +47,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="docs/images/default-layout.svg" alt="Map of the default layout: CPU and memory graphs, GPU load and VRAM, CPU and GPU temperatures, FPS, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Twenty widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `weather` ([Weather](#weather)), `agenda` ([Calendar](#calendar)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Twenty-one widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `weather` ([Weather](#weather)), `agenda` ([Calendar](#calendar)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
 
 ## What it shows
 
@@ -256,6 +256,18 @@ The *Reset* button underneath puts a countdown or stopwatch back to zero. A runn
 another page, switch layouts or edit the layout: timers with the same label, mode and length share one clock, so a
 countdown on two pages is the same countdown. Timers start again from scratch when the app restarts. The notification
 only comes while the timer is on screen; if it's on a page you're not showing, it comes when you next show it.
+
+## Audio visualiser
+
+The `visualizer` widget's bars move with whatever the PC is playing (music, a game, a video), from low notes on the
+left to high on the right, with peak markers that drift down. *Mirror* grows the bars up and down from the middle.
+It listens to the default output device the way Windows' own volume meters do (WASAPI loopback): nothing to install
+and nothing changes in what you hear. When nothing is playing, the bars settle to zero.
+
+It's the one widget that draws many times a second (25 by default; *Frames a second* goes from 5 to 60), so it costs a
+little CPU, but only while it's on screen: sound is captured only while a visualiser is showing, and stops when it's
+on another page, the dashboard is hidden, or the layout doesn't have one. It doesn't move in the tablet view, which
+updates once a second.
 
 ## Alerts
 
