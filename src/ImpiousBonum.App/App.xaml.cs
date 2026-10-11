@@ -984,7 +984,7 @@ public partial class App : Application
             {
                 var question =
                     $"Claude Code already has a status line:\n\n{command}\n\nReplace it with Impious Bonum's? It shows the model, context use "
-                    + "and your plan usage, and passes the usage to the dashboard.\n\nTo keep yours, choose No: the README's Claude usage "
+                    + "and your plan usage, and passes the usage to the dashboard.\n\nTo keep yours, choose No: the user guide's Claude usage "
                     + "section shows the line to add to your own script.";
                 var answer = owner is null
                     ? MessageBox.Show(question, "Impious Bonum", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No)
