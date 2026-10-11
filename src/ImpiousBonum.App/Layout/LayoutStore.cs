@@ -172,7 +172,7 @@ public sealed class LayoutStore : IDisposable
         ActiveChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>Renames a layout, keeping it active or remembered, and game links pointing at it, where they were.</summary>
+    /// <summary>Renames a layout, keeping it active or remembered, and game links and schedule rules pointing at it, where they were.</summary>
     public void Rename(string name, string newName)
     {
         Library.Rename(name, newName);
@@ -191,6 +191,14 @@ public sealed class LayoutStore : IDisposable
             if (_settings.GameLayouts[i] is { } rule && Is(name, rule.Layout))
             {
                 _settings.GameLayouts[i] = rule with { Layout = renamed };
+                changed = true;
+            }
+        }
+        for (var i = 0; i < _settings.Schedule.Count; i++)
+        {
+            if (_settings.Schedule[i] is { } rule && Is(name, rule.Layout))
+            {
+                _settings.Schedule[i] = rule with { Layout = renamed };
                 changed = true;
             }
         }

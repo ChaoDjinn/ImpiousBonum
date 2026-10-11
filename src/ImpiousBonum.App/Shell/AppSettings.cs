@@ -10,6 +10,7 @@ namespace ImpiousBonum.App.Shell;
 public sealed class AppSettings
 {
     private List<GameLayoutRule> _gameLayouts = [];
+    private List<ScheduleRule> _schedule = [];
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
     public string? MonitorId { get; set; }
@@ -49,6 +50,16 @@ public sealed class AppSettings
 
     /// <summary>Switch to a game's linked layout automatically. Off leaves the links in place but unused.</summary>
     public bool GameLayoutsEnabled { get; set; } = true;
+
+    /// <summary>Layouts and themes shown at times of day or with Windows in dark or light mode (see <see cref="ScheduleRule"/>).</summary>
+    public List<ScheduleRule> Schedule
+    {
+        get => _schedule;
+        set => _schedule = value ?? [];
+    }
+
+    /// <summary>Follow <see cref="Schedule"/>. Off leaves the rules in place but unused.</summary>
+    public bool ScheduleEnabled { get; set; } = true;
 
     /// <summary>Monitor whose top app the FPS reading follows (a <see cref="DisplayMonitor.Id"/>), or null for the foreground app.</summary>
     public string? FpsMonitorId { get; set; }
@@ -97,6 +108,7 @@ public sealed class AppSettings
             {
                 // Hand edits: drop links missing a process, or both a layout and a theme, rather than tripping over them later.
                 settings.GameLayouts.RemoveAll(rule => rule is null || !rule.IsUsable);
+                settings.Schedule.RemoveAll(rule => rule is null || !rule.IsUsable);
                 return settings;
             }
         }

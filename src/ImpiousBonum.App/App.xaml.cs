@@ -45,6 +45,7 @@ public partial class App : Application
     // "layout:<name>" or "theme:<name>" for links whose target has gone, so each is reported once.
     private readonly HashSet<string> _reportedMissingLinks = new(StringComparer.OrdinalIgnoreCase);
     private string? _gameLayoutApplied;
+    private ScheduleRule? _scheduled;
     private string? _recentApp;
     private DispatcherTimer? _updateTimer;
     private bool _warnedOutdatedService;
@@ -118,11 +119,27 @@ public partial class App : Application
                 var names = _layouts.List();
                 _tray.SetLayouts(names, _layouts.Active, _layouts.ActivePath);
                 _tray.SetGameLayouts(_settings.GameLayoutsEnabled, _settings.GameLayouts, _recentApp, names, _layouts.Themes.List());
+                _tray.SetSchedule(_settings.ScheduleEnabled, _settings.Schedule, _scheduled);
             }
         };
         _tray.LayoutSelected += (_, name) => SelectLayout(name);
         _tray.ImportLayoutRequested += (_, _) => ImportLayout();
         _tray.GameLayoutsToggled += (_, enabled) => SetGameLayoutsEnabled(enabled);
+        _tray.ScheduleToggled += (_, enabled) =>
+        {
+            _settings.ScheduleEnabled = enabled;
+            _settings.Save();
+            AppLog.Info($"Schedule {(enabled ? "on" : "off")}");
+            UpdateSchedule();
+        };
+        _tray.ScheduleAddRequested += (_, _) => AddScheduleRule();
+        _tray.ScheduleRuleRemoved += (_, rule) =>
+        {
+            _settings.Schedule.Remove(rule);
+            _settings.Save();
+            AppLog.Info($"Removed from the schedule: {rule.Describe()}");
+            UpdateSchedule();
+        };
         _tray.GameLinkRequested += (_, rule) => LinkGame(rule);
         _tray.GameLinkRemoved += (_, rule) => UnlinkGame(rule);
         _tray.FpsSourceSelected += (_, monitorId) =>
@@ -385,6 +402,31 @@ public partial class App : Application
 
         if (_settings.GameLayoutsEnabled && _gameSwitcher.Update(_settings.GameLayouts, app, DateTime.UtcNow))
             ApplyGameLayout();
+        UpdateSchedule();
+    }
+
+    /// <summary>Checks the schedule (each second, with the game check) and switches when a different rule applies.</summary>
+    private void UpdateSchedule()
+    {
+        var rule = _settings.ScheduleEnabled ? ScheduleRule.Match(_settings.Schedule, TimeOnly.FromDateTime(DateTime.Now), WindowsColourMode.IsDark()) : null;
+        if (ReferenceEquals(rule, _scheduled))
+            return;
+        _scheduled = rule;
+        AppLog.Info(rule is null ? "Schedule: nothing scheduled now" : $"Schedule: {rule.Describe()}");
+        ApplyGameLayout();
+    }
+
+    /// <summary>Tray → Layout → Schedule → Add…</summary>
+    private void AddScheduleRule()
+    {
+        if (_layouts is null)
+            return;
+        if (ScheduleRuleWindow.Ask(_layouts.List(), _layouts.Themes.List(), "Night Watch") is not { } rule)
+            return;
+        _settings.Schedule.Add(rule);
+        _settings.Save();
+        AppLog.Info($"Added to the schedule: {rule.Describe()}");
+        UpdateSchedule();
     }
 
     /// <summary>Apps offered for linking never include the shell, whose windows come to the front when you use the tray.</summary>
@@ -394,32 +436,38 @@ public partial class App : Application
         Path.GetFileNameWithoutExtension(Environment.ProcessPath) ?? "ImpiousBonum",
     };
 
-    /// <summary>Shows the layout and theme the game switcher wants, unless the editor has the layout or they're already showing.</summary>
+    /// <summary>
+    /// Shows the layout and theme a game in front wants, with the schedule filling in what the game's link doesn't set,
+    /// unless the editor has the layout or they're already showing.
+    /// </summary>
     private void ApplyGameLayout()
     {
         if (_layouts is null || _editor is not null)
             return;
 
         var rule = _gameSwitcher.Current;
-        var wanted = rule is null ? null : $"{rule.Layout}|{rule.Theme}";
+        var scheduled = _scheduled;
+        var layout = rule?.Layout ?? scheduled?.Layout;
+        var theme = rule?.Theme ?? scheduled?.Theme;
+        var wanted = layout is null && theme is null ? null : $"{layout}|{theme}";
         if (string.Equals(wanted, _gameLayoutApplied, StringComparison.OrdinalIgnoreCase))
             return;
         _gameLayoutApplied = wanted;
 
-        var layout = rule?.Layout;
-        var theme = rule?.Theme;
-        if (rule is not null && layout is not null && _layouts.Library.Find(layout) is null)
+        if (layout is not null && _layouts.Library.Find(layout) is null)
         {
-            ReportMissingLink(rule, "layout", layout);
+            ReportMissing(rule?.Layout is not null ? $"\"{rule.Process}\" is linked to" : "The schedule names", "layout", layout);
             layout = null;
         }
-        if (rule is not null && theme is not null && _layouts.Themes.Find(theme) is null)
+        if (theme is not null && _layouts.Themes.Find(theme) is null)
         {
-            ReportMissingLink(rule, "theme", theme);
+            ReportMissing(rule?.Theme is not null ? $"\"{rule.Process}\" is linked to" : "The schedule names", "theme", theme);
             theme = null;
         }
 
-        AppLog.Info(rule is null ? "No linked game in front; back to the chosen layout" : $"\"{rule.Process}\" is in front; switching to {rule.Describe()}");
+        AppLog.Info(rule is not null ? $"\"{rule.Process}\" is in front; switching to {rule.Describe()}{(scheduled is null ? "" : $" (schedule: {scheduled.Describe()})")}"
+            : scheduled is not null ? $"Scheduled: {scheduled.Describe()}"
+            : "No linked game in front and nothing scheduled; back to the chosen layout");
         try
         {
             _layouts.ShowTemporarily(layout);
@@ -432,12 +480,14 @@ public partial class App : Application
         }
     }
 
-    private void ReportMissingLink(GameLayoutRule rule, string kind, string name)
+    /// <param name="who">"\"game\" is linked to" or "The schedule names".</param>
+    private void ReportMissing(string who, string kind, string name)
     {
         if (!_reportedMissingLinks.Add($"{kind}:{name}"))
             return;
-        AppLog.Warning($"Game {kind} for \"{rule.Process}\" ignored: there's no {kind} called \"{name}\"");
-        _tray?.ShowError($"Game {kind} not found", $"\"{rule.Process}\" is linked to the {kind} \"{name}\", which doesn't exist any more. Tray → Layout → Game layouts.");
+        AppLog.Warning($"{who} the {kind} \"{name}\", which doesn't exist; ignored");
+        _tray?.ShowError($"{char.ToUpperInvariant(kind[0])}{kind[1..]} not found",
+            $"{who} the {kind} \"{name}\", which doesn't exist any more. Tray → Layout → Game layouts or Schedule.");
     }
 
     private void SetGameLayoutsEnabled(bool enabled)

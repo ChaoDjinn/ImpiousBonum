@@ -20,6 +20,7 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _tabletNewLink = new("New link") { ToolTipText = "Stops old links working" };
     private readonly ToolStripMenuItem _layouts = new("Layout");
     private readonly ToolStripMenuItem _gameLayouts = new("Game layouts");
+    private readonly ToolStripMenuItem _schedule = new("Schedule") { ToolTipText = "Show a layout or theme at night, or with Windows in dark or light mode" };
     private readonly ToolStripMenuItem _fpsSource = new("FPS from");
     private readonly ToolStripMenuItem _startup = new("Start with Windows") { CheckOnClick = true };
     private readonly ToolStripMenuItem _sensors = new("Sensors");
@@ -214,6 +215,7 @@ public sealed class TrayIcon : IDisposable
         _layouts.DropDownItems.Add(new ToolStripSeparator());
         _layouts.DropDownItems.Add("Import…", null, (_, _) => ImportLayoutRequested?.Invoke(this, EventArgs.Empty));
         _layouts.DropDownItems.Add(_gameLayouts);
+        _layouts.DropDownItems.Add(_schedule);
     }
 
     /// <summary>Tray → Layout → Import…</summary>
@@ -232,6 +234,34 @@ public sealed class TrayIcon : IDisposable
     /// front while its menu is open) and is offered for linking to any of the saved layouts in <paramref name="names"/>,
     /// or to any of the <paramref name="themes"/> to restyle whichever layout is showing.
     /// </summary>
+    public event EventHandler<bool>? ScheduleToggled;
+
+    public event EventHandler? ScheduleAddRequested;
+
+    public event EventHandler<ScheduleRule>? ScheduleRuleRemoved;
+
+    public void SetSchedule(bool enabled, IReadOnlyList<ScheduleRule> rules, ScheduleRule? current)
+    {
+        _schedule.DropDownItems.Clear();
+        var toggle = new ToolStripMenuItem("Follow the schedule") { Checked = enabled };
+        toggle.Click += (_, _) => ScheduleToggled?.Invoke(this, !enabled);
+        _schedule.DropDownItems.Add(toggle);
+        _schedule.DropDownItems.Add("Add…", null, (_, _) => ScheduleAddRequested?.Invoke(this, EventArgs.Empty));
+        if (rules.Count == 0)
+            return;
+
+        _schedule.DropDownItems.Add(new ToolStripSeparator());
+        foreach (var rule in rules)
+        {
+            // Bold: the rule that applies right now.
+            var item = new ToolStripMenuItem(Escape(rule.Describe()));
+            if (enabled && ReferenceEquals(rule, current))
+                item.Font = new Font(_schedule.DropDown.Font, FontStyle.Bold);
+            item.DropDownItems.Add("Remove", null, (_, _) => ScheduleRuleRemoved?.Invoke(this, rule));
+            _schedule.DropDownItems.Add(item);
+        }
+    }
+
     public void SetGameLayouts(bool enabled, IReadOnlyList<GameLayoutRule> rules, string? recentApp, IReadOnlyList<string> names, IReadOnlyList<string> themes)
     {
         _gameLayouts.DropDownItems.Clear();

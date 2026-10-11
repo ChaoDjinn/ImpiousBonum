@@ -89,7 +89,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
 
@@ -102,6 +102,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, and turn automatic switching on or off (see [Game layouts](#game-layouts)) |
+| *Layout → Schedule* | Show a layout or theme at certain times of day, or while Windows is in dark or light mode (see [Schedule](#schedule)) |
 | *Sensors* | Sensor service status, and install, update or remove it |
 | *Claude usage* | Whether Claude Code is reporting, and *Connect Claude Code…* (see [Claude usage](#claude-usage)) |
 | *Weather* | The weather now, *Set location…*, units, and *Turn off weather* (see [Weather](#weather)) |
@@ -257,6 +258,23 @@ Links live in `settings.json` (tray → *Open settings folder*) and can be edite
   { "process": "doom", "layout": "FPS", "theme": "Terminal" }
 ],
 "gameLayoutsEnabled": true
+```
+
+## Schedule
+
+The dashboard can change with the time of day: the dim red *Night Watch* theme from 22:00 to 07:00, say, or a calmer layout during working hours. It can also follow Windows' dark and light mode, e.g. *Nord* while Windows is dark and *Glacier* while it's light.
+
+Tray → *Layout* → *Schedule* → *Add…* picks when (between two times, which may cross midnight, or while Windows is in dark or light mode) and what to show: a layout, a theme, or both. The menu lists the rules, with the one that applies now in bold, and *Follow the schedule* turns them all off and on. When several rules apply, the first one listed wins.
+
+A game linked under *Game layouts* still wins while it's in front, and the schedule fills in what its link doesn't set: a game linked to a layout gets the night theme at night. Like game layouts, scheduled ones are temporary: picking a layout from the tray makes it your choice, and renaming a layout updates the rules. The schedule is in `settings.json` too:
+
+```json
+"schedule": [
+  { "from": "22:00", "to": "07:00", "theme": "Night Watch" },
+  { "when": "dark", "theme": "Nord" },
+  { "from": "09:00", "to": "17:30", "layout": "Work" }
+],
+"scheduleEnabled": true
 ```
 
 ## Editing layouts by hand
