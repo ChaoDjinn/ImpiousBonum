@@ -53,6 +53,10 @@ public static class TrayMenuStyle
     // Weak, so submenus rebuilt each time the menu opens aren't kept alive by having been styled.
     private static readonly ConditionalWeakTable<ToolStripDropDown, object> Styled = [];
     private static readonly ConditionalWeakTable<ToolStripItem, StrongBox<char>> Glyphs = [];
+
+    // Which way each submenu opened (true: to the left of its menu), and the items whose side is already chosen for them.
+    private static readonly ConditionalWeakTable<ToolStripDropDown, StrongBox<bool>> OpenedLeft = [];
+    private static readonly ConditionalWeakTable<ToolStripDropDownItem, object> Sided = [];
     private static readonly Dictionary<(char Glyph, Color Color, int Size), Bitmap> GlyphImages = [];
 
     /// <summary>Common glyphs, by what they show.</summary>
@@ -124,10 +128,45 @@ public static class TrayMenuStyle
                 item.ImageScaling = ToolStripItemImageScaling.None;
             }
             if (item is ToolStripMenuItem { HasDropDown: true } parent)
+            {
                 Attach(parent.DropDown);
+                if (Sided.TryAdd(parent, parent))
+                    parent.DropDownOpening += (_, _) => ChooseSide(parent);
+            }
         }
         if (menu.IsHandleCreated)
             RoundCorners(menu);
+    }
+
+    /// <summary>
+    /// Opens a submenu beside its menu on the same screen, carrying on the way the menus already go: from a tray at the
+    /// right of the screen, each opens to the left of the last. Windows Forms opens to the right whenever that fits on
+    /// any screen, so with a monitor to the right submenus landed on that one, and without one the next level opened
+    /// over the main menu, where moving the mouse across it closed them all.
+    /// </summary>
+    private static void ChooseSide(ToolStripDropDownItem item)
+    {
+        if (item.Owner is not ToolStripDropDown menu)
+            return;
+        var area = Screen.FromRectangle(menu.Bounds).WorkingArea;
+        var left = Side(menu.Bounds, area, item.DropDown.GetPreferredSize(Size.Empty).Width,
+            OpenedLeft.TryGetValue(menu, out var openedLeft) ? openedLeft.Value : null);
+        item.DropDownDirection = left ? ToolStripDropDownDirection.Left : ToolStripDropDownDirection.Right;
+        OpenedLeft.AddOrUpdate(item.DropDown, new StrongBox<bool>(left));
+    }
+
+    /// <summary>
+    /// True to open a submenu <paramref name="width"/> wide to the left of <paramref name="menu"/>, within the screen's
+    /// working <paramref name="area"/>. It keeps going the way the menu itself opened (<paramref name="menuOpenedLeft"/>;
+    /// for the first menu, towards the side with more room) while that fits, and otherwise turns to the roomier side.
+    /// </summary>
+    internal static bool Side(Rectangle menu, Rectangle area, int width, bool? menuOpenedLeft)
+    {
+        var roomLeft = menu.Left - area.Left;
+        var roomRight = area.Right - menu.Right;
+        var goLeft = menuOpenedLeft ?? roomLeft > roomRight;
+        var room = goLeft ? roomLeft : roomRight;
+        return width <= room ? goLeft : roomLeft > roomRight;
     }
 
     /// <summary>A glyph from the icon font as a picture, made once for each colour and size.</summary>

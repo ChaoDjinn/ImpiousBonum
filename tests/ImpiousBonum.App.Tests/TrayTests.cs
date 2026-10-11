@@ -101,6 +101,23 @@ public sealed class TrayTests
         }
     }
 
+    [Fact]
+    public void Submenus_open_away_from_the_tray_and_keep_going_that_way()
+    {
+        // A 3840-wide main screen with a tray menu at its right edge, and another monitor further right.
+        var area = new System.Drawing.Rectangle(0, 0, 3840, 2100);
+        var root = new System.Drawing.Rectangle(3500, 1200, 320, 880);
+
+        // The first submenu goes left, where the room is, not onto the next monitor.
+        Assert.True(TrayMenuStyle.Side(root, area, 400, menuOpenedLeft: null));
+        // Its submenus keep going left, rather than back over the main menu.
+        var display = new System.Drawing.Rectangle(3100, 1300, 400, 700);
+        Assert.True(TrayMenuStyle.Side(display, area, 300, menuOpenedLeft: true));
+        // A menu near the left edge goes right; one going left that runs out of room turns round.
+        Assert.False(TrayMenuStyle.Side(new System.Drawing.Rectangle(10, 0, 300, 400), area, 300, menuOpenedLeft: null));
+        Assert.False(TrayMenuStyle.Side(new System.Drawing.Rectangle(200, 0, 300, 400), area, 300, menuOpenedLeft: true));
+    }
+
     /// <summary>WCAG contrast ratio, 1 to 21.</summary>
     private static double Contrast(Color a, Color b)
     {

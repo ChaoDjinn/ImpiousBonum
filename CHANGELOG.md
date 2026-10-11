@@ -3,6 +3,10 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## 0.11.1
+
+- Submenus in the tray menu stay open again. With the tray at the right of the screen, a submenu's own submenus (*Display → When you're away*, *More dashboards → Add on*) opened over the main menu and closed as soon as you moved onto them, and with a monitor to the right, submenus opened on that monitor. Each now opens beside the last on the tray's own screen.
+
 ## 0.11.0
 
 A polish release: a new tray menu with Help and About, a cleaner editor and dialogs, text that fits, a better first run, and fixes for the editor asking to save changes nobody made.
