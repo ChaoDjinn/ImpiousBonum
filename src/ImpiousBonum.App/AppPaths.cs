@@ -1,12 +1,25 @@
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace ImpiousBonum.App;
 
 /// <summary>Where settings and layouts live. Defaults to %AppData%\ImpiousBonum; <c>--data-dir</c> overrides it for testing.</summary>
 public static class AppPaths
 {
-    public static string DataDirectory { get; private set; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ImpiousBonum");
+    private static readonly string Default = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ImpiousBonum");
+
+    public static string DataDirectory { get; private set; } = Default;
+
+    /// <summary>
+    /// Names the single-instance lock. Each data folder has its own, so a copy run with <c>--data-dir</c> (to test, or to
+    /// take screenshots) can run alongside the installed one instead of quitting.
+    /// </summary>
+    public static string InstanceName => string.Equals(DataDirectory, Default, StringComparison.OrdinalIgnoreCase)
+        ? @"Local\ImpiousBonum"
+        : $@"Local\ImpiousBonum-{Hash(DataDirectory)}";
+
+    private static string Hash(string path) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path.ToUpperInvariant())))[..16];
 
     public static string SettingsFile => Path.Combine(DataDirectory, "settings.json");
 

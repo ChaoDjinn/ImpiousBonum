@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: User guide
+    url: https://github.com/ChaoDjinn/ImpiousBonum/blob/main/docs/guide.md
+    about: How to set up every feature, from the sensor service to the tablet view.
+  - name: Security problem
+    url: https://github.com/ChaoDjinn/ImpiousBonum/security/advisories/new
+    about: Please report security problems privately, not as an issue.

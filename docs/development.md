@@ -22,6 +22,16 @@ A build run from source shows *development build* in the tray and never checks f
 dotnet run --project src/ImpiousBonum.App -c Release -- --widget-docs docs/widgets.md
 ```
 
+## Screenshots
+
+The pictures in the README, the guide and the gallery are drawn with made-up readings, so they don't show anyone's PC:
+
+```bash
+pwsh build/screenshots.ps1
+```
+
+It draws the default layout, each gallery layout and the themes collage with `ImpiousBonum.exe --snapshot <file> --layout <name> --demo`. The readings are in `src/ImpiousBonum.Core/Demo/DemoReadings.cs`. The editor's screenshot is taken by hand: `ImpiousBonum.exe --data-dir <an empty folder> --demo` runs a copy with those readings next to an installed one.
+
 ## Making a release
 
 1. In [`CHANGELOG.md`](../CHANGELOG.md), rename *Unreleased* to `## x.y.z` (it should already say what's new, for people using the app): it becomes the release notes. Set `<Version>` in `Directory.Build.props` to the new version, and merge both to `main`.

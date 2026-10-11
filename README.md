@@ -18,10 +18,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/ChaoDjinn/ImpiousBonum" alt="MIT license"></a>
 </p>
 
-<!-- Screenshot of the real dashboard. Render one with: ImpiousBonum.exe --snapshot docs\images\dashboard.png
-     then remove these comment markers:
-<p align="center"><img src="docs/images/dashboard.png" alt="The dashboard on a 1920×480 screen"></p>
--->
+<p align="center"><img src="docs/images/dashboard.png" alt="The default dashboard on a 1920×480 screen: CPU, GPU and memory graphs, CPU and GPU temperatures, 145 FPS, the time, three drives, and download, upload and ping"></p>
 
 <p align="center">
   <a href="https://github.com/ChaoDjinn/ImpiousBonum/releases/latest/download/ImpiousBonum-win-Setup.exe"><b>Download the installer</b></a>
@@ -39,8 +36,6 @@ Impious Bonum turns a spare screen into a live view of your PC: CPU, GPU, memory
 network, alongside a clock, the weather, your calendar, what's playing and buttons to control it all. Lay it out how
 you like in a visual editor, pick from 43 themes, and it runs quietly in the tray using about 50 MB of memory. No
 spare screen? It works as a window too, on a tablet over Wi-Fi, or on a small USB screen.
-
-<p align="center"><img src="docs/images/default-layout.svg" alt="Map of the default layout: CPU, GPU and memory graphs, CPU and GPU temperatures and the frame rate, a clock, drives, and network download, upload and ping"></p>
 
 ## Features
 
@@ -66,6 +61,31 @@ spare screen? It works as a window too, on a tablet over Wi-Fi, or on a small US
 - On a spare monitor (or several, each with its own layout), as a window, on a tablet or phone in its browser, or on a small 3.5" USB screen. [More](<docs/guide.md#more-screens>)
 - About 50 MB of memory and well under 0.1% CPU when idle. A per-user installer with no admin prompt, and small automatic updates.
 
+## A look for every desk
+
+43 built-in themes, or make your own. Here's the default layout in eight of them:
+
+<p align="center"><img src="docs/images/themes.png" alt="The default layout in the Outrun, Nord, Dracula, Solarized Light, Amber, Cyberpunk, Blueprint and Catppuccin themes"></p>
+
+Or start from a layout in the [gallery](gallery):
+
+<table>
+  <tr>
+    <td width="50%"><img src="gallery/images/gaming-hud.png" alt="Gaming HUD: a big frame rate, frame times, 1% lows, CPU and GPU load, temperature gauges and the session so far"><br><b>Gaming HUD</b>: frame rate, frame times and the session so far</td>
+    <td width="50%"><img src="gallery/images/system-monitor.png" alt="System Monitor: CPU, GPU and network lines, every CPU thread as a heatmap, the busiest apps, drives and memory"><br><b>System Monitor</b>: loads, every CPU thread, the busiest apps</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="gallery/images/desk-companion.png" alt="Desk Companion: the time here and in two other places, the day's calendar, the weather and what's playing"><br><b>Desk Companion</b>: world clocks, calendar, weather and music</td>
+    <td width="50%"><img src="gallery/images/focus.png" alt="Focus: a 25-minute focus timer, the next event, the time and what's playing"><br><b>Focus</b>: a focus timer, your next event and your music</td>
+  </tr>
+</table>
+
+Lay out your own in the editor, with a live preview, a searchable list of every reading and the same changes on the dashboard as you make them:
+
+<p align="center"><img src="docs/images/editor.png" alt="The layout editor: the widget list, the layout's preview with the GPU graph selected, and the graph's settings"></p>
+
+<sub>Screenshots use made-up readings (`build/screenshots.ps1`).</sub>
+
 ## Get started
 
 1. Download and run [`ImpiousBonum-win-Setup.exe`](https://github.com/ChaoDjinn/ImpiousBonum/releases/latest/download/ImpiousBonum-win-Setup.exe) (Windows 10 or 11). It installs for your user only and adds the .NET runtime if needed. SmartScreen may warn the first time, since the installer isn't code-signed yet: choose *More info → Run anyway*.
@@ -82,6 +102,7 @@ The [user guide](<docs/guide.md>) covers everything else, and the [widget refere
 - [Layout gallery](gallery): shared layouts, and how to add yours
 - [Changelog](CHANGELOG.md): what's new in each release
 - [Developing Impious Bonum](docs/development.md): building from source, releases, update signing and the code's layout
+- [Contributing](CONTRIBUTING.md) and [security](SECURITY.md)
 
 ## Roadmap
 
@@ -98,7 +119,7 @@ The [user guide](<docs/guide.md>) covers everything else, and the [widget refere
 - [x] More widget types: 22 so far
 - [x] Themes: 43 built in, with gradients, glow and moving backgrounds
 - [ ] Tried and tested on real USB screens, and support for the 5" and 8.8" models
-- [ ] Screenshots of the real dashboard and editor here and in the guide
+- [x] Screenshots of the real dashboard and editor here and in the guide
 
 ## License
 

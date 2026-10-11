@@ -12,10 +12,28 @@ user guide.
 | Focus | 1920 × 480 | A 25-minute focus timer, today's agenda, the time and your music |
 | Small Screen | 800 × 480 | The time, CPU and GPU load, and the CPU temperature |
 
+### Gaming HUD
+![Gaming HUD](images/gaming-hud.png)
+
+### Desk Companion
+![Desk Companion](images/desk-companion.png)
+
+### System Monitor
+![System Monitor](images/system-monitor.png)
+
+### Focus
+![Focus](images/focus.png)
+
+### Small Screen
+<img src="images/small-screen.png" width="400" alt="Small Screen">
+
+These are drawn with made-up readings by `build/screenshots.ps1`; in the app, the gallery shows each one with yours.
+
 ## Sharing a layout
 
 1. In the layout editor, *Layouts ▾ → Export…* saves your layout as one `.ibl` file, with its font, background and
    pictures inside. (A plain layout `.json` works too, if it has no pictures or fonts.)
 2. Add the file to this folder, and an entry for it in [`index.json`](index.json): its `name`, `file`, `author`, a
    one-line `description`, and the canvas `width` and `height`.
-3. Open a pull request. The tests check that every gallery layout opens and is valid.
+3. Open a pull request. The tests check that every gallery layout opens and is valid. If you can, run
+   `pwsh build/screenshots.ps1` to add a picture of it to `gallery/images`.

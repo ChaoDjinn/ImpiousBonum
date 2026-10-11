@@ -1,0 +1,49 @@
+name: Something's wrong
+description: The dashboard, the editor or the sensor service isn't doing what it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. The more of this you can fill in, the quicker it gets fixed.
+        Tray → *Help* → *About Impious Bonum* → *Copy details* copies the version and system details for the box below.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+      placeholder: |
+        I added a weather widget and set the location, but it still says "No weather yet" after ten minutes.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen
+      description: Steps from a fresh start, if you know them.
+      placeholder: |
+        1. Tray → Weather → Set location… → Leeds
+        2. Edit layout… → Add widget → Weather
+        3. …
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: From tray → Help → About Impious Bonum → Copy details.
+      placeholder: Impious Bonum 0.10.0 · Microsoft Windows 10.0.26100 · .NET 10.0.0 · sensor service: Running
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: dashboard.log
+      description: |
+        Tray → Help → Open settings folder has `dashboard.log`. Drag it here, or paste the lines from around when it happened.
+        It has no passwords, but may show layout names and file paths; remove anything you'd rather not share.
+      render: text
+  - type: textarea
+    id: screen
+    attributes:
+      label: Screenshot or layout
+      description: A screenshot helps for anything you can see. For a layout problem, attach the layout (editor → Layouts → Export…).

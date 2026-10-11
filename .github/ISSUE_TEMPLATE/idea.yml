@@ -1,0 +1,17 @@
+name: An idea
+description: A widget, a reading, a theme or a feature you'd like.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you'd like
+      description: What it would show or do, and what for. A sketch or a picture of something similar helps.
+      placeholder: A widget showing the next train from my station, with the minutes until it leaves.
+    validations:
+      required: true
+  - type: textarea
+    id: now
+    attributes:
+      label: How you do it now
+      description: If you have a way round it (custom data, another app), what it is and what's missing.

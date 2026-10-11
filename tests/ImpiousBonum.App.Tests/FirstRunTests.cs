@@ -85,4 +85,17 @@ public sealed class FirstRunTests : IDisposable
         Assert.Equal("8.8.8.8", settings.PingHost);
         Assert.DoesNotContain("loadProblem", File.ReadAllText(AppPaths.SettingsFile), StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void Each_data_folder_has_its_own_instance_so_a_test_copy_can_run_beside_the_real_one()
+    {
+        AppPaths.UseDataDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ImpiousBonum"));
+        Assert.Equal(@"Local\ImpiousBonum", AppPaths.InstanceName);
+
+        AppPaths.UseDataDirectory(_directory);
+        var other = AppPaths.InstanceName;
+        Assert.StartsWith(@"Local\ImpiousBonum-", other);
+        AppPaths.UseDataDirectory(_directory.ToUpperInvariant());
+        Assert.Equal(other, AppPaths.InstanceName);
+    }
 }
