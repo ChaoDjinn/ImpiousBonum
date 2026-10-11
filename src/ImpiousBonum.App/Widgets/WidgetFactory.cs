@@ -7,32 +7,27 @@ namespace ImpiousBonum.App.Widgets;
 
 public static class WidgetFactory
 {
-    /// <summary>Every widget type, in the order the editor offers them.</summary>
+    public const string Readings = "Readings";
+    public const string Time = "Time and calendar";
+    public const string Media = "Media and controls";
+    public const string Online = "Weather, news and Claude";
+    public const string Decoration = "Pictures and shapes";
+
+    /// <summary>Every widget type, grouped by what it's for, in the order the editor offers them.</summary>
     public static readonly IReadOnlyList<WidgetDescriptor> Descriptors = WithThemeOverrides(
     [
-        TextWidget.Descriptor,
-        GraphWidget.Descriptor,
-        LinesWidget.Descriptor,
-        GaugeWidget.Descriptor,
-        CoresWidget.Descriptor,
-        StatWidget.Descriptor,
-        IconValueWidget.Descriptor,
-        ClockWidget.Descriptor,
-        TimerWidget.Descriptor,
-        DrivesWidget.Descriptor,
-        ProcessesWidget.Descriptor,
-        RowsWidget.Descriptor,
-        BarsWidget.Descriptor,
-        MediaWidget.Descriptor,
-        VisualizerWidget.Descriptor,
-        ButtonsWidget.Descriptor,
-        WeatherWidget.Descriptor,
-        AgendaWidget.Descriptor,
-        NewsWidget.Descriptor,
-        ImageWidget.Descriptor,
-        ShapeWidget.Descriptor,
-        BarsWidget.ClaudeDescriptor,
+        .. In(Readings,
+            TextWidget.Descriptor, GraphWidget.Descriptor, LinesWidget.Descriptor, GaugeWidget.Descriptor, StatWidget.Descriptor,
+            CoresWidget.Descriptor, IconValueWidget.Descriptor, BarsWidget.Descriptor, RowsWidget.Descriptor, DrivesWidget.Descriptor,
+            ProcessesWidget.Descriptor),
+        .. In(Time, ClockWidget.Descriptor, TimerWidget.Descriptor, AgendaWidget.Descriptor),
+        .. In(Media, MediaWidget.Descriptor, VisualizerWidget.Descriptor, ButtonsWidget.Descriptor),
+        .. In(Online, WeatherWidget.Descriptor, NewsWidget.Descriptor, BarsWidget.ClaudeDescriptor),
+        .. In(Decoration, ImageWidget.Descriptor, ShapeWidget.Descriptor),
     ]);
+
+    private static IEnumerable<WidgetDescriptor> In(string category, params WidgetDescriptor[] descriptors) =>
+        descriptors.Select(d => d with { Category = category });
 
     /// <summary>Every widget can also have its own font and colours (<see cref="Setting.ThemeOverrides"/>).</summary>
     private static IReadOnlyList<WidgetDescriptor> WithThemeOverrides(IReadOnlyList<WidgetDescriptor> descriptors) =>
@@ -54,7 +49,7 @@ public static class WidgetFactory
     {
         public UnknownWidget(string? type, Theme theme) : base(new WidgetSettings([], []), theme)
         {
-            var text = CreateText(20, Brushes.IndianRed);
+            var text = CreateText(20, theme.Critical);
             text.Text = $"Unknown widget type '{type}'";
             Children.Add(text);
         }

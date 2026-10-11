@@ -56,12 +56,9 @@ public partial class AboutWindow : Window
         }
     }
 
-    // Shown with Show(), not as a dialog, so IsCancel alone wouldn't close it.
-    private void OnClose(object sender, RoutedEventArgs e) => Close();
-
     private void OnCopy(object sender, RoutedEventArgs e)
     {
         if (TabletLinkWindow.CopyToClipboard(_details))
-            CopyButton.Content = "Copied";
+            CopyText.Text = "Copied";
     }
 }

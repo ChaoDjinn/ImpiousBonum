@@ -22,8 +22,9 @@ public sealed class PreviewSurface : Border
     public PreviewSurface(LayoutSession session)
     {
         _session = session;
-        Background = new SolidColorBrush(Color.FromRgb(0x20, 0x20, 0x20));
-        Padding = new Thickness(24);
+        // The editor puts this on a card in the theme's colours; transparent, but still there to be clicked.
+        Background = Brushes.Transparent;
+        Padding = new Thickness(8);
         ClipToBounds = true;
         // Focusable so clicking the preview takes focus from text boxes, letting arrow keys nudge the selection.
         Focusable = true;

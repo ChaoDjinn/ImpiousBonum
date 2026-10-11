@@ -24,6 +24,9 @@ public sealed record WidgetDescriptor(
 
     /// <summary>Added behind every other widget rather than on top, like a panel that groups widgets.</summary>
     public bool AddBehind { get; init; }
+
+    /// <summary>What it's for, to group the editor's Add menu and the widget reference (see <see cref="WidgetFactory"/>).</summary>
+    public string Category { get; init; } = string.Empty;
 }
 
 public enum SettingKind

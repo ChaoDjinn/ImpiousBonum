@@ -28,7 +28,8 @@ public partial class MetricPickerWindow : Window
         InitializeComponent();
         _store = store;
         _placeholder = placeholder;
-        FormatPanel.Visibility = placeholder ? Visibility.Visible : Visibility.Collapsed;
+        // "Show it as" appears once there's a metric to show.
+        FormatPanel.Visibility = Visibility.Collapsed;
 
         _rows = store.Definitions
             .Select(d => new MetricRow(d))
@@ -97,7 +98,10 @@ public partial class MetricPickerWindow : Window
     private void RefreshFormats()
     {
         if (!_placeholder || Selected is not { } row || !_store.TryGet(row.Id, out var sample))
+        {
+            FormatPanel.Visibility = Visibility.Collapsed;
             return;
+        }
 
         var selectedSpec = SelectedFormat?.Spec ?? string.Empty;
         var options = FormatsFor(row.Definition.Unit)
@@ -105,6 +109,7 @@ public partial class MetricPickerWindow : Window
             .ToList();
         FormatList.ItemsSource = options;
         FormatList.SelectedItem = options.FirstOrDefault(o => o.Spec == selectedSpec) ?? options[0];
+        FormatPanel.Visibility = Visibility.Visible;
     }
 
     private bool Matches(object item)

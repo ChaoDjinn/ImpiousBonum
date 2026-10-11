@@ -316,7 +316,7 @@ public sealed class PropertyPanel : StackPanel
         Grid.SetColumn(editor, 1);
         grid.Children.Add(editor);
 
-        var reset = new Button { Content = "↺", ToolTip = "Reset to default", Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        var reset = new Button { Content = Glyph("\uE7A7"), ToolTip = "Reset to default", Padding = new Thickness(8, 4, 8, 4), Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
         reset.Click += (_, _) => _session.SetValue(target, setting.Key, null, this);
         Grid.SetColumn(reset, 2);
         grid.Children.Add(reset);
@@ -328,7 +328,6 @@ public sealed class PropertyPanel : StackPanel
             Grid.SetColumn(help, 1);
             grid.Children.Add(help);
         }
-
 
         parent.Children.Add(grid);
         _refreshers.Add(() =>
@@ -406,9 +405,7 @@ public sealed class PropertyPanel : StackPanel
             var ids = isTemplate ? ValueTemplate.Parse(text).MetricIds.ToList() : [text.Trim()];
             var unknown = ids.Where(id => !store.TryGet(id, out _)).Distinct().ToList();
             preview.Visibility = Visibility.Visible;
-            preview.Foreground = unknown.Count > 0 ? Brushes.IndianRed : null;
-            if (preview.Foreground is null)
-                preview.ClearValue(TextBlock.ForegroundProperty);
+            preview.SetResourceReference(TextBlock.ForegroundProperty, unknown.Count > 0 ? CriticalBrush : SecondaryBrush);
             preview.Text = unknown.Count > 0
                 ? $"Unknown metric{(unknown.Count > 1 ? "s" : "")}: {string.Join(", ", unknown)}"
                 : "→ " + (isTemplate ? ValueTemplate.Parse(text).Render(store) : ValueTemplate.Parse($"{{{text.Trim()}}}").Render(store));
@@ -482,7 +479,7 @@ public sealed class PropertyPanel : StackPanel
             }
             else
             {
-                box.BorderBrush = Brushes.IndianRed;
+                box.SetResourceReference(Control.BorderBrushProperty, CriticalBrush);
             }
         };
 
@@ -572,7 +569,8 @@ public sealed class PropertyPanel : StackPanel
     private (FrameworkElement, Action) ColorEditor(SettingTarget target, SettingDescriptor setting)
     {
         var panel = new DockPanel();
-        var swatch = new Button { Width = 32, Margin = new Thickness(0, 0, 6, 0), ToolTip = "Pick a colour", BorderBrush = Brushes.Gray };
+        var swatch = new Button { Width = 32, Margin = new Thickness(0, 0, 6, 0), ToolTip = "Pick a colour" };
+        swatch.SetResourceReference(Control.BorderBrushProperty, "TextFillColorTertiaryBrush");
         DockPanel.SetDock(swatch, Dock.Left);
         panel.Children.Add(swatch);
 
@@ -602,7 +600,8 @@ public sealed class PropertyPanel : StackPanel
         {
             var current = ResolveColor(read()) ?? Colors.White;
             using var dialog = new WinForms.ColorDialog { FullOpen = true, Color = System.Drawing.Color.FromArgb(current.R, current.G, current.B) };
-            if (dialog.ShowDialog() != WinForms.DialogResult.OK)
+            // Owned by the editor, so it stays in front of it and the editor waits for it.
+            if (dialog.ShowDialog(Owner.Of(Window.GetWindow(this))) != WinForms.DialogResult.OK)
                 return;
             var picked = dialog.Color;
             // The dialog has no alpha; keep whatever transparency the colour already had.
@@ -629,9 +628,9 @@ public sealed class PropertyPanel : StackPanel
             var header = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
             var buttons = new StackPanel { Orientation = Orientation.Horizontal };
             DockPanel.SetDock(buttons, Dock.Right);
-            buttons.Children.Add(ItemButton("↑", "Move up", index > 0, () => _session.EditItems(target.WidgetIndex, setting.Key, a => Swap(a, index, index - 1))));
-            buttons.Children.Add(ItemButton("↓", "Move down", index < items.Count - 1, () => _session.EditItems(target.WidgetIndex, setting.Key, a => Swap(a, index, index + 1))));
-            buttons.Children.Add(ItemButton("✕", "Remove", true, () => _session.EditItems(target.WidgetIndex, setting.Key, a => a.RemoveAt(index))));
+            buttons.Children.Add(ItemButton("\uE74A", "Move up", index > 0, () => _session.EditItems(target.WidgetIndex, setting.Key, a => Swap(a, index, index - 1))));
+            buttons.Children.Add(ItemButton("\uE74B", "Move down", index < items.Count - 1, () => _session.EditItems(target.WidgetIndex, setting.Key, a => Swap(a, index, index + 1))));
+            buttons.Children.Add(ItemButton("\uE74D", "Remove", true, () => _session.EditItems(target.WidgetIndex, setting.Key, a => a.RemoveAt(index))));
             header.Children.Add(buttons);
             header.Children.Add(new TextBlock { Text = $"{setting.Label} {index + 1}", FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center });
             card.Children.Add(header);
@@ -639,18 +638,12 @@ public sealed class PropertyPanel : StackPanel
             foreach (var itemSetting in setting.ItemSettings ?? [])
                 AddRow(card, SettingTarget.Item(target.WidgetIndex, setting.Key, index), itemSetting);
 
-            parent.Children.Add(new Border
-            {
-                Child = card,
-                Padding = new Thickness(10, 8, 10, 8),
-                Margin = new Thickness(0, 0, 0, 8),
-                BorderThickness = new Thickness(1),
-                BorderBrush = new SolidColorBrush(Color.FromArgb(0x40, 0x80, 0x80, 0x80)),
-                CornerRadius = new CornerRadius(6),
-            });
+            var border = new Border { Child = card, Margin = new Thickness(0, 0, 0, 8) };
+            border.SetResourceReference(StyleProperty, "Card");
+            parent.Children.Add(border);
         }
 
-        var add = new Button { Content = $"Add {setting.Label.ToLowerInvariant().TrimEnd('s')}", HorizontalAlignment = HorizontalAlignment.Left };
+        var add = new Button { Content = WithGlyph("\uE710", $"Add {setting.Label.ToLowerInvariant().TrimEnd('s')}"), HorizontalAlignment = HorizontalAlignment.Left };
         add.Click += (_, _) =>
         {
             _session.EditItems(target.WidgetIndex, setting.Key, a => a.Add(new JsonObject()));
@@ -661,7 +654,7 @@ public sealed class PropertyPanel : StackPanel
 
     private Button ItemButton(string symbol, string tip, bool enabled, Action action)
     {
-        var button = new Button { Content = symbol, ToolTip = tip, IsEnabled = enabled, Padding = new Thickness(8, 1, 8, 1), Margin = new Thickness(4, 0, 0, 0) };
+        var button = new Button { Content = Glyph(symbol), ToolTip = tip, IsEnabled = enabled, Padding = new Thickness(8, 4, 8, 4), Margin = new Thickness(4, 0, 0, 0) };
         button.Click += (_, _) =>
         {
             action();
@@ -711,6 +704,8 @@ public sealed class PropertyPanel : StackPanel
             "accent" => theme.Accent,
             "warning" => theme.Warning,
             "critical" => theme.Critical,
+            "track" => theme.Track,
+            "background" => theme.Background,
             _ => value,
         };
         try
@@ -729,9 +724,40 @@ public sealed class PropertyPanel : StackPanel
 
     private static string Format(double value) => value.ToString("0.##", CultureInfo.CurrentCulture);
 
+    private const string SecondaryBrush = "TextFillColorSecondaryBrush";
+    private const string CriticalBrush = "SystemFillColorCriticalBrush";
+
+    /// <summary>Less important text (help, live previews) in the theme's secondary colour.</summary>
     private static TextBlock Secondary(TextBlock text)
     {
-        text.Opacity = 0.7;
+        text.SetResourceReference(TextBlock.ForegroundProperty, SecondaryBrush);
         return text;
+    }
+
+    /// <summary>An icon from the icon font (see Styles.xaml), for small buttons.</summary>
+    private static TextBlock Glyph(string glyph)
+    {
+        var text = new TextBlock { Text = glyph };
+        text.SetResourceReference(StyleProperty, "Glyph");
+        return text;
+    }
+
+    private static StackPanel WithGlyph(string glyph, string label)
+    {
+        var icon = Glyph(glyph);
+        icon.Margin = new Thickness(0, 0, 8, 0);
+        var panel = new StackPanel { Orientation = Orientation.Horizontal };
+        panel.Children.Add(icon);
+        panel.Children.Add(new TextBlock { Text = label });
+        return panel;
+    }
+
+    /// <summary>A WPF window as the owner of a Windows Forms dialog.</summary>
+    private sealed class Owner(nint handle) : WinForms.IWin32Window
+    {
+        public nint Handle => handle;
+
+        public static WinForms.IWin32Window? Of(Window? window) =>
+            window is null ? null : new Owner(new System.Windows.Interop.WindowInteropHelper(window).Handle);
     }
 }

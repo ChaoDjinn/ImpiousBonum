@@ -28,6 +28,7 @@ public partial class LinkListWindow : Window
         IntroText.Text = intro;
         NoteText.Text = note;
         AddHeading.Text = $"Add a {what}";
+        Controls.Placeholder.SetText(LinkList, $"No {what}s yet. Add one below.");
         _links = new ObservableCollection<NamedLink>(links);
         LinkList.ItemsSource = _links;
         Update();
@@ -104,7 +105,8 @@ public partial class LinkListWindow : Window
 
     private void Update()
     {
-        if (AddButton is null)
+        // TextChanged fires while the window is still being built; the constructor calls this once it's ready.
+        if (!IsInitialized)
             return;
         var problem = Problem();
         ProblemText.Text = problem ?? string.Empty;

@@ -1,48 +1,53 @@
 <Window x:Class="ImpiousBonum.App.Shell.ScheduleRuleWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:ImpiousBonum.App.Controls"
         ThemeMode="System"
         Title="Add to the schedule"
-        Width="440" SizeToContent="Height" ResizeMode="NoResize"
+        Width="460" SizeToContent="Height" ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False">
-    <StackPanel Margin="16">
-        <TextBlock Text="When" FontWeight="SemiBold" Margin="0,0,0,6" />
-        <StackPanel Orientation="Horizontal">
-            <RadioButton x:Name="Between" Content="Between" GroupName="When" IsChecked="True" VerticalAlignment="Center" Checked="OnChanged" />
-            <TextBox x:Name="FromBox" Text="22:00" Width="70" Margin="8,0,0,0" TextChanged="OnChanged" />
-            <TextBlock Text="and" VerticalAlignment="Center" Margin="8,0,8,0" />
-            <TextBox x:Name="ToBox" Text="07:00" Width="70" TextChanged="OnChanged" />
-        </StackPanel>
-        <RadioButton x:Name="Dark" Content="While Windows is in dark mode" GroupName="When" Margin="0,8,0,0" Checked="OnChanged" />
-        <RadioButton x:Name="Light" Content="While Windows is in light mode" GroupName="When" Margin="0,4,0,0" Checked="OnChanged" />
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Style="{DynamicResource DialogFooter}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="OkButton" Content="Add" IsDefault="True" Click="OnOk" MinWidth="{DynamicResource DialogButtonWidth}"
+                        Style="{DynamicResource AccentButtonStyle}" />
+                <Button Content="Cancel" IsCancel="True" Margin="{DynamicResource ButtonGap}" MinWidth="{DynamicResource DialogButtonWidth}" />
+            </StackPanel>
+        </Border>
+        <StackPanel Margin="{DynamicResource DialogPadding}">
+            <TextBlock Text="When" Style="{DynamicResource SectionHeading}" />
+            <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="Between" Content="Between" GroupName="When" IsChecked="True" VerticalAlignment="Center" Checked="OnChanged" />
+                <TextBox x:Name="FromBox" Text="22:00" Width="70" Margin="8,0,0,0" TextChanged="OnChanged" />
+                <TextBlock Text="and" VerticalAlignment="Center" Margin="8,0,8,0" />
+                <TextBox x:Name="ToBox" Text="07:00" Width="70" TextChanged="OnChanged" />
+            </StackPanel>
+            <RadioButton x:Name="Dark" Content="While Windows is in dark mode" GroupName="When" Margin="0,8,0,0" Checked="OnChanged" />
+            <RadioButton x:Name="Light" Content="While Windows is in light mode" GroupName="When" Margin="0,4,0,0" Checked="OnChanged" />
 
-        <TextBlock Text="Show" FontWeight="SemiBold" Margin="0,16,0,6" />
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="90" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <TextBlock Text="Layout" VerticalAlignment="Center" />
-            <ComboBox x:Name="LayoutBox" Grid.Column="1" SelectionChanged="OnChanged" />
-            <TextBlock Text="Theme" Grid.Row="1" VerticalAlignment="Center" Margin="0,8,0,0" />
-            <ComboBox x:Name="ThemeBox" Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" SelectionChanged="OnChanged" />
-            <TextBlock Text="Brightness" Grid.Row="2" VerticalAlignment="Center" Margin="0,8,0,0" />
-            <ComboBox x:Name="BrightnessBox" Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" SelectionChanged="OnChanged" />
-        </Grid>
+            <TextBlock Text="Show" Style="{DynamicResource SectionHeading}" Margin="0,18,0,6" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="Layout" VerticalAlignment="Center" />
+                <ComboBox x:Name="LayoutBox" Grid.Column="1" SelectionChanged="OnChanged" />
+                <TextBlock Text="Theme" Grid.Row="1" VerticalAlignment="Center" Margin="0,8,0,0" />
+                <ComboBox x:Name="ThemeBox" Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" SelectionChanged="OnChanged" />
+                <TextBlock Text="Brightness" Grid.Row="2" VerticalAlignment="Center" Margin="0,8,0,0" />
+                <ComboBox x:Name="BrightnessBox" Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" SelectionChanged="OnChanged" />
+            </Grid>
 
-        <TextBlock x:Name="ProblemText" Foreground="IndianRed" TextWrapping="Wrap" Margin="0,10,0,0" MinHeight="18" />
-        <TextBlock TextWrapping="Wrap" FontSize="11.5" Opacity="0.75" Margin="0,4,0,0"
-                   Text="A game linked under Game layouts still wins while it's in front; the schedule fills in what its link doesn't set." />
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button x:Name="OkButton" Content="Add" IsDefault="True" Click="OnOk" MinWidth="80"
-                    Style="{DynamicResource AccentButtonStyle}" />
-            <Button Content="Cancel" IsCancel="True" Margin="8,0,0,0" MinWidth="80" />
+            <TextBlock x:Name="ProblemText" Style="{DynamicResource ProblemText}" c:Dialog.ShowAfterInput="True" Margin="0,12,0,0" />
+            <TextBlock Style="{DynamicResource NoteText}" Margin="0,4,0,0"
+                       Text="A game linked under Game layouts still wins while it's in front; the schedule fills in what its link doesn't set." />
         </StackPanel>
-    </StackPanel>
+    </DockPanel>
 </Window>
