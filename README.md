@@ -122,6 +122,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Claude usage* | Whether Claude Code is reporting, and *Connect Claude Code…* (see [Claude usage](#claude-usage)) |
 | *Weather* | The weather now, *Set location…*, units, and *Turn off weather* (see [Weather](#weather)) |
 | *Alerts…* | Be told when a reading stays out of bounds (see [Alerts](#alerts)) |
+| *Logging…* | Log readings to daily CSV files, with each one's average, lowest and highest (see [Logging](#logging)) |
 | *Calendar…* | Calendars whose events the agenda widget shows (see [Calendar](#calendar)) |
 | *Hotkeys…* | Keys that show or hide the dashboard, turn pages, open the editor or switch layouts from anywhere (see [Hotkeys](#hotkeys)) |
 | *Custom data…* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
@@ -286,6 +287,19 @@ Some examples:
 | A JSON API | Web address `https://api.github.com/repos/<owner>/<repo>`, fields `stars = stargazers_count` and `issues = open_issues_count` |
 
 Sources are stored in `settings.json` (`customData`) on this PC and never in a layout, so a layout from someone else can't add a command to run. Headers, tokens included, are stored there as plain text.
+
+## Logging
+
+Tray → *Logging…* writes readings to CSV files for a spreadsheet, to see how temperatures crept up over an afternoon
+or what the CPU was doing overnight. Pick the metrics (*Add…* opens the same picker as the editor), how often to
+write a row (every second to every 5 minutes) and how long to keep the files.
+
+Each row is one period, and the readings are taken every second within it, so a row every minute still catches a
+short spike: the time the period ended, then each metric's average, lowest and highest. A metric with no reading in a
+period has empty cells. Periods line up with the clock (10:00:00, 10:00:10, …). There's one file a day in the `logs`
+folder in the settings folder (*Open logs folder* in the window), e.g. `2026-10-11.csv`. Changing the metrics during
+the day starts `2026-10-11 (2).csv`, so each file's header matches all its rows. Files older than the time you chose
+are deleted once a day. Numbers use a dot for decimals whatever the Windows region, so any spreadsheet reads them.
 
 ## Calendar
 

@@ -60,6 +60,10 @@ public sealed class TrayIcon : IDisposable
         {
             ToolTipText = "Be told when a reading is out of bounds for a while",
         });
+        menu.Items.Add(new ToolStripMenuItem("Logging…", null, (_, _) => LoggingRequested?.Invoke(this, EventArgs.Empty))
+        {
+            ToolTipText = "Log readings to CSV files, with each one's average, lowest and highest",
+        });
         menu.Items.Add(new ToolStripMenuItem("Calendar…", null, (_, _) => CalendarRequested?.Invoke(this, EventArgs.Empty))
         {
             ToolTipText = "Calendars whose events the agenda widget shows",
@@ -210,6 +214,8 @@ public sealed class TrayIcon : IDisposable
     public event EventHandler? HotkeysRequested;
 
     public event EventHandler? CalendarRequested;
+
+    public event EventHandler? LoggingRequested;
 
     public event EventHandler? WeatherTurnedOff;
 

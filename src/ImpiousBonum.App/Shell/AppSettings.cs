@@ -19,6 +19,7 @@ public sealed class AppSettings
     private List<string> _pages = [];
     private List<Hotkey> _hotkeys = [];
     private List<CalendarLink> _calendars = [];
+    private LogSettings _logging = LogSettings.Default;
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
     public string? MonitorId { get; set; }
@@ -112,6 +113,13 @@ public sealed class AppSettings
         set => _calendars = value ?? [];
     }
 
+    /// <summary>Logging readings to CSV files (tray → Logging…). Off by default.</summary>
+    public LogSettings Logging
+    {
+        get => _logging;
+        set => _logging = value ?? LogSettings.Default;
+    }
+
     /// <summary>Key combinations that work from anywhere (tray → Hotkeys…). None by default.</summary>
     public List<Hotkey> Hotkeys
     {
@@ -197,3 +205,9 @@ public sealed record PixelRect(int X, int Y, int Width, int Height);
 
 /// <param name="Name">The place as you picked it, e.g. "Leeds, England, United Kingdom".</param>
 public sealed record WeatherLocation(string Name, double Latitude, double Longitude);
+
+/// <summary>What tray → Logging… logs: these metrics, a row every so many seconds, files kept for so many days (0 = always).</summary>
+public sealed record LogSettings(bool Enabled, IReadOnlyList<string> Metrics, int EverySeconds, int KeepDays)
+{
+    public static readonly LogSettings Default = new(false, ["cpu.load", "mem.load", "gpu.load", "cpu.temp", "gpu.temp", "fps"], 10, 30);
+}

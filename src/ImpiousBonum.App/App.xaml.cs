@@ -16,6 +16,7 @@ using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
 using ImpiousBonum.Core.Sensors;
+using ImpiousBonum.Core.Logging;
 using ImpiousBonum.Core.Sessions;
 using Microsoft.Win32;
 
@@ -56,6 +57,10 @@ public partial class App : Application
 
     /// <summary>The linked game in front, for session recaps; written on the UI thread, read by the sampler's.</summary>
     private volatile string? _trackedGame;
+    private MetricLogger? _logger;
+    private CsvLog? _csvLog;
+    private DateTime _prunedOn;
+    private bool _logFailed;
     private DispatcherTimer? _updateTimer;
     private bool _warnedOutdatedService;
     private bool _mirrorQueued;
@@ -205,6 +210,7 @@ public partial class App : Application
         _tray.AlertsRequested += (_, _) => OpenAlerts();
         _tray.HotkeysRequested += (_, _) => EditHotkeys();
         _tray.CalendarRequested += (_, _) => EditCalendars();
+        _tray.LoggingRequested += (_, _) => EditLogging();
         _tray.WeatherTurnedOff += (_, _) =>
         {
             _settings.WeatherLocation = null;
@@ -288,6 +294,7 @@ public partial class App : Application
         UpdateGameLayout();
         RotatePages();
         UpdateAlerts();
+        UpdateLogging();
         UpdateDimming();
         UpdateFullscreenHide();
 
@@ -683,6 +690,55 @@ public partial class App : Application
                 _tray?.ShowAlert(alert.Text);
         }
         _window.ShowAlerts(_alerts.Active.Where(rule => rule.Flash).Select(rule => (rule.Describe(), rule.Text(_sampler.Store))).ToList());
+    }
+
+    /// <summary>Tray → Logging…; changes start a fresh logger (and a new file if the columns changed).</summary>
+    private void EditLogging()
+    {
+        if (LoggingWindow.Ask(_settings.Logging, _sampler?.Store) is not { } logging)
+            return;
+        _settings.Logging = logging;
+        _settings.Save();
+        _logger = null;
+        _prunedOn = default;
+        AppLog.Info(logging.Enabled
+            ? $"Logging {string.Join(", ", logging.Metrics)} every {logging.EverySeconds} s to {AppPaths.LogsFolder}"
+            : "Logging off");
+    }
+
+    /// <summary>Each tick: feeds the logger, writes a row when a period ends, and once a day removes old files.</summary>
+    private void UpdateLogging()
+    {
+        var logging = _settings.Logging;
+        if (!logging.Enabled || logging.Metrics.Count == 0 || _sampler is null)
+        {
+            _logger = null;
+            return;
+        }
+        var now = DateTime.Now;
+        _logger ??= new MetricLogger([.. logging.Metrics], TimeSpan.FromSeconds(Math.Max(1, logging.EverySeconds)));
+        _csvLog ??= new CsvLog(AppPaths.LogsFolder);
+        var store = _sampler.Store;
+        if (_logger.Add(id => store.TryGet(id, out var sample) ? sample.Value : null, now) is not { } row)
+            return;
+        try
+        {
+            _csvLog.Append(_logger.Header, row, now);
+            if (_prunedOn != now.Date)
+            {
+                _prunedOn = now.Date;
+                if (CsvLog.Prune(AppPaths.LogsFolder, logging.KeepDays, now) is > 0 and var pruned)
+                    AppLog.Info($"Logging: removed {pruned} old log file(s)");
+            }
+            _logFailed = false;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Said once until it works again, not every period.
+            if (!_logFailed)
+                AppLog.Warning($"Couldn't write the log in {AppPaths.LogsFolder}: {ex.Message}");
+            _logFailed = true;
+        }
     }
 
     /// <summary>A game session ended: tell the user how it went and add it to sessions.csv.</summary>
