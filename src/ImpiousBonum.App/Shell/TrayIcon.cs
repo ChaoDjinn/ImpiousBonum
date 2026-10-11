@@ -14,6 +14,7 @@ public sealed class TrayIcon : IDisposable
     private readonly Icon _image;
     private readonly ToolStripMenuItem _displays = new("Display");
     private readonly ToolStripMenuItem _tablet = new("Tablet view");
+    private readonly ToolStripMenuItem _away = new("When you're away") { ToolTipText = "Dim the dashboard when there's been no keyboard, mouse or touch input for a while" };
     private readonly ToolStripMenuItem _tabletOn = new("Show on tablets") { ToolTipText = "Serve the dashboard to browsers on your local network" };
     private readonly ToolStripMenuItem _tabletShowLink = new("Show link…");
     private readonly ToolStripMenuItem _tabletCopyLink = new("Copy link");
@@ -240,7 +241,28 @@ public sealed class TrayIcon : IDisposable
 
     public event EventHandler<ScheduleRule>? ScheduleRuleRemoved;
 
-    public void SetSchedule(bool enabled, IReadOnlyList<ScheduleRule> rules, ScheduleRule? current)
+    /// <summary>Tray → Display → When you're away: (minutes, brightness), minutes 0 for never.</summary>
+    public event EventHandler<(int Minutes, int Brightness)>? AwayChanged;
+
+    public void SetAway(int minutes, int brightness)
+    {
+        _away.DropDownItems.Clear();
+        foreach (var choice in new[] { 0, 5, 15, 30, 60 })
+        {
+            var item = new ToolStripMenuItem(choice == 0 ? "Don't dim" : $"Dim after {choice} minutes") { Checked = minutes == choice };
+            item.Click += (_, _) => AwayChanged?.Invoke(this, (choice, brightness));
+            _away.DropDownItems.Add(item);
+        }
+        _away.DropDownItems.Add(new ToolStripSeparator());
+        foreach (var level in new[] { 40, 20, 0 })
+        {
+            var item = new ToolStripMenuItem(level == 0 ? "Turn it black" : $"Dim to {level}%") { Checked = brightness == level, Enabled = minutes > 0 };
+            item.Click += (_, _) => AwayChanged?.Invoke(this, (minutes, level));
+            _away.DropDownItems.Add(item);
+        }
+    }
+
+    public void SetSchedule(bool enabled, IReadOnlyList<ScheduleRule> rules, IReadOnlyList<ScheduleRule> active)
     {
         _schedule.DropDownItems.Clear();
         var toggle = new ToolStripMenuItem("Follow the schedule") { Checked = enabled };
@@ -253,9 +275,9 @@ public sealed class TrayIcon : IDisposable
         _schedule.DropDownItems.Add(new ToolStripSeparator());
         foreach (var rule in rules)
         {
-            // Bold: the rule that applies right now.
+            // Bold: the rules that apply right now.
             var item = new ToolStripMenuItem(Escape(rule.Describe()));
-            if (enabled && ReferenceEquals(rule, current))
+            if (enabled && active.Contains(rule))
                 item.Font = new Font(_schedule.DropDown.Font, FontStyle.Bold);
             item.DropDownItems.Add("Remove", null, (_, _) => ScheduleRuleRemoved?.Invoke(this, rule));
             _schedule.DropDownItems.Add(item);
@@ -343,6 +365,7 @@ public sealed class TrayIcon : IDisposable
         _displays.DropDownItems.Add("Bring to front", null, (_, _) => BringToFrontRequested?.Invoke(this, EventArgs.Empty));
 
         _displays.DropDownItems.Add(new ToolStripSeparator());
+        _displays.DropDownItems.Add(_away);
         _displays.DropDownItems.Add(_tablet);
     }
 

@@ -41,6 +41,11 @@ public partial class DashboardWindow : Window
     {
         InitializeComponent();
         SizeChanged += (_, _) => _overlay?.Update();
+        DimOverlay.MouseLeftButtonDown += (_, e) =>
+        {
+            e.Handled = true;
+            PeekRequested?.Invoke(this, EventArgs.Empty);
+        };
         AddHandler(Widget.ActionEvent, new EventHandler<WidgetActionEventArgs>((_, e) =>
         {
             e.Handled = true;
@@ -55,6 +60,23 @@ public partial class DashboardWindow : Window
 
     /// <summary>A tap on a widget (a button, say) asks for something to be done.</summary>
     public event EventHandler<WidgetAction>? ActionRequested;
+
+    /// <summary>A tap on a screen dimmed too far to see: show it at full brightness for a moment instead of pressing what's there.</summary>
+    public event EventHandler? PeekRequested;
+
+    private double _dimOpacity;
+
+    /// <summary>0 (black) to 1 (full), fading over a second or so. Very dark, taps peek rather than press.</summary>
+    public void SetBrightness(double brightness)
+    {
+        brightness = Math.Clamp(brightness, 0, 1);
+        DimOverlay.IsHitTestVisible = brightness <= Dimming.TapToPeekBelow;
+        var opacity = 1 - brightness;
+        if (Math.Abs(opacity - _dimOpacity) < 0.001)
+            return;
+        _dimOpacity = opacity;
+        DimOverlay.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(opacity, TimeSpan.FromSeconds(1.2)));
+    }
 
     public bool IsEditing => _overlay is not null;
 

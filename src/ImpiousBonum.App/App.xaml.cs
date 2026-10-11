@@ -14,6 +14,7 @@ using ImpiousBonum.Core;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
+using ImpiousBonum.Core.Sensors;
 using Microsoft.Win32;
 
 namespace ImpiousBonum.App;
@@ -45,7 +46,8 @@ public partial class App : Application
     // "layout:<name>" or "theme:<name>" for links whose target has gone, so each is reported once.
     private readonly HashSet<string> _reportedMissingLinks = new(StringComparer.OrdinalIgnoreCase);
     private string? _gameLayoutApplied;
-    private ScheduleRule? _scheduled;
+    private ScheduledLook? _scheduled;
+    private DateTime _peekUntil;
     private string? _recentApp;
     private DispatcherTimer? _updateTimer;
     private bool _warnedOutdatedService;
@@ -101,6 +103,11 @@ public partial class App : Application
 
         _window = new DashboardWindow();
         _window.EditRequested += (_, _) => OpenEditor();
+        _window.PeekRequested += (_, _) =>
+        {
+            _peekUntil = DateTime.UtcNow + Dimming.PeekFor;
+            UpdateDimming();
+        };
         _actions = new ActionRunner(SwitchLayoutFromButton);
         _window.ActionRequested += (_, action) => RunAction(action);
         _window.PlacementChanged += (_, rect) => OnWindowMoved(rect);
@@ -119,7 +126,9 @@ public partial class App : Application
                 var names = _layouts.List();
                 _tray.SetLayouts(names, _layouts.Active, _layouts.ActivePath);
                 _tray.SetGameLayouts(_settings.GameLayoutsEnabled, _settings.GameLayouts, _recentApp, names, _layouts.Themes.List());
-                _tray.SetSchedule(_settings.ScheduleEnabled, _settings.Schedule, _scheduled);
+                _tray.SetSchedule(_settings.ScheduleEnabled, _settings.Schedule,
+                    ScheduledLook.Active(_settings.Schedule, TimeOnly.FromDateTime(DateTime.Now), WindowsColourMode.IsDark()));
+                _tray.SetAway(_settings.AwayDimMinutes, _settings.AwayBrightness);
             }
         };
         _tray.LayoutSelected += (_, name) => SelectLayout(name);
@@ -133,6 +142,12 @@ public partial class App : Application
             UpdateSchedule();
         };
         _tray.ScheduleAddRequested += (_, _) => AddScheduleRule();
+        _tray.AwayChanged += (_, away) =>
+        {
+            (_settings.AwayDimMinutes, _settings.AwayBrightness) = away;
+            _settings.Save();
+            AppLog.Info(away.Minutes == 0 ? "Dimming when away: off" : $"Dimming when away: after {away.Minutes} minutes, to {away.Brightness}%");
+        };
         _tray.ScheduleRuleRemoved += (_, rule) =>
         {
             _settings.Schedule.Remove(rule);
@@ -236,6 +251,7 @@ public partial class App : Application
         _editor?.Refresh(_sampler!.Store, now);
         _tablet?.Refresh(_sampler!.Store, now);
         UpdateGameLayout();
+        UpdateDimming();
         UpdateFullscreenHide();
 
         // After an app update the installed service is still the old build; say so once per run.
@@ -405,15 +421,29 @@ public partial class App : Application
         UpdateSchedule();
     }
 
-    /// <summary>Checks the schedule (each second, with the game check) and switches when a different rule applies.</summary>
+    /// <summary>Checks the schedule (each second, with the game check) and switches when what it wants changes.</summary>
     private void UpdateSchedule()
     {
-        var rule = _settings.ScheduleEnabled ? ScheduleRule.Match(_settings.Schedule, TimeOnly.FromDateTime(DateTime.Now), WindowsColourMode.IsDark()) : null;
-        if (ReferenceEquals(rule, _scheduled))
+        var look = _settings.ScheduleEnabled ? ScheduledLook.From(_settings.Schedule, TimeOnly.FromDateTime(DateTime.Now), WindowsColourMode.IsDark()) : null;
+        if (look == _scheduled)
             return;
-        _scheduled = rule;
-        AppLog.Info(rule is null ? "Schedule: nothing scheduled now" : $"Schedule: {rule.Describe()}");
+        _scheduled = look;
+        AppLog.Info(look is null ? "Schedule: nothing scheduled now" : $"Schedule: {look.Describe()}");
         ApplyGameLayout();
+    }
+
+    /// <summary>
+    /// Dims the dashboard for the schedule and when you're away, each second. A game drawing frames counts as someone
+    /// there, since a gamepad doesn't count as input to Windows.
+    /// </summary>
+    private void UpdateDimming()
+    {
+        if (_window is null || _sampler is null)
+            return;
+        var drawing = _sampler.Store.TryGet(SensorAliases.FramesPerSecond, out var fps) && fps.Value is > 0;
+        _window.SetBrightness(Dimming.Brightness(
+            _scheduled?.Brightness, Dimming.IdleTime(), _settings.AwayDimMinutes, _settings.AwayBrightness,
+            drawing, DateTime.UtcNow < _peekUntil, _editor is not null));
     }
 
     /// <summary>Tray → Layout → Schedule → Add…</summary>

@@ -17,6 +17,8 @@
                 <app:DashboardView x:Name="View" />
             </Grid>
         </Viewbox>
+        <!-- Dims the dashboard (schedule, away). Catches taps only when the screen is too dark to see what they'd press. -->
+        <Rectangle x:Name="DimOverlay" Fill="Black" Opacity="0" IsHitTestVisible="False" />
         <!-- Shown while the windowed dashboard is unlocked, so it's clear it can be dragged and resized. -->
         <Rectangle x:Name="MoveOutline" Visibility="Collapsed" IsHitTestVisible="False"
                    Stroke="#B0FFFFFF" StrokeThickness="2" StrokeDashArray="4 3" />
