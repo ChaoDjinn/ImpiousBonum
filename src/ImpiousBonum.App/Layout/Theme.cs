@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 
 namespace ImpiousBonum.App.Layout;
 
@@ -16,13 +17,17 @@ public sealed class Theme
         FontWeight = ParseWeight(settings.FontWeight);
         Foreground = ParseBrush(settings.Foreground, Brushes.White);
         Secondary = ParseBrush(settings.Secondary, Foreground);
-        Accent = ParseBrush(settings.Accent, Brushes.Orange);
-        Background = ParseBrush(settings.Background, Brushes.Black);
+        Accent = Gradient(ParseBrush(settings.Accent, Brushes.Orange), settings.Accent2, vertical: false);
+        Background = Gradient(ParseBrush(settings.Background, Brushes.Black), settings.BackgroundGradient, vertical: true);
         Track = ParseBrush(settings.Track, Brushes.Transparent);
         Warning = ParseBrush(settings.Warning, Brushes.Gold);
         Critical = ParseBrush(settings.Critical, Brushes.Red);
-        AccentColor = Accent is SolidColorBrush solid ? solid.Color : Colors.Orange;
+        AccentColor = ParseBrush(settings.Accent, Brushes.Orange) is SolidColorBrush solid ? solid.Color : Colors.Orange;
+        Glow = CreateGlow(settings.Glow, ParseBrush(settings.GlowColor, Brushes.Transparent) is SolidColorBrush { Color.A: > 0 } glow ? glow.Color : AccentColor);
     }
+
+    /// <summary>The glow around every widget, shared by all of them, or null for none.</summary>
+    public Effect? Glow { get; }
 
     public FontFamily FontFamily { get; }
 
@@ -34,6 +39,7 @@ public sealed class Theme
 
     public Brush Accent { get; }
 
+    /// <summary>The accent's colour (its first colour when it's a gradient).</summary>
     public Color AccentColor { get; }
 
     public Brush Background { get; }
@@ -99,6 +105,37 @@ public sealed class Theme
         {
             return FontWeights.Normal;
         }
+    }
+
+    /// <summary><paramref name="from"/> fading to <paramref name="to"/> (left to right, or top to bottom), or just <paramref name="from"/> when there's no second colour.</summary>
+    private static Brush Gradient(Brush from, string? to, bool vertical)
+    {
+        if (from is not SolidColorBrush start || ParseBrush(to, Brushes.Transparent) is not SolidColorBrush { Color.A: > 0 } end)
+            return from;
+        var brush = new LinearGradientBrush(start.Color, end.Color, vertical ? 90 : 0);
+        brush.Freeze();
+        return brush;
+    }
+
+    /// <summary>
+    /// A soft halo: a shadow with no offset, wider and stronger as <paramref name="amount"/> goes from 0 to 1. Effects
+    /// cost CPU in software rendering, though the dashboard only redraws once a second.
+    /// </summary>
+    internal static Effect? CreateGlow(double? amount, Color color)
+    {
+        if (amount is not { } glow || !double.IsFinite(glow) || glow <= 0)
+            return null;
+        glow = Math.Min(glow, 1);
+        var effect = new DropShadowEffect
+        {
+            Color = color,
+            ShadowDepth = 0,
+            BlurRadius = 6 + 18 * glow,
+            Opacity = 0.35 + 0.65 * glow,
+            RenderingBias = RenderingBias.Performance,
+        };
+        effect.Freeze();
+        return effect;
     }
 
     private static Brush ParseBrush(string? value, Brush fallback)

@@ -65,6 +65,18 @@ public sealed class ThemeSettings
     /// <summary>Named by warning colour rules as <c>critical</c>.</summary>
     public string Critical { get; set; } = "#F44336";
 
+    /// <summary>Optional: the accent fades from <see cref="Accent"/> to this, left to right, wherever it's drawn.</summary>
+    public string? Accent2 { get; set; }
+
+    /// <summary>Optional: the background fades from <see cref="Background"/> at the top to this at the bottom.</summary>
+    public string? BackgroundGradient { get; set; }
+
+    /// <summary>Optional, 0–1: a soft glow around every widget's text and shapes. Unset or 0 is none.</summary>
+    public double? Glow { get; set; }
+
+    /// <summary>The glow's colour; unset glows in the accent colour.</summary>
+    public string? GlowColor { get; set; }
+
     /// <summary>These values as a theme object: every key that has a value (the optional files left out when unset).</summary>
     public JsonObject ToJson()
     {

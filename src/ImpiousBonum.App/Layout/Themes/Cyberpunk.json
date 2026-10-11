@@ -8,5 +8,7 @@
   "background": "#0B0B12",
   "track": "#22222E",
   "warning": "#FF8A00",
-  "critical": "#FF003C"
+  "critical": "#FF003C",
+  "accent2": "#00F0FF",
+  "glow": 0.4
 }
