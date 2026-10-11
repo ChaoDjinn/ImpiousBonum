@@ -46,6 +46,12 @@ public abstract class Widget : Grid
     /// <summary>Called roughly once a second on the UI thread.</summary>
     public abstract void Refresh(MetricStore store, DateTime now);
 
+    /// <summary>Raised (bubbling) when a tap on a widget asks the app to do something; see <see cref="WidgetAction"/>.</summary>
+    public static readonly RoutedEvent ActionEvent = EventManager.RegisterRoutedEvent(
+        "Action", RoutingStrategy.Bubble, typeof(EventHandler<WidgetActionEventArgs>), typeof(Widget));
+
+    protected void RequestAction(WidgetAction action) => RaiseEvent(new WidgetActionEventArgs(action));
+
     /// <summary>Hides the widget while it has nothing to show (faded instead while <see cref="Editing"/>).</summary>
     protected void SetUnavailable(bool unavailable)
     {

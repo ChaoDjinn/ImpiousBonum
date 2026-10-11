@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using ImpiousBonum.App.Layout;
+using ImpiousBonum.App.Widgets;
 
 namespace ImpiousBonum.App.Editor;
 
@@ -58,6 +59,9 @@ public static class LayoutTransfer
             return null;
         }
 
+        if (!ConfirmOpenTargets(owner, package.Layout))
+            return null;
+
         var name = package.Name;
         if (layouts.Library.Find(name) is { } existing)
         {
@@ -93,6 +97,29 @@ public static class LayoutTransfer
                 string.Join(Environment.NewLine, package.Skipped.Take(10)), MessageBoxButton.OK, MessageBoxImage.Information);
         }
         return name;
+    }
+
+    /// <summary>
+    /// A layout from someone else can have a harmless-looking button that runs any program. If it has buttons that open
+    /// something, lists what and asks: keep them, clear what they open, or cancel the import. False means cancel.
+    /// </summary>
+    private static bool ConfirmOpenTargets(Window? owner, LayoutDocument layout)
+    {
+        var targets = ButtonsWidget.OpenTargets(layout);
+        if (targets.Count == 0)
+            return true;
+
+        var list = string.Join(Environment.NewLine, targets.Take(10).Select(t => "• " + t));
+        if (targets.Count > 10)
+            list += Environment.NewLine + $"• and {targets.Count - 10} more";
+        var answer = Show(owner,
+            $"This layout has buttons that open programs, files or web addresses:{Environment.NewLine}{Environment.NewLine}{list}{Environment.NewLine}{Environment.NewLine}" +
+            $"Only keep them if you trust where the layout came from.{Environment.NewLine}{Environment.NewLine}" +
+            "Yes keeps them. No keeps the buttons but clears what they open.",
+            MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+        if (answer == MessageBoxResult.No)
+            ButtonsWidget.ClearOpenTargets(layout);
+        return answer != MessageBoxResult.Cancel;
     }
 
     /// <summary>"Name (2)", "Name (3)"… whichever is free first.</summary>

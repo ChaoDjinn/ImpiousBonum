@@ -111,8 +111,9 @@ public static class Setting
 
     public static readonly IReadOnlyList<string> NamedColors = ["foreground", "secondary", "accent", "warning", "critical"];
 
-    public static SettingDescriptor Icon(string key, string label, string @default, string group = Content) =>
-        new(key, label, SettingKind.Icon, @default, group, Choices: Icons.Names);
+    /// <param name="allowNone">Offer <see cref="Icons.None"/> too, for widgets where the icon is optional.</param>
+    public static SettingDescriptor Icon(string key, string label, string @default, string group = Content, bool allowNone = false) =>
+        new(key, label, SettingKind.Icon, @default, group, Choices: allowNone ? [Icons.None, .. Icons.Names] : Icons.Names);
 
     /// <param name="defaults">Entries a new widget starts with; a layout that leaves the list out gets them too.</param>
     public static SettingDescriptor Items(

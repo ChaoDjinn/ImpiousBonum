@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using ImpiousBonum.App.Editor;
 using ImpiousBonum.App.Shell;
+using ImpiousBonum.App.Widgets;
 
 namespace ImpiousBonum.App;
 
@@ -40,12 +41,20 @@ public partial class DashboardWindow : Window
     {
         InitializeComponent();
         SizeChanged += (_, _) => _overlay?.Update();
+        AddHandler(Widget.ActionEvent, new EventHandler<WidgetActionEventArgs>((_, e) =>
+        {
+            e.Handled = true;
+            ActionRequested?.Invoke(this, e.Action);
+        }));
     }
 
     public DashboardView Dashboard => View;
 
     /// <summary>Right-click, or press and hold with a finger (Windows turns that into a right-click): open the layout editor.</summary>
     public event EventHandler? EditRequested;
+
+    /// <summary>A tap on a widget (a button, say) asks for something to be done.</summary>
+    public event EventHandler<WidgetAction>? ActionRequested;
 
     public bool IsEditing => _overlay is not null;
 

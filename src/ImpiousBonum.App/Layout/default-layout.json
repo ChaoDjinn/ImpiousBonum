@@ -12,6 +12,7 @@
 // (any drive letter), disk.read, disk.write,
 // net.down, net.up, net.down.total, net.up.total, net.ip, net.adapter, net.ping,
 // sys.uptime, sys.name, sys.battery, sys.battery.status (laptops)
+// media.title, media.artist, media.album, media.app, media.status, media.position, media.duration, media.progress (what's playing)
 // With the sensor service: cpu.temp, cpu.power, gpu.temp, gpu.hotspot, gpu.power, gpu.fan, fps, sensors.status,
 // plus every raw sensor as hw/... (run "sensors\ImpiousBonum.Sensors.exe list" to see them).
 {

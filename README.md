@@ -36,6 +36,7 @@
 - **Made for a spare screen, or a window.** Pick a monitor; the dashboard fills it and comes back to the same place after reboots or display changes. No spare screen? Make it a window you can drag, resize, lock in place and keep on top. It's hidden from the taskbar and Alt+Tab, and tapping it never steals focus.
 - **The numbers you'd run HWiNFO for, built in.** CPU, memory, GPU, drives and network out of the box. The optional sensor service adds temperatures, fans, clocks, power and per-app FPS, about 280 metrics on a typical PC.
 - **Edit it visually, or by hand.** A layout editor with live preview, drag and resize, a searchable metric picker and touch editing on the dashboard itself. Underneath it's one JSON file that applies live as you save it.
+- **Tap to control.** Buttons for play/pause, skip and volume, opening programs and web pages, keyboard shortcuts and switching layout, plus a *Now playing* widget with album art. The dashboard never takes focus, so a shortcut goes to the app you're using.
 - **On a tablet too.** Turn on the tablet view and any tablet or phone on your Wi-Fi can show the dashboard in its browser, with nothing to install on it.
 - **Tiny footprint.** About 50 MB of private memory and well under 0.1% CPU when idle; the sensor service adds about 20 MB.
 - **Installs and updates itself.** A per-user installer with no admin prompt, and small background updates from GitHub Releases.
@@ -46,7 +47,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="docs/images/default-layout.svg" alt="Map of the default layout: CPU and memory graphs, GPU load and VRAM, CPU and GPU temperatures, FPS, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Nine widget types are available: `text`, `graph` (line or area history with a header), `gauge` (a dial: 270° arc, semicircle or ring), `icon` (accent icon + value), `clock`, `drives`, `rows`, `bars` (labelled progress bars) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Eleven widget types are available: `text`, `graph` (line or area history with a header), `gauge` (a dial: 270° arc, semicircle or ring), `icon` (accent icon + value), `clock`, `drives`, `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
 
 ## What it shows
 
@@ -64,6 +65,7 @@ Every box is a widget you can move, resize, restyle or replace. Nine widget type
 | `net.down`, `net.up`, `net.down.total`, `net.up.total`, `net.ip`, `net.adapter` | Adapters with a default gateway (totals count since the adapter connected) |
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
 | `sys.uptime`, `sys.name`, `sys.battery`, `sys.battery.status` | Windows; the battery ones only on PCs with a battery |
+| `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
 | `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
@@ -171,6 +173,22 @@ and set `"refreshInterval": 15` on your `statusLine` so the widget knows Claude 
 
 The `bars` widget is the same widget for any metrics, e.g. CPU and RAM load. Its *Hide without a reading* setting works the same way.
 
+## Now playing and buttons
+
+The *Now playing* widget (`media`) shows what's playing in any app that appears in Windows' media controls (the ones in the volume flyout): Spotify, YouTube in a browser, Media Player and so on. It has the album art, title and artist (both templates, so `{media.artist} · {media.album}` works too), a progress bar with the position and length, and previous / play-pause / next buttons. It hides while nothing is playing, and shows faded while you edit the layout. The `media.*` metrics work in any widget too, e.g. a gauge of `media.progress`.
+
+The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a label, an icon or both. Each button does one of:
+
+| Action | |
+|---|---|
+| `play-pause`, `next`, `previous`, `stop` | Like the keyboard's media keys: they act on what *Now playing* shows |
+| `volume-up`, `volume-down`, `mute` | Like the keyboard's volume keys |
+| `open` | Opens the *target*: a program (`calc.exe`), a file or folder (`C:\Games`), a web address, or a Windows link such as `ms-settings:sound`. *Arguments* are passed to a program |
+| `keys` | Sends a shortcut such as `Ctrl+Shift+M`, `Win+D` or `F13` to the app you're using. Names are like `A`, `5`, `F1`–`F24`, `Enter`, `Space`, `Esc`, `Tab`, `Home`, `PgUp`, `Up`, `Delete`, `VolumeUp`, `MediaPlayPause` |
+| `layout` | Switches to the layout named in *target* |
+
+Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything in the tablet view, which is read-only, or while you edit the layout. If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
+
 ## Layout editor
 
 Double-click the tray icon (or tray → *Edit layout…*, or right-click / press and hold on the dashboard) to open the editor on your main screen:
@@ -191,6 +209,8 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 ## Sharing layouts
 
 *Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file and background image inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor, or tray → *Layout*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual.
+
+A layout from someone else could have a harmless-looking button that runs any program, so if it has buttons that open something, the import lists what they'd open and asks whether to keep them or clear them.
 
 An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder. Imports only take the layout and the font (`.ttf`, `.otf`) and image it names, reject a file with `..` or absolute paths in it, and cap sizes (1 MB for the layout, 50 MB per file).
 
