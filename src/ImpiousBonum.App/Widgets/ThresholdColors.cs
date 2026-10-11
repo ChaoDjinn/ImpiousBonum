@@ -22,4 +22,13 @@ public sealed class ThresholdColors
     /// <summary>The brush of the winning rule, or <paramref name="normal"/> when none matches.</summary>
     public Brush Pick(MetricStore store, string? ownMetric, Brush normal) =>
         _rules.Count > 0 && ThresholdRule.Select(_rules, ownMetric, store) is { } rule ? _brushes[rule] : normal;
+
+    /// <summary>As above, for a widget whose own value isn't a metric (a rule with an empty metric reads <paramref name="own"/>).</summary>
+    public Brush Pick(MetricStore store, double own, Brush normal) =>
+        _rules.Count > 0 && ThresholdRule.Select(_rules, OwnValue, id => id == OwnValue ? own : store.TryGet(id, out var sample) ? sample.Value : null) is { } rule
+            ? _brushes[rule]
+            : normal;
+
+    // Not a metric id anyone can type.
+    private const string OwnValue = "\0own";
 }

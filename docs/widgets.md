@@ -195,6 +195,28 @@ Each entry in `thresholds`:
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
 
+## Top apps (`processes`)
+
+The apps using the most CPU or memory, like a small Task Manager. An app's processes count together, so all of a browser's tabs are one row.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `sort` | `cpu` / `memory` | `cpu` | Sort by |
+| `count` | number (1–30) | `5` | Rows |
+| `columns` | `both` / `cpu` / `memory` | `both` | Show. Which numbers each row shows after the app's name. |
+| `fontSize` | number (6–200) | `20` | Font size |
+| `spacing` | number (0–200) | `4` | Row spacing |
+| `thresholds` | list | — | Warning colours. Changes the colour of each row's CPU figure. An empty metric uses that app's CPU. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
+
 ## Rows (`rows`)
 
 A stack of label and value rows, e.g. Download / Upload / Ping.

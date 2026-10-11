@@ -38,6 +38,7 @@ public sealed class Sampler : IAsyncDisposable
         new PingProvider(pingHost),
         new SensorHostProvider(frameRateTarget),
         new SystemProvider(),
+        new ProcessProvider(),
         new MediaProvider(),
         new WeatherProvider(weather ?? (() => null)),
         new CustomDataProvider(customData ?? (() => [])),
