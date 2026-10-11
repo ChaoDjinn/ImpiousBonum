@@ -21,6 +21,9 @@ public sealed record WidgetDescriptor(
     public static readonly IReadOnlyList<string> GeometryKeys = ["type", "x", "y", "width", "height"];
 
     public SettingDescriptor? Find(string key) => Settings.FirstOrDefault(s => s.Key == key);
+
+    /// <summary>Added behind every other widget rather than on top, like a panel that groups widgets.</summary>
+    public bool AddBehind { get; init; }
 }
 
 public enum SettingKind
@@ -109,7 +112,7 @@ public static class Setting
     public static SettingDescriptor Color(string key, string label, string @default, string group = Appearance, string? help = null, bool named = true) =>
         new(key, label, SettingKind.Color, @default, group, help, Choices: named ? NamedColors : null);
 
-    public static readonly IReadOnlyList<string> NamedColors = ["foreground", "secondary", "accent", "warning", "critical"];
+    public static readonly IReadOnlyList<string> NamedColors = ["foreground", "secondary", "accent", "warning", "critical", "track", "background"];
 
     /// <param name="allowNone">Offer <see cref="Icons.None"/> too, for widgets where the icon is optional.</param>
     public static SettingDescriptor Icon(string key, string label, string @default, string group = Content, bool allowNone = false) =>

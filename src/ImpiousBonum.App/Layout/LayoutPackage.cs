@@ -22,6 +22,9 @@ public sealed class LayoutPackageContents
 
     public PackagedFile? Background { get; init; }
 
+    /// <summary>Pictures for image widgets, by the widget's position in the layout; those widgets' <c>file</c> is cleared.</summary>
+    public IReadOnlyDictionary<int, PackagedFile> Images { get; init; } = new Dictionary<int, PackagedFile>();
+
     /// <summary>Entries that were left out, and why, for telling the user.</summary>
     public IReadOnlyList<string> Skipped { get; init; } = [];
 }
@@ -72,6 +75,13 @@ public static class LayoutPackage
         using var zip = new ZipArchive(destination, ZipArchiveMode.Create, leaveOpen: true);
         ThemeLibrary.SetString(copy.Theme, "fontFile", Pack(zip, theme.FontFile, "font", FontExtensions, "font file", warnings));
         ThemeLibrary.SetString(copy.Theme, "backgroundImage", Pack(zip, theme.BackgroundImage, "background", BackgroundImage.Extensions, "background image", warnings));
+        foreach (var (widget, index) in ImageWidgets(copy))
+        {
+            if (Pack(zip, widget.GetString(ImageFileKey), $"image{index}", BackgroundImage.Extensions, "image", warnings) is { } entry)
+                widget[ImageFileKey] = entry;
+            else
+                widget.Remove(ImageFileKey);
+        }
 
         WriteText(zip, ManifestEntry, new JsonObject
         {
@@ -147,9 +157,16 @@ public static class LayoutPackage
             var background = Unpack(entries, ThemeLibrary.GetString(layout.Theme, "backgroundImage"), BackgroundImage.Extensions, "background image", used, skipped);
             ThemeLibrary.SetString(layout.Theme, "fontFile", null);
             ThemeLibrary.SetString(layout.Theme, "backgroundImage", null);
+            var images = new Dictionary<int, PackagedFile>();
+            foreach (var (widget, index) in ImageWidgets(layout))
+            {
+                if (Unpack(entries, widget.GetString(ImageFileKey), BackgroundImage.Extensions, "image", used, skipped) is { } image)
+                    images[index] = image;
+                widget.Remove(ImageFileKey);
+            }
 
             skipped.AddRange(entries.Keys.Where(key => !used.Contains(key)).Order(StringComparer.OrdinalIgnoreCase).Select(key => $"{key}: not used by the layout"));
-            return new LayoutPackageContents { Name = name, Layout = layout, Font = font, Background = background, Skipped = skipped };
+            return new LayoutPackageContents { Name = name, Layout = layout, Font = font, Background = background, Images = images, Skipped = skipped };
         }
     }
 
@@ -284,6 +301,16 @@ public static class LayoutPackage
         using var writer = new StreamWriter(zip.CreateEntry(entryName, CompressionLevel.Optimal).Open());
         writer.Write(text);
     }
+
+    /// <summary>The key in an image widget that names its picture.</summary>
+    public const string ImageFileKey = "file";
+
+    /// <summary>Image widgets that name a picture, with their positions in the layout.</summary>
+    public static IEnumerable<(JsonObject Widget, int Index)> ImageWidgets(LayoutDocument layout) =>
+        layout.Widgets
+            .Select((widget, index) => (widget, index))
+            .Where(w => string.Equals(w.widget.GetString("type"), "image", StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrWhiteSpace(w.widget.GetString(ImageFileKey)));
 
     private static LayoutDocument Clone(LayoutDocument layout) =>
         JsonSerializer.Deserialize<LayoutDocument>(JsonSerializer.Serialize(layout, JsonDefaults.Options), JsonDefaults.Options)!;

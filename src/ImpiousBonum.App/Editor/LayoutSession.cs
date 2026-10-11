@@ -252,6 +252,12 @@ public sealed class LayoutSession
         // Lists with default entries start with them in the file, so editing the list edits what's on screen.
         foreach (var items in descriptor.Settings.Where(s => s.Default is JsonArray))
             widget[items.Key] = ((JsonArray)items.Default!).DeepClone();
+        if (descriptor.AddBehind)
+        {
+            Edit(ChangeKind.Structure, null, null, null, document => document.Widgets.Insert(0, widget));
+            Select(0);
+            return;
+        }
         Edit(ChangeKind.Structure, null, null, null, document => document.Widgets.Add(widget));
         Select(Document.Widgets.Count - 1);
     }

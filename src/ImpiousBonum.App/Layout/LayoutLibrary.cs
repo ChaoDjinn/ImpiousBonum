@@ -124,13 +124,18 @@ public sealed class LayoutLibrary
     {
         RequireValid(name);
         var layout = package.Layout;
-        if (package.Font is not null || package.Background is not null)
+        if (package.Font is not null || package.Background is not null || package.Images.Count > 0)
         {
             var folder = NewImportFolder(name);
             System.IO.Directory.CreateDirectory(folder);
             File.WriteAllText(Path.Combine(folder, ImportMarker), "Files for an imported layout. Deleted when no layout uses them.\n");
             ThemeLibrary.SetString(layout.Theme, "fontFile", Place(folder, "font", package.Font));
             ThemeLibrary.SetString(layout.Theme, "backgroundImage", Place(folder, "background", package.Background));
+            foreach (var (index, image) in package.Images)
+            {
+                if (index < layout.Widgets.Count)
+                    layout.Widgets[index][LayoutPackage.ImageFileKey] = Place(folder, $"image{index}", image);
+            }
         }
         name = Find(name) ?? name;
         Save(name, layout);
@@ -179,8 +184,10 @@ public sealed class LayoutLibrary
         {
             try
             {
-                var theme = Load(name).Theme;
-                used.AddRange(new[] { ThemeLibrary.GetString(theme, "fontFile"), ThemeLibrary.GetString(theme, "backgroundImage") }.OfType<string>().Where(p => !string.IsNullOrWhiteSpace(p)).Select(FullPathOrEmpty));
+                var layout = Load(name);
+                var files = new[] { ThemeLibrary.GetString(layout.Theme, "fontFile"), ThemeLibrary.GetString(layout.Theme, "backgroundImage") }
+                    .Concat(LayoutPackage.ImageWidgets(layout).Select(w => w.Widget.GetString(LayoutPackage.ImageFileKey)));
+                used.AddRange(files.OfType<string>().Where(p => !string.IsNullOrWhiteSpace(p)).Select(FullPathOrEmpty));
             }
             catch (Exception ex) when (ex is JsonException or IOException)
             {

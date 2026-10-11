@@ -52,8 +52,8 @@ public sealed class Theme
         BackgroundImage.CreateBrush(_settings, Background, width, height);
 
     /// <summary>
-    /// Resolves a widget colour setting: <c>foreground</c>, <c>secondary</c>, <c>accent</c>, <c>warning</c>, <c>critical</c>
-    /// or a <c>#RRGGBB</c>/<c>#AARRGGBB</c> value.
+    /// Resolves a widget colour setting: <c>foreground</c>, <c>secondary</c>, <c>accent</c>, <c>warning</c>, <c>critical</c>,
+    /// <c>track</c>, <c>background</c> or a <c>#RRGGBB</c>/<c>#AARRGGBB</c> value.
     /// </summary>
     public Brush Resolve(string? value, Brush fallback) => value?.ToLowerInvariant() switch
     {
@@ -63,6 +63,8 @@ public sealed class Theme
         "accent" => Accent,
         "warning" => Warning,
         "critical" => Critical,
+        "track" => Track,
+        "background" => Background,
         _ => ParseBrush(value, fallback),
     };
 
