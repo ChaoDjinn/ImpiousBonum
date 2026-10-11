@@ -95,7 +95,7 @@ An accent-coloured line icon followed by a live value, e.g. a chip and the CPU t
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` | `cpu` | Icon |
+| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` | `cpu` | Icon |
 | `text` | template | `{cpu.temp:nounit} °C` | Text |
 | `fontSize` | number (6–400) | `64` | Font size |
 | `iconSize` | number (8–400) | `60` | Icon size |
@@ -234,10 +234,25 @@ Each entry in `buttons`:
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `label` | text | `Play/pause` | Label. Empty shows just the icon. |
-| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` | `play-pause` | Icon |
+| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` | `play-pause` | Icon |
 | `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `open` / `keys` / `layout` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys and layout use the target below. |
 | `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name. |
 | `arguments` | text | — | Arguments. open: command-line arguments for a program. |
+
+## Weather (`weather`)
+
+The weather now and the days or hours ahead, from Open-Meteo.com. Set your location from the tray: Weather → Set location.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `forecast` | `days` / `hours` / `none` | `days` | Forecast |
+| `count` | number (1–14) | `5` | Days or hours |
+| `hourStep` | number (1–12) | `1` | Hours apart. For an hourly forecast, e.g. 3 for every three hours. |
+| `showDetails` | true/false | `true` | Details. Conditions, today's high and low, and feels like, beside the temperature. |
+| `showLocation` | true/false | `false` | Location |
+| `fontSize` | number (6–400) | `80` | Temperature size |
+| `forecastSize` | number (6–200) | `22` | Forecast size |
+| `iconColor` | color | `accent` | Icon colour |
 
 ## Claude usage (`claude`)
 

@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using ImpiousBonum.Core.Remote;
+using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.App.Shell;
 
@@ -65,6 +67,27 @@ public sealed class AppSettings
     /// <summary>The secret in the tablet link. Created when the tablet view is first turned on; replaced by "New link".</summary>
     public string? TabletToken { get; set; }
 
+    /// <summary>Where the weather is for (tray → Weather → Set location…), or null: then no forecast is fetched at all.</summary>
+    public WeatherLocation? WeatherLocation { get; set; }
+
+    /// <summary><c>auto</c> follows Windows' region; <c>metric</c> is °C and km/h, <c>imperial</c> °F and mph.</summary>
+    public string WeatherUnits { get; set; } = WeatherUnitsAuto;
+
+    public const string WeatherUnitsAuto = "auto";
+    public const string WeatherUnitsMetric = "metric";
+    public const string WeatherUnitsImperial = "imperial";
+
+    /// <summary>What the weather provider should fetch, or null when no location is set.</summary>
+    public WeatherRequest? WeatherRequest() =>
+        WeatherLocation is { } place ? new WeatherRequest(place.Name, place.Latitude, place.Longitude, ResolveWeatherUnits(WeatherUnits)) : null;
+
+    public static WeatherUnits ResolveWeatherUnits(string? setting) => setting?.ToLowerInvariant() switch
+    {
+        WeatherUnitsMetric => Core.Weather.WeatherUnits.Metric,
+        WeatherUnitsImperial => Core.Weather.WeatherUnits.Imperial,
+        _ => RegionInfo.CurrentRegion.IsMetric ? Core.Weather.WeatherUnits.Metric : Core.Weather.WeatherUnits.Imperial,
+    };
+
     public static AppSettings Load()
     {
         try
@@ -93,3 +116,6 @@ public sealed class AppSettings
 }
 
 public sealed record PixelRect(int X, int Y, int Width, int Height);
+
+/// <param name="Name">The place as you picked it, e.g. "Leeds, England, United Kingdom".</param>
+public sealed record WeatherLocation(string Name, double Latitude, double Longitude);

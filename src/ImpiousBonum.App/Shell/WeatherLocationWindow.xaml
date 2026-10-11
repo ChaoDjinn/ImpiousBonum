@@ -1,0 +1,25 @@
+<Window x:Class="ImpiousBonum.App.Shell.WeatherLocationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        ThemeMode="System"
+        Title="Weather location"
+        Width="460" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False">
+    <StackPanel Margin="16">
+        <TextBlock Text="Town or city, or latitude, longitude" Margin="0,0,0,6" />
+        <DockPanel>
+            <Button x:Name="SearchButton" Content="Search" DockPanel.Dock="Right" Margin="8,0,0,0" MinWidth="80" Click="OnSearch" />
+            <TextBox x:Name="QueryBox" TextChanged="OnQueryChanged" KeyDown="OnQueryKeyDown" />
+        </DockPanel>
+        <ListBox x:Name="Results" Height="190" Margin="0,10,0,0" SelectionChanged="OnSelectionChanged" MouseDoubleClick="OnOk" />
+        <TextBlock x:Name="StatusText" TextWrapping="Wrap" Margin="0,8,0,0" MinHeight="18" Opacity="0.75" />
+        <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" FontSize="11.5" Opacity="0.75"
+                   Text="The place you pick is sent to Open-Meteo.com to get the forecast, every 15 minutes. Nothing else is sent." />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="OkButton" Content="Use this place" IsDefault="True" IsEnabled="False" Click="OnOk" MinWidth="80"
+                    Style="{DynamicResource AccentButtonStyle}" />
+            <Button Content="Cancel" IsCancel="True" Margin="8,0,0,0" MinWidth="80" />
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -14,4 +14,7 @@ public enum MetricUnit
     Rpm,
     Volts,
     Watts,
+    Fahrenheit,
+    KilometresPerHour,
+    MilesPerHour,
 }

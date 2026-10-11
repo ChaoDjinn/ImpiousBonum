@@ -47,7 +47,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="docs/images/default-layout.svg" alt="Map of the default layout: CPU and memory graphs, GPU load and VRAM, CPU and GPU temperatures, FPS, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Eleven widget types are available: `text`, `graph` (line or area history with a header), `gauge` (a dial: 270° arc, semicircle or ring), `icon` (accent icon + value), `clock`, `drives`, `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Twelve widget types are available: `text`, `graph` (line or area history with a header), `gauge` (a dial: 270° arc, semicircle or ring), `icon` (accent icon + value), `clock`, `drives`, `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `weather` ([Weather](#weather)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
 
 ## What it shows
 
@@ -65,6 +65,7 @@ Every box is a widget you can move, resize, restyle or replace. Eleven widget ty
 | `net.down`, `net.up`, `net.down.total`, `net.up.total`, `net.ip`, `net.adapter` | Adapters with a default gateway (totals count since the adapter connected) |
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
 | `sys.uptime`, `sys.name`, `sys.battery`, `sys.battery.status` | Windows; the battery ones only on PCs with a battery |
+| `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set in tray → *Weather*, every 15 minutes |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
 | `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
@@ -87,7 +88,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours and background), which any layout can use by name.
-- `settings.json`: which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
 
@@ -102,6 +103,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, and turn automatic switching on or off (see [Game layouts](#game-layouts)) |
 | *Sensors* | Sensor service status, and install, update or remove it |
 | *Claude usage* | Whether Claude Code is reporting, and *Connect Claude Code…* (see [Claude usage](#claude-usage)) |
+| *Weather* | The weather now, *Set location…*, units, and *Turn off weather* (see [Weather](#weather)) |
 | *FPS from* | Follow the foreground app, or the top app on a chosen monitor |
 | *Edit layout…* | Open the layout editor (or double-click the tray icon) |
 | *Open layout file*, *Open settings folder*, *Reload layout* | Work with the files directly (*Open layout file* opens the one being shown) |
@@ -188,6 +190,17 @@ The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a
 | `layout` | Switches to the layout named in *target* |
 
 Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything in the tablet view, which is read-only, or while you edit the layout. If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
+
+## Weather
+
+The *Weather* widget shows an icon, the temperature and conditions now (with today's high and low and what it feels like), and a row of the days or hours ahead, every three hours if you like. Every `weather.*` metric works in other widgets too: `{weather.temp} · {weather.condition}` in a text widget, or a gauge of `weather.temp`.
+
+1. Tray → *Weather* → *Set location…* (adding the widget in the editor offers this too). Search for your town, or type latitude and longitude, e.g. `51.5, -0.12`.
+2. Add the widget: *Edit layout…* → add *Weather*.
+
+The location is set once for the PC, so every layout shows the same place. Units follow your Windows region (°C and km/h, or °F and mph); tray → *Weather* → *Units* changes them.
+
+Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-commercial use and needs no account. The coordinates of the place you pick go to Open-Meteo every 15 minutes, and the name you search for when you search; nothing else is sent, and nothing at all until you set a location. *Turn off weather* forgets the place and stops it. If the internet is down the last forecast stays for up to three hours. Weather data by Open-Meteo.com, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ## Layout editor
 

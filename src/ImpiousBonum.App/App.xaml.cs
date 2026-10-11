@@ -95,7 +95,7 @@ public partial class App : Application
         if (!_settings.HardwareRendering)
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         _frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
-        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile));
+        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest()));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -110,6 +110,7 @@ public partial class App : Application
             _tray.SetMonitors(monitors, DisplayMonitor.Resolve(_settings, monitors), CurrentWindowOptions());
             _tray.SetSensorState(SensorStatus(), SensorServiceControl.IsInstalled, SensorServiceControl.IsOutdated(SensorVersion()));
             _tray.SetClaudeState(ClaudeStatus(), IsClaudeCodeConnected());
+            _tray.SetWeatherState(WeatherStatus(), _settings.WeatherLocation is not null, _settings.WeatherUnits);
             _tray.SetFpsSources(monitors, _settings.FpsMonitorId);
             _tray.SetTabletView(_tablet?.IsRunning == true);
             if (_layouts is not null)
@@ -139,6 +140,18 @@ public partial class App : Application
         _tray.TabletNewLinkRequested += (_, _) => NewTabletLink();
         _tray.SensorServiceChangeRequested += async (_, install) => await ChangeSensorServiceAsync(install);
         _tray.ConnectClaudeCodeRequested += (_, _) => ConnectClaudeCode();
+        _tray.WeatherLocationRequested += (_, _) => SetWeatherLocation(null);
+        _tray.WeatherTurnedOff += (_, _) =>
+        {
+            _settings.WeatherLocation = null;
+            _settings.Save();
+            AppLog.Info("Weather off");
+        };
+        _tray.WeatherUnitsSelected += (_, units) =>
+        {
+            _settings.WeatherUnits = units;
+            _settings.Save();
+        };
         _tray.ReloadRequested += (_, _) => ApplyLayout();
         _tray.EditLayoutRequested += (_, _) => OpenEditor();
         _tray.ExitRequested += async (_, _) => await ExitAsync();
@@ -273,6 +286,8 @@ public partial class App : Application
         {
             if (descriptor == BarsWidget.ClaudeDescriptor && _editor is { } editor)
                 OfferClaudeCodeConnection(editor);
+            else if (descriptor == WeatherWidget.Descriptor && _settings.WeatherLocation is null && _editor is { } owner)
+                SetWeatherLocation(owner);
         };
         _editor.Closed += (_, _) =>
         {
@@ -488,6 +503,29 @@ public partial class App : Application
         _sampler is not null && _sampler.Store.TryGet(SensorHostProvider.Status, out var status) && status.Text is { } text
             ? text
             : SensorHostProvider.NotRunning;
+
+    /// <summary>"Leeds: 12° Light rain", or what's missing.</summary>
+    private string WeatherStatus()
+    {
+        if (_settings.WeatherLocation is not { } place)
+            return "No location set";
+        var store = _sampler?.Store;
+        if (store is null || !store.TryGet(WeatherProvider.Temperature, out var temperature) || temperature.Value is null)
+            return $"{place.Name.Split(',')[0]}: waiting for the forecast";
+        store.TryGet(WeatherProvider.Condition, out var condition);
+        return $"{place.Name.Split(',')[0]}: {MetricFormatter.Format(temperature)} {condition.Text}".TrimEnd();
+    }
+
+    /// <summary>Tray → Weather → Set location…, or adding a weather widget when there's no location yet.</summary>
+    private void SetWeatherLocation(Window? owner)
+    {
+        if (WeatherLocationWindow.Ask(owner, _settings.WeatherLocation) is not { } place)
+            return;
+        _settings.WeatherLocation = place;
+        _settings.Save();
+        AppLog.Info("Weather location set");
+        _tray?.ShowInfo("Weather", $"Forecasts for {place.Name} will appear in a few seconds.");
+    }
 
     private string ClaudeStatus() =>
         _sampler is not null && _sampler.Store.TryGet(ClaudeUsageProvider.Status, out var status) && status.Text is { } text
@@ -880,7 +918,7 @@ public partial class App : Application
         if (name is null)
             return false;
 
-        await using var sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile));
+        await using var sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest));
         sampler.Start();
         await Task.Delay(warmup);
 
