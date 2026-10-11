@@ -90,7 +90,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
 
@@ -103,6 +103,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Display → Tablet view* | Show the dashboard in a browser on a tablet or phone (see [Tablet view](#tablet-view)) |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
+| *Layout → Pages* | Swipe across the dashboard to move between layouts, or rotate them on a timer (see [Pages](#pages)) |
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, and turn automatic switching on or off (see [Game layouts](#game-layouts)) |
 | *Layout → Schedule* | Show a layout or theme at certain times of day, or while Windows is in dark or light mode (see [Schedule](#schedule)) |
 | *Sensors* | Sensor service status, and install, update or remove it |
@@ -284,6 +285,16 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 A layout from someone else could have a harmless-looking button that runs any program, so if it has buttons that open something, the import lists what they'd open and asks whether to keep them or clear them.
 
 An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder. Imports only take the layout and the font (`.ttf`, `.otf`) and images it names, reject a file with `..` or absolute paths in it, and cap sizes (1 MB for the layout, 50 MB per file).
+
+## Pages
+
+A small strip fits more when it has pages. Tray → *Layout* → *Pages*:
+
+- **Swipe between pages:** swipe left across the dashboard for the next layout, right for the previous one (a mouse drag works too). A row of dots shows which page you're on. A press that turns into a swipe doesn't count as a tap on a button.
+- **Rotate:** move to the next page every 15 seconds to 5 minutes. Rotation waits a minute after you touch the dashboard, and doesn't run while you edit the layout or while a [game's layout](#game-layouts) is showing.
+- **The pages are:** tick the layouts that are pages, in the *Layout* menu's order. With none ticked, every layout is a page.
+
+Turning a page is the same as picking that layout from the tray, so it's remembered. Swiping is off while the window can be dragged (windowed and unlocked) and while you edit the layout. Stored as `swipePages`, `rotatePagesSeconds` and `pages` in `settings.json`.
 
 ## Game layouts
 
