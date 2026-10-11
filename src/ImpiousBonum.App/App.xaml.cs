@@ -49,6 +49,8 @@ public partial class App : Application
     private string? _gameLayoutApplied;
     private ScheduledLook? _scheduled;
     private DateTime _peekUntil;
+    private DateTime _lastTouch = DateTime.MinValue;
+    private DateTime _lastPageChange = DateTime.UtcNow;
     private string? _recentApp;
     private DispatcherTimer? _updateTimer;
     private bool _warnedOutdatedService;
@@ -104,6 +106,9 @@ public partial class App : Application
 
         _window = new DashboardWindow();
         _window.EditRequested += (_, _) => OpenEditor();
+        _window.SwipesEnabled = _settings.SwipePages;
+        _window.SwipeRequested += (_, step) => TurnPage(step);
+        _window.Touched += (_, _) => _lastTouch = DateTime.UtcNow;
         _window.PeekRequested += (_, _) =>
         {
             _peekUntil = DateTime.UtcNow + Dimming.PeekFor;
@@ -127,6 +132,7 @@ public partial class App : Application
                 var names = _layouts.List();
                 _tray.SetLayouts(names, _layouts.Active, _layouts.ActivePath);
                 _tray.SetGameLayouts(_settings.GameLayoutsEnabled, _settings.GameLayouts, _recentApp, names, _layouts.Themes.List());
+                _tray.SetPages(_settings.SwipePages, _settings.RotatePagesSeconds, _settings.Pages, names);
                 _tray.SetSchedule(_settings.ScheduleEnabled, _settings.Schedule,
                     ScheduledLook.Active(_settings.Schedule, TimeOnly.FromDateTime(DateTime.Now), WindowsColourMode.IsDark()));
                 _tray.SetAway(_settings.AwayDimMinutes, _settings.AwayBrightness);
@@ -143,6 +149,14 @@ public partial class App : Application
             UpdateSchedule();
         };
         _tray.ScheduleAddRequested += (_, _) => AddScheduleRule();
+        _tray.PagesChanged += (_, pages) =>
+        {
+            (_settings.SwipePages, _settings.RotatePagesSeconds) = (pages.Swipe, pages.RotateSeconds);
+            _settings.Pages = [.. pages.Pages];
+            _settings.Save();
+            _window!.SwipesEnabled = _settings.SwipePages;
+            _lastPageChange = DateTime.UtcNow;
+        };
         _tray.AwayChanged += (_, away) =>
         {
             (_settings.AwayDimMinutes, _settings.AwayBrightness) = away;
@@ -254,6 +268,7 @@ public partial class App : Application
         _editor?.Refresh(_sampler!.Store, now);
         _tablet?.Refresh(_sampler!.Store, now);
         UpdateGameLayout();
+        RotatePages();
         UpdateAlerts();
         UpdateDimming();
         UpdateFullscreenHide();
@@ -448,6 +463,32 @@ public partial class App : Application
         _window.SetBrightness(Dimming.Brightness(
             _scheduled?.Brightness, Dimming.IdleTime(), _settings.AwayDimMinutes, _settings.AwayBrightness,
             drawing, DateTime.UtcNow < _peekUntil, _editor is not null));
+    }
+
+    /// <summary>
+    /// Moves to the next page every few seconds when rotation is on: not while editing, while a game's layout is
+    /// showing, or for a minute after someone touched the dashboard.
+    /// </summary>
+    private void RotatePages()
+    {
+        var now = DateTime.UtcNow;
+        if (_settings.RotatePagesSeconds <= 0 || _layouts is null || _editor is not null || _layouts.IsTemporary
+            || now - _lastTouch < Pages.RotationPauseAfterTouch || now - _lastPageChange < TimeSpan.FromSeconds(_settings.RotatePagesSeconds))
+            return;
+        TurnPage(1);
+    }
+
+    /// <summary>A swipe or rotation: shows the page <paramref name="step"/> away, as if picked from the tray, with page dots.</summary>
+    private void TurnPage(int step)
+    {
+        _lastPageChange = DateTime.UtcNow;
+        if (_layouts is null || _editor is not null)
+            return;
+        var pages = Pages.Of(_layouts.List(), _settings.Pages);
+        if (Pages.Next(pages, _layouts.Active, step) is not { } next)
+            return;
+        SelectLayout(next);
+        _window?.ShowPage(pages.ToList().FindIndex(p => string.Equals(p, next, StringComparison.OrdinalIgnoreCase)), pages.Count);
     }
 
     /// <summary>Tray → Layout → Schedule → Add…</summary>

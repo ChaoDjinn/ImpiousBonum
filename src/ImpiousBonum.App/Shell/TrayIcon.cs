@@ -21,6 +21,7 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _tabletNewLink = new("New link") { ToolTipText = "Stops old links working" };
     private readonly ToolStripMenuItem _layouts = new("Layout");
     private readonly ToolStripMenuItem _gameLayouts = new("Game layouts");
+    private readonly ToolStripMenuItem _pages = new("Pages") { ToolTipText = "Swipe across the dashboard to move between layouts, or rotate them" };
     private readonly ToolStripMenuItem _schedule = new("Schedule") { ToolTipText = "Show a layout or theme at night, or with Windows in dark or light mode" };
     private readonly ToolStripMenuItem _fpsSource = new("FPS from");
     private readonly ToolStripMenuItem _startup = new("Start with Windows") { CheckOnClick = true };
@@ -227,6 +228,7 @@ public sealed class TrayIcon : IDisposable
         }
         _layouts.DropDownItems.Add(new ToolStripSeparator());
         _layouts.DropDownItems.Add("Import…", null, (_, _) => ImportLayoutRequested?.Invoke(this, EventArgs.Empty));
+        _layouts.DropDownItems.Add(_pages);
         _layouts.DropDownItems.Add(_gameLayouts);
         _layouts.DropDownItems.Add(_schedule);
     }
@@ -252,6 +254,43 @@ public sealed class TrayIcon : IDisposable
     public event EventHandler? ScheduleAddRequested;
 
     public event EventHandler<ScheduleRule>? ScheduleRuleRemoved;
+
+    /// <summary>Tray → Layout → Pages: (swipe, rotate seconds, the layouts that are pages or empty for all).</summary>
+    public event EventHandler<(bool Swipe, int RotateSeconds, IReadOnlyList<string> Pages)>? PagesChanged;
+
+    public void SetPages(bool swipe, int rotateSeconds, IReadOnlyList<string> chosen, IReadOnlyList<string> layouts)
+    {
+        _pages.DropDownItems.Clear();
+        var swipeItem = new ToolStripMenuItem("Swipe between pages") { Checked = swipe };
+        swipeItem.Click += (_, _) => PagesChanged?.Invoke(this, (!swipe, rotateSeconds, chosen));
+        _pages.DropDownItems.Add(swipeItem);
+
+        var rotate = new ToolStripMenuItem("Rotate");
+        foreach (var seconds in new[] { 0, 15, 30, 60, 300 })
+        {
+            var label = seconds switch { 0 => "Don't rotate", < 60 => $"Every {seconds} seconds", 60 => "Every minute", _ => $"Every {seconds / 60} minutes" };
+            var item = new ToolStripMenuItem(label) { Checked = rotateSeconds == seconds };
+            item.Click += (_, _) => PagesChanged?.Invoke(this, (swipe, seconds, chosen));
+            rotate.DropDownItems.Add(item);
+        }
+        _pages.DropDownItems.Add(rotate);
+
+        _pages.DropDownItems.Add(new ToolStripSeparator());
+        _pages.DropDownItems.Add(new ToolStripMenuItem("The pages are:") { Enabled = false });
+        var pages = Pages.Of(layouts, chosen);
+        foreach (var layout in layouts)
+        {
+            var included = pages.Contains(layout, StringComparer.OrdinalIgnoreCase);
+            var item = new ToolStripMenuItem(Escape(layout)) { Checked = included };
+            item.Click += (_, _) =>
+            {
+                var next = included ? pages.Where(p => !string.Equals(p, layout, StringComparison.OrdinalIgnoreCase)).ToList() : [.. pages, layout];
+                // Every layout picked is the same as none: all of them.
+                PagesChanged?.Invoke(this, (swipe, rotateSeconds, next.Count == layouts.Count ? [] : next));
+            };
+            _pages.DropDownItems.Add(item);
+        }
+    }
 
     /// <summary>Tray → Display → When you're away: (minutes, brightness), minutes 0 for never.</summary>
     public event EventHandler<(int Minutes, int Brightness)>? AwayChanged;

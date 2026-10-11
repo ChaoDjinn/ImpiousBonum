@@ -24,6 +24,9 @@
         <Border x:Name="AlertBanner" Visibility="Collapsed" VerticalAlignment="Top" Background="#F0B71C1C" Padding="16,6" Cursor="Hand">
             <TextBlock x:Name="AlertText" Foreground="White" FontFamily="Segoe UI" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
         </Border>
+        <!-- Which page is showing, for a moment after moving between pages. -->
+        <StackPanel x:Name="PageDots" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                    Margin="0,0,0,10" Opacity="0" IsHitTestVisible="False" />
         <!-- Shown while the windowed dashboard is unlocked, so it's clear it can be dragged and resized. -->
         <Rectangle x:Name="MoveOutline" Visibility="Collapsed" IsHitTestVisible="False"
                    Stroke="#B0FFFFFF" StrokeThickness="2" StrokeDashArray="4 3" />

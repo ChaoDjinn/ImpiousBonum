@@ -71,6 +71,56 @@ public partial class DashboardWindow : Window
     public event EventHandler? PeekRequested;
 
     private double _dimOpacity;
+    private Point? _pressedAt;
+
+    /// <summary>A swipe across the dashboard: +1 for the next page, -1 for the previous. Only while <see cref="SwipesEnabled"/>.</summary>
+    public event EventHandler<int>? SwipeRequested;
+
+    /// <summary>Any press on the dashboard, so page rotation can pause while someone is using it.</summary>
+    public event EventHandler? Touched;
+
+    /// <summary>Swiping between pages; off while editing or while the window can be dragged.</summary>
+    public bool SwipesEnabled { get; set; }
+
+    protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+    {
+        base.OnPreviewMouseLeftButtonDown(e);
+        _pressedAt = e.GetPosition(this);
+        Touched?.Invoke(this, EventArgs.Empty);
+    }
+
+    protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
+    {
+        base.OnPreviewMouseLeftButtonUp(e);
+        if (_pressedAt is not { } start)
+            return;
+        _pressedAt = null;
+        // Not handled: a button the press started on sees it moved and doesn't count it as a tap.
+        if (SwipesEnabled && !IsEditing && !CanMove && Pages.Swipe(e.GetPosition(this) - start, ActualWidth) is { } step)
+            SwipeRequested?.Invoke(this, step);
+    }
+
+    /// <summary>Shows a row of dots for a moment, the current page's filled in.</summary>
+    public void ShowPage(int index, int count)
+    {
+        PageDots.Children.Clear();
+        var size = Math.Clamp(ActualHeight / 40, 6, 16);
+        for (var i = 0; i < count; i++)
+        {
+            PageDots.Children.Add(new System.Windows.Shapes.Ellipse
+            {
+                Width = size,
+                Height = size,
+                Margin = new Thickness(size / 2),
+                Fill = i == index ? System.Windows.Media.Brushes.White : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x60, 0xFF, 0xFF, 0xFF)),
+            });
+        }
+        var fade = new System.Windows.Media.Animation.DoubleAnimationUsingKeyFrames();
+        fade.KeyFrames.Add(new System.Windows.Media.Animation.LinearDoubleKeyFrame(1, TimeSpan.FromMilliseconds(150)));
+        fade.KeyFrames.Add(new System.Windows.Media.Animation.LinearDoubleKeyFrame(1, TimeSpan.FromMilliseconds(1500)));
+        fade.KeyFrames.Add(new System.Windows.Media.Animation.LinearDoubleKeyFrame(0, TimeSpan.FromMilliseconds(2000)));
+        PageDots.BeginAnimation(OpacityProperty, fade);
+    }
     private IReadOnlyList<string> _alerts = [];
     private IReadOnlyList<string> _dismissedAlerts = [];
 

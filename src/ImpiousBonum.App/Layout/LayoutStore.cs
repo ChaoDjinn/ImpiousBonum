@@ -194,6 +194,14 @@ public sealed class LayoutStore : IDisposable
                 changed = true;
             }
         }
+        for (var i = 0; i < _settings.Pages.Count; i++)
+        {
+            if (Is(name, _settings.Pages[i]))
+            {
+                _settings.Pages[i] = renamed;
+                changed = true;
+            }
+        }
         for (var i = 0; i < _settings.Schedule.Count; i++)
         {
             if (_settings.Schedule[i] is { } rule && Is(name, rule.Layout))

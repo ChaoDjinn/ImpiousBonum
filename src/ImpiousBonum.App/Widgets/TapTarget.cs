@@ -24,10 +24,16 @@ public sealed class TapTarget : Border
 
     public event EventHandler? Tapped;
 
+    /// <summary>A press that moves further than this (in its own units) is a swipe, not a tap.</summary>
+    private const double SwipeSlop = 12;
+
+    private Point _pressedAt;
+
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonDown(e);
         e.Handled = true;
+        _pressedAt = e.GetPosition(this);
         if (CaptureMouse())
             Opacity = PressedOpacity;
     }
@@ -38,9 +44,11 @@ public sealed class TapTarget : Border
         if (!IsMouseCaptured)
             return;
         e.Handled = true;
-        var inside = new Rect(RenderSize).Contains(e.GetPosition(this));
+        var at = e.GetPosition(this);
+        var inside = new Rect(RenderSize).Contains(at);
+        var moved = (at - _pressedAt).Length > SwipeSlop;
         ReleaseMouseCapture();
-        if (inside)
+        if (inside && !moved)
             Tap();
     }
 

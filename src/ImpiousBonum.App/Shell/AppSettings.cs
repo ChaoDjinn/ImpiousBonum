@@ -15,6 +15,7 @@ public sealed class AppSettings
     private List<ScheduleRule> _schedule = [];
     private List<CustomSource> _customData = [];
     private List<AlertRule> _alerts = [];
+    private List<string> _pages = [];
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
     public string? MonitorId { get; set; }
@@ -73,6 +74,19 @@ public sealed class AppSettings
     {
         get => _customData;
         set => _customData = value ?? [];
+    }
+
+    /// <summary>Swipe across the dashboard to move between <see cref="Pages"/>. Off by default.</summary>
+    public bool SwipePages { get; set; }
+
+    /// <summary>Move to the next page every this many seconds; 0 doesn't rotate.</summary>
+    public int RotatePagesSeconds { get; set; }
+
+    /// <summary>The layouts that are pages, or empty for all of them.</summary>
+    public List<string> Pages
+    {
+        get => _pages;
+        set => _pages = value ?? [];
     }
 
     /// <summary>Notifications and flashing banners when a reading is out of bounds for a while (tray → Alerts…).</summary>
