@@ -13,7 +13,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 **Text that fits**
 - Text and *Icon and value* widgets shrink long text to fit their width instead of cutting it off, so 144 FPS fits where 60 did. *Shrink to fit* turns it off.
 - Text widgets can hide until one of their readings arrives (*Hide without a reading*), like the Gaming HUD's session lines before you've played.
-- The Gaming HUD gallery layout no longer cuts off its frame rate.
+- The Gaming HUD gallery layout no longer cuts off its frame rate, or says "141 FPS FPS average".
 
 **A tidier tray**
 - A new look for the tray menu: dark or light to match the taskbar, with Windows 11's rounded corners, roomier rows, an icon beside each main item, and check marks in the app's orange.
@@ -33,6 +33,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - *Show it as* in the metric picker appears once you've picked a metric.
 
 **Also**
+- Screenshots of the dashboard, the themes, the gallery's layouts and the editor in the README and the guide.
 - If `settings.json` can't be read, Impious Bonum says so and keeps a copy as `settings.unreadable.json` before starting with the defaults, rather than quietly replacing your settings.
 
 ## 0.10.0

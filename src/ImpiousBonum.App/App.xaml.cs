@@ -9,6 +9,7 @@ using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core;
+using ImpiousBonum.Core.Demo;
 using ImpiousBonum.Core.Logging;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
@@ -22,6 +23,8 @@ namespace ImpiousBonum.App;
 ///   --snapshot &lt;file.png&gt; render the layout to a PNG after a short warm-up, then exit
 ///   --layout &lt;name&gt;       with --snapshot, render this saved layout instead of the active one
 ///   --warmup &lt;seconds&gt;    how long to sample before a snapshot (default 3)
+///   --demo                made-up readings instead of this PC's, for screenshots (with --snapshot, at 21:47);
+///                         see build/screenshots.ps1
 ///   --widget-docs &lt;file&gt;  write the widget reference (docs/widgets.md) and exit
 /// </summary>
 public partial class App : Application
@@ -85,12 +88,12 @@ public partial class App : Application
         if (args.TryGetValue("snapshot", out var snapshotPath))
         {
             var warmup = args.TryGetValue("warmup", out var w) && double.TryParse(w, out var seconds) ? seconds : 3;
-            var rendered = await RenderSnapshotAsync(snapshotPath, TimeSpan.FromSeconds(warmup), args.GetValueOrDefault("layout"));
+            var rendered = await RenderSnapshotAsync(snapshotPath, TimeSpan.FromSeconds(warmup), args.GetValueOrDefault("layout"), args.ContainsKey("demo"));
             Shutdown(rendered ? 0 : 1);
             return;
         }
 
-        _singleInstance = new Mutex(initiallyOwned: true, @"Local\ImpiousBonum", out var isFirstInstance);
+        _singleInstance = new Mutex(initiallyOwned: true, AppPaths.InstanceName, out var isFirstInstance);
         if (!isFirstInstance)
         {
             Shutdown();
@@ -110,9 +113,11 @@ public partial class App : Application
         if (!_settings.HardwareRendering)
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         _frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
-        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData, () => _settings.Calendars,
-            () => _settings.NewsFeeds,
-            () => _trackedGame, recap => Dispatcher.BeginInvoke(() => OnSessionEnded(recap))));
+        _sampler = args.ContainsKey("demo")
+            ? DemoSampler()
+            : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData, () => _settings.Calendars,
+                () => _settings.NewsFeeds,
+                () => _trackedGame, recap => Dispatcher.BeginInvoke(() => OnSessionEnded(recap))));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -276,8 +281,17 @@ public partial class App : Application
         return true;
     }
 
+    /// <summary>A sampler with nothing to sample: the made-up readings stay as they are, for screenshots.</summary>
+    private static Sampler DemoSampler()
+    {
+        var store = new MetricStore();
+        DemoReadings.Fill(store, DateTime.Now, DemoArtwork.Png());
+        return new Sampler(store, []);
+    }
+
     /// <summary>Returns false if <paramref name="layoutName"/> isn't a saved layout.</summary>
-    private static async Task<bool> RenderSnapshotAsync(string path, TimeSpan warmup, string? layoutName)
+    /// <param name="demo">Made-up readings (<see cref="DemoReadings"/>) instead of sampling this PC's.</param>
+    private static async Task<bool> RenderSnapshotAsync(string path, TimeSpan warmup, string? layoutName, bool demo)
     {
         var settings = AppSettings.Load();
         var library = new LayoutLibrary(AppPaths.DataDirectory);
@@ -286,15 +300,25 @@ public partial class App : Application
         if (name is null)
             return false;
 
-        await using var sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest, customData: () => settings.CustomData, calendars: () => settings.Calendars, news: () => settings.NewsFeeds));
-        sampler.Start();
-        await Task.Delay(warmup);
+        await using var sampler = demo ? null : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest, customData: () => settings.CustomData, calendars: () => settings.Calendars, news: () => settings.NewsFeeds));
+        var store = sampler?.Store ?? new MetricStore();
+        var now = DateTime.Now;
+        if (sampler is not null)
+        {
+            sampler.Start();
+            await Task.Delay(warmup);
+        }
+        else
+        {
+            now = DateTime.Today.AddHours(21).AddMinutes(47);
+            DemoReadings.Fill(store, now, DemoArtwork.Png());
+        }
 
         var layout = library.Load(name);
 
-        var view = new DashboardView();
+        var view = new DashboardView { AnimateBackground = false };
         view.Build(layout, new ThemeLibrary(AppPaths.DataDirectory).Resolve(layout.Theme));
-        view.Refresh(sampler.Store, DateTime.Now);
+        view.Refresh(store, now);
         var size = new Size(layout.Width, layout.Height);
         view.Measure(size);
         view.Arrange(new Rect(size));

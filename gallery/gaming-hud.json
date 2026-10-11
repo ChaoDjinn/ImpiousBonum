@@ -25,6 +25,6 @@
     { "type": "text", "x": 1160, "y": 300, "width": 730, "height": 50, "fontSize": 30, "color": "secondary", "text": "{session.playing}: {session.game}",
       "hideUnavailable": true },
     { "type": "text", "x": 1160, "y": 350, "width": 730, "height": 110, "fontSize": 44,
-      "text": "{session.minutes} min · {session.fps.avg} FPS average", "hideUnavailable": true }
+      "text": "{session.minutes} min · {session.fps.avg} average", "hideUnavailable": true }
   ]
 }

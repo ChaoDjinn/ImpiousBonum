@@ -106,9 +106,7 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 - **Saved layouts:** the editor edits the layout the dashboard is showing. The *Layout* drop-down switches to another (asking first if you have unsaved changes), and *Layouts ▾* has *Save as…* (your changes as a new layout), *Rename…*, *Duplicate…*, *Export…*, *Import…* and *Delete* (not the last one). Keep a "Gaming" and a "Desktop" layout, for example, and flip between them from the tray.
 - The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes the layout's file; closing without saving puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
 
-<!-- Editor screenshot (Win+Shift+S): save as docs/images/editor.png, then remove these comment markers:
-<p align="center"><img src="images/editor.png" alt="The layout editor with the metric picker open"></p>
--->
+<p align="center"><img src="images/editor.png" alt="The layout editor: the widget list, the layout's preview with the GPU graph selected, and the graph's settings"></p>
 
 ### Editing layouts by hand
 
