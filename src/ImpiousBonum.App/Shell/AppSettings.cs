@@ -20,6 +20,7 @@ public sealed class AppSettings
     private List<Hotkey> _hotkeys = [];
     private List<CalendarLink> _calendars = [];
     private List<NewsFeed> _newsFeeds = [];
+    private UsbScreenSettings _usbScreen = UsbScreenSettings.Default;
     private LogSettings _logging = LogSettings.Default;
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
@@ -125,6 +126,13 @@ public sealed class AppSettings
     {
         get => _newsFeeds;
         set => _newsFeeds = value ?? [];
+    }
+
+    /// <summary>A small USB screen to show a layout on too (tray → Display → USB screen). Off by default.</summary>
+    public UsbScreenSettings UsbScreen
+    {
+        get => _usbScreen;
+        set => _usbScreen = value ?? UsbScreenSettings.Default;
     }
 
     /// <summary>Logging readings to CSV files (tray → Logging…). Off by default.</summary>

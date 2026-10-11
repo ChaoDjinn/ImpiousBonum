@@ -114,6 +114,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Display* | Which monitor the dashboard is on, and how its window behaves (see [Windowed mode](#windowed-mode)) |
 | *Display → When you're away* | Dim the dashboard, or turn it black, after a while without input (see [Dimming](#dimming)) |
 | *Display → Tablet view* | Show the dashboard in a browser on a tablet or phone (see [Tablet view](#tablet-view)) |
+| *Display → USB screen* | Show a layout on a small USB screen as well (see [USB screens](#usb-screens)) |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
 | *Layout → Gallery…* | Browse layouts other people have shared, with a live preview, and import one (see [Layout gallery](#layout-gallery)) |
@@ -154,6 +155,21 @@ A tablet or phone on the same Wi-Fi can show the dashboard in its web browser, a
 - **Cost:** with no tablet watching it draws nothing. With one watching, it draws the layout off-screen and sends one JPEG a second, and only when something changed.
 - **Security:** it's off by default and read-only: the page can't change anything on the PC. The link carries a random secret, and *New link* stops old links working. It only answers addresses on the local network (private, link-local and loopback addresses), never the internet. When Windows asks about the firewall the first time, allow **private networks** only. It's plain HTTP, so someone watching your Wi-Fi traffic could see the dashboard's numbers.
 - It listens on port 8787. If another app uses that port, change `tabletPort` in `settings.json` and turn the tablet view off and on.
+
+### USB screens
+
+Small 3.5" USB screens (the *Turing Smart Screen* and the many unbranded ones like it, 320 × 480, sold for showing
+PC stats inside a case) can show a layout too, with no software of their own running. Plug it in, then tray →
+Display → *USB screen* → *Show on the USB screen*. It finds the screen by itself (or pick its COM port under *Port*),
+and you choose its *Layout* (the dashboard's, or one made for its size: give a layout a 480 × 320 canvas, or 320 × 480
+for portrait), *Brightness* and *Way up* for how it's mounted. A layout of a different shape is scaled to fit, with the
+theme's background around it.
+
+It's drawn once a second like the tablet view, and only the parts that changed are sent, since these screens are
+slow to fill completely. If it's unplugged it picks up again when it's back. Close the screen maker's own software
+first: only one program can use it at a time. These screens speak the "revision A" protocol; newer models with other
+protocols (the 5" and 8.8" ones, for instance) aren't supported yet. **This hasn't been tried on a real screen yet**,
+so please report what happens.
 
 ## Sensor service (temperatures, fans, power, FPS)
 

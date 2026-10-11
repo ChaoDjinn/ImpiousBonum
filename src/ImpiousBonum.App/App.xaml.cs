@@ -42,6 +42,7 @@ public partial class App : Application
     private DispatcherTimer? _tick;
     private EditorWindow? _editor;
     private TabletView? _tablet;
+    private UsbScreenView? _usb;
     private TabletLinkWindow? _tabletLink;
     private readonly Updater _updater = new();
     private FrameRateTarget? _frameRateTarget;
@@ -140,6 +141,7 @@ public partial class App : Application
             _tray.SetWeatherState(WeatherStatus(), _settings.WeatherLocation is not null, _settings.WeatherUnits);
             _tray.SetFpsSources(monitors, _settings.FpsMonitorId);
             _tray.SetTabletView(_tablet?.IsRunning == true);
+            _tray.SetUsbScreen(_settings.UsbScreen, System.IO.Ports.SerialPort.GetPortNames().Order().ToList(), _layouts?.List() ?? [], _usb?.Status ?? "Off");
             if (_layouts is not null)
             {
                 var names = _layouts.List();
@@ -202,6 +204,13 @@ public partial class App : Application
         _tray.ResetWindowRequested += (_, _) => ResetWindow();
         _tray.BringToFrontRequested += (_, _) => _window?.BringForward();
         _tray.TabletViewToggled += (_, on) => SetTabletView(on);
+        _tray.UsbScreenChanged += (_, usb) =>
+        {
+            _settings.UsbScreen = usb;
+            _settings.Save();
+            AppLog.Info(usb.Enabled ? $"USB screen: on, port {usb.Port}, layout {usb.Layout ?? "same as the dashboard"}, {usb.Brightness}%, {usb.Orientation}" : "USB screen: off");
+            ApplyUsbScreen();
+        };
         _tray.TabletLinkRequested += (_, _) => ShowTabletLink();
         _tray.TabletLinkCopyRequested += (_, _) => CopyTabletLink();
         _tray.TabletNewLinkRequested += (_, _) => NewTabletLink();
@@ -234,6 +243,7 @@ public partial class App : Application
         StartUpdateChecks();
 
         _tablet = new TabletView();
+        _usb = new UsbScreenView();
         _layouts = new LayoutStore(_settings);
         _layouts.Changed += (_, _) => ApplyLayout();
         _layouts.ActiveChanged += (_, _) =>
@@ -249,6 +259,7 @@ public partial class App : Application
             ApplyLayout();
         };
         ApplyLayout();
+        ApplyUsbScreen();
         if (_settings.TabletView)
             StartTablet();
 
@@ -294,6 +305,7 @@ public partial class App : Application
         _window?.Dashboard.Refresh(_sampler!.Store, now);
         _editor?.Refresh(_sampler!.Store, now);
         _tablet?.Refresh(_sampler!.Store, now);
+        _usb?.Refresh(_sampler!.Store, now);
         UpdateGameLayout();
         RotatePages();
         UpdateAlerts();
@@ -1028,7 +1040,45 @@ public partial class App : Application
         _window.Background = Theme.From(theme).Background;
         _window.Dashboard.Build(layout, theme);
         _tablet?.Build(layout, theme);
+        if (_settings.UsbScreen.Layout is null)
+            _usb?.Build(layout, theme);
+        else
+            ApplyUsbScreen();
         Refresh();
+    }
+
+    /// <summary>Connects the USB screen (or not) and gives it its layout: its own, or the dashboard's.</summary>
+    private void ApplyUsbScreen()
+    {
+        if (_usb is null || _layouts is null)
+            return;
+        var settings = _settings.UsbScreen;
+        _usb.Apply(settings);
+        if (!settings.Enabled)
+            return;
+        if (settings.Layout is { } name && _layouts.Library.Find(name) is { } found)
+        {
+            try
+            {
+                var layout = _layouts.Library.Load(found);
+                _usb.Build(layout, _layouts.ResolveTheme(layout));
+                return;
+            }
+            catch (Exception ex) when (ex is JsonException or IOException)
+            {
+                AppLog.Warning($"USB screen: couldn't read layout \"{found}\": {ex.Message}");
+            }
+        }
+        try
+        {
+            var current = _layouts.Load();
+            _usb.Build(current, _layouts.ResolveTheme(current));
+        }
+        catch (Exception ex) when (ex is JsonException or IOException)
+        {
+            // ApplyLayout has already said what's wrong with it.
+            AppLog.Warning($"USB screen: couldn't read the dashboard's layout: {ex.Message}");
+        }
     }
 
     /// <summary>Tray → Display → Tablet view → Show on tablets. Turning it on shows the link to open.</summary>
@@ -1279,6 +1329,8 @@ public partial class App : Application
         _tray = null;
         _tabletLink?.Close();
         _tablet?.Dispose();
+        _usb?.Dispose();
+        _usb = null;
         _window?.Close();
         if (_sampler is not null)
             await _sampler.DisposeAsync();

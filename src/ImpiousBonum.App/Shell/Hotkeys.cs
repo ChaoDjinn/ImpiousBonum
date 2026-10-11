@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
 using System.Windows.Input;
 using System.Windows.Interop;
 
@@ -8,7 +9,7 @@ namespace ImpiousBonum.App.Shell;
 /// <param name="Action">One of the constants below.</param>
 /// <param name="Keys">The combination, as <see cref="KeyChord"/> writes it, e.g. <c>Ctrl+Alt+D</c>.</param>
 /// <param name="Layout">For <see cref="SwitchLayout"/>: the layout to show.</param>
-public sealed record Hotkey(string Action, string Keys, string? Layout = null)
+public sealed record Hotkey(string Action, string Keys, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Layout = null)
 {
     public const string ShowHide = "show-hide";
     public const string NextPage = "next-page";
