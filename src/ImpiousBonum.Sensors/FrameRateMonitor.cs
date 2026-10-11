@@ -146,10 +146,13 @@ internal sealed unsafe class FrameRateMonitor : IDisposable
             _names.Remove(gone);
 
         return rates
-            .Select(r => new PresenterInfo(r.ProcessId, NameOf(r.ProcessId), Math.Round(r.Fps, 1)))
+            .Select(r => new PresenterInfo(r.ProcessId, NameOf(r.ProcessId), Math.Round(r.Fps, 1),
+                Math.Round(r.FrameTime, 2), Math.Round(r.MaxFrameTime, 2), Round(r.OnePercentLow), Round(r.PointOnePercentLow)))
             .OrderByDescending(p => p.Fps)
             .ToList();
     }
+
+    private static double? Round(double? fps) => fps is double value ? Math.Round(value, 1) : null;
 
     private string NameOf(int processId)
     {

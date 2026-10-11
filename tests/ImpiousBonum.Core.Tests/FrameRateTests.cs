@@ -132,6 +132,100 @@ public sealed class FrameRateTests
         Assert.Equal(60, fps, precision: 0);
     }
 
+    /// <summary>Records frames at the given times (in ms, which is the test clock's tick).</summary>
+    private static void RecordAt(PresentRateTracker tracker, IEnumerable<long> times)
+    {
+        foreach (var time in times)
+            tracker.Record(42, time);
+    }
+
+    /// <summary>Frame times at 60 fps, with every <paramref name="stutterEvery"/>th frame taking <paramref name="stutterMs"/> instead.</summary>
+    private static IEnumerable<long> Frames(int count, long start = 0, int stutterEvery = 0, int stutterMs = 0)
+    {
+        var time = (double)start;
+        for (var i = 0; i < count; i++)
+        {
+            yield return (long)time;
+            time += stutterEvery > 0 && i % stutterEvery == stutterEvery - 1 ? stutterMs : 1000.0 / 60;
+        }
+    }
+
+    [Fact]
+    public void Steady_frames_have_even_frame_times_and_lows_near_the_rate()
+    {
+        var tracker = Tracker();
+        RecordAt(tracker, Frames(1201));
+
+        var stats = Assert.Single(tracker.Snapshot(now: 20_000));
+        Assert.Equal(16.7, stats.FrameTime, precision: 1);
+        Assert.InRange(stats.MaxFrameTime, 16, 17);
+        Assert.InRange(stats.OnePercentLow!.Value, 58, 61);
+        Assert.InRange(stats.PointOnePercentLow!.Value, 58, 61);
+    }
+
+    [Fact]
+    public void Stutters_pull_the_lows_down_and_show_as_the_slowest_frame()
+    {
+        // A 100 ms hitch every 50 frames: 2% of frames, so the slowest 1% are all hitches.
+        var tracker = Tracker();
+        var times = Frames(1200, stutterEvery: 50, stutterMs: 100).ToList();
+        RecordAt(tracker, times);
+
+        var stats = Assert.Single(tracker.Snapshot(now: times[^1]));
+        Assert.Equal(10, stats.OnePercentLow!.Value, precision: 0);
+        Assert.Equal(10, stats.PointOnePercentLow!.Value, precision: 0);
+        Assert.Equal(100, stats.MaxFrameTime, precision: 0);
+    }
+
+    [Fact]
+    public void Only_the_last_second_counts_for_the_slowest_frame()
+    {
+        var tracker = Tracker();
+        var times = Frames(120).ToList();
+        times = [.. times, times[^1] + 250, .. Frames(120, start: times[^1] + 250)];
+        RecordAt(tracker, times);
+
+        // The 250 ms hitch was two seconds before the latest frame.
+        Assert.InRange(Assert.Single(tracker.Snapshot(now: times[^1])).MaxFrameTime, 16, 17);
+    }
+
+    [Fact]
+    public void Pauses_longer_than_a_second_are_not_slow_frames()
+    {
+        // Alt-tabbed for four seconds between two bursts of steady frames.
+        var tracker = Tracker();
+        var first = Frames(600).ToList();
+        RecordAt(tracker, [.. first, .. Frames(600, start: first[^1] + 4000)]);
+
+        var stats = Assert.Single(tracker.Snapshot(now: first[^1] + 4000 + 10_000));
+        Assert.InRange(stats.OnePercentLow!.Value, 58, 61);
+    }
+
+    [Fact]
+    public void Lows_wait_for_enough_frames()
+    {
+        var tracker = Tracker();
+        RecordAt(tracker, Frames(150));
+
+        var stats = Assert.Single(tracker.Snapshot(now: 2_500));
+        Assert.NotNull(stats.OnePercentLow);
+        Assert.Null(stats.PointOnePercentLow);
+    }
+
+    [Fact]
+    public void Frame_times_cross_the_pipe_and_older_hosts_send_none()
+    {
+        var message = new SensorMessage { Type = SensorMessage.ValuesType, Values = new Dictionary<string, double?>(), Presenters = [new(42, "game", 143.9, 6.95, 21.3, 98.2, 61.4)] };
+        var back = Assert.Single(SensorProtocol.Deserialize(SensorProtocol.Serialize(message))!.Presenters!);
+        Assert.Equal(new PresenterInfo(42, "game", 143.9, 6.95, 21.3, 98.2, 61.4), back);
+
+        var old = SensorProtocol.Deserialize("""{"type":"values","values":{},"presenters":[{"processId":42,"name":"game","fps":60}]}""");
+        var presenter = Assert.Single(old!.Presenters!);
+        Assert.Equal(60, presenter.Fps);
+        Assert.Null(presenter.FrameTime);
+        Assert.Null(presenter.Low1);
+    }
+
     [Fact]
     public void Foreground_prefers_the_exact_process()
     {

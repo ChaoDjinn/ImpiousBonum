@@ -124,6 +124,10 @@ public sealed class SensorHostProvider(Func<(int ProcessId, string? Name)>? fram
         var match = presenters is null ? null : ForForeground(presenters);
         store.Set(SensorAliases.FramesPerSecond, match?.Fps);
         store.SetText(SensorAliases.FramesPerSecondApp, match?.Name);
+        store.Set(SensorAliases.FrameTime, match?.FrameTime);
+        store.Set(SensorAliases.MaxFrameTime, match?.MaxFrameTime);
+        store.Set(SensorAliases.OnePercentLow, match?.Low1);
+        store.Set(SensorAliases.PointOnePercentLow, match?.Low01);
     }
 
     private PresenterInfo? ForForeground(IReadOnlyList<PresenterInfo> presenters)

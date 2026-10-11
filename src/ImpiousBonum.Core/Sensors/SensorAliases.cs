@@ -16,6 +16,10 @@ public static class SensorAliases
     public const string GpuFan = "gpu.fan";
     public const string FramesPerSecond = "fps";
     public const string FramesPerSecondApp = "fps.app";
+    public const string FrameTime = "fps.frametime";
+    public const string MaxFrameTime = "fps.frametime.max";
+    public const string OnePercentLow = "fps.low1";
+    public const string PointOnePercentLow = "fps.low01";
 
     public static readonly IReadOnlyList<SensorInfo> All =
     [
@@ -27,8 +31,13 @@ public static class SensorAliases
         new(GpuFan, "GPU fan speed", "Sensors", MetricUnit.Rpm),
         new(FramesPerSecond, "Frames per second (foreground app)", "Sensors", MetricUnit.FramesPerSecond),
         new(FramesPerSecondApp, "App the frame rate is measured for", "Sensors", MetricUnit.Text),
+        new(FrameTime, "Frame time (foreground app)", "Sensors", MetricUnit.Milliseconds, Format: "0.0"),
+        new(MaxFrameTime, "Slowest frame in the last second: spikes are stutters", "Sensors", MetricUnit.Milliseconds, Format: "0.0"),
+        new(OnePercentLow, "1% low frame rate (last 30 seconds)", "Sensors", MetricUnit.FramesPerSecond),
+        new(PointOnePercentLow, "0.1% low frame rate (last 30 seconds)", "Sensors", MetricUnit.FramesPerSecond),
     ];
 
     /// <summary>Aliases the dashboard computes itself (from the presenter list), so the host doesn't send values for them.</summary>
-    public static bool IsComputedByDashboard(string id) => id is FramesPerSecond or FramesPerSecondApp;
+    public static bool IsComputedByDashboard(string id) =>
+        id is FramesPerSecond or FramesPerSecondApp or FrameTime or MaxFrameTime or OnePercentLow or PointOnePercentLow;
 }

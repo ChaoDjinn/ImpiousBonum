@@ -62,7 +62,12 @@ public sealed record SensorMessage
     public IReadOnlyList<PresenterInfo>? Presenters { get; init; }
 }
 
-public sealed record PresenterInfo(int ProcessId, string Name, double Fps)
+/// <param name="FrameTime">Average frame time in milliseconds. This and the ones after it are null from older sensor services.</param>
+/// <param name="MaxFrameTime">The slowest frame in the last second, in milliseconds.</param>
+/// <param name="Low1">1% low frame rate over the last 30 seconds.</param>
+/// <param name="Low01">0.1% low frame rate over the last 30 seconds.</param>
+public sealed record PresenterInfo(int ProcessId, string Name, double Fps,
+    double? FrameTime = null, double? MaxFrameTime = null, double? Low1 = null, double? Low01 = null)
 {
     /// <summary>
     /// The presenter for the foreground app: the same process, or else the busiest process with the same exe name
@@ -76,9 +81,9 @@ public sealed record PresenterInfo(int ProcessId, string Name, double Fps)
     }
 }
 
-public sealed record SensorInfo(string Id, string Name, string Category, MetricUnit Unit, double? Max = null)
+public sealed record SensorInfo(string Id, string Name, string Category, MetricUnit Unit, double? Max = null, string? Format = null)
 {
-    public MetricDefinition ToDefinition() => new(Id, Name, Category, Unit, Max);
+    public MetricDefinition ToDefinition() => new(Id, Name, Category, Unit, Max, Format);
 }
 
 [JsonSourceGenerationOptions(
