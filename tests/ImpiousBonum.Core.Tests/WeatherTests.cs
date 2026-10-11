@@ -1,4 +1,3 @@
-using System.Net.Http;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Weather;

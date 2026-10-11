@@ -5,6 +5,11 @@
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Product>Impious Bonum</Product>
+    <Description>A lightweight system dashboard for a spare screen.</Description>
+    <Authors>ChaoDjinn</Authors>
+    <Company>ChaoDjinn</Company>
+    <Copyright>Copyright © 2026 ChaoDjinn</Copyright>
+    <RepositoryUrl>https://github.com/ChaoDjinn/ImpiousBonum</RepositoryUrl>
     <Version>0.10.0</Version>
   </PropertyGroup>
 </Project>

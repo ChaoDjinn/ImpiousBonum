@@ -1,4 +1,3 @@
-using System.Windows;
 using System.Windows.Controls;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;

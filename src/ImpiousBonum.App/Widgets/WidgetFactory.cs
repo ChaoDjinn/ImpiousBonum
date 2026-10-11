@@ -1,5 +1,4 @@
 using System.Text.Json.Nodes;
-using System.Windows.Media;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.Core.Metrics;
 

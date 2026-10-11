@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <AssemblyName>ImpiousBonum.Sensors</AssemblyName>
+    <!-- The file description, which Task Manager and Services show. -->
+    <AssemblyTitle>Impious Bonum sensor service</AssemblyTitle>
     <RootNamespace>ImpiousBonum.Sensors</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>..\..\assets\ImpiousBonum.ico</ApplicationIcon>

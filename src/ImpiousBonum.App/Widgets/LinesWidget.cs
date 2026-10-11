@@ -1,7 +1,6 @@
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Shapes;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.Core.Metrics;

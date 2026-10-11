@@ -1,8 +1,9 @@
 # Normalise line endings in the repo; check out with the platform's native endings.
 * text=auto
 
-*.cs      text diff=csharp
-*.xaml    text
+# C# and XAML check out with Windows line endings everywhere, which dotnet format (run by CI) expects.
+*.cs      text eol=crlf diff=csharp
+*.xaml    text eol=crlf
 *.csproj  text
 *.slnx    text
 *.props   text

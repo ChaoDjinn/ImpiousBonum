@@ -42,6 +42,7 @@ public static class Program
             }
             catch (Exception)
             {
+                // Best effort, as above: declined or failed, the uninstall must carry on regardless.
             }
         }
     }
