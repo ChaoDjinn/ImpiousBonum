@@ -69,6 +69,7 @@ Every box is a widget you can move, resize, restyle or replace. Twelve widget ty
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
 | `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
+| `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
 | `claude.session`, `claude.week`, `claude.session.resets`, `claude.week.resets`, `claude.status` | Your Claude plan's usage limits, from Claude Code's status line (see [Claude usage](#claude-usage)) |
@@ -152,6 +153,16 @@ flowchart LR
 - **CPU temperatures** also need the signed [PawnIO](https://pawnio.eu) driver (`winget install namazso.PawnIO`). HWiNFO and FanControl install it too. GPU sensors work without it.
 - The service only reads hardware while a dashboard is connected. Its log is in `%ProgramData%\ImpiousBonum\sensors.log`.
 - For development: `ImpiousBonum.Sensors.exe run` serves from a console, and `list` prints every sensor. Both work unelevated with fewer sensors. `install` and `uninstall` (as admin) do what the tray items do.
+
+### Frame times
+
+Average FPS hides stutter: a game can average 120 FPS and still hitch. The sensor service also times every frame of the app the FPS follows:
+
+- `fps.frametime`: the average frame time, e.g. `8.3 ms`.
+- `fps.frametime.max`: the slowest frame in the last second. Put it in a `graph` widget for a frame-time graph: a flat line is smooth, each spike is a stutter you felt.
+- `fps.low1` and `fps.low01`: the 1% and 0.1% lows, the frame rate of the slowest 1% (or 0.1%) of frames over the last 30 seconds. A 1% low close to the average means smooth play. They appear once there are enough frames (100, and 1,000). Pauses longer than a second, like alt-tabbing or a loading screen, don't count.
+
+A sensor service from before 0.8 doesn't send these; *Sensors → Update sensor service…* brings it up to date.
 
 ## Claude usage
 
