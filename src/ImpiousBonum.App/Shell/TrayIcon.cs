@@ -246,6 +246,10 @@ public sealed class TrayIcon : IDisposable
         }
         _layouts.DropDownItems.Add(new ToolStripSeparator());
         _layouts.DropDownItems.Add("Import…", null, (_, _) => ImportLayoutRequested?.Invoke(this, EventArgs.Empty));
+        _layouts.DropDownItems.Add(new ToolStripMenuItem("Gallery…", null, (_, _) => GalleryRequested?.Invoke(this, EventArgs.Empty))
+        {
+            ToolTipText = "Browse layouts other people have shared, and import one",
+        });
         _layouts.DropDownItems.Add(_pages);
         _layouts.DropDownItems.Add(_gameLayouts);
         _layouts.DropDownItems.Add(_schedule);
@@ -253,6 +257,8 @@ public sealed class TrayIcon : IDisposable
 
     /// <summary>Tray → Layout → Import…</summary>
     public event EventHandler? ImportLayoutRequested;
+
+    public event EventHandler? GalleryRequested;
 
     /// <summary>Tray → Layout → Game layouts → Switch automatically.</summary>
     public event EventHandler<bool>? GameLayoutsToggled;

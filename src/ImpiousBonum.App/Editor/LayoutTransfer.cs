@@ -59,6 +59,16 @@ public static class LayoutTransfer
             return null;
         }
 
+        return ImportPackage(owner, layouts, package);
+    }
+
+    /// <summary>
+    /// Adds a package's layout to the saved layouts (from a file or the gallery): checks buttons that open things,
+    /// and asks before replacing a layout with the same name. Returns the saved name, or null if cancelled or it
+    /// couldn't be saved (the user has been told).
+    /// </summary>
+    public static string? ImportPackage(Window? owner, LayoutStore layouts, LayoutPackageContents package)
+    {
         if (!ConfirmOpenTargets(owner, package.Layout))
             return null;
 

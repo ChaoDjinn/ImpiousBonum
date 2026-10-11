@@ -152,6 +152,7 @@ public partial class App : Application
         };
         _tray.LayoutSelected += (_, name) => SelectLayout(name);
         _tray.ImportLayoutRequested += (_, _) => ImportLayout();
+        _tray.GalleryRequested += (_, _) => OpenGallery();
         _tray.GameLayoutsToggled += (_, enabled) => SetGameLayoutsEnabled(enabled);
         _tray.SessionRecapsToggled += (_, on) =>
         {
@@ -437,6 +438,24 @@ public partial class App : Application
     }
 
     /// <summary>Tray → Layout → Import…: adds the layout and shows it. With the editor open, the editor does it.</summary>
+    /// <summary>Tray → Layout → Gallery…; shows what was imported. Not while the editor is open, which has its own copy of the layouts.</summary>
+    private void OpenGallery()
+    {
+        if (_editor is not null)
+        {
+            BringToFront(_editor);
+            _tray?.ShowInfo("Layout gallery", "Close the layout editor first, then open the gallery from the tray.");
+            return;
+        }
+        if (_layouts is null)
+            return;
+        var gallery = new GalleryWindow(_settings.GalleryAddress ?? Gallery.DefaultAddress, _layouts, _sampler?.Store);
+        if (gallery.ShowDialog() != true || gallery.Imported is not { } name)
+            return;
+        _layouts.SetActive(name);
+        AppLog.Info($"Imported layout \"{name}\" from the gallery");
+    }
+
     private void ImportLayout()
     {
         if (_editor is not null)

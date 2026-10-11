@@ -1,0 +1,46 @@
+// The layout gallery (tray → Layout → Gallery…). Each entry is a file in this folder: an .ibl package made with
+// Export… in the editor, or a bare layout .json. To share a layout, add its file and an entry here in a pull request.
+{
+  "layouts": [
+    {
+      "name": "Gaming HUD",
+      "file": "gaming-hud.json",
+      "author": "Impious Bonum",
+      "description": "Frame rate front and centre, frame times, 1% lows, temperatures and how the session's going. Neon Outrun theme.",
+      "width": 1920,
+      "height": 480
+    },
+    {
+      "name": "Desk Companion",
+      "file": "desk-companion.json",
+      "author": "Impious Bonum",
+      "description": "The time here and in two other places, today's calendar, the weather and what's playing.",
+      "width": 1920,
+      "height": 480
+    },
+    {
+      "name": "System Monitor",
+      "file": "system-monitor.json",
+      "author": "Impious Bonum",
+      "description": "Loads and network over time, every CPU thread as a heatmap, the busiest apps, drives and memory.",
+      "width": 1920,
+      "height": 480
+    },
+    {
+      "name": "Focus",
+      "file": "focus.json",
+      "author": "Impious Bonum",
+      "description": "A 25-minute focus timer, today's agenda, the time and your music.",
+      "width": 1920,
+      "height": 480
+    },
+    {
+      "name": "Small Screen",
+      "file": "small-screen.json",
+      "author": "Impious Bonum",
+      "description": "For a 5 or 7 inch 800 × 480 display: the time, CPU and GPU load, and the CPU temperature.",
+      "width": 800,
+      "height": 480
+    }
+  ]
+}

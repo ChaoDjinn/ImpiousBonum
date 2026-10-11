@@ -113,6 +113,9 @@ public sealed class AppSettings
         set => _calendars = value ?? [];
     }
 
+    /// <summary>Where the layout gallery is (a web folder with an index.json); null for the Impious Bonum repository's.</summary>
+    public string? GalleryAddress { get; set; }
+
     /// <summary>Logging readings to CSV files (tray → Logging…). Off by default.</summary>
     public LogSettings Logging
     {
