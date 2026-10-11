@@ -60,6 +60,10 @@ public sealed class TrayIcon : IDisposable
         {
             ToolTipText = "Be told when a reading is out of bounds for a while",
         });
+        menu.Items.Add(new ToolStripMenuItem("Calendar…", null, (_, _) => CalendarRequested?.Invoke(this, EventArgs.Empty))
+        {
+            ToolTipText = "Calendars whose events the agenda widget shows",
+        });
         menu.Items.Add(new ToolStripMenuItem("Hotkeys…", null, (_, _) => HotkeysRequested?.Invoke(this, EventArgs.Empty))
         {
             ToolTipText = "Keys that show or hide the dashboard, turn pages or switch layouts from anywhere",
@@ -204,6 +208,8 @@ public sealed class TrayIcon : IDisposable
     public event EventHandler? AlertsRequested;
 
     public event EventHandler? HotkeysRequested;
+
+    public event EventHandler? CalendarRequested;
 
     public event EventHandler? WeatherTurnedOff;
 

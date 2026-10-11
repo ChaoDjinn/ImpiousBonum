@@ -47,7 +47,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="docs/images/default-layout.svg" alt="Map of the default layout: CPU and memory graphs, GPU load and VRAM, CPU and GPU temperatures, FPS, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Eighteen widget types are available: `text`, `graph` (line or area history with a header), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `weather` ([Weather](#weather)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Nineteen widget types are available: `text`, `graph` (line or area history with a header), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `weather` ([Weather](#weather)), `agenda` ([Calendar](#calendar)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](docs/widgets.md).
 
 ## What it shows
 
@@ -67,6 +67,7 @@ Every box is a widget you can move, resize, restyle or replace. Eighteen widget 
 | `sys.uptime`, `sys.name`, `sys.battery`, `sys.battery.status` | Windows; the battery ones only on PCs with a battery |
 | `top.cpu.<N>`, `top.cpu.<N>.name`, `top.memory.<N>`, `top.memory.<N>.name` (N = 1 to 5) | The apps using the most CPU and memory, every 2 seconds, from one `NtQuerySystemInformation` call like Task Manager's. An app's processes count together (all of Chrome's are one); CPU is a share of the whole processor, memory is the private working set (Task Manager's *Memory* column) |
 | `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set in tray → *Weather*, every 15 minutes |
+| `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set in tray → *Calendar…*, every 15 minutes (see [Calendar](#calendar)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up in tray → *Custom data…* (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
@@ -120,6 +121,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 | *Claude usage* | Whether Claude Code is reporting, and *Connect Claude Code…* (see [Claude usage](#claude-usage)) |
 | *Weather* | The weather now, *Set location…*, units, and *Turn off weather* (see [Weather](#weather)) |
 | *Alerts…* | Be told when a reading stays out of bounds (see [Alerts](#alerts)) |
+| *Calendar…* | Calendars whose events the agenda widget shows (see [Calendar](#calendar)) |
 | *Hotkeys…* | Keys that show or hide the dashboard, turn pages, open the editor or switch layouts from anywhere (see [Hotkeys](#hotkeys)) |
 | *Custom data…* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
 | *FPS from* | Follow the foreground app, or the top app on a chosen monitor |
@@ -275,6 +277,24 @@ Some examples:
 | A JSON API | Web address `https://api.github.com/repos/<owner>/<repo>`, fields `stars = stargazers_count` and `issues = open_issues_count` |
 
 Sources are stored in `settings.json` (`customData`) on this PC and never in a layout, so a layout from someone else can't add a command to run. Headers, tokens included, are stored there as plain text.
+
+## Calendar
+
+The `agenda` widget lists what's coming up, by day: each event's time (or *All day*) and title, and where it is.
+What's on now is in the accent colour, and something that started before today shows *Until* when it ends.
+
+Add calendars in tray → *Calendar…* by pasting their private iCal link:
+
+- **Google Calendar:** Settings → your calendar → *Secret address in iCal format*.
+- **Outlook / Microsoft 365:** Settings → Calendar → Shared calendars → *Publish a calendar*, then the ICS link.
+- **Apple iCloud:** share the calendar as a public calendar and copy its `webcal://` link.
+
+Each is checked every 15 minutes. Repeating events, moved and cancelled occurrences, all-day events and time zones
+are all handled; events show in this PC's time. If a calendar can't be fetched, its last events stay for a day and
+`calendar.status` says what's wrong. An agenda can show some calendars and not others (*Calendars*: `Work, Family`).
+The metrics put the next event anywhere: `{calendar.next.title}` at `{calendar.next.time}`, or a `stat` of
+`calendar.next.minutes`. A private link lets anyone who has it read the calendar, so it's kept only in this PC's
+`settings.json`, never in layouts you export.
 
 ## Images and shapes
 

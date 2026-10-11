@@ -103,7 +103,7 @@ public partial class App : Application
         if (!_settings.HardwareRendering)
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         _frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
-        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData));
+        _sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData, () => _settings.Calendars));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -193,6 +193,7 @@ public partial class App : Application
         _tray.CustomDataRequested += (_, _) => OpenCustomData();
         _tray.AlertsRequested += (_, _) => OpenAlerts();
         _tray.HotkeysRequested += (_, _) => EditHotkeys();
+        _tray.CalendarRequested += (_, _) => EditCalendars();
         _tray.WeatherTurnedOff += (_, _) =>
         {
             _settings.WeatherLocation = null;
@@ -668,6 +669,16 @@ public partial class App : Application
                 _tray?.ShowAlert(alert.Text);
         }
         _window.ShowAlerts(_alerts.Active.Where(rule => rule.Flash).Select(rule => (rule.Describe(), rule.Text(_sampler.Store))).ToList());
+    }
+
+    /// <summary>Tray → Calendar…. The list is replaced, not changed in place, since the sampler reads it.</summary>
+    private void EditCalendars()
+    {
+        if (CalendarWindow.Ask(_settings.Calendars) is not { } links)
+            return;
+        _settings.Calendars = [.. links];
+        _settings.Save();
+        AppLog.Info(links.Count == 0 ? "Calendars: none" : $"Calendars: {string.Join(", ", links.Select(l => l.Name))}");
     }
 
     /// <summary>Registers the hotkeys from settings; any that can't be set are reported once.</summary>
@@ -1170,7 +1181,7 @@ public partial class App : Application
         if (name is null)
             return false;
 
-        await using var sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest, customData: () => settings.CustomData));
+        await using var sampler = new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest, customData: () => settings.CustomData, calendars: () => settings.Calendars));
         sampler.Start();
         await Task.Delay(warmup);
 
