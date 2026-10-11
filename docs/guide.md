@@ -31,37 +31,42 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
 - `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
-- `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Open settings folder*).
+- `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Help* → *Open settings folder*, or *Report a problem…*).
 
 ### Tray menu
 
+The menu is grouped: the layout and where it shows, where its readings come from, what watches them, then the app itself.
+
 | Item | |
 |---|---|
-| *Display* | Which monitor the dashboard is on, and how its window behaves (see [Windowed mode](#windowed-mode)) |
-| *Display → More dashboards* | Fill other screens with layouts of their own (see [More dashboards](#more-dashboards)) |
-| *Display → When you're away* | Dim the dashboard, or turn it black, after a while without input (see [Dimming](#dimming)) |
-| *Display → Tablet view* | Show the dashboard in a browser on a tablet or phone, and optionally let it press the layout's buttons (see [Tablet view](#tablet-view)) |
-| *Display → USB screen* | Show a layout on a small USB screen as well (see [USB screens](#usb-screens)) |
+| *Edit layout…* | Open the layout editor (or double-click the tray icon) |
 | *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
 | *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
 | *Layout → Gallery…* | Browse layouts other people have shared, with a live preview, and import one (see [Layout gallery](#layout-gallery)) |
 | *Layout → Pages* | Swipe across the dashboard to move between layouts, or rotate them on a timer (see [Pages](#pages)) |
 | *Layout → Game layouts* | Link the app you were just using to a layout, remove links, turn automatic switching on or off, and recap each session (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
 | *Layout → Schedule* | Show a layout or theme at certain times of day, or while Windows is in dark or light mode (see [Schedule](#schedule)) |
+| *Layout → Open layout file*, *Reload* | Work with the shown layout's file directly (see [Editing layouts by hand](#editing-layouts-by-hand)) |
+| *Display* | Which monitor the dashboard is on, by name, and how its window behaves (see [Windowed mode](#windowed-mode)) |
+| *Display → More dashboards* | Fill other screens with layouts of their own (see [More dashboards](#more-dashboards)) |
+| *Display → When you're away* | Dim the dashboard, or turn it black, after a while without input (see [Dimming](#dimming)) |
+| *Display → Tablet view* | Show the dashboard in a browser on a tablet or phone, and optionally let it press the layout's buttons (see [Tablet view](#tablet-view)) |
+| *Display → USB screen* | Show a layout on a small USB screen as well (see [USB screens](#usb-screens)) |
 | *Sensors* | Sensor service status, and install, update or remove it |
-| *Claude usage* | Whether Claude Code is reporting, and *Connect Claude Code…* (see [Claude usage](#claude-usage)) |
+| *Sensors → FPS from* | Follow the foreground app, or the top app on a chosen monitor |
 | *Weather* | The weather now, *Set location…*, units, and *Turn off weather* (see [Weather](#weather)) |
-| *Alerts…* | Be told when a reading stays out of bounds (see [Alerts](#alerts)) |
-| *Logging…* | Log readings to daily CSV files, with each one's average, lowest and highest (see [Logging](#logging)) |
-| *News feeds…* | Feeds whose headlines the news widget shows (see [News](#news)) |
 | *Calendar…* | Calendars whose events the agenda widget shows (see [Calendar](#calendar)) |
-| *Hotkeys…* | Keys that show or hide the dashboard, turn pages, open the editor or switch layouts from anywhere (see [Hotkeys](#hotkeys)) |
+| *News feeds…* | Feeds whose headlines the news widget shows (see [News](#news)) |
+| *Claude usage* | Whether Claude Code is reporting, and *Connect Claude Code…* (see [Claude usage](#claude-usage)) |
 | *Custom data…* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
-| *FPS from* | Follow the foreground app, or the top app on a chosen monitor |
-| *Edit layout…* | Open the layout editor (or double-click the tray icon) |
-| *Open layout file*, *Open settings folder*, *Reload layout* | Work with the files directly (*Open layout file* opens the one being shown) |
+| *Alerts…* | Be told when a reading stays out of bounds (see [Alerts](#alerts)) |
+| *Hotkeys…* | Keys that show or hide the dashboard, turn pages, open the editor or switch layouts from anywhere (see [Hotkeys](#hotkeys)) |
+| *Logging…* | Log readings to daily CSV files, with each one's average, lowest and highest (see [Logging](#logging)) |
 | *Start with Windows* | Start the dashboard when you sign in |
 | *Check for updates* | Installed copies only |
+| *Help* | This guide, the widget reference and what's new, for the version you have; *Report a problem…*; *Open settings folder*; and *About Impious Bonum*, whose *Copy details* copies the version, Windows and .NET versions for a problem report |
+
+Notifications that can do something say so: clicking one about an error opens the settings folder with `dashboard.log` selected, and clicking *Impious Bonum x.y.z is ready* restarts into the update.
 
 ### Windowed mode
 
@@ -107,7 +112,7 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 
 ### Editing layouts by hand
 
-Each layout is a JSON file in `%AppData%\ImpiousBonum\layouts` (tray → *Open layout file* opens the one being shown). Saving the shown layout's file applies it straight away; changes to other layouts show when you switch to them. To add a layout by hand, drop a new `.json` file in the folder and pick it from tray → *Layout*.
+Each layout is a JSON file in `%AppData%\ImpiousBonum\layouts` (tray → *Layout* → *Open layout file* opens the one being shown). Saving the shown layout's file applies it straight away; changes to other layouts show when you switch to them. To add a layout by hand, drop a new `.json` file in the folder and pick it from tray → *Layout*.
 
 The canvas has a design size (default 1920×480) and scales to fit the window. Each widget has `type`, `x`, `y`, `width`, `height` plus its own settings. Text uses templates:
 
@@ -186,7 +191,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up in tray → *Custom data…* (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
-| `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; the tray's *FPS from* picks the foreground app or the top app on a chosen monitor |
+| `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; tray → *Sensors* → *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
@@ -424,11 +429,11 @@ A game can have its own layout: FPS front and centre, its colours, a themed font
 
 To link a game: with the game running, open tray → *Layout* → *Game layouts* → *Link "game" to* and pick a layout (the menu offers the last app you had in front, so click the tray icon straight after leaving the game). To keep your usual layout and only change its look, pick a theme under *Theme only* instead. The same menu lists the links with *Remove link*, and *Switch automatically* turns the whole thing off and on (remembered).
 
-"In front" means the same thing as for the FPS reading: the foreground app, or with *FPS from → Top app on a monitor*, the top app on that monitor, so a game on one screen keeps its layout while you type on another.
+"In front" means the same thing as for the FPS reading: the foreground app, or with *Sensors → FPS from → Top app on a monitor*, the top app on that monitor, so a game on one screen keeps its layout while you type on another.
 
 Game layouts are temporary: picking a layout from the tray while a game is running makes that your choice to come back to, and the editor keeps whichever layout it opened on (switching waits until it closes). Switches are written to `dashboard.log`. A link to a layout or theme that no longer exists is ignored, with one notification and a line in the log; renaming a layout updates its links.
 
-Links live in `settings.json` (tray → *Open settings folder*) and can be edited by hand while the dashboard isn't running. `process` is the program's name as Task Manager's *Details* tab shows it, with or without `.exe`, matched ignoring case. A link has a `layout`, a `theme` (which restyles whichever layout is showing), or both:
+Links live in `settings.json` (tray → *Help* → *Open settings folder*) and can be edited by hand while the dashboard isn't running. `process` is the program's name as Task Manager's *Details* tab shows it, with or without `.exe`, matched ignoring case. A link has a `layout`, a `theme` (which restyles whichever layout is showing), or both:
 
 ```json
 "gameLayouts": [

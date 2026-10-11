@@ -1,13 +1,12 @@
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices;
+using System.IO;
 using System.Windows.Forms;
 using ImpiousBonum.Core.Providers;
 
 namespace ImpiousBonum.App.Shell;
 
-/// <summary>The notification-area icon and its menu: displays, layouts, sensors, FPS source, the layout editor, updates and exit.</summary>
+/// <summary>The notification-area icon, its notifications and its menu: the layout and its screens, data sources, alerts and the like, updates, help and exit.</summary>
 public sealed class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
@@ -45,62 +44,59 @@ public sealed class TrayIcon : IDisposable
     private readonly ToolStripMenuItem _header = new("Impious Bonum") { Enabled = false };
     private readonly ToolStripMenuItem _checkUpdates = new("Check for updates") { Visible = false };
     private readonly ToolStripMenuItem _restartToUpdate = new() { Visible = false };
-    private string? _activeLayoutPath;
+    private readonly ToolStripMenuItem _help = new("Help");
+    private readonly Font _bold;
+    private string? _version;
+
+    /// <summary>What clicking the notification showing now does, if anything.</summary>
+    private Action? _onNotificationClicked;
 
     public TrayIcon()
     {
-        _image = DrawIcon();
+        _image = LoadIcon();
 
+        // Grouped by what they're for: the layout and where it shows, where its readings come from, what watches the
+        // readings, then the app itself. The bold item is what double-clicking the icon does.
         var menu = new ContextMenuStrip();
+        _bold = new Font(menu.Font, FontStyle.Bold);
         menu.Items.Add(_header);
         menu.Items.Add(_restartToUpdate);
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(_displays);
+        menu.Items.Add(new ToolStripMenuItem("Edit layout…", null, (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty)) { Font = _bold });
         menu.Items.Add(_layouts);
+        menu.Items.Add(_displays);
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_sensors);
-        menu.Items.Add(_claude);
         menu.Items.Add(_weather);
-        menu.Items.Add(new ToolStripMenuItem("Alerts…", null, (_, _) => AlertsRequested?.Invoke(this, EventArgs.Empty))
-        {
-            ToolTipText = "Be told when a reading is out of bounds for a while",
-        });
-        menu.Items.Add(new ToolStripMenuItem("Logging…", null, (_, _) => LoggingRequested?.Invoke(this, EventArgs.Empty))
-        {
-            ToolTipText = "Log readings to CSV files, with each one's average, lowest and highest",
-        });
-        menu.Items.Add(new ToolStripMenuItem("News feeds…", null, (_, _) => NewsRequested?.Invoke(this, EventArgs.Empty))
-        {
-            ToolTipText = "News feeds whose headlines the news widget shows",
-        });
-        menu.Items.Add(new ToolStripMenuItem("Calendar…", null, (_, _) => CalendarRequested?.Invoke(this, EventArgs.Empty))
-        {
-            ToolTipText = "Calendars whose events the agenda widget shows",
-        });
-        menu.Items.Add(new ToolStripMenuItem("Hotkeys…", null, (_, _) => HotkeysRequested?.Invoke(this, EventArgs.Empty))
-        {
-            ToolTipText = "Keys that show or hide the dashboard, turn pages or switch layouts from anywhere",
-        });
-        menu.Items.Add(new ToolStripMenuItem("Custom data…", null, (_, _) => CustomDataRequested?.Invoke(this, EventArgs.Empty))
-        {
-            ToolTipText = "Your own metrics from web addresses and commands",
-        });
-        menu.Items.Add(_fpsSource);
-        menu.Items.Add(new ToolStripMenuItem("Edit layout…", null, (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty)) { Font = new Font(menu.Font, FontStyle.Bold) });
-        menu.Items.Add("Open layout file", null, (_, _) =>
-        {
-            if (_activeLayoutPath is not null)
-                Open(_activeLayoutPath);
-        });
-        menu.Items.Add("Open settings folder", null, (_, _) => Open(AppPaths.DataDirectory));
-        menu.Items.Add("Reload layout", null, (_, _) => ReloadRequested?.Invoke(this, EventArgs.Empty));
+        menu.Items.Add(Item("Calendar…", "Calendars whose events the agenda widget shows", () => CalendarRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(Item("News feeds…", "News feeds whose headlines the news widget shows", () => NewsRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(_claude);
+        menu.Items.Add(Item("Custom data…", "Your own metrics from web addresses and commands", () => CustomDataRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(Item("Alerts…", "Be told when a reading is out of bounds for a while", () => AlertsRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(Item("Hotkeys…", "Keys that show or hide the dashboard, turn pages or switch layouts from anywhere", () => HotkeysRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(Item("Logging…", "Log readings to CSV files, with each one's average, lowest and highest", () => LoggingRequested?.Invoke(this, EventArgs.Empty)));
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_startup);
         menu.Items.Add(_checkUpdates);
+        menu.Items.Add(_help);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty));
+
+        _help.DropDownItems.Add(Item("User guide", "How to use everything, on GitHub", () => OpenLink(Links.Guide(_version))));
+        _help.DropDownItems.Add(Item("Widget reference", "Every widget's settings, on GitHub", () => OpenLink(Links.Widgets(_version))));
+        _help.DropDownItems.Add(Item("What's new", "The changelog, on GitHub", () => OpenLink(Links.Changelog(_version))));
+        _help.DropDownItems.Add(Item("Report a problem…", "Open an issue on GitHub. Attaching dashboard.log from the settings folder helps.", () => OpenLink(Links.NewIssue)));
+        _help.DropDownItems.Add(new ToolStripSeparator());
+        _help.DropDownItems.Add(Item("Open settings folder", "Settings, layouts, themes and dashboard.log", () => Open(AppPaths.DataDirectory)));
+        _help.DropDownItems.Add(new ToolStripSeparator());
+        _help.DropDownItems.Add(Item("About Impious Bonum", null, () => AboutRequested?.Invoke(this, EventArgs.Empty)));
 
         _sensors.DropDownItems.Add(_sensorStatus);
         _sensors.DropDownItems.Add(_sensorInstall);
         _sensors.DropDownItems.Add(_sensorRemove);
+        _sensors.DropDownItems.Add(new ToolStripSeparator());
+        _sensors.DropDownItems.Add(_fpsSource);
         // Installing over an existing service replaces it, so "Update" is the same operation.
         _sensorInstall.Click += (_, _) => SensorServiceChangeRequested?.Invoke(this, true);
         _sensorRemove.Click += (_, _) => SensorServiceChangeRequested?.Invoke(this, false);
@@ -127,7 +123,7 @@ public sealed class TrayIcon : IDisposable
         _tabletCopyLink.Click += (_, _) => TabletLinkCopyRequested?.Invoke(this, EventArgs.Empty);
         _tabletNewLink.Click += (_, _) => TabletNewLinkRequested?.Invoke(this, EventArgs.Empty);
 
-        _restartToUpdate.Font = new Font(menu.Font, FontStyle.Bold);
+        _restartToUpdate.Font = _bold;
         _restartToUpdate.Click += (_, _) => RestartToUpdateRequested?.Invoke(this, EventArgs.Empty);
         _checkUpdates.Click += (_, _) => CheckForUpdatesRequested?.Invoke(this, EventArgs.Empty);
 
@@ -141,7 +137,15 @@ public sealed class TrayIcon : IDisposable
 
         _icon = new NotifyIcon { Icon = _image, Text = "Impious Bonum", ContextMenuStrip = menu, Visible = true };
         _icon.DoubleClick += (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty);
+        _icon.BalloonTipClicked += (_, _) => _onNotificationClicked?.Invoke();
+        _icon.BalloonTipClosed += (_, _) => _onNotificationClicked = null;
     }
+
+    private static ToolStripMenuItem Item(string text, string? tip, Action click) =>
+        new(text, null, (_, _) => click()) { ToolTipText = tip };
+
+    /// <summary>Help → About Impious Bonum.</summary>
+    public event EventHandler? AboutRequested;
 
     public event EventHandler? MenuOpening;
 
@@ -161,6 +165,7 @@ public sealed class TrayIcon : IDisposable
     /// <summary>Shows the version in the menu header and, for installed copies, the update items.</summary>
     public void SetVersion(string? version, bool updatesAvailable)
     {
+        _version = version;
         _header.Text = version is null ? "Impious Bonum (development build)" : $"Impious Bonum {version}";
         _checkUpdates.Visible = updatesAvailable;
     }
@@ -198,7 +203,7 @@ public sealed class TrayIcon : IDisposable
     {
         _sensorStatus.Text = outdated ? "Sensor service is from an older version" : status;
         _sensorInstall.Text = serviceInstalled ? "Update sensor service…" : "Install sensor service…";
-        _sensorInstall.Font = outdated ? new Font(_sensorInstall.Owner?.Font ?? SystemFonts.MenuFont!, FontStyle.Bold) : null;
+        _sensorInstall.Font = outdated ? _bold : null;
         _sensorRemove.Visible = serviceInstalled;
     }
 
@@ -247,7 +252,6 @@ public sealed class TrayIcon : IDisposable
 
     public void SetLayouts(IReadOnlyList<string> names, string active, string activePath)
     {
-        _activeLayoutPath = activePath;
         _layouts.DropDownItems.Clear();
         foreach (var name in names)
         {
@@ -264,6 +268,9 @@ public sealed class TrayIcon : IDisposable
         _layouts.DropDownItems.Add(_pages);
         _layouts.DropDownItems.Add(_gameLayouts);
         _layouts.DropDownItems.Add(_schedule);
+        _layouts.DropDownItems.Add(new ToolStripSeparator());
+        _layouts.DropDownItems.Add(Item("Open layout file", "The shown layout's JSON file, to edit by hand", () => Open(activePath)));
+        _layouts.DropDownItems.Add(Item("Reload", "Read the shown layout's file again", () => ReloadRequested?.Invoke(this, EventArgs.Empty)));
     }
 
     /// <summary>Tray → Layout → Import…</summary>
@@ -282,11 +289,7 @@ public sealed class TrayIcon : IDisposable
 
     public event EventHandler<GameLayoutRule>? GameLinkRemoved;
 
-    /// <summary>
-    /// Fills the Game layouts submenu. <paramref name="recentApp"/> is the last app seen in front (the tray itself is in
-    /// front while its menu is open) and is offered for linking to any of the saved layouts in <paramref name="names"/>,
-    /// or to any of the <paramref name="themes"/> to restyle whichever layout is showing.
-    /// </summary>
+    /// <summary>Tray → Layout → Schedule → Follow the schedule, with the new state.</summary>
     public event EventHandler<bool>? ScheduleToggled;
 
     public event EventHandler? ScheduleAddRequested;
@@ -367,12 +370,17 @@ public sealed class TrayIcon : IDisposable
             // Bold: the rules that apply right now.
             var item = new ToolStripMenuItem(Escape(rule.Describe()));
             if (enabled && active.Contains(rule))
-                item.Font = new Font(_schedule.DropDown.Font, FontStyle.Bold);
+                item.Font = _bold;
             item.DropDownItems.Add("Remove", null, (_, _) => ScheduleRuleRemoved?.Invoke(this, rule));
             _schedule.DropDownItems.Add(item);
         }
     }
 
+    /// <summary>
+    /// Fills the Game layouts submenu. <paramref name="recentApp"/> is the last app seen in front (the tray itself is in
+    /// front while its menu is open) and is offered for linking to any of the saved layouts in <paramref name="names"/>,
+    /// or to any of the <paramref name="themes"/> to restyle whichever layout is showing.
+    /// </summary>
     public void SetGameLayouts(bool enabled, bool recaps, IReadOnlyList<GameLayoutRule> rules, string? recentApp, IReadOnlyList<string> names, IReadOnlyList<string> themes)
     {
         _gameLayouts.DropDownItems.Clear();
@@ -593,15 +601,37 @@ public sealed class TrayIcon : IDisposable
         _displays.DropDownItems.Add(item);
     }
 
-    public void ShowError(string title, string message) =>
-        _icon.ShowBalloonTip(5000, title, message, ToolTipIcon.Warning);
+    /// <param name="onClick">What clicking the notification does, e.g. show the log it mentions.</param>
+    public void ShowError(string title, string message, Action? onClick = null) =>
+        Notify(5000, title, message, ToolTipIcon.Warning, onClick);
 
     /// <summary>An alert: a notification that stands out from the app's own messages.</summary>
     public void ShowAlert(string message) =>
-        _icon.ShowBalloonTip(10000, "Impious Bonum alert", message, ToolTipIcon.Warning);
+        Notify(10000, "Impious Bonum alert", message, ToolTipIcon.Warning, null);
 
-    public void ShowInfo(string title, string message) =>
-        _icon.ShowBalloonTip(5000, title, message, ToolTipIcon.Info);
+    /// <param name="onClick">What clicking the notification does, e.g. restart into a downloaded update.</param>
+    public void ShowInfo(string title, string message, Action? onClick = null) =>
+        Notify(5000, title, message, ToolTipIcon.Info, onClick);
+
+    private void Notify(int timeout, string title, string message, ToolTipIcon icon, Action? onClick)
+    {
+        _onNotificationClicked = onClick;
+        _icon.ShowBalloonTip(timeout, title, message, icon);
+    }
+
+    /// <summary>Opens the settings folder with dashboard.log selected, for notifications about errors.</summary>
+    public static void ShowLog()
+    {
+        var arguments = File.Exists(AppPaths.LogFile) ? $"/select,\"{AppPaths.LogFile}\"" : $"\"{AppPaths.DataDirectory}\"";
+        try
+        {
+            Process.Start("explorer.exe", arguments);
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // No Explorer to show it in; the notification has already said where the log is.
+        }
+    }
 
     private static void Open(string path)
     {
@@ -616,46 +646,36 @@ public sealed class TrayIcon : IDisposable
         }
     }
 
-    /// <summary>A small orange tile with three bars, drawn at runtime so there is no binary asset to maintain.</summary>
-    private static Icon DrawIcon()
+    private static void OpenLink(string url)
     {
-        using var bitmap = new Bitmap(32, 32);
-        using (var g = Graphics.FromImage(bitmap))
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            using var tile = new GraphicsPath();
-            tile.AddArc(1, 1, 10, 10, 180, 90);
-            tile.AddArc(21, 1, 10, 10, 270, 90);
-            tile.AddArc(21, 21, 10, 10, 0, 90);
-            tile.AddArc(1, 21, 10, 10, 90, 90);
-            tile.CloseFigure();
-            using var orange = new SolidBrush(Color.FromArgb(0xFF, 0xAA, 0x00));
-            g.FillPath(orange, tile);
-            g.FillRectangle(Brushes.Black, 7, 17, 4, 8);
-            g.FillRectangle(Brushes.Black, 14, 9, 4, 16);
-            g.FillRectangle(Brushes.Black, 21, 13, 4, 12);
-        }
-
-        var handle = bitmap.GetHicon();
         try
         {
-            return (Icon)Icon.FromHandle(handle).Clone();
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
-        finally
+        catch (System.ComponentModel.Win32Exception)
         {
-            DestroyIcon(handle);
+            // No browser registered; nothing else to offer.
         }
     }
 
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool DestroyIcon(nint handle);
+    /// <summary>
+    /// The app's own icon (assets/ImpiousBonum.ico, built in) at the size the notification area wants at the screen's
+    /// scaling, so it stays sharp at 125% or 150% rather than being one 32-pixel drawing scaled down.
+    /// </summary>
+    private static Icon LoadIcon()
+    {
+        using var stream = typeof(TrayIcon).Assembly.GetManifestResourceStream(IconResource)!;
+        return new Icon(stream, SystemInformation.SmallIconSize);
+    }
+
+    internal const string IconResource = "ImpiousBonum.icon.ico";
 
     public void Dispose()
     {
         _icon.Visible = false;
         _icon.Dispose();
         _image.Dispose();
+        _bold.Dispose();
     }
 }
 

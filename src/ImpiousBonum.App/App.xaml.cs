@@ -258,13 +258,14 @@ public partial class App : Application
         _tray.EditLayoutRequested += (_, _) => OpenEditor();
         _tray.ExitRequested += async (_, _) => await ExitAsync();
         _tray.CheckForUpdatesRequested += async (_, _) => await CheckForUpdatesAsync(userAsked: true);
+        _tray.AboutRequested += (_, _) => ShowAbout();
         _tray.RestartToUpdateRequested += async (_, _) => await RestartToUpdateAsync();
         _tray.SetVersion(_updater.CurrentVersion, _updater.IsInstalled);
         StartUpdateChecks();
         if (_settings.LoadProblem is { } problem)
         {
             AppLog.Warning($"Started with default settings: {problem}");
-            _tray.ShowError("Settings couldn't be read", "Impious Bonum started with its default settings. Details are in dashboard.log (tray → Open settings folder).");
+            _tray.ShowError("Settings couldn't be read", "Impious Bonum started with its default settings. Click for dashboard.log, which has the details.", TrayIcon.ShowLog);
         }
 
         _tablet = new TabletView { AllowTaps = _settings.TabletButtons };
@@ -321,7 +322,7 @@ public partial class App : Application
         if (!_reportedError)
         {
             _reportedError = true;
-            _tray?.ShowError("Impious Bonum hit an error", "It's still running. Details are in dashboard.log (tray → Open settings folder).");
+            _tray?.ShowError("Impious Bonum hit an error", "It's still running. Click for dashboard.log, which has the details.", TrayIcon.ShowLog);
         }
     }
 
@@ -375,7 +376,7 @@ public partial class App : Application
         var ready = await _updater.CheckAndDownloadAsync();
         _tray?.SetUpdateReady(ready);
         if (ready is not null)
-            _tray?.ShowInfo($"Impious Bonum {ready} is ready", "Tray → Restart to update.");
+            _tray?.ShowInfo($"Impious Bonum {ready} is ready", "Click here, or tray → Restart to update, to restart into it.", () => _ = RestartToUpdateAsync());
         else if (userAsked)
             _tray?.ShowInfo("Impious Bonum", $"You're up to date ({_updater.CurrentVersion}).");
     }
@@ -385,6 +386,22 @@ public partial class App : Application
         AppLog.Info($"Restarting to update to {_updater.ReadyVersion}");
         if (await ReleaseEverythingAsync())
             _updater.RestartToUpdate();
+    }
+
+    private AboutWindow? _about;
+
+    /// <summary>Tray → Help → About Impious Bonum: one window at a time.</summary>
+    private void ShowAbout()
+    {
+        if (_about is not null)
+        {
+            BringToFront(_about);
+            return;
+        }
+        _about = new AboutWindow(_updater.CurrentVersion, SensorStatus());
+        _about.Closed += (_, _) => _about = null;
+        _about.Show();
+        BringToFront(_about);
     }
 
     private void OpenEditor()
@@ -1191,7 +1208,7 @@ public partial class App : Application
             // In use by another app, or a hand-edited port that isn't one.
             AppLog.Warning($"Tablet view couldn't use port {_settings.TabletPort}: {ex.Message}");
             _tray?.ShowError("Couldn't start the tablet view",
-                $"Port {_settings.TabletPort} is in use or isn't a valid port. Change tabletPort in settings.json (tray → Open settings folder), then try again.");
+                $"Port {_settings.TabletPort} is in use or isn't a valid port. Change tabletPort in settings.json (tray → Help → Open settings folder), then try again.");
             return false;
         }
     }

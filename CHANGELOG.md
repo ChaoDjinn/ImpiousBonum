@@ -15,6 +15,14 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - Text widgets can hide until one of their readings arrives (*Hide without a reading*), like the Gaming HUD's session lines before you've played.
 - The Gaming HUD gallery layout no longer cuts off its frame rate.
 
+**A tidier tray**
+- The tray menu is grouped: *Edit layout…*, *Layout* and *Display* first, then where readings come from (*Sensors*, *Weather*, *Calendar…*, *News feeds…*, *Claude usage*, *Custom data…*), then *Alerts…*, *Hotkeys…* and *Logging…*.
+- *FPS from* is under *Sensors*, and *Open layout file* and *Reload* under *Layout*.
+- A new *Help* menu has the user guide, widget reference and what's new for your version, *Report a problem…*, *Open settings folder*, and *About Impious Bonum* (with *Copy details* for a problem report).
+- Screens are listed by name, like *SAMSUNG · 3840×2160*, rather than *DISPLAY6*.
+- A sharper tray icon at 125% and 150% scaling.
+- Clicking a notification about an error opens the log, and clicking *Impious Bonum x.y.z is ready* restarts into the update.
+
 **Also**
 - If `settings.json` can't be read, Impious Bonum says so and keeps a copy as `settings.unreadable.json` before starting with the defaults, rather than quietly replacing your settings.
 

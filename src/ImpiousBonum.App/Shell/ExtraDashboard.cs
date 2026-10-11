@@ -17,7 +17,7 @@ public sealed record ExtraDashboard(string MonitorId, string MonitorDevice, stri
 
     /// <summary>What the tray calls its monitor.</summary>
     public string MonitorName(IReadOnlyList<DisplayMonitor> monitors) =>
-        Resolve(monitors)?.DisplayName ?? $"{MonitorDevice.Replace(@"\\.\", string.Empty)} (not connected)";
+        Resolve(monitors)?.DisplayName ?? $"{DisplayMonitor.ShortName(MonitorDevice)} (not connected)";
 
     public static ExtraDashboard On(DisplayMonitor monitor, string layout) => new(monitor.Id, monitor.Device, layout);
 
