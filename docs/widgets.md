@@ -411,6 +411,23 @@ What's coming up in your calendars (tray → Calendar…), by day, with what's o
 | `spacing` | number (0–100) | `6` | Event spacing |
 | `nowColor` | color | `accent` | What's on now. The colour of events that are happening now. |
 
+## News (`news`)
+
+Headlines from your news feeds (tray → News feeds…), newest first, as a list or one at a time. Tap a headline to open it in your browser.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `style` | `list` / `ticker` | `list` | Style. list shows the newest few; ticker shows one at a time, moving on every few seconds. |
+| `count` | number (1–30) | `5` | Headlines. How many the list shows, or the ticker goes through. |
+| `seconds` | number (2–120) | `8` | Ticker seconds. How long the ticker shows each headline. |
+| `feeds` | text | `all` | Feeds. "all", or feed names separated by commas, e.g. "BBC, The Verge". |
+| `source` | true/false | `true` | Show where from |
+| `age` | true/false | `true` | Show how old |
+| `tapToOpen` | true/false | `true` | Tap to open. Opens the article in your browser. Not in the tablet view. |
+| `fontSize` | number (6–200) | `22` | Font size |
+| `spacing` | number (0–100) | `8` | Spacing |
+| `lines` | number (1–4) | `1` | Lines per headline. Long headlines wrap onto this many lines, then end with … |
+
 ## Image (`image`)
 
 A picture from a file: a logo, artwork or a photo. It's packed into exported layouts so it travels with them.

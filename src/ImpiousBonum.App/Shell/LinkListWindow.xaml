@@ -1,18 +1,17 @@
-<Window x:Class="ImpiousBonum.App.Shell.CalendarWindow"
+<Window x:Class="ImpiousBonum.App.Shell.LinkListWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         ThemeMode="System"
-        Title="Calendars"
+        Title="Links"
         Width="520" SizeToContent="Height" ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False">
     <StackPanel Margin="16">
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
-                   Text="Add a calendar's private iCal link to show its events in the agenda widget. Google Calendar: Settings → your calendar → Secret address in iCal format. Outlook: Settings → Calendar → Shared calendars → Publish a calendar → ICS. Apple: share as a public calendar." />
+        <TextBlock x:Name="IntroText" TextWrapping="Wrap" Margin="0,0,0,10" />
         <ListBox x:Name="LinkList" Height="120" SelectionChanged="OnChanged" DisplayMemberPath="Name" />
         <Button x:Name="RemoveButton" Content="Remove" HorizontalAlignment="Right" Margin="0,6,0,0" MinWidth="80" Click="OnRemove" />
 
-        <TextBlock Text="Add a calendar" FontWeight="SemiBold" Margin="0,12,0,6" />
+        <TextBlock x:Name="AddHeading" FontWeight="SemiBold" Margin="0,12,0,6" />
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="60" />
@@ -30,8 +29,7 @@
         <Button x:Name="AddButton" Content="Add" HorizontalAlignment="Right" Margin="0,8,0,0" MinWidth="80" Click="OnAdd" />
 
         <TextBlock x:Name="ProblemText" Foreground="IndianRed" TextWrapping="Wrap" Margin="0,6,0,0" MinHeight="18" />
-        <TextBlock TextWrapping="Wrap" FontSize="11.5" Opacity="0.75" Margin="0,4,0,0"
-                   Text="A private link lets anyone who has it read the calendar, so it's kept only in this PC's settings. Calendars are checked every 15 minutes." />
+        <TextBlock x:Name="NoteText" TextWrapping="Wrap" FontSize="11.5" Opacity="0.75" Margin="0,4,0,0" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button Content="Save" IsDefault="True" Click="OnOk" MinWidth="80" Style="{DynamicResource AccentButtonStyle}" />
             <Button Content="Cancel" IsCancel="True" Margin="8,0,0,0" MinWidth="80" />
