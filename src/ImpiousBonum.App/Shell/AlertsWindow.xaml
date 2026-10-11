@@ -1,0 +1,19 @@
+<Window x:Class="ImpiousBonum.App.Shell.AlertsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        ThemeMode="System"
+        Title="Alerts"
+        Width="540" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen">
+    <StackPanel Margin="16">
+        <TextBlock TextWrapping="Wrap"
+                   Text="Be told when a reading stays out of bounds, such as the GPU hot spot above 95 °C for 10 seconds: a Windows notification, a banner flashing on the dashboard, or both. Each alert goes off once, then again only after the reading has been back to normal for 30 seconds." />
+        <ListBox x:Name="Rules" Height="170" Margin="0,12,0,0" SelectionChanged="OnSelectionChanged" MouseDoubleClick="OnEdit" />
+        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <Button Content="Add…" MinWidth="80" Click="OnAdd" />
+            <Button x:Name="EditButton" Content="Edit…" MinWidth="80" Margin="8,0,0,0" Click="OnEdit" />
+            <Button x:Name="RemoveButton" Content="Remove" MinWidth="80" Margin="8,0,0,0" Click="OnRemove" />
+        </StackPanel>
+        <Button Content="Close" IsCancel="True" HorizontalAlignment="Right" MinWidth="80" Margin="0,12,0,0" />
+    </StackPanel>
+</Window>

@@ -41,6 +41,12 @@ public partial class DashboardWindow : Window
     {
         InitializeComponent();
         SizeChanged += (_, _) => _overlay?.Update();
+        AlertBanner.MouseLeftButtonDown += (_, e) =>
+        {
+            e.Handled = true;
+            _dismissedAlerts = _alerts;
+            UpdateAlerts();
+        };
         DimOverlay.MouseLeftButtonDown += (_, e) =>
         {
             e.Handled = true;
@@ -65,6 +71,40 @@ public partial class DashboardWindow : Window
     public event EventHandler? PeekRequested;
 
     private double _dimOpacity;
+    private IReadOnlyList<string> _alerts = [];
+    private IReadOnlyList<string> _dismissedAlerts = [];
+
+    /// <summary>
+    /// Flashes these alerts in a banner with a pulsing outline, or stops when the list is empty. Tapping the banner hides
+    /// it until a different set of alerts is going off. Keys identify the alerts; the texts can change every second.
+    /// </summary>
+    public void ShowAlerts(IReadOnlyList<(string Key, string Text)> alerts)
+    {
+        AlertText.Text = string.Join("   ·   ", alerts.Select(a => a.Text));
+        var keys = alerts.Select(a => a.Key).ToList();
+        if (keys.SequenceEqual(_alerts))
+            return;
+        _alerts = keys;
+        UpdateAlerts();
+    }
+
+    private void UpdateAlerts()
+    {
+        var show = _alerts.Count > 0 && !_alerts.SequenceEqual(_dismissedAlerts);
+        AlertBanner.Visibility = AlertOutline.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        if (!show)
+        {
+            AlertOutline.BeginAnimation(OpacityProperty, null);
+            return;
+        }
+        AlertText.FontSize = Math.Clamp(ActualHeight / 12, 12, 40);
+        var pulse = new System.Windows.Media.Animation.DoubleAnimation(1, 0.25, TimeSpan.FromSeconds(0.8))
+        {
+            AutoReverse = true,
+            RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever,
+        };
+        AlertOutline.BeginAnimation(OpacityProperty, pulse);
+    }
 
     /// <summary>0 (black) to 1 (full), fading over a second or so. Very dark, taps peek rather than press.</summary>
     public void SetBrightness(double brightness)
