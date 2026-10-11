@@ -55,6 +55,10 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_sensors);
         menu.Items.Add(_claude);
         menu.Items.Add(_weather);
+        menu.Items.Add(new ToolStripMenuItem("Custom data…", null, (_, _) => CustomDataRequested?.Invoke(this, EventArgs.Empty))
+        {
+            ToolTipText = "Your own metrics from web addresses and commands",
+        });
         menu.Items.Add(_fpsSource);
         menu.Items.Add(new ToolStripMenuItem("Edit layout…", null, (_, _) => EditLayoutRequested?.Invoke(this, EventArgs.Empty)) { Font = new Font(menu.Font, FontStyle.Bold) });
         menu.Items.Add("Open layout file", null, (_, _) =>
@@ -185,6 +189,8 @@ public sealed class TrayIcon : IDisposable
     }
 
     public event EventHandler? WeatherLocationRequested;
+
+    public event EventHandler? CustomDataRequested;
 
     public event EventHandler? WeatherTurnedOff;
 

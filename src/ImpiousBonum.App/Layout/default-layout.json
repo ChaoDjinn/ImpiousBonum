@@ -14,6 +14,7 @@
 // sys.uptime, sys.name, sys.battery, sys.battery.status (laptops)
 // media.title, media.artist, media.album, media.app, media.status, media.position, media.duration, media.progress (what's playing)
 // weather.temp, weather.feels, weather.high, weather.low, weather.condition, weather.humidity, weather.wind, weather.rain, ... (tray → Weather)
+// custom.<source>.<field> from your own web addresses and commands (tray → Custom data…)
 // With the sensor service: cpu.temp, cpu.power, gpu.temp, gpu.hotspot, gpu.power, gpu.fan, fps, sensors.status,
 // fps.frametime, fps.frametime.max (slowest frame in the last second), fps.low1, fps.low01 (1% and 0.1% lows),
 // plus every raw sensor as hw/... (run "sensors\ImpiousBonum.Sensors.exe list" to see them).

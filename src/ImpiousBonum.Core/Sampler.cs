@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using ImpiousBonum.Core.CustomData;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Weather;
@@ -23,9 +24,10 @@ public sealed class Sampler : IAsyncDisposable
 
     /// <param name="claudeUsagePath">Where Claude Code's status line writes plan usage; null leaves out the Claude metrics.</param>
     /// <param name="weather">Where to get the weather for; null, or returning null, fetches none.</param>
+    /// <param name="customData">Your own sources of metrics; null for none.</param>
     public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(
         string pingHost = "1.1.1.1", Func<(int ProcessId, string? Name)>? frameRateTarget = null, string? claudeUsagePath = null,
-        Func<WeatherRequest?>? weather = null) =>
+        Func<WeatherRequest?>? weather = null, Func<IReadOnlyList<CustomSource>>? customData = null) =>
     [
         new CpuProvider(),
         new MemoryProvider(),
@@ -38,6 +40,7 @@ public sealed class Sampler : IAsyncDisposable
         new SystemProvider(),
         new MediaProvider(),
         new WeatherProvider(weather ?? (() => null)),
+        new CustomDataProvider(customData ?? (() => [])),
         .. claudeUsagePath is null ? Array.Empty<IMetricProvider>() : [new ClaudeUsageProvider(claudeUsagePath)],
     ];
 

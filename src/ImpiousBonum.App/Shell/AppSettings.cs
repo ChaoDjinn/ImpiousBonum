@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
+using ImpiousBonum.Core.CustomData;
 using ImpiousBonum.Core.Remote;
 using ImpiousBonum.Core.Weather;
 
@@ -11,6 +12,7 @@ public sealed class AppSettings
 {
     private List<GameLayoutRule> _gameLayouts = [];
     private List<ScheduleRule> _schedule = [];
+    private List<CustomSource> _customData = [];
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
     public string? MonitorId { get; set; }
@@ -60,6 +62,16 @@ public sealed class AppSettings
 
     /// <summary>Follow <see cref="Schedule"/>. Off leaves the rules in place but unused.</summary>
     public bool ScheduleEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Your own metrics from web addresses and commands (tray → Custom data…). Replaced as a whole when edited, never
+    /// changed in place, since the sampler reads it from another thread.
+    /// </summary>
+    public List<CustomSource> CustomData
+    {
+        get => _customData;
+        set => _customData = value ?? [];
+    }
 
     /// <summary>Dim the dashboard after this many minutes without keyboard, mouse or touch input; 0 never does.</summary>
     public int AwayDimMinutes { get; set; }
@@ -115,6 +127,7 @@ public sealed class AppSettings
                 // Hand edits: drop links missing a process, or both a layout and a theme, rather than tripping over them later.
                 settings.GameLayouts.RemoveAll(rule => rule is null || !rule.IsUsable);
                 settings.Schedule.RemoveAll(rule => rule is null || !rule.IsUsable);
+                settings.CustomData.RemoveAll(source => source is null);
                 return settings;
             }
         }
