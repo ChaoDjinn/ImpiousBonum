@@ -10,6 +10,7 @@
     docs/images/dashboard.png       the default layout
     docs/images/themes.png          the default layout in eight of the built-in themes
     docs/images/widgets/<name>.png  the widgets close up, each from a small layout in build/screenshots
+    docs/images/social-preview.png  the picture shown when the repository's link is shared (build/social-preview.json)
     gallery/images/<layout>.png     each layout in the gallery
 
   The editor's screenshot (docs/images/editor.png) is taken by hand, since it's a window rather than a layout: run
@@ -46,6 +47,7 @@ try {
     foreach ($file in $widgets) {
         Copy-Item $file.FullName (Join-Path $layouts "Widgets $($file.Name)")
     }
+    Copy-Item (Join-Path $PSScriptRoot 'social-preview.json') (Join-Path $layouts 'Social preview.json')
 
     # The default layout with a saved theme instead of its own colours.
     $themes = 'Outrun', 'Nord', 'Dracula', 'Solarized Light', 'Amber', 'Cyberpunk', 'Blueprint', 'Catppuccin'
@@ -71,6 +73,7 @@ try {
     foreach ($file in $widgets) {
         Snapshot "Widgets $($file.BaseName)" (Join-Path $root "docs/images/widgets/$($file.BaseName).png")
     }
+    Snapshot 'Social preview' (Join-Path $root 'docs/images/social-preview.png')
 
     # The themes, two to a row with their names underneath, on GitHub's dark grey so they read in light and dark mode.
     $tiles = @(foreach ($theme in $themes) {

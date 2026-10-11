@@ -23,6 +23,7 @@ public sealed class DemoReadingsTests
         var layouts = new List<(string Name, LayoutDocument Layout)> { ("default", LayoutStore.LoadDefault()) };
         layouts.AddRange(LayoutsIn("gallery"));
         layouts.AddRange(LayoutsIn(Path.Combine("build", "screenshots")));
+        layouts.AddRange(LayoutsIn("build"));
 
         var missing = layouts
             .SelectMany(l => l.Layout.Widgets.SelectMany(MetricsIn).Select(id => (l.Name, Id: id)))
@@ -33,11 +34,11 @@ public sealed class DemoReadingsTests
         Assert.Empty(missing);
     }
 
-    /// <summary>The layouts the widget pictures are drawn from (build/screenshots.ps1).</summary>
+    /// <summary>The layouts the widget pictures and the social preview are drawn from (build/screenshots.ps1).</summary>
     [Fact]
-    public void The_widget_picture_layouts_are_valid()
+    public void The_picture_layouts_are_valid()
     {
-        var layouts = LayoutsIn(Path.Combine("build", "screenshots"));
+        var layouts = LayoutsIn(Path.Combine("build", "screenshots")).Concat(LayoutsIn("build")).ToList();
         Assert.NotEmpty(layouts);
         foreach (var (name, layout) in layouts)
             Assert.True(LayoutValidator.Validate(layout) is { Count: 0 }, $"{name}: {string.Join(" ", LayoutValidator.Validate(layout))}");

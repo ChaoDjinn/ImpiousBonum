@@ -4,6 +4,6 @@
   "height": 400,
   "theme": "Orange",
   "widgets": [
-    { "type": "processes", "x": 30, "y": 30, "width": 740, "height": 340, "count": 6, "fontSize": 28, "spacing": 10 }
+    { "type": "processes", "x": 30, "y": 30, "width": 740, "height": 340, "count": 6, "fontSize": 32, "spacing": 16 }
   ]
 }
