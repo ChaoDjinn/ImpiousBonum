@@ -532,12 +532,20 @@ public partial class LayoutEditor : UserControl
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
         base.OnPreviewKeyDown(e);
-        var ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
-        var shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+        if (HandleKey(e.Key, Keyboard.Modifiers))
+            e.Handled = true;
+    }
+
+    /// <summary>Does what a key does in the editor (its shortcuts, and arrows nudging the selected widget).</summary>
+    /// <returns>Whether the key was one of them, and so is used up.</returns>
+    internal bool HandleKey(Key key, ModifierKeys modifiers)
+    {
+        var ctrl = modifiers.HasFlag(ModifierKeys.Control);
+        var shift = modifiers.HasFlag(ModifierKeys.Shift);
         // Plain keys belong to whatever text field has focus.
         var typing = Keyboard.FocusedElement is TextBoxBase or ComboBox;
 
-        switch (e.Key)
+        switch (key)
         {
             case Key.Z when ctrl && shift:
             case Key.Y when ctrl:
@@ -567,12 +575,12 @@ public partial class LayoutEditor : UserControl
             case Key.Left or Key.Right or Key.Up or Key.Down when !typing && _session.SelectedWidget is { } widget:
                 var step = shift ? 10 : 1;
                 var r = LayoutSession.GeometryOf(widget);
-                r.Offset(e.Key switch { Key.Left => -step, Key.Right => step, _ => 0 }, e.Key switch { Key.Up => -step, Key.Down => step, _ => 0 });
+                r.Offset(key switch { Key.Left => -step, Key.Right => step, _ => 0 }, key switch { Key.Up => -step, Key.Down => step, _ => 0 });
                 _session.SetGeometry(_session.SelectedIndex, r, $"nudge:{_session.SelectedIndex}", null);
                 break;
             default:
-                return;
+                return false;
         }
-        e.Handled = true;
+        return true;
     }
 }

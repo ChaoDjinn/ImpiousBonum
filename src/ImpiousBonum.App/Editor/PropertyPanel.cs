@@ -695,7 +695,12 @@ public sealed class PropertyPanel : StackPanel
         };
         AutomationProperties.SetName(handle, $"Reorder {title}");
         DragReorder.SetIsHandle(handle, true);
-        handle.MouseLeftButtonDown += (_, _) => handle.Focus();
+        handle.MouseLeftButtonDown += (_, e) =>
+        {
+            // Handled, or the scroll viewer around the panel takes focus for itself next. Dragging listens before this.
+            handle.Focus();
+            e.Handled = true;
+        };
         return handle;
     }
 

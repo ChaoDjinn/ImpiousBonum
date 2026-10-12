@@ -155,10 +155,14 @@ public sealed class DragReorder
         return 0;
     }
 
+    /// <summary>Whether the mouse has moved far enough with the button down to start a drag, rather than still being a click.</summary>
+    internal static bool PastThreshold(Vector moved) =>
+        Math.Abs(moved.Y) >= SystemParameters.MinimumVerticalDragDistance || Math.Abs(moved.X) >= SystemParameters.MinimumHorizontalDragDistance;
+
     /// <summary>Alt+Up moves an entry up a place (-1) and Alt+Down down one (+1); other keys, 0.</summary>
-    /// <param name="key">The key pressed (for a key pressed with Alt, the event's <see cref="KeyEventArgs.SystemKey"/>).</param>
-    internal static int KeyStep(Key key, ModifierKeys modifiers) =>
-        modifiers != ModifierKeys.Alt ? 0 : key switch
+    /// <param name="key">The event's key: <see cref="Key.System"/> for a key pressed with Alt, which is then <paramref name="systemKey"/>.</param>
+    internal static int KeyStep(Key key, Key systemKey, ModifierKeys modifiers) =>
+        modifiers != ModifierKeys.Alt ? 0 : (key == Key.System ? systemKey : key) switch
         {
             Key.Up => -1,
             Key.Down => 1,
@@ -182,6 +186,17 @@ public sealed class DragReorder
         _ => null,
     };
 
+    /// <summary>
+    /// What's at an index: the item, for an ItemsControl (a virtualising list can let go of an item's entry, or give it
+    /// to another item, once it's scrolled away), or the entry itself, for a panel.
+    /// </summary>
+    private object? ItemAt(int index) => _list switch
+    {
+        ItemsControl items => items.Items[index],
+        Panel panel => panel.Children[index],
+        _ => null,
+    };
+
     /// <summary>The entry's place in the list, or -1 once it's no longer in it (the list was rebuilt).</summary>
     private int IndexOf(FrameworkElement entry) => _list switch
     {
@@ -202,6 +217,13 @@ public sealed class DragReorder
         }
         return null;
     }
+
+    /// <summary>
+    /// The entry a press on an element can drag: the one it's in, but in a list dragged by handles only from the handle,
+    /// so the entry's text boxes and buttons keep the mouse. Null anywhere else.
+    /// </summary>
+    internal FrameworkElement? DraggableEntryOf(DependencyObject element) =>
+        EntryOf(element) is { } entry && (!_byHandle || OnHandle(element, entry)) ? entry : null;
 
     /// <summary>Whether a press on an element is on its entry's handle.</summary>
     private static bool OnHandle(DependencyObject element, FrameworkElement entry)
@@ -235,7 +257,7 @@ public sealed class DragReorder
 
     private void OnKeyDown(object sender, KeyEventArgs e)
     {
-        var step = KeyStep(e.Key == Key.System ? e.SystemKey : e.Key, Keyboard.Modifiers);
+        var step = KeyStep(e.Key, e.SystemKey, Keyboard.Modifiers);
         if (step != 0 && _drag is null && e.OriginalSource is DependencyObject source && MoveBy(source, step))
             e.Handled = true;
     }
@@ -257,11 +279,8 @@ public sealed class DragReorder
     private void OnPress(object sender, MouseButtonEventArgs e)
     {
         _press = null;
-        if (_drag is not null || e.ClickCount > 1 || e.OriginalSource is not DependencyObject source || EntryOf(source) is not { } entry)
-            return;
-        if (_byHandle && !OnHandle(source, entry))
-            return;
-        _press = new Press(entry, e.GetPosition(_list));
+        if (_drag is null && e.ClickCount <= 1 && e.OriginalSource is DependencyObject source && DraggableEntryOf(source) is { } entry)
+            _press = new Press(entry, e.GetPosition(_list));
     }
 
     private void OnPreviewMove(object sender, MouseEventArgs e)
@@ -274,8 +293,7 @@ public sealed class DragReorder
             return;
         }
 
-        var moved = e.GetPosition(_list) - press.Start;
-        if (Math.Abs(moved.Y) < SystemParameters.MinimumVerticalDragDistance && Math.Abs(moved.X) < SystemParameters.MinimumHorizontalDragDistance)
+        if (!PastThreshold(e.GetPosition(_list) - press.Start))
             return;
         _press = null;
         if (Begin(press.Entry))
@@ -290,7 +308,9 @@ public sealed class DragReorder
         if (from < 0 || AdornerLayer.GetAdornerLayer(_list) is not { } layer)
             return false;
 
-        var line = new InsertionLine(_list) { Cursor = Cursors.SizeNS };
+        // Across the entry, measured now: a virtualising list can let go of the entry once it's scrolled away.
+        var left = entry.TranslatePoint(new Point(), _list).X;
+        var line = new InsertionLine(_list, left, left + entry.ActualWidth) { Cursor = Cursors.SizeNS };
         layer.Add(line);
         line.SetResourceReference(InsertionLine.BrushProperty, "AccentFillColorDefaultBrush");
         // The line holds the mouse for the drag, so the list doesn't also take the drag as selecting what it passes over.
@@ -303,7 +323,7 @@ public sealed class DragReorder
         var keys = Window.GetWindow(_list) as UIElement ?? _list;
         // The entry is dimmed while it's dragged, unless it has an opacity of its own to keep.
         var dim = entry.ReadLocalValue(UIElement.OpacityProperty) == DependencyProperty.UnsetValue;
-        var drag = new Drag(entry, from, layer, line, keys, dim, OwnScroller(), OuterScroller());
+        var drag = new Drag(entry, from, ItemAt(from), layer, line, keys, dim, OwnScroller(), OuterScroller());
         _drag = drag;
         line.MouseMove += (_, e) => Update(e.GetPosition(_list));
         line.MouseLeftButtonUp += (_, _) => End(drop: true);
@@ -317,20 +337,43 @@ public sealed class DragReorder
         return true;
     }
 
-    /// <summary>Moves the line to the gap under the pointer, or hides it when the pointer is off to the side (a drop there cancels).</summary>
+    /// <summary>
+    /// Moves the line to the gap under the pointer, or hides it when the pointer is off to the side (a drop there cancels).
+    /// Above or below the part of the list in view (while it scrolls, say), the pointer counts as at that edge, so the
+    /// entry lands where the line shows rather than among entries scrolled out of sight.
+    /// </summary>
     internal void Update(Point at)
     {
         if (_drag is not { } drag)
             return;
         var places = Places();
-        drag.Gap = at.X >= 0 && at.X <= _list.ActualWidth && places.Count > 0 ? GapAt(places, at.Y) : -1;
+        var (top, bottom) = Shown(drag);
+        var over = at.X >= 0 && at.X <= _list.ActualWidth && places.Count > 0 && top < bottom;
+        drag.Gap = over ? GapAt(places, Math.Clamp(at.Y, top, bottom)) : -1;
         if (drag.Gap < 0)
         {
             drag.Line.Hide();
             return;
         }
-        var left = drag.Entry.TranslatePoint(new Point(), _list).X;
-        drag.Line.Show(LineAt(places, drag.Gap), left, left + drag.Entry.ActualWidth);
+        drag.Line.Show(LineAt(places, drag.Gap), top, bottom);
+    }
+
+    /// <summary>
+    /// The part of the list in view, top to bottom in its own coordinates: inside its own scroll viewer and the one it's
+    /// in, so not the entries scrolled out of sight (or made ready just out of sight, by a virtualising list).
+    /// </summary>
+    private (double Top, double Bottom) Shown(Drag drag)
+    {
+        var (top, bottom) = (0.0, _list.ActualHeight);
+        ReadOnlySpan<ScrollViewer?> viewers = [drag.Own, drag.Outer];
+        foreach (var viewer in viewers)
+        {
+            if (viewer is null)
+                continue;
+            var y = viewer.TranslatePoint(new Point(), _list).Y;
+            (top, bottom) = (Math.Max(top, y), Math.Min(bottom, y + viewer.ActualHeight));
+        }
+        return (top, bottom);
     }
 
     private void AutoScroll()
@@ -347,6 +390,13 @@ public sealed class DragReorder
         var step = ScrollStep(Mouse.GetPosition(viewer).Y, viewer.ActualHeight);
         if (step == 0)
             return;
+        // A list in a longer page scrolls the page only until the list's end is in view, not on past it out of sight.
+        if (viewer == drag.Outer)
+        {
+            var listTop = _list.TranslatePoint(new Point(), viewer).Y;
+            if (step < 0 ? listTop >= 0 : listTop + _list.ActualHeight <= viewer.ActualHeight)
+                return;
+        }
         if (!viewer.CanContentScroll)
         {
             viewer.ScrollToVerticalOffset(viewer.VerticalOffset + step);
@@ -386,8 +436,9 @@ public sealed class DragReorder
         if (drag.Dimmed)
             drag.Entry.ClearValue(UIElement.OpacityProperty);
 
-        // If the list changed under the drag (an undo, say), its indexes no longer mean the same entries.
-        if (!drop || drag.Gap < 0 || IndexOf(drag.Entry) != drag.From)
+        // If the list changed under the drag (an undo, say), its indexes no longer mean the same entries. Checked by item,
+        // not by entry, since a virtualising list can let go of the entry while it's scrolled away.
+        if (!drop || drag.Gap < 0 || drag.From >= Count || !Equals(ItemAt(drag.From), drag.Item))
             return;
         var to = DropIndex(drag.From, drag.Gap);
         if (to != drag.From)
@@ -422,11 +473,13 @@ public sealed class DragReorder
     /// <summary>The mouse went down on an entry; a drag starts if it moves far enough before coming up.</summary>
     private sealed record Press(FrameworkElement Entry, Point Start);
 
+    /// <param name="Item">What's dragged, as <see cref="ItemAt"/> gives it, to check it's still there when it's dropped.</param>
     /// <param name="Keys">Where Esc is listened for: the whole window, wherever focus is.</param>
     /// <param name="Dimmed">Whether the entry was dimmed, so its opacity goes back afterwards.</param>
     /// <param name="Own">The list's own scroll viewer, if it has one.</param>
     /// <param name="Outer">The scroll viewer the list is in, if any.</param>
-    private sealed record Drag(FrameworkElement Entry, int From, AdornerLayer Layer, InsertionLine Line, UIElement Keys, bool Dimmed, ScrollViewer? Own, ScrollViewer? Outer)
+    private sealed record Drag(
+        FrameworkElement Entry, int From, object? Item, AdornerLayer Layer, InsertionLine Line, UIElement Keys, bool Dimmed, ScrollViewer? Own, ScrollViewer? Outer)
     {
         public DispatcherTimer? Timer { get; set; }
 
@@ -437,8 +490,11 @@ public sealed class DragReorder
         public double Carry { get; set; }
     }
 
-    /// <summary>The line showing where a dragged entry will land, in the theme's accent colour.</summary>
-    private sealed class InsertionLine(UIElement list) : Adorner(list)
+    /// <summary>
+    /// The line showing where a dragged entry will land, in the theme's accent colour, across the entry from
+    /// <paramref name="left"/> to <paramref name="right"/>.
+    /// </summary>
+    private sealed class InsertionLine(UIElement list, double left, double right) : Adorner(list)
     {
         public static readonly DependencyProperty BrushProperty = DependencyProperty.Register(
             nameof(Brush), typeof(Brush), typeof(InsertionLine), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
@@ -447,8 +503,8 @@ public sealed class DragReorder
         private const double Dot = 3;
 
         private double? _y;
-        private double _left;
-        private double _right;
+        private double _top;
+        private double _bottom;
 
         public Brush? Brush
         {
@@ -456,9 +512,10 @@ public sealed class DragReorder
             set => SetValue(BrushProperty, value);
         }
 
-        public void Show(double y, double left, double right)
+        /// <summary>Shows the line at <paramref name="y"/>, kept between <paramref name="top"/> and <paramref name="bottom"/>: the part of the list in view.</summary>
+        public void Show(double y, double top, double bottom)
         {
-            (_y, _left, _right) = (y, left, right);
+            (_y, _top, _bottom) = (y, top, bottom);
             InvalidateVisual();
         }
 
@@ -472,10 +529,11 @@ public sealed class DragReorder
         {
             if (_y is not { } y || Brush is not { } brush)
                 return;
-            // Kept inside the list, so a line above the first entry or below the last isn't cut in half.
-            y = Math.Clamp(y, Dot, Math.Max(Dot, AdornedElement.RenderSize.Height - Dot));
-            drawing.DrawEllipse(brush, null, new Point(_left + Dot, y), Dot, Dot);
-            drawing.DrawRoundedRectangle(brush, null, new Rect(_left + Dot, y - Thickness / 2, Math.Max(0, _right - _left - Dot), Thickness), 1, 1);
+            // Kept inside the part of the list in view, so a line above the first entry there or below the last isn't cut
+            // in half, or drawn out of sight.
+            y = Math.Clamp(y, _top + Dot, Math.Max(_top + Dot, _bottom - Dot));
+            drawing.DrawEllipse(brush, null, new Point(left + Dot, y), Dot, Dot);
+            drawing.DrawRoundedRectangle(brush, null, new Rect(left + Dot, y - Thickness / 2, Math.Max(0, right - left - Dot), Thickness), 1, 1);
         }
     }
 }

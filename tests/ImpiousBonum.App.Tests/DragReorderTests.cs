@@ -2,6 +2,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 using ImpiousBonum.App.Controls;
 
 namespace ImpiousBonum.App.Tests;
@@ -83,13 +85,67 @@ public sealed class DragReorderTests
     }
 
     [Theory]
-    [InlineData(Key.Up, ModifierKeys.Alt, -1)]
-    [InlineData(Key.Down, ModifierKeys.Alt, 1)]
-    [InlineData(Key.Up, ModifierKeys.None, 0)] // plain arrows belong to whatever has focus
-    [InlineData(Key.Down, ModifierKeys.Alt | ModifierKeys.Shift, 0)]
-    [InlineData(Key.Left, ModifierKeys.Alt, 0)]
-    public void Alt_up_and_down_move_an_entry_a_place(Key key, ModifierKeys modifiers, int step) =>
-        Assert.Equal(step, DragReorder.KeyStep(key, modifiers));
+    [InlineData(Key.System, Key.Up, ModifierKeys.Alt, -1)] // with Alt held, Windows reports the arrow as a system key
+    [InlineData(Key.System, Key.Down, ModifierKeys.Alt, 1)]
+    [InlineData(Key.Down, Key.None, ModifierKeys.Alt, 1)]
+    [InlineData(Key.Up, Key.None, ModifierKeys.None, 0)] // plain arrows belong to whatever has focus
+    [InlineData(Key.System, Key.Down, ModifierKeys.Alt | ModifierKeys.Shift, 0)]
+    [InlineData(Key.System, Key.Left, ModifierKeys.Alt, 0)]
+    public void Alt_up_and_down_move_an_entry_a_place(Key key, Key systemKey, ModifierKeys modifiers, int step) =>
+        Assert.Equal(step, DragReorder.KeyStep(key, systemKey, modifiers));
+
+    [Fact]
+    public void A_drag_starts_only_once_the_mouse_has_moved_the_system_drag_distance()
+    {
+        var (across, down) = (SystemParameters.MinimumHorizontalDragDistance, SystemParameters.MinimumVerticalDragDistance);
+        // A click, or a press that wobbles a little: still a click, which reorders nothing.
+        Assert.False(DragReorder.PastThreshold(new Vector(0, 0)));
+        Assert.False(DragReorder.PastThreshold(new Vector(across / 2, -down / 2)));
+        // Far enough either way.
+        Assert.True(DragReorder.PastThreshold(new Vector(0, down)));
+        Assert.True(DragReorder.PastThreshold(new Vector(0, -down)));
+        Assert.True(DragReorder.PastThreshold(new Vector(-across, 0)));
+    }
+
+    [Fact]
+    public void A_list_dragged_by_handles_leaves_presses_on_its_fields_and_buttons_alone()
+    {
+        Sta.Run(() =>
+        {
+            var byHandle = Cards();
+            var anywhere = Cards();
+            var reorderByHandle = DragReorder.Attach(byHandle, (_, _) => { }, byHandle: true);
+            var reorderAnywhere = DragReorder.Attach(anywhere, (_, _) => { });
+            var card = (Border)byHandle.Children[1];
+            var (handle, field, button) = Parts(card);
+
+            Assert.Same(card, reorderByHandle.DraggableEntryOf(handle.Child));
+            Assert.Null(reorderByHandle.DraggableEntryOf(field));
+            Assert.Null(reorderByHandle.DraggableEntryOf(button));
+            Assert.Null(reorderByHandle.DraggableEntryOf(byHandle)); // between the entries
+            // Without handles, the whole entry drags.
+            Assert.Same(anywhere.Children[1], reorderAnywhere.DraggableEntryOf(Parts((Border)anywhere.Children[1]).Field));
+        });
+    }
+
+    /// <summary>Two cards, each with a handle, a text box and a button (as a list entry's Remove).</summary>
+    private static StackPanel Cards()
+    {
+        var panel = new StackPanel();
+        for (var i = 0; i < 2; i++)
+        {
+            var handle = new Border { Child = new TextBlock { Text = "≡" } };
+            DragReorder.SetIsHandle(handle, true);
+            panel.Children.Add(new Border { Child = new StackPanel { Children = { handle, new TextBox(), new Button() } } });
+        }
+        return panel;
+    }
+
+    private static (Border Handle, TextBox Field, Button Button) Parts(Border card)
+    {
+        var parts = ((StackPanel)card.Child).Children;
+        return ((Border)parts[0], (TextBox)parts[1], (Button)parts[2]);
+    }
 
     [Fact]
     public void Dropping_a_dragged_entry_reports_where_it_goes()
@@ -186,6 +242,84 @@ public sealed class DragReorderTests
         });
     }
 
+    [Fact]
+    public void A_long_list_still_takes_the_drop_once_it_has_scrolled_the_entry_away()
+    {
+        Sta.Run(() =>
+        {
+            // A list that reuses rows: once the first entry scrolls away, its row shows another item (other lists let go
+            // of it a moment later).
+            var list = new ListBox { ItemsSource = Enumerable.Range(0, 200).Select(i => $"Entry {i}").ToList() };
+            VirtualizingPanel.SetVirtualizationMode(list, VirtualizationMode.Recycling);
+            var window = Offscreen(list);
+            var moves = new List<(int, int)>();
+            var reorder = DragReorder.Attach(list, (from, to) => moves.Add((from, to)));
+            var first = (FrameworkElement)list.ItemContainerGenerator.ContainerFromIndex(0);
+
+            // The first entry dragged far down the list, then dropped on the upper half of entry 155.
+            Assert.True(reorder.Begin(first));
+            Descendants<ScrollViewer>(list).First().ScrollToVerticalOffset(150);
+            window.UpdateLayout();
+            var reused = list.ItemContainerGenerator.IndexFromContainer(first) != 0;
+            var target = (FrameworkElement)list.ItemContainerGenerator.ContainerFromIndex(155);
+            reorder.Update(new Point(10, target.TranslatePoint(new Point(), list).Y + 2));
+            reorder.End(drop: true);
+            window.Close();
+
+            Assert.True(reused);
+            Assert.Equal([(0, 154)], moves);
+        });
+    }
+
+    [Fact]
+    public void Past_the_top_of_a_scrolled_list_the_entry_goes_before_the_first_one_in_view()
+    {
+        Sta.Run(() =>
+        {
+            var list = new ListBox { ItemsSource = Enumerable.Range(0, 100).Select(i => $"Entry {i}").ToList() };
+            var window = Offscreen(list);
+            var moves = new List<(int, int)>();
+            var reorder = DragReorder.Attach(list, (from, to) => moves.Add((from, to)));
+            Descendants<ScrollViewer>(list).First().ScrollToVerticalOffset(30);
+            Pump();
+
+            // Entry 32 dragged above the list (as it scrolls): the line shows it going before entry 30, not among the
+            // entries the list keeps ready out of view.
+            Assert.True(reorder.Begin((FrameworkElement)list.ItemContainerGenerator.ContainerFromIndex(32)));
+            reorder.Update(new Point(10, -60));
+            reorder.End(drop: true);
+            window.Close();
+
+            Assert.Equal([(32, 30)], moves);
+        });
+    }
+
+    [Fact]
+    public void Past_the_top_of_a_scrolled_page_the_entry_goes_before_the_first_one_in_view()
+    {
+        Sta.Run(() =>
+        {
+            // Twenty entries 30 high in a page 300 high, scrolled to show entries 10 to 19.
+            var panel = new StackPanel();
+            for (var i = 0; i < 20; i++)
+                panel.Children.Add(new Border { Height = 30 });
+            var viewer = new ScrollViewer { Content = panel };
+            var window = Offscreen(viewer);
+            viewer.ScrollToVerticalOffset(300);
+            window.UpdateLayout();
+            var moves = new List<(int, int)>();
+            var reorder = DragReorder.Attach(panel, (from, to) => moves.Add((from, to)));
+
+            // Entry 12 dragged 60 above the page, over entry 8 (out of view): before entry 10.
+            Assert.True(reorder.Begin((FrameworkElement)panel.Children[12]));
+            reorder.Update(new Point(50, 240));
+            reorder.End(drop: true);
+            window.Close();
+
+            Assert.Equal([(12, 10)], moves);
+        });
+    }
+
     /// <summary>Three entries 30 high, 0–30, 30–60 and 60–90, in a window off screen.</summary>
     private static (StackPanel Panel, Window Window) ShowStack()
     {
@@ -205,6 +339,26 @@ public sealed class DragReorderTests
         window.Show();
         window.UpdateLayout();
         return window;
+    }
+
+    /// <summary>Lets the window lay itself out and run what it queued.</summary>
+    private static void Pump()
+    {
+        var frame = new DispatcherFrame();
+        Dispatcher.CurrentDispatcher.BeginInvoke(() => frame.Continue = false, DispatcherPriority.ContextIdle);
+        Dispatcher.PushFrame(frame);
+    }
+
+    private static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T match)
+                yield return match;
+            foreach (var inner in Descendants<T>(child))
+                yield return inner;
+        }
     }
 
     [Fact]
