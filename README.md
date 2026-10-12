@@ -130,7 +130,7 @@ or from the app: tray → *Help* → *Report a problem…*. Please report securi
 
 ## Good to know
 
-Impious Bonum is young: it's at version 0.11, first released at the end of September 2026, and it changes quickly
+Impious Bonum is young: it's at version 0.12, first released at the end of September 2026, and it changes quickly
 (installed copies update themselves). Some things it doesn't do yet, or does with a catch:
 
 - **Windows 10 and 11 only.**

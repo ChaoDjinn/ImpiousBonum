@@ -342,7 +342,7 @@ public partial class App
     private DashboardWindow CreateExtraWindow()
     {
         var window = new DashboardWindow();
-        window.EditRequested += (_, _) => OpenEditor();
+        window.EditRequested += (_, _) => EditDashboard(ScreenOf(window));
         window.Touched += (_, _) => _lastTouch = DateTime.UtcNow;
         window.PeekRequested += (_, _) =>
         {
@@ -352,6 +352,44 @@ public partial class App
         window.ActionRequested += (_, action) => RunAction(action);
         window.SetBehaviour(movable: false, clickThrough: false, topmost: _settings.AlwaysOnTop);
         return window;
+    }
+
+    /// <summary>The monitor id of the extra dashboard in <paramref name="window"/>, which the editor knows it by.</summary>
+    private string? ScreenOf(DashboardWindow window)
+    {
+        var index = _extras.IndexOf(window);
+        return index >= 0 && index < _settings.ExtraDashboards.Count ? _settings.ExtraDashboards[index].MonitorId : null;
+    }
+
+    /// <summary>
+    /// Tray → Display → More dashboards → Add on: a dashboard on <paramref name="monitor"/> with a new, empty layout of
+    /// its own (see <see cref="ExtraDashboard.NewLayout"/>), open in the editor to fill.
+    /// </summary>
+    private void AddDashboard(DisplayMonitor monitor)
+    {
+        if (_layouts is null || RefuseWhileEditing())
+            return;
+        var name = ExtraDashboard.NewLayoutName(monitor, _layouts.List());
+        _layouts.Save(name, ExtraDashboard.NewLayout(monitor, _layouts.LoadOrDefault().Theme));
+        _settings.ExtraDashboards = [.. _settings.ExtraDashboards, ExtraDashboard.On(monitor, name)];
+        _settings.Save();
+        AppLog.Info($"More dashboards: added \"{name}\" on {monitor.Device}");
+        ApplyExtraDashboards();
+        Place();
+        EditDashboard(monitor.Id);
+    }
+
+    /// <summary>
+    /// Dashboards aren't added, moved or removed while the editor is open, since it may be editing one of them: says so
+    /// and returns true then.
+    /// </summary>
+    private bool RefuseWhileEditing()
+    {
+        if (_editor is null)
+            return false;
+        BringToFront(_editor);
+        _tray?.ShowInfo("Close the layout editor first", "Then add, move or remove the dashboard from the tray again.");
+        return true;
     }
 
     /// <summary>The extra dashboards showing the layout <paramref name="name"/>, which the editor's changes show on live.</summary>
@@ -404,10 +442,13 @@ public partial class App
 
     private void MoveTo(DisplayMonitor monitor)
     {
+        // One dashboard a screen: the main one takes the place of another already there.
+        var displaced = _settings.ExtraDashboards.FirstOrDefault(e => e.MonitorId == monitor.Id);
+        if (displaced is not null && RefuseWhileEditing())
+            return;
         _settings.MonitorId = monitor.Id;
         _settings.MonitorDevice = monitor.Device;
-        // One dashboard a screen: the main one takes the place of another already there.
-        if (_settings.ExtraDashboards.FirstOrDefault(e => e.MonitorId == monitor.Id) is { } displaced)
+        if (displaced is not null)
         {
             _settings.ExtraDashboards = _settings.ExtraDashboards.Where(e => e != displaced).ToList();
             ApplyExtraDashboards();
@@ -415,6 +456,7 @@ public partial class App
         }
         _settings.Save();
         Place();
+        _editor?.SetScreens(EditorScreens(), ScreenIndex(_editingScreen));
     }
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs e) =>

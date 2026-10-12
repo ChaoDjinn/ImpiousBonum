@@ -106,7 +106,7 @@ public sealed class LayoutStore : IDisposable
     public ThemeSettings ResolveTheme(LayoutDocument layout) =>
         ThemeOverride is { } name ? Themes.Resolve(new JsonObject { [ThemeLibrary.BaseKey] = name }) : Themes.Resolve(layout.Theme);
 
-    /// <summary>Name of the layout the dashboard shows and the editor edits: the remembered choice, or a game's layout.</summary>
+    /// <summary>Name of the layout the main dashboard shows: the remembered choice, or a game's layout.</summary>
     public string Active { get; private set; }
 
     public string ActivePath => Library.PathOf(Active);
@@ -125,11 +125,14 @@ public sealed class LayoutStore : IDisposable
     public LayoutDocument Load(string name) => Library.Load(name);
 
     /// <summary>The active layout, or the built-in default if its file is broken.</summary>
-    public LayoutDocument LoadOrDefault()
+    public LayoutDocument LoadOrDefault() => LoadOrDefault(Active);
+
+    /// <summary>A saved layout, or the built-in default if its file is broken or gone.</summary>
+    public LayoutDocument LoadOrDefault(string name)
     {
         try
         {
-            return Load();
+            return Load(name);
         }
         catch (Exception ex) when (ex is JsonException or IOException)
         {
@@ -172,7 +175,10 @@ public sealed class LayoutStore : IDisposable
         ActiveChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>Renames a layout, keeping it active or remembered, and game links, schedule rules and hotkeys pointing at it, where they were.</summary>
+    /// <summary>
+    /// Renames a layout, keeping it active or remembered, and the other dashboards, the USB screen, game links, schedule
+    /// rules and hotkeys pointing at it, where they were.
+    /// </summary>
     public void Rename(string name, string newName)
     {
         Library.Rename(name, newName);
@@ -184,6 +190,19 @@ public sealed class LayoutStore : IDisposable
         if (Is(name, _settings.ActiveLayout))
         {
             _settings.ActiveLayout = renamed;
+            changed = true;
+        }
+        for (var i = 0; i < _settings.ExtraDashboards.Count; i++)
+        {
+            if (_settings.ExtraDashboards[i] is { } extra && Is(name, extra.Layout))
+            {
+                _settings.ExtraDashboards[i] = extra with { Layout = renamed };
+                changed = true;
+            }
+        }
+        if (Is(name, _settings.UsbScreen.Layout))
+        {
+            _settings.UsbScreen = _settings.UsbScreen with { Layout = renamed };
             changed = true;
         }
         for (var i = 0; i < _settings.GameLayouts.Count; i++)
@@ -227,12 +246,21 @@ public sealed class LayoutStore : IDisposable
     /// <summary>Saves an imported layout, replacing any of that name (the dashboard reloads if it's showing it). Returns the saved name.</summary>
     public string Import(LayoutPackageContents package, string name) => Library.Import(package, name);
 
-    /// <summary>Deletes a layout. Deleting the active one switches to the remembered one, or another if that was it.</summary>
+    /// <summary>
+    /// Deletes a layout. Deleting the active one switches to the remembered one, or another if that was it; other
+    /// dashboards showing it switch to the remembered one too, rather than to the built-in default.
+    /// </summary>
     public void Delete(string name)
     {
         Library.Delete(name);
         if (Is(name, _settings.ActiveLayout))
             RememberActive(Library.Resolve(null));
+        if (_settings.ExtraDashboards.Any(e => Is(name, e.Layout)))
+        {
+            var fallback = Library.Resolve(_settings.ActiveLayout);
+            _settings.ExtraDashboards = _settings.ExtraDashboards.Select(e => Is(name, e.Layout) ? e with { Layout = fallback } : e).ToList();
+            _settings.Save();
+        }
         if (Is(name, Active))
         {
             IsTemporary = false;

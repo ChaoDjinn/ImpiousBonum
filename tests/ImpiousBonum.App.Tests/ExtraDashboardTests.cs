@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Shell;
 
 namespace ImpiousBonum.App.Tests;
@@ -34,10 +36,33 @@ public sealed class ExtraDashboardTests
     }
 
     [Fact]
-    public void A_new_dashboard_starts_with_a_layout_the_main_one_isnt_showing()
+    public void A_new_dashboards_layout_is_named_after_its_screen()
     {
-        Assert.Equal("Gaming", ExtraDashboard.FirstLayout(["Default", "Gaming"], "default"));
-        Assert.Equal("Default", ExtraDashboard.FirstLayout(["Default"], "Default"));
+        var dell = Strip with { Name = "DELL U2720Q" };
+        Assert.Equal("DELL U2720Q", ExtraDashboard.NewLayoutName(dell, ["Default"]));
+        Assert.Equal("DELL U2720Q 2", ExtraDashboard.NewLayoutName(dell, ["Default", "dell u2720q"]));
+        Assert.Equal("DELL U2720Q 3", ExtraDashboard.NewLayoutName(dell, ["DELL U2720Q", "DELL U2720Q 2"]));
+
+        // Unnamed, or named in a way a file can't be.
+        Assert.Equal("Screen", ExtraDashboard.NewLayoutName(Strip, ["Default"]));
+        Assert.Equal("Screen 2", ExtraDashboard.NewLayoutName(Strip with { Name = "LG/27GL" }, ["Screen"]));
+        Assert.Equal("Screen", ExtraDashboard.NewLayoutName(Strip with { Name = new string('A', 50) }, []));
+    }
+
+    [Fact]
+    public void A_new_dashboards_layout_is_empty_and_its_screens_size_in_the_main_theme()
+    {
+        var theme = new JsonObject { ["base"] = "Nord", ["accent"] = "#88C0D0" };
+        var layout = ExtraDashboard.NewLayout(Square, theme);
+
+        Assert.Equal((800.0, 800.0), (layout.Width, layout.Height));
+        Assert.Empty(layout.Widgets);
+        Assert.Equal(theme.ToJsonString(), layout.Theme.ToJsonString());
+
+        // A copy: changing the new layout's theme leaves the main dashboard's alone.
+        layout.Theme["accent"] = "#BF616A";
+        Assert.Equal("#88C0D0", (string?)theme["accent"]);
+        Assert.Empty(LayoutValidator.Validate(layout));
     }
 
     [Fact]

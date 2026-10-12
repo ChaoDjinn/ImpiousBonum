@@ -48,7 +48,7 @@ The menu follows Windows: dark or light with the taskbar (Settings → Personali
 | *Layout → Schedule* | Show a layout or theme at certain times of day, or while Windows is in dark or light mode (see [Schedule](#schedule)) |
 | *Layout → Open layout file*, *Reload* | Work with the shown layout's file directly (see [Editing layouts by hand](#editing-layouts-by-hand)) |
 | *Display* | Which monitor the dashboard is on, by name, and how its window behaves (see [Windowed mode](#windowed-mode)) |
-| *Display → More dashboards* | Fill other screens with layouts of their own (see [More dashboards](#more-dashboards)) |
+| *Display → More dashboards* | Fill other screens with layouts of their own, and edit each one's (see [More dashboards](#more-dashboards)) |
 | *Display → When you're away* | Dim the dashboard, or turn it black, after a while without input (see [Dimming](#dimming)) |
 | *Display → Tablet view* | Show the dashboard in a browser on a tablet or phone, and optionally let it press the layout's buttons (see [Tablet view](#tablet-view)) |
 | *Display → USB screen* | Show a layout on a small USB screen as well (see [USB screens](#usb-screens)) |
@@ -98,7 +98,7 @@ Every box is a widget you can move, resize, restyle or replace. Twenty-two widge
 
 ### Layout editor
 
-Double-click the tray icon (or tray → *Edit layout…*, or right-click / press and hold on the dashboard) to open the editor on your main screen:
+Double-click the tray icon (or tray → *Edit layout…*, or right-click / press and hold on the dashboard) to open the editor on your main screen. Right-click or press and hold on one of [more dashboards](#more-dashboards) to edit that one's layout instead:
 
 - **Preview:** click a widget to select it, drag to move, drag the handles to resize. Moves snap to a grid (toolbar); hold Alt to place freely. Arrow keys nudge, Shift+arrows by 10.
 - **Metrics:** template and metric fields have a `{…}` button that opens a searchable list of every metric (about 280 on a typical PC, including every raw sensor) with live values. Pick one and choose how to show it (e.g. `18.7 GB`, `19,138 MB` or just `18.7`) and it's inserted at the cursor. Under each field a live preview shows what it renders now and flags unknown metric ids.
@@ -111,6 +111,7 @@ Double-click the tray icon (or tray → *Edit layout…*, or right-click / press
 - **A widget's own look:** every widget has *Widget theme* settings (font, weight and the theme's colours) that override the layout's theme for that widget alone; leave them empty to follow the theme. Named colours in its other settings, like `accent`, then mean the widget's own. Many widgets also have colours of their own, such as a bar's track or *Now playing*'s progress bar, so changing the theme's bar track doesn't change everything that happens to use it.
 - **Gradients and glow:** under *Gradients and glow* in the theme's settings, *Accent fades to* makes graphs, bars, gauges and icons fade from the accent to a second colour; *Background fades to* fades the background from top to bottom; and *Glow* (0 to 1) puts a soft neon halo around every widget's text and shapes, in the accent colour or its own. *Outrun*, *Vaporwave*, *Aurora*, *Magma*, *Cyberpunk* and *Toxic* use them. The glow costs a little CPU, since the dashboard draws without the graphics card by default.
 - **Saved layouts:** the editor edits the layout the dashboard is showing. The *Layout* drop-down switches to another (asking first if you have unsaved changes), and *Layouts ▾* has *Save as…* (your changes as a new layout), *Rename…*, *Duplicate…*, *Export…*, *Import…* and *Delete* (not the last one). Keep a "Gaming" and a "Desktop" layout, for example, and flip between them from the tray.
+- **More than one screen:** with [more dashboards](#more-dashboards), a screen list appears beside *Layout*. Pick a screen to edit its dashboard's layout; *Layout* and *Layouts ▾* then work on that screen's dashboard, and the others keep theirs.
 - The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes the layout's file; closing without saving puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
 
 <p align="center"><img src="images/editor.png" alt="The layout editor: the widget list, the layout's preview with the GPU graph selected, and the graph's settings"></p>
@@ -529,12 +530,13 @@ are deleted once a day. Numbers use a dot for decimals whatever the Windows regi
 
 ### More dashboards
 
-With more than one spare screen, each can have a dashboard of its own: tray → *Display* → *More dashboards* → *Add on*, then pick a screen. The new dashboard fills it with a saved layout, starting with one the main dashboard isn't showing. Change it under that dashboard's *Layout*, move it with *Move to*, or *Remove* it.
+With more than one spare screen, each can have a dashboard of its own, with a different layout: tray → *Display* → *More dashboards* → *Add on*, then pick a screen. The new dashboard gets a new, empty layout of its own, named after the screen, the screen's size and in the main dashboard's theme, and the editor opens on it so you can add its widgets.
 
-- A layout made for another screen's shape still fills it, scaled evenly. For a better fit, make a layout for that screen: in the editor, give it the screen's size under *Canvas*.
-- To edit an extra dashboard's layout, open the editor and pick that layout in its *Layout* list. Your changes show live on every dashboard showing that layout. The main dashboard shows it too while you edit, so switch back afterwards.
-- Pages, game layouts and the schedule's layouts only change the main dashboard; the others keep their layout. Dimming, *Always on top*, *Hide over fullscreen apps* and the show/hide hotkey apply to all of them, and buttons and media controls work on each.
-- A dashboard whose screen is unplugged or off hides until it's back, rather than landing on another screen. There's one dashboard to a screen: moving the main dashboard onto a screen that has another one removes the other.
+- **Editing it:** right-click or press and hold on that dashboard, or tray → *Display* → *More dashboards* → the dashboard → *Edit layout…*. In the editor, the screen list beside *Layout* moves between dashboards. Changes show live on the dashboard you're editing (and on any other showing the same layout); the rest keep theirs.
+- **Its layout:** any saved layout can go on any screen: pick it in the editor's *Layout* list while you're on that screen, or under the dashboard's *Layout* in the tray. Two screens showing the same layout show the same changes, so give each its own (*Layouts ▾* → *Duplicate…* makes a copy to change).
+- **Which screen the tray means:** tray → *Layout*, *Edit layout…*, pages, game layouts, the schedule, hotkeys and buttons that switch layouts are all the main dashboard's; the others keep their layout. Each of the others has its own *Edit layout…*, *Layout*, *Move to* and *Remove* under *More dashboards*. Dimming, *Always on top*, *Hide over fullscreen apps* and the show/hide hotkey apply to all of them, and buttons and media controls work on each.
+- A layout made for another screen's shape still fills it, scaled evenly. For a better fit, give it the screen's size: *Match dashboard screen* under *Canvas* in the editor.
+- A dashboard whose screen is unplugged or off hides until it's back, rather than landing on another screen. There's one dashboard to a screen: moving the main dashboard onto a screen that has another one removes the other. Dashboards can't be added, moved or removed while the editor is open.
 
 ### Tablet view
 

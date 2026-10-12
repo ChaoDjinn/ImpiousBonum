@@ -23,7 +23,7 @@ public partial class App
             {
                 var names = _layouts.List();
                 tray.SetLayouts(names, _layouts.Active, _layouts.ActivePath);
-                tray.SetExtraDashboards(_settings.ExtraDashboards, monitors, DisplayMonitor.Resolve(_settings, monitors), names, _layouts.Active);
+                tray.SetExtraDashboards(_settings.ExtraDashboards, monitors, DisplayMonitor.Resolve(_settings, monitors), names);
                 tray.SetGameLayouts(_settings.GameLayoutsEnabled, _settings.SessionRecaps, _settings.GameLayouts, _recentApp, names, _layouts.Themes.List());
                 tray.SetPages(_settings.SwipePages, _settings.RotatePagesSeconds, _settings.Pages, names);
                 tray.SetSchedule(_settings.ScheduleEnabled, _settings.Schedule,
@@ -80,12 +80,16 @@ public partial class App
         tray.MonitorSelected += (_, monitor) => MoveTo(monitor);
         tray.ExtraDashboardsChanged += (_, extras) =>
         {
+            if (RefuseWhileEditing())
+                return;
             _settings.ExtraDashboards = extras;
             _settings.Save();
             AppLog.Info(extras.Count == 0 ? "More dashboards: none" : $"More dashboards: {string.Join(", ", extras.Select(e => $"\"{e.Layout}\" on {e.MonitorDevice}"))}");
             ApplyExtraDashboards();
             Place();
         };
+        tray.ExtraDashboardAddRequested += (_, monitor) => AddDashboard(monitor);
+        tray.ExtraDashboardEditRequested += (_, extra) => EditDashboard(extra.MonitorId);
         tray.WindowOptionsChanged += (_, options) => SetWindowOptions(options);
         tray.ResetWindowRequested += (_, _) => ResetWindow();
         tray.BringToFrontRequested += (_, _) => _window?.BringForward();

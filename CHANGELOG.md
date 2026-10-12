@@ -3,6 +3,15 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## 0.12.0
+
+Each screen can have a layout of its own: a new screen gets a new, empty layout, and the editor edits whichever screen you open it from.
+
+**A different layout on each screen**
+- *Display* → *More dashboards* → *Add on* gives the new dashboard a new, empty layout of its own, sized for its screen and in the main dashboard's theme, and opens the editor on it. It used to start with one of your existing layouts, so with only one layout it showed a copy of the main dashboard.
+- The editor edits the dashboard you open it from: right-click or press and hold on another screen's dashboard, or tray → *More dashboards* → the dashboard → *Edit layout…*. With more than one dashboard, a screen list beside *Layout* moves between them, and picking a layout there changes only that screen's. Editing another screen's layout no longer switches the main dashboard to it.
+- Renaming a layout keeps it on the screens and the USB screen that show it, and deleting one moves those screens to the main dashboard's layout rather than a missing one.
+
 ## 0.11.1
 
 - Submenus in the tray menu stay open again. With the tray at the right of the screen, a submenu's own submenus (*Display → When you're away*, *More dashboards → Add on*) opened over the main menu and closed as soon as you moved onto them, and with a monitor to the right, submenus opened on that monitor. Each now opens beside the last on the tray's own screen.
