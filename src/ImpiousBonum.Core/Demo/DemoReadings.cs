@@ -143,16 +143,28 @@ public static class DemoReadings
         // The weather in a made-up town, and the forecast.
         var weather = new WeatherProvider(() => null, (_, _) => Task.FromException<WeatherReport>(new InvalidOperationException("Demo")));
         weather.Initialize(store);
-        var hours = Enumerable.Range(0, 24).Select(h =>
+        // The pressure falls ahead of the rain due in nine hours or so.
+        var hours = Enumerable.Range(-3, 51).Select(h =>
         {
             var time = now.Date.AddHours(now.Hour + h);
+            var daytime = time.Hour is >= 7 and < 20;
             return new WeatherPeriod(time, 14 + 3 * Math.Sin((time.Hour - 9) / 24.0 * 2 * Math.PI), null, h < 5 ? 2 : h < 9 ? 3 : 61,
-                time.Hour is >= 7 and < 20, h < 9 ? 10 : 55);
+                daytime, h < 9 ? 10 : 55)
+            {
+                Precipitation = h < 9 ? 0 : 0.6, Wind = 11 + h % 4, Gusts = 22 + h % 5, Uv = daytime ? 2 : 0, Pressure = 1016 - 0.5 * h,
+            };
         }).ToList();
-        int[] codes = [2, 61, 3, 0, 1, 80, 2];
-        var days = Enumerable.Range(0, 7).Select(d => new WeatherPeriod(now.Date.AddDays(d), 16 + d % 3, 9 + d % 2, codes[d], true, d == 1 ? 70 : 20)).ToList();
-        weather.Publish(store, new WeatherReport(WeatherUnits.Metric, now, 14, 13, 72, 11, 225, 2, now.Hour is >= 7 and < 20,
-            hours, days, now.Date.AddHours(7.2), now.Date.AddHours(18.6)), "Harbourton");
+        int[] codes = [2, 61, 3, 0, 1, 80, 2, 3, 61, 63, 2, 1, 0, 3, 80, 2];
+        var days = Enumerable.Range(0, 16).Select(d => new WeatherPeriod(now.Date.AddDays(d), 16 + d % 3, 9 + d % 2, codes[d], true, d == 1 ? 70 : 20)
+        {
+            Precipitation = d == 1 ? 6.2 : 0.4, Wind = 14 + d % 4, Gusts = 30 + d % 6, Uv = 3, Daylight = TimeSpan.FromMinutes(649 - 4 * d),
+        }).ToList();
+        var report = new WeatherReport(WeatherUnits.Metric, now, 14, 13, 72, 11, 225, 2, now.Hour is >= 7 and < 20,
+            hours, days, now.Date.AddHours(7.2), now.Date.AddHours(18.6))
+        {
+            Gusts = 24, Uv = now.Hour is >= 7 and < 20 ? 2 : 0, Pressure = 1016, DewPoint = 9, Visibility = 18000, Clouds = 45, Precipitation = 0,
+        };
+        weather.Publish(store, report, new WeatherRequest("Harbourton", 50.6, -2.0, WeatherUnits.Metric), now);
 
         // Today's calendar.
         new CalendarProvider(() => []).Initialize(store);

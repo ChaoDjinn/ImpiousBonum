@@ -5,10 +5,10 @@ namespace ImpiousBonum.Core.Weather;
 
 public enum WeatherUnits
 {
-    /// <summary>°C and km/h.</summary>
+    /// <summary>°C, km/h, mm, km and hPa.</summary>
     Metric,
 
-    /// <summary>°F and mph.</summary>
+    /// <summary>°F, mph, inches, miles and inHg.</summary>
     Imperial,
 }
 
@@ -27,12 +27,37 @@ public sealed record WeatherPlace(string Name, string? Region, string? Country, 
     public string Description => string.Join(", ", new[] { Name, Region, Country }.Where(p => !string.IsNullOrWhiteSpace(p)).Distinct());
 }
 
-/// <summary>One step of the forecast: an hour, or a day with its low.</summary>
+/// <summary>
+/// One step of the forecast: an hour, or a day with its low. The readings after the first few are properties, so a
+/// period can be made with only those it needs; null is unknown (Open-Meteo leaves values out at times).
+/// </summary>
 /// <param name="Time">Local time at the place.</param>
 /// <param name="Low">For days, the day's low; null for hours.</param>
-public sealed record WeatherPeriod(DateTime Time, double Temperature, double? Low, int Code, bool IsDay, double? RainChance);
+public sealed record WeatherPeriod(DateTime Time, double Temperature, double? Low, int Code, bool IsDay, double? RainChance)
+{
+    /// <summary>Rain, showers and snow, in mm or inches: in the hour, or the day's total.</summary>
+    public double? Precipitation { get; init; }
 
-/// <summary>A forecast from Open-Meteo: conditions now, today's range, and the hours and days ahead.</summary>
+    /// <summary>Wind speed: in the hour, or the day's strongest.</summary>
+    public double? Wind { get; init; }
+
+    /// <summary>Wind gusts: in the hour, or the day's strongest.</summary>
+    public double? Gusts { get; init; }
+
+    /// <summary>UV index: in the hour, or the day's highest.</summary>
+    public double? Uv { get; init; }
+
+    /// <summary>For hours, the air pressure at sea level in hPa, whatever the units.</summary>
+    public double? Pressure { get; init; }
+
+    /// <summary>For days, how long the sun is up.</summary>
+    public TimeSpan? Daylight { get; init; }
+}
+
+/// <summary>
+/// A forecast from Open-Meteo: conditions now, today's range, and the hours and days ahead. The readings added since
+/// the first few are properties, like <see cref="WeatherPeriod"/>'s, and null when the forecast didn't have them.
+/// </summary>
 /// <param name="Time">When the current conditions are for, in the place's local time.</param>
 public sealed record WeatherReport(
     WeatherUnits Units,
@@ -49,6 +74,29 @@ public sealed record WeatherReport(
     DateTime? Sunrise,
     DateTime? Sunset)
 {
+    private const double MetresPerFoot = 0.3048;
+
+    /// <summary>How far the place's clock is ahead of UTC.</summary>
+    public TimeSpan? UtcOffset { get; init; }
+
+    public double? Gusts { get; init; }
+
+    public double? Uv { get; init; }
+
+    /// <summary>Air pressure at sea level, in hPa whatever the units.</summary>
+    public double? Pressure { get; init; }
+
+    public double? DewPoint { get; init; }
+
+    /// <summary>How far you can see, in metres whatever the units.</summary>
+    public double? Visibility { get; init; }
+
+    /// <summary>How much of the sky is cloud, in %.</summary>
+    public double? Clouds { get; init; }
+
+    /// <summary>Rain, showers and snow in the last 15 minutes, in mm or inches.</summary>
+    public double? Precipitation { get; init; }
+
     /// <summary>Today's forecast, if the report has days.</summary>
     public WeatherPeriod? Today => Days.Count > 0 ? Days[0] : null;
 
@@ -56,6 +104,13 @@ public sealed record WeatherReport(
 
     /// <summary>The hours after the current one.</summary>
     public IEnumerable<WeatherPeriod> HoursAhead => Hours.Where(h => h.Time > Time);
+
+    /// <summary>The time at the place at <paramref name="utc"/>, or <see cref="Time"/> if the forecast didn't give its offset from UTC.</summary>
+    public DateTime LocalTime(DateTimeOffset utc) =>
+        UtcOffset is { } offset ? DateTime.SpecifyKind(utc.UtcDateTime + offset, DateTimeKind.Unspecified) : Time;
+
+    /// <summary>The hour that <paramref name="time"/> (local, at the place) is in, if the forecast has it.</summary>
+    public WeatherPeriod? HourAt(DateTime time) => Hours.LastOrDefault(h => h.Time <= time && time < h.Time.AddHours(1));
 
     /// <summary>
     /// Reads Open-Meteo's forecast JSON (current, hourly and daily blocks as requested by <see cref="OpenMeteo"/>).
@@ -79,7 +134,14 @@ public sealed record WeatherReport(
                     null,
                     (int)(Number(hourly, "weather_code", i) ?? 0),
                     Number(hourly, "is_day", i) != 0,
-                    Number(hourly, "precipitation_probability", i)));
+                    Number(hourly, "precipitation_probability", i))
+                {
+                    Precipitation = Number(hourly, "precipitation", i),
+                    Wind = Number(hourly, "wind_speed_10m", i),
+                    Gusts = Number(hourly, "wind_gusts_10m", i),
+                    Uv = Number(hourly, "uv_index", i),
+                    Pressure = Number(hourly, "pressure_msl", i),
+                });
             }
         }
 
@@ -96,11 +158,18 @@ public sealed record WeatherReport(
                     Number(daily, "temperature_2m_min", i),
                     (int)(Number(daily, "weather_code", i) ?? 0),
                     true,
-                    Number(daily, "precipitation_probability_max", i)));
+                    Number(daily, "precipitation_probability_max", i))
+                {
+                    Precipitation = Number(daily, "precipitation_sum", i),
+                    Wind = Number(daily, "wind_speed_10m_max", i),
+                    Gusts = Number(daily, "wind_gusts_10m_max", i),
+                    Uv = Number(daily, "uv_index_max", i),
+                    Daylight = Number(daily, "daylight_duration", i) is { } seconds ? TimeSpan.FromSeconds(seconds) : null,
+                });
             }
-            if (daily.TryGetProperty("sunrise", out var rises) && rises.GetArrayLength() > 0 && rises[0].ValueKind == JsonValueKind.String)
+            if (daily.TryGetProperty("sunrise", out var rises) && rises.ValueKind == JsonValueKind.Array && rises.GetArrayLength() > 0 && rises[0].ValueKind == JsonValueKind.String)
                 sunrise = ParseTime(rises[0]);
-            if (daily.TryGetProperty("sunset", out var sets) && sets.GetArrayLength() > 0 && sets[0].ValueKind == JsonValueKind.String)
+            if (daily.TryGetProperty("sunset", out var sets) && sets.ValueKind == JsonValueKind.Array && sets.GetArrayLength() > 0 && sets[0].ValueKind == JsonValueKind.String)
                 sunset = ParseTime(sets[0]);
         }
 
@@ -117,8 +186,27 @@ public sealed record WeatherReport(
             hours,
             days,
             sunrise,
-            sunset);
+            sunset)
+        {
+            UtcOffset = Value(root, "utc_offset_seconds") is { } offset ? TimeSpan.FromSeconds(offset) : null,
+            Gusts = Value(current, "wind_gusts_10m"),
+            Uv = Value(current, "uv_index"),
+            Pressure = Value(current, "pressure_msl"),
+            DewPoint = Value(current, "dew_point_2m"),
+            Visibility = Value(current, "visibility") * (VisibilityInFeet(root, units) ? MetresPerFoot : 1),
+            Clouds = Value(current, "cloud_cover"),
+            Precipitation = Value(current, "precipitation"),
+        };
     }
+
+    /// <summary>
+    /// Open-Meteo gives visibility in feet once precipitation is asked for in inches, as it is for imperial units. The
+    /// units block says which; without one, it's whatever was asked for.
+    /// </summary>
+    private static bool VisibilityInFeet(JsonElement root, WeatherUnits units) =>
+        root.TryGetProperty("current_units", out var given) && given.TryGetProperty("visibility", out var unit) && unit.ValueKind == JsonValueKind.String
+            ? unit.GetString() == "ft"
+            : units == WeatherUnits.Imperial;
 
     private static DateTime ParseTime(JsonElement value) =>
         DateTime.Parse(value.GetString() ?? throw new FormatException("A forecast time is missing."), CultureInfo.InvariantCulture, DateTimeStyles.None);
@@ -127,7 +215,7 @@ public sealed record WeatherReport(
         block.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number ? value.GetDouble() : null;
 
     private static double? Number(JsonElement block, string name, int index) =>
-        block.TryGetProperty(name, out var values) && index < values.GetArrayLength() && values[index].ValueKind == JsonValueKind.Number
+        block.TryGetProperty(name, out var values) && values.ValueKind == JsonValueKind.Array && index < values.GetArrayLength() && values[index].ValueKind == JsonValueKind.Number
             ? values[index].GetDouble()
             : null;
 }

@@ -188,6 +188,8 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `sys.uptime`, `sys.name`, `sys.battery`, `sys.battery.status` | Windows; the battery ones only on PCs with a battery |
 | `top.cpu.<N>`, `top.cpu.<N>.name`, `top.memory.<N>`, `top.memory.<N>.name` (N = 1 to 5) | The apps using the most CPU and memory, every 2 seconds, from one `NtQuerySystemInformation` call like Task Manager's. An app's processes count together (all of Chrome's are one); CPU is a share of the whole processor, memory is the private working set (Task Manager's *Memory* column) |
 | `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set on the *Weather* page, every 15 minutes |
+| `weather.gusts`, `weather.wind.degrees`, `weather.pressure`, `weather.pressure.trend` (*Rising*, *Falling* or *Steady* over the last 3 hours), `weather.dewpoint`, `weather.visibility`, `weather.clouds`, `weather.precipitation` (the last 15 minutes), `weather.precipitation.today`, `weather.rain.hour`, `weather.tomorrow.rain`, `weather.uv`, `weather.uv.max` (today's highest), `weather.uv.level` (*Low* to *Extreme*), `weather.daylight` | The same forecast (see [Weather](#weather)) |
+| `weather.sun.elevation` | How high the sun is, in degrees, worked out on your PC from the place and the time, every 30 seconds |
 | `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set on the *Calendars* page, every 15 minutes (see [Calendar](#calendar)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
@@ -237,16 +239,27 @@ A sensor service from before 0.8 doesn't send these; *Sensors* → *Update…* b
 
 ### Weather
 
-The *Weather* widget shows an icon, the temperature and conditions now (with today's high and low and what it feels like), and a row of the days or hours ahead, every three hours if you like. Every `weather.*` metric works in other widgets too: `{weather.temp} · {weather.condition}` in a text widget, or a gauge of `weather.temp`.
+The *Weather* widget shows an icon, the temperature and conditions now (with today's high and low and what it feels like), and a row of the days or hours ahead, every three hours if you like: up to 16 days, or 48 hours. Every `weather.*` metric works in other widgets too: `{weather.temp} · {weather.condition}` in a text widget, or a gauge of `weather.temp`.
 
 <p align="center"><img src="images/widgets/weather.png" width="600" alt="The weather widget with colour icons: 14° and partly cloudy now with the high, low and feels-like, four days ahead, and below it a second weather widget of every three hours ahead with the chance of rain"></p>
 
 1. *Weather* → *Set location…*, or in the editor select the widget and *Set location…* under *Set up* (adding the widget offers it too). Search for your town, or type latitude and longitude, e.g. `51.5, -0.12`.
 2. Add the widget: *Add widget* → *Weather* in the editor.
 
-It's adjustable in the editor: turn off *Weather now* to leave just the forecast (say, one widget of the hours ahead beside another of the days), choose *colour* icons for a yellow sun, white clouds, grey rain clouds with blue rain and white lightning instead of outlines in one colour, and give the widget its own text and detail colours rather than the theme's.
+It's adjustable in the editor: turn off *Weather now* to leave just the forecast (say, one widget of the hours ahead beside another of the days), choose *colour* icons for a yellow sun, white clouds, grey rain clouds with blue rain and white lightning instead of outlines in one colour, and give the widget its own text and detail colours rather than the theme's. A day or hour shows its chance of rain from 30%; *Chance of rain from* changes that, and 0 always shows it.
 
-The location is set once for the PC, so every layout shows the same place. Units follow your Windows region (°C and km/h, or °F and mph); *Weather* → *Units* changes them.
+There's more in the forecast than the widget shows, for text, gauges and the rest:
+
+- **Wind:** gusts (`weather.gusts`) as well as the speed, and the direction in degrees (`weather.wind.degrees`, 0 for a wind from the north) as well as `SW`.
+- **UV:** the index now (`weather.uv`), today's highest (`weather.uv.max`), and the level now in the WHO's words (`weather.uv.level`): *Low* (up to 2), *Moderate* (3 to 5), *High* (6 and 7), *Very high* (8 to 10) or *Extreme* (11 and up).
+- **Pressure:** at sea level (`weather.pressure`), and whether it's *Rising*, *Falling* or *Steady* (`weather.pressure.trend`): a change of 1 hPa or more over the last three hours counts. A fall often comes before rain and wind, and some people get headaches with it.
+- **The air:** dew point (`weather.dewpoint`), visibility (`weather.visibility`) and cloud cover (`weather.clouds`), with humidity and *feels like* as before.
+- **Rain:** how much fell in the last 15 minutes (`weather.precipitation`) and is forecast today (`weather.precipitation.today`), and the chance of rain this hour (`weather.rain.hour`) and tomorrow (`weather.tomorrow.rain`), as well as today's (`weather.rain`).
+- **The sun:** today's daylight (`weather.daylight`, e.g. *10 h 49 min*) and how high the sun is (`weather.sun.elevation`, in degrees, below 0 after sunset). The sun's height is worked out on your PC from the place and the time, so it keeps moving between forecasts without fetching anything.
+
+For example, `UV {weather.uv} ({weather.uv.level}) · {weather.pressure} {weather.pressure.trend}` in a text widget reads *UV 3 (Moderate) · 1012 hPa Falling*. They all come with the one forecast, so they cost nothing extra.
+
+The location is set once for the PC, so every layout shows the same place. Units follow your Windows region (°C, km/h, mm, km and hPa, or °F, mph, inches, miles and inches of mercury); *Weather* → *Units* changes them.
 
 Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-commercial use and needs no account. The coordinates of the place you pick go to Open-Meteo every 15 minutes, and the name you search for when you search; nothing else is sent, and nothing at all until you set a location. *Turn off weather* forgets the place and stops it. If the internet is down the last forecast stays for up to three hours. Weather data by Open-Meteo.com, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 

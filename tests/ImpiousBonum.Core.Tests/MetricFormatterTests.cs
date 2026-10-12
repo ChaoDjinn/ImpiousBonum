@@ -20,6 +20,14 @@ public sealed class MetricFormatterTests : IDisposable
     [InlineData(MetricUnit.Milliseconds, 9.4, "9 ms")]
     [InlineData(MetricUnit.FramesPerSecond, 58.8, "58.8 FPS")]
     [InlineData(MetricUnit.None, 16, "16")]
+    [InlineData(MetricUnit.Hectopascals, 1013.6, "1014 hPa")]
+    [InlineData(MetricUnit.InchesOfMercury, 29.921, "29.92 inHg")]
+    [InlineData(MetricUnit.Millimetres, 0.42, "0.4 mm")]
+    [InlineData(MetricUnit.Inches, 0.017, "0.02 in")]
+    [InlineData(MetricUnit.Kilometres, 20.5, "20.5 km")]
+    [InlineData(MetricUnit.Miles, 12.74, "12.7 mi")]
+    [InlineData(MetricUnit.Degrees, 225, "225°")]
+    [InlineData(MetricUnit.Degrees, -31.9, "-32°")]
     public void Formats_units_with_default_precision(MetricUnit unit, double value, string expected) =>
         Assert.Equal(expected, MetricFormatter.Format(Sample(unit, value)));
 
