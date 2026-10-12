@@ -3,7 +3,9 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
-## Unreleased
+## 0.12.0
+
+Each screen can have a layout of its own: a new screen gets a new, empty layout, and the editor edits whichever screen you open it from.
 
 **A different layout on each screen**
 - *Display* → *More dashboards* → *Add on* gives the new dashboard a new, empty layout of its own, sized for its screen and in the main dashboard's theme, and opens the editor on it. It used to start with one of your existing layouts, so with only one layout it showed a copy of the main dashboard.
