@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using ImpiousBonum.App.Controls;
 using ImpiousBonum.App.Editor;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;
@@ -76,6 +77,63 @@ public sealed class PropertyPanelTests
     }
 
     [Fact]
+    public void List_entries_are_dragged_by_a_handle_rather_than_moved_with_arrows()
+    {
+        Sta.Run(() =>
+        {
+            var session = new LayoutSession(new LayoutDocument { Widgets = [Rows("A", "B")] });
+            var (panel, window) = Show(session);
+            session.Select(0);
+            Pump();
+
+            var handles = Handles(panel);
+            var arrows = Descendants<Button>(panel).Where(b => b.ToolTip is "Move up" or "Move down").ToList();
+            var removes = Descendants<Button>(panel).Count(b => b.ToolTip is "Remove");
+            window.Close();
+
+            Assert.Equal(2, handles.Count);
+            Assert.All(handles, h => Assert.True(h.Focusable));
+            Assert.Empty(arrows);
+            Assert.Equal(2, removes);
+        });
+    }
+
+    [Fact]
+    public void Moving_a_list_entry_from_the_keyboard_keeps_focus_on_it()
+    {
+        Sta.Run(() =>
+        {
+            var session = new LayoutSession(new LayoutDocument { Widgets = [Rows("A", "B", "C")] });
+            var (panel, window) = Show(session);
+            session.Select(0);
+            Pump();
+
+            // What Alt+Down does with focus on the first row's handle.
+            Handles(panel)[0].Focus();
+            Assert.True(DragReorder.Move(Handles(panel)[0], +1));
+            Pump();
+            var handleFocused = Handles(panel)[1].IsKeyboardFocused;
+
+            // And Alt+Up while typing in the last row's label: still typing in it afterwards.
+            var label = LabelBox(panel, "C");
+            label.Focus();
+            Assert.True(DragReorder.Move(label, -1));
+            Pump();
+            var labelFocused = LabelBox(panel, "C").IsKeyboardFocused;
+            window.Close();
+
+            Assert.Equal(["B", "C", "A"], Labels(session));
+            Assert.True(handleFocused);
+            Assert.True(labelFocused);
+            session.Undo();
+            Assert.Equal(["B", "A", "C"], Labels(session));
+            session.Undo();
+            Assert.Equal(["A", "B", "C"], Labels(session));
+            Assert.False(session.CanUndo);
+        });
+    }
+
+    [Fact]
     public void The_editor_opens_centred_on_the_main_screen_and_fits_it()
     {
         // A 4K main screen at 150% scaling, less the taskbar.
@@ -86,6 +144,22 @@ public sealed class PropertyPanelTests
     }
 
     private static JsonObject Widget(string type) => new() { ["type"] = type, ["x"] = 10, ["y"] = 10, ["width"] = 400, ["height"] = 200 };
+
+    /// <summary>A rows widget with a row for each label.</summary>
+    private static JsonObject Rows(params string[] labels)
+    {
+        var widget = Widget("rows");
+        widget["rows"] = new JsonArray([.. labels.Select(l => (JsonNode)new JsonObject { ["label"] = l })]);
+        return widget;
+    }
+
+    private static List<string> Labels(LayoutSession session) =>
+        [.. ((JsonArray)session.Document.Widgets[0]["rows"]!).Select(r => r!["label"]!.GetValue<string>())];
+
+    /// <summary>The list entries' drag handles, top to bottom.</summary>
+    private static List<FrameworkElement> Handles(PropertyPanel panel) => [.. Descendants<FrameworkElement>(panel).Where(DragReorder.GetIsHandle)];
+
+    private static TextBox LabelBox(PropertyPanel panel, string label) => Descendants<TextBox>(panel).Single(b => b.Text == label);
 
     /// <summary>The panel in a window off screen, as in the editor: some controls only fill in their text once shown.</summary>
     private static (PropertyPanel Panel, Window Window) Show(LayoutSession session)
