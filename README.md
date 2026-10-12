@@ -100,16 +100,16 @@ Or start from a layout in the [gallery](gallery):
 
 Lay out your own in the editor, with a live preview, a searchable list of every reading and the same changes on the dashboard as you make them:
 
-<p align="center"><img src="docs/images/editor.png" alt="The layout editor: the widget list, the layout's preview with the GPU graph selected, and the graph's settings"></p>
+<p align="center"><img src="docs/images/editor.png" alt="The Impious Bonum window on its Layouts page: the sidebar of pages, the screen and layout pickers, the widget list, the layout's preview with the GPU graph selected, and the graph's settings"></p>
 
 <sub>Every picture here is drawn by the app itself from made-up readings (`build/screenshots.ps1`), so it shows what the app really draws without showing anyone's PC. The [user guide](<docs/guide.md>) has more.</sub>
 
 ## Get started
 
 1. Download and run [`ImpiousBonum-win-Setup.exe`](https://github.com/ChaoDjinn/ImpiousBonum/releases/latest/download/ImpiousBonum-win-Setup.exe) (Windows 10 or 11). It installs for your user only and adds the .NET runtime if needed. SmartScreen may warn the first time, since the installer isn't code-signed yet: choose *More info → Run anyway*.
-2. The dashboard opens on your smallest secondary monitor, or as a window on your main screen if that's the only one. Right-click the tray icon to move it, make it a window, or turn on *Start with Windows*.
-3. For temperatures and FPS, tray → *Sensors* → *Install sensor service…* (one admin prompt). CPU temperatures also need the free [PawnIO](https://pawnio.eu) driver (`winget install namazso.PawnIO`; HWiNFO and FanControl install it too). GPU temperatures and FPS work without it.
-4. Double-click the tray icon to open the layout editor, or try a ready-made layout from tray → *Layout* → *Gallery…*.
+2. The dashboard opens on your smallest secondary monitor, or as a window on your main screen if that's the only one. Double-click the tray icon (or start Impious Bonum again) for its window, where *Screens* moves it or makes it a window and *General* has *Start with Windows*.
+3. For temperatures and FPS, *Sensors* → *Install…* in the window (one admin prompt). CPU temperatures also need the free [PawnIO](https://pawnio.eu) driver (`winget install namazso.PawnIO`; HWiNFO and FanControl install it too). GPU temperatures and FPS work without it.
+4. *Layouts* is the layout editor, and *Gallery* has ready-made layouts for screens from 3.5" to 4K, filtered to suit yours.
 
 The [user guide](<docs/guide.md>) covers everything else, and the [widget reference](docs/widgets.md) lists every widget's settings.
 
@@ -125,12 +125,12 @@ The [user guide](<docs/guide.md>) covers everything else, and the [widget refere
 ## Help and ideas
 
 Something not working, or an idea for a widget or a feature? [Open an issue](https://github.com/ChaoDjinn/ImpiousBonum/issues/new/choose),
-or from the app: tray → *Help* → *Report a problem…*. Please report security problems privately, as
+or from the app: *About and updates* → *Report a problem*. Please report security problems privately, as
 [SECURITY.md](SECURITY.md) explains.
 
 ## Good to know
 
-Impious Bonum is young: it's at version 0.12, first released at the end of September 2026, and it changes quickly
+Impious Bonum is young: it's at version 0.13, first released at the end of September 2026, and it changes quickly
 (installed copies update themselves). Some things it doesn't do yet, or does with a catch:
 
 - **Windows 10 and 11 only.**

@@ -3,7 +3,7 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
-## Unreleased
+## 0.13.0
 
 Impious Bonum has a window of its own, and the tray menu keeps to the basics.
 

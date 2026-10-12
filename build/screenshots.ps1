@@ -15,7 +15,7 @@
 
   The editor's screenshot (docs/images/editor.png) is taken by hand, since it's a window rather than a layout: run
     ImpiousBonum.exe --data-dir <an empty folder> --demo
-  (it runs alongside an installed copy), open the editor, select the GPU graph and capture the window.
+  (it runs alongside an installed copy), open its window on the Layouts page, select the GPU graph and capture the window.
 
 .EXAMPLE
   pwsh build/screenshots.ps1

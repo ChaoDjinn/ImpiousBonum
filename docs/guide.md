@@ -4,7 +4,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 ## Contents
 
-- [Getting started](#getting-started): [installing](#installing), [the tray menu](#tray-menu), [windowed mode](#windowed-mode)
+- [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
@@ -19,9 +19,9 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 Download [`ImpiousBonum-win-Setup.exe`](https://github.com/ChaoDjinn/ImpiousBonum/releases/latest/download/ImpiousBonum-win-Setup.exe) from the [latest release](https://github.com/ChaoDjinn/ImpiousBonum/releases/latest) and run it.
 
 - It installs for your user only (no admin prompt) into `%LocalAppData%\ImpiousBonum`, adds Start menu and desktop shortcuts, and installs the .NET 10 Desktop Runtime first if you don't have it.
-- On first run it fills your smallest secondary monitor. With only one screen it starts as a window on it instead (see [Windowed mode](#windowed-mode)), so it doesn't cover everything else. Use the tray icon to move it to another display, edit the layout, or turn on *Start with Windows*.
-- The app checks GitHub for updates about a minute after it starts and every six hours after that; tray → *Check for updates* checks right away. New versions download in the background (usually as a small delta) and the tray offers *Restart to update to x.y.z*. The tray menu's first line shows the installed version.
-- After an update, if the sensor service is from an older version the tray says so; *Sensors → Update sensor service…* brings it up to date.
+- On first run it fills your smallest secondary monitor. With only one screen it starts as a window on it instead (see [Windowed mode](#windowed-mode)), so it doesn't cover everything else. Open Impious Bonum (from the tray icon, or the Start menu) to move it to another screen, edit the layout, or turn on *Start with Windows* (on the *General* page).
+- The app checks GitHub for updates about a minute after it starts and every six hours after that; *About and updates* → *Check for updates* checks right away and shows the download as it goes. New versions download in the background (usually as a small delta), and once one is ready *Restart to update* is on that page and in the tray, and a dot beside *About and updates* in the sidebar says so. The tray menu's first line shows the installed version.
+- After an update, if the sensor service is from an older version a notification says so; *Sensors* → *Update…* brings it up to date.
 - Uninstall from Windows Settings → Apps. It removes start-with-Windows and offers to remove the sensor service (one UAC prompt). Your layout and settings in `%AppData%\ImpiousBonum` are kept.
 - The installer isn't code-signed yet, so Windows SmartScreen may warn the first time: choose *More info → Run anyway*.
 
@@ -31,53 +31,43 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
 - `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
-- `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (tray → *Help* → *Open settings folder*, or *Report a problem…*).
+- `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
 
-### Tray menu
+### The window and the tray menu
 
-The menu follows Windows: dark or light with the taskbar (Settings → Personalisation → Colours → *Choose your mode*). It's grouped into the layout and where it shows, where its readings come from, what watches them, then the app itself.
+Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bonum*, or double-click the icon), or start Impious Bonum again from the Start menu while it's running. A sidebar on the left has a page for each part of the app, as in Windows' Settings, and changes take effect as you make them. The layout editor is the exception: it has *Save*, and asks before another page takes its place while it has unsaved changes. The window follows Windows' light or dark mode.
 
-| Item | |
+| Page | |
 |---|---|
-| *Edit layout…* | Open the layout editor (or double-click the tray icon) |
-| *Layout* | Which saved layout the dashboard shows. Switches straight away and is remembered |
-| *Layout → Import…* | Add a layout from an exported `.ibl` file and show it (see [Sharing layouts](#sharing-layouts)) |
-| *Layout → Gallery…* | Browse ready-made layouts, with a live preview, and import one (see [Layout gallery](#layout-gallery)) |
-| *Layout → Pages* | Swipe across the dashboard to move between layouts, or rotate them on a timer (see [Pages](#pages)) |
-| *Layout → Game layouts* | Link the app you were just using to a layout, remove links, turn automatic switching on or off, and recap each session (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
-| *Layout → Schedule* | Show a layout or theme at certain times of day, or while Windows is in dark or light mode (see [Schedule](#schedule)) |
-| *Layout → Open layout file*, *Reload* | Work with the shown layout's file directly (see [Editing layouts by hand](#editing-layouts-by-hand)) |
-| *Display* | Which monitor the dashboard is on, by name, and how its window behaves (see [Windowed mode](#windowed-mode)) |
-| *Display → More dashboards* | Fill other screens with layouts of their own, and edit each one's (see [More dashboards](#more-dashboards)) |
-| *Display → When you're away* | Dim the dashboard, or turn it black, after a while without input (see [Dimming](#dimming)) |
-| *Display → Tablet view* | Show the dashboard in a browser on a tablet or phone, and optionally let it press the layout's buttons (see [Tablet view](#tablet-view)) |
-| *Display → USB screen* | Show a layout on a small USB screen as well (see [USB screens](#usb-screens)) |
-| *Sensors* | Sensor service status, and install, update or remove it |
-| *Sensors → FPS from* | Follow the foreground app, or the top app on a chosen monitor |
-| *Weather* | The weather now, *Set location…*, units, and *Turn off weather* (see [Weather](#weather)) |
-| *Calendar…* | Calendars whose events the agenda widget shows (see [Calendar](#calendar)) |
-| *News feeds…* | Feeds whose headlines the news widget shows (see [News](#news)) |
-| *Claude usage* | Whether Claude Code is reporting, and *Connect Claude Code…* (see [Claude usage](#claude-usage)) |
-| *Custom data…* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
-| *Alerts…* | Be told when a reading stays out of bounds (see [Alerts](#alerts)) |
-| *Hotkeys…* | Keys that show or hide the dashboard, turn pages, open the editor or switch layouts from anywhere (see [Hotkeys](#hotkeys)) |
-| *Logging…* | Log readings to daily CSV files, with each one's average, lowest and highest (see [Logging](#logging)) |
-| *Start with Windows* | Start the dashboard when you sign in |
-| *Check for updates* | Installed copies only |
-| *Help* | This guide, the widget reference and what's new, for the version you have; *Report a problem…*; *Open settings folder*; and *About Impious Bonum*, whose *Copy details* copies the version, Windows and .NET versions for a problem report |
+| *Layouts* | The layout editor, on the screen you pick (see [Layout editor](#layout-editor)) |
+| *Gallery* | Ready-made layouts for screens like yours, to put straight on one (see [Layout gallery](#layout-gallery)) |
+| *Screens* | Your monitors as Windows arranges them: which shows the main dashboard and how its window behaves, the dashboards on the others, and dimming when you're away (see [Windowed mode](#windowed-mode), [More dashboards](#more-dashboards) and [Dimming](#dimming)) |
+| *Tablet and USB screen* | The dashboard in a browser on a tablet or phone, and on a small USB screen (see [Tablet view](#tablet-view) and [USB screens](#usb-screens)) |
+| *Pages and schedule* | Swiping and turning between layouts, and what shows when (see [Pages](#pages) and [Schedule](#schedule)) |
+| *Game layouts* | Games linked to a layout or theme, and session recaps (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
+| *Sensors* | Whether the sensor service is running, installing, updating or removing it, and which app the FPS reading follows (see [the sensor service](#sensor-service-temperatures-fans-power-fps)) |
+| *Weather* | The location, the units, and turning the weather off (see [Weather](#weather)) |
+| *Calendars*, *News feeds* | The links the agenda and news widgets read (see [Calendar](#calendar) and [News](#news)) |
+| *Claude usage* | Whether Claude Code is reporting, and connecting it (see [Claude usage](#claude-usage)) |
+| *Custom data* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
+| *Alerts*, *Hotkeys*, *Logging* | See [Alerts](#alerts), [Hotkeys](#hotkeys) and [Logging](#logging) |
+| *General* | *Start with Windows*, drawing with the graphics card, and the settings folder and `dashboard.log` |
+| *About and updates* | The version, checking for and installing updates, what's new, this guide and the widget reference for your version, *Report a problem*, and *Details* to copy into a problem report |
+
+The tray menu keeps to the basics: *Open Impious Bonum*, *Edit layout…* (the window on the main dashboard's layout), *Layout* to switch the main dashboard's layout quickly, *Restart to update to x.y.z* when an update is waiting, and *Exit*. Its first line shows the installed version, and it's dark or light with the taskbar (Settings → Personalisation → Colours → *Choose your mode*).
 
 Notifications that can do something say so: clicking one about an error opens the settings folder with `dashboard.log` selected, and clicking *Impious Bonum x.y.z is ready* restarts into the update.
 
 ### Windowed mode
 
-Without a spare screen, tray → *Display* → *Windowed* turns the dashboard into a window on the chosen monitor (on a PC with only one screen it starts this way). It starts unlocked with a dashed outline: drag it to move it (onto another monitor too) and drag an edge or corner to resize it. It keeps the layout's shape, so the layout always fills it. Then tick *Lock position*. Its size, position and monitor are remembered, and it's moved back on screen if the resolution changes.
+Without a spare screen, *Screens* → pick the monitor → *Size* → *A window* turns the dashboard into a window on it (on a PC with only one screen it starts this way). It starts unlocked with a dashed outline: drag it to move it (onto another monitor too) and drag an edge or corner to resize it. It keeps the layout's shape, so the layout always fills it. Then turn on *Lock position*. Its size, position and monitor are remembered, and it's moved back on screen if the resolution changes.
 
-- *Click-through when locked* lets clicks go to the window underneath. Right-click can't open the editor then; use the tray.
-- *Always on top* keeps it above other windows. *Hide over fullscreen apps* (on by default) hides it while a game or video fills its monitor, since a window over a borderless game can cost frame pacing, and it can't show over exclusive fullscreen anyway.
+- *Click-through when locked* lets clicks go to the window underneath. Right-click can't open the editor then; use the tray or the window.
+- *Always on top* (under *All dashboards*) keeps it above other windows. *Hide over fullscreen apps* (on by default) hides it while a game or video fills its monitor, since a window over a borderless game can cost frame pacing, and it can't show over exclusive fullscreen anyway.
 - *Bring to front* raises it when it's behind other windows, and *Reset size and position* recentres it.
 - The canvas scales to the window, so a small window shrinks everything evenly. For a window that isn't a strip, give the layout a matching size in the editor (*Canvas*); *Match dashboard screen* uses the window's size.
 
-*Fill screen* goes back to covering the whole monitor.
+*Size* → *Fill the screen* goes back to covering the whole monitor.
 
 ## Layouts and the editor
 
@@ -98,27 +88,27 @@ Every box is a widget you can move, resize, restyle or replace. Twenty-two widge
 
 ### Layout editor
 
-Double-click the tray icon (or tray → *Edit layout…*, or right-click / press and hold on the dashboard) to open the editor on your main screen. Right-click or press and hold on one of [more dashboards](#more-dashboards) to edit that one's layout instead:
+The editor is the *Layouts* page of the window, which opens on your main screen: tray → *Edit layout…*, or right-click / press and hold on the dashboard. Right-click or press and hold on one of [more dashboards](#more-dashboards) to edit that one's layout instead. At the top, *Screen* picks which screen's dashboard you're editing and *Layout* which saved layout it shows:
 
 - **Preview:** click a widget to select it, drag to move, drag the handles to resize. Moves snap to a grid (toolbar); hold Alt to place freely. Arrow keys nudge, Shift+arrows by 10.
 - **Metrics:** template and metric fields have a `{…}` button that opens a searchable list of every metric (about 280 on a typical PC, including every raw sensor) with live values. Pick one and choose how to show it (e.g. `18.7 GB`, `19,138 MB` or just `18.7`) and it's inserted at the cursor. Under each field a live preview shows what it renders now and flags unknown metric ids.
 - **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme.
-- **Setting a widget up:** the weather, agenda, news and Claude usage widgets need something set up outside the layout. Select one and *Set up*, at the top of its properties, says what's set up now and has a button for it: *Set location…*, *Calendars…*, *News feeds…* or *Connect Claude Code…*. They're the same as the tray's.
+- **Setting a widget up:** the weather, agenda, news and Claude usage widgets need something set up outside the layout. Select one and *Set up*, at the top of its properties, says what's set up now and has a button for it: *Set location…*, *Calendars…*, *News feeds…* or *Connect Claude Code…*. They do the same as the window's own pages.
 - **Widgets:** add, duplicate (Ctrl+D), delete, and bring forward / send back.
 - **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
 - **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout, each shown with a sample of its colours. *Orange* (the default look) and 42 others are built in: clean ones like *High Contrast*, *Swiss* and *Glacier*, retro ones like *Amber*, *8-Bit*, *Desktop 95* and *Blue Screen*, moods like *Outrun*, *Cyberpunk*, *Grimoire*, *Aurora* and *Gatsby*, a *Night Watch* theme in dim reds for a screen you keep on at night, and well-known editor palettes such as *Dracula*, *Nord*, *Gruvbox*, *Solarized* and *Catppuccin*. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
 - **Moving backgrounds:** the theme's background *Image* can be an animated GIF or a video (MP4, M4V or WMV), which plays muted and on a loop behind the widgets, with the same fit and opacity settings as a picture. GIF frames are prepared once at the size the canvas shows them and kept under 48 MB in all (a long GIF is made smaller, then thinned), and fast GIFs are held to 20 frames a second. A moving background stops while the dashboard is hidden. The tablet view and USB screens show a still frame. Moving backgrounds cost more CPU than a still picture, a video most of all, since the dashboard draws without the graphics card unless you turn hardware rendering on. Exported layouts carry a video up to 50 MB.
 - **A widget's own look:** every widget has *Widget theme* settings (font, weight and the theme's colours) that override the layout's theme for that widget alone; leave them empty to follow the theme. Named colours in its other settings, like `accent`, then mean the widget's own. Many widgets also have colours of their own, such as a bar's track or *Now playing*'s progress bar, so changing the theme's bar track doesn't change everything that happens to use it.
 - **Gradients and glow:** under *Gradients and glow* in the theme's settings, *Accent fades to* makes graphs, bars, gauges and icons fade from the accent to a second colour; *Background fades to* fades the background from top to bottom; and *Glow* (0 to 1) puts a soft neon halo around every widget's text and shapes, in the accent colour or its own. *Outrun*, *Vaporwave*, *Aurora*, *Magma*, *Cyberpunk* and *Toxic* use them. The glow costs a little CPU, since the dashboard draws without the graphics card by default.
-- **Saved layouts:** the editor edits the layout the dashboard is showing. The *Layout* drop-down switches to another (asking first if you have unsaved changes), and *Layouts ▾* has *Save as…* (your changes as a new layout), *Rename…*, *Duplicate…*, *Export…*, *Import…* and *Delete* (not the last one). Keep a "Gaming" and a "Desktop" layout, for example, and flip between them from the tray.
-- **More than one screen:** with [more dashboards](#more-dashboards), a screen list appears beside *Layout*. Pick a screen to edit its dashboard's layout; *Layout* and *Layouts ▾* then work on that screen's dashboard, and the others keep theirs.
-- The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes the layout's file; closing without saving puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
+- **Saved layouts:** the editor edits the layout the dashboard is showing. The *Layout* drop-down switches to another (asking first if you have unsaved changes), and *Layouts ▾* has *Save as…* (your changes as a new layout), *Rename…*, *Duplicate…*, *Get one from the gallery…*, *Export…*, *Import…*, *Open layout file* and *Delete* (not the last one). Keep a "Gaming" and a "Desktop" layout, for example, and flip between them from the tray's *Layout* menu.
+- **More than one screen:** with [more dashboards](#more-dashboards), *Screen* moves between them. Pick a screen to edit its dashboard's layout; *Layout* and *Layouts ▾* then work on that screen's dashboard, and the others keep theirs.
+- The real dashboard shows your changes live while you edit. **Save** (Ctrl+S) writes the layout's file; leaving the page or closing the window without saving (it asks first) puts the dashboard back as it was. Undo/redo with Ctrl+Z / Ctrl+Y.
 
-<p align="center"><img src="images/editor.png" alt="The layout editor: the widget list, the layout's preview with the GPU graph selected, and the graph's settings"></p>
+<p align="center"><img src="images/editor.png" alt="The Impious Bonum window on its Layouts page: the sidebar of pages, the screen and layout pickers, the widget list, the layout's preview with the GPU graph selected, and the graph's settings"></p>
 
 ### Editing layouts by hand
 
-Each layout is a JSON file in `%AppData%\ImpiousBonum\layouts` (tray → *Layout* → *Open layout file* opens the one being shown). Saving the shown layout's file applies it straight away; changes to other layouts show when you switch to them. To add a layout by hand, drop a new `.json` file in the folder and pick it from tray → *Layout*.
+Each layout is a JSON file in `%AppData%\ImpiousBonum\layouts` (*Layouts ▾* → *Open layout file* in the editor opens the one being edited). Saving the shown layout's file applies it straight away; changes to other layouts show when you switch to them. To add a layout by hand, drop a new `.json` file in the folder and pick it from tray → *Layout*.
 
 The canvas has a design size (default 1920×480) and scales to fit the window. Each widget has `type`, `x`, `y`, `width`, `height` plus its own settings. Text uses templates:
 
@@ -140,7 +130,7 @@ To put a picture behind the widgets, add `"backgroundImage": "C:\\Pictures\\wall
 
 ### Sharing layouts
 
-*Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file, background image and image widgets' pictures inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor, or tray → *Layout*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual.
+*Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file, background image and image widgets' pictures inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor's *Layouts ▾*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual.
 
 A layout from someone else could have a harmless-looking button that runs any program, so if it has buttons that open something, the import lists what they'd open and asks whether to keep them or clear them.
 
@@ -148,26 +138,33 @@ An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder
 
 ### Layout gallery
 
-Tray → Layout → *Gallery…* lists ready-made layouts, each with its screen size and a description. Pick one to
-see it drawn live with your own readings, then *Import* adds it to your saved layouts and shows it, the same way as
-importing a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open
-programs. Pictures and fonts inside a shared layout show once it's imported. So far it has five, made along with
-the app: a gaming HUD, a desk companion (world clocks, calendar, weather, music), a system monitor, a focus timer and
-a layout for small 800 × 480 screens. Yours could be next.
+The *Gallery* page lists ready-made layouts, each with its size, how many widgets it has and a description. Under
+*For*, pick one of your screens to see only the layouts whose shape suits it, closest in size first. Under *Showing*,
+choose *A few big things* (up to 6 widgets) or *Lots at once*: a TV across the room or a small panel suits a few big
+things, while a monitor at arm's length can show lots. Pick a layout to see it drawn live with your own readings.
+*Show on* puts it on the screen you picked (*Add a dashboard on* gives a screen without one a dashboard), then *Edit
+it* opens it in the editor; with *Any screen*, *Add to my layouts* only adds it. It's added the same way as importing
+a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open programs.
+Pictures and fonts inside a shared layout show once it's added. In the editor, *Layouts ▾* → *Get one from the
+gallery…* opens it for the screen you're editing.
+
+So far it has thirteen, made along with the app, for screens from a 3.5" USB screen (480 × 320) and a 7" panel
+(1024 × 600) through 1920 × 480 and 1920 × 720 bars to 1080p, 1440p and 4K monitors, a TV across the room and a monitor
+turned on its side. Yours could be next.
 
 The gallery is the [`gallery`](../gallery) folder of this repository. To share a layout, export it (*Layouts ▾ →
 Export…* in the editor), add the `.ibl` file and an entry in [`gallery/index.json`](../gallery/index.json), and open a
 pull request. A plain layout `.json` works too if it has no pictures or fonts. The tests check every gallery layout
-opens and is valid. To use a gallery of your own instead, set `"galleryAddress"` in `settings.json` to a web folder
-with an `index.json` in it.
+opens and is valid, and that its widget count is right. To use a gallery of your own instead, set `"galleryAddress"`
+in `settings.json` to a web folder, or a folder on this PC, with an `index.json` in it.
 
 ### Pages
 
-A small strip fits more when it has pages. Tray → *Layout* → *Pages*:
+A small strip fits more when it has pages. *Pages and schedule* → *Pages*:
 
 - **Swipe between pages:** swipe left across the dashboard for the next layout, right for the previous one (a mouse drag works too). A row of dots shows which page you're on. A press that turns into a swipe doesn't count as a tap on a button.
-- **Rotate:** move to the next page every 15 seconds to 5 minutes. Rotation waits a minute after you touch the dashboard, and doesn't run while you edit the layout or while a [game's layout](#game-layouts) is showing.
-- **The pages are:** tick the layouts that are pages, in the *Layout* menu's order. With none ticked, every layout is a page.
+- **Turn pages by themselves:** move to the next page every 15 seconds to 5 minutes. Rotation waits a minute after you touch the dashboard, and doesn't run while you edit the layout or while a [game's layout](#game-layouts) is showing.
+- **The pages:** tick the layouts that are pages. With none ticked, every layout is a page.
 
 Turning a page is the same as picking that layout from the tray, so it's remembered. Swiping is off while the window can be dragged (windowed and unlocked) and while you edit the layout. Stored as `swipePages`, `rotatePagesSeconds` and `pages` in `settings.json`.
 
@@ -190,14 +187,14 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `net.ping` | ICMP to `1.1.1.1` (configurable) |
 | `sys.uptime`, `sys.name`, `sys.battery`, `sys.battery.status` | Windows; the battery ones only on PCs with a battery |
 | `top.cpu.<N>`, `top.cpu.<N>.name`, `top.memory.<N>`, `top.memory.<N>.name` (N = 1 to 5) | The apps using the most CPU and memory, every 2 seconds, from one `NtQuerySystemInformation` call like Task Manager's. An app's processes count together (all of Chrome's are one); CPU is a share of the whole processor, memory is the private working set (Task Manager's *Memory* column) |
-| `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set in tray → *Weather*, every 15 minutes |
-| `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set in tray → *Calendar…*, every 15 minutes (see [Calendar](#calendar)) |
+| `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set on the *Weather* page, every 15 minutes |
+| `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set on the *Calendars* page, every 15 minutes (see [Calendar](#calendar)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
-| `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set in tray → *News feeds…*, every 15 minutes (see [News](#news)) |
-| `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up in tray → *Custom data…* (see [Custom data](#custom-data)) |
+| `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
+| `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
-| `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; tray → *Sensors* → *FPS from* picks the foreground app or the top app on a chosen monitor |
+| `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; *Sensors* → *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
@@ -221,10 +218,10 @@ flowchart LR
     sensors -- "read-only<br/>named pipe" --> dash
 ```
 
-- **Install:** tray icon → *Sensors* → *Install sensor service…* (one UAC prompt). The host is copied to `Program Files\Impious Bonum\Sensors` and registered as an auto-start service, so there are no prompts at logon.
+- **Install:** *Sensors* → *Install…* (one UAC prompt). The host is copied to `Program Files\Impious Bonum\Sensors` and registered as an auto-start service, so there are no prompts at logon.
 - **CPU temperatures** also need the signed [PawnIO](https://pawnio.eu) driver (`winget install namazso.PawnIO`). HWiNFO and FanControl install it too. GPU sensors work without it.
 - The service only reads hardware while a dashboard is connected. Its log is in `%ProgramData%\ImpiousBonum\sensors.log`.
-- For development: `ImpiousBonum.Sensors.exe run` serves from a console, and `list` prints every sensor. Both work unelevated with fewer sensors. `install` and `uninstall` (as admin) do what the tray items do.
+- For development: `ImpiousBonum.Sensors.exe run` serves from a console, and `list` prints every sensor. Both work unelevated with fewer sensors. `install` and `uninstall` (as admin) do what the *Sensors* page's buttons do.
 
 #### Frame times
 
@@ -236,7 +233,7 @@ Average FPS hides stutter: a game can average 120 FPS and still hitch. The senso
 
 <p align="center"><img src="images/widgets/frame-times.png" width="600" alt="Stat tiles of the frame rate at 145 and the 1% and 0.1% lows, each with a trend line and its range, and a graph of the average and slowest frame times"></p>
 
-A sensor service from before 0.8 doesn't send these; *Sensors → Update sensor service…* brings it up to date.
+A sensor service from before 0.8 doesn't send these; *Sensors* → *Update…* brings it up to date.
 
 ### Weather
 
@@ -244,12 +241,12 @@ The *Weather* widget shows an icon, the temperature and conditions now (with tod
 
 <p align="center"><img src="images/widgets/weather.png" width="600" alt="The weather widget with colour icons: 14° and partly cloudy now with the high, low and feels-like, four days ahead, and below it a second weather widget of every three hours ahead with the chance of rain"></p>
 
-1. Tray → *Weather* → *Set location…*, or in the editor select the widget and *Set location…* under *Set up* (adding the widget offers it too). Search for your town, or type latitude and longitude, e.g. `51.5, -0.12`.
-2. Add the widget: *Edit layout…* → add *Weather*.
+1. *Weather* → *Set location…*, or in the editor select the widget and *Set location…* under *Set up* (adding the widget offers it too). Search for your town, or type latitude and longitude, e.g. `51.5, -0.12`.
+2. Add the widget: *Add widget* → *Weather* in the editor.
 
 It's adjustable in the editor: turn off *Weather now* to leave just the forecast (say, one widget of the hours ahead beside another of the days), choose *colour* icons for a yellow sun, white clouds, grey rain clouds with blue rain and white lightning instead of outlines in one colour, and give the widget its own text and detail colours rather than the theme's.
 
-The location is set once for the PC, so every layout shows the same place. Units follow your Windows region (°C and km/h, or °F and mph); tray → *Weather* → *Units* changes them.
+The location is set once for the PC, so every layout shows the same place. Units follow your Windows region (°C and km/h, or °F and mph); *Weather* → *Units* changes them.
 
 Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-commercial use and needs no account. The coordinates of the place you pick go to Open-Meteo every 15 minutes, and the name you search for when you search; nothing else is sent, and nothing at all until you set a location. *Turn off weather* forgets the place and stops it. If the internet is down the last forecast stays for up to three hours. Weather data by Open-Meteo.com, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
@@ -260,7 +257,7 @@ What's on now is in the accent colour, and something that started before today s
 
 <p align="center"><img src="images/widgets/agenda.png" width="600" alt="An agenda of today's and tomorrow's events with their times and places, and beside it text widgets showing the next event, Call with Sam at 22:15"></p>
 
-Add calendars in tray → *Calendar…* (or select the widget in the editor → *Calendars…*) by pasting their private iCal link:
+Add calendars on the *Calendars* page (or select the widget in the editor → *Calendars…*) by pasting their private iCal link:
 
 - **Google Calendar:** Settings → your calendar → *Secret address in iCal format*.
 - **Outlook / Microsoft 365:** Settings → Calendar → Shared calendars → *Publish a calendar*, then the ICS link.
@@ -277,7 +274,7 @@ The metrics put the next event anywhere: `{calendar.next.title}` at `{calendar.n
 
 The `news` widget shows headlines from news feeds (RSS or Atom), newest first: a list of the latest few, or a
 *ticker* that shows one at a time and moves on every few seconds. Each shows where it's from and how old it is, and
-tapping one opens the article in your browser. Add feeds in tray → *News feeds…* (or select the widget in the editor → *News feeds…*): most news sites and blogs have
+tapping one opens the article in your browser. Add feeds on the *News feeds* page (or select the widget in the editor → *News feeds…*): most news sites and blogs have
 one (look for an RSS link, or try the site's address with `/feed` or `/rss` on the end), and so do YouTube channels
 and subreddits. Each feed is checked every 15 minutes, and the same story in two feeds shows once. A widget can show
 some feeds and not others (*Feeds*: `BBC, The Verge`), and `{news.title}` puts the newest headline anywhere.
@@ -286,7 +283,7 @@ some feeds and not others (*Feeds*: `BBC, The Verge`), and `{news.title}` puts t
 
 ### Custom data
 
-Anything that can answer a web request or print to a console can feed the dashboard: Home Assistant sensors, a server's health page, a script that checks your backups. Tray → *Custom data…* lists your sources; *Add…* sets one up:
+Anything that can answer a web request or print to a console can feed the dashboard: Home Assistant sensors, a server's health page, a script that checks your backups. The *Custom data* page lists your sources; *Add…* sets one up:
 
 - **Where from:** a web address (`GET`, with optional headers such as an access token) or a command with arguments, run without a window. Either can return JSON or plain text.
 - **How often:** every 5 seconds or more. Each source runs on its own, and gives up after 15 seconds.
@@ -313,9 +310,9 @@ The *Claude usage* widget shows your Claude plan's session (5-hour) and weekly l
 
 The numbers come from Claude Code: it passes them to its [status line](https://code.claude.com/docs/en/statusline), and only for Pro and Max plans. There's no official way for another app to read them, so Impious Bonum uses the status line. That means Claude Code in a terminal (the CLI): the Claude Desktop app doesn't run status lines or share usage with other apps. Usage in the Desktop app and on claude.ai still counts, because the limits are shared, and shows the next time the CLI reports.
 
-1. Tray → *Claude usage* → *Connect Claude Code…* (or select the widget in the editor → *Connect Claude Code…*; adding the widget offers this too, if it isn't set up yet). This sets the status line in Claude Code's `settings.json` (`%USERPROFILE%\.claude\settings.json`) to `ImpiousBonum.Sensors.exe claude-statusline`, re-run every 15 seconds. It keeps your other settings and saves a copy of the file first. If you already have a status line, it asks before replacing it.
+1. *Claude usage* → *Connect…* (or select the widget in the editor → *Connect Claude Code…*; adding the widget offers this too, if it isn't set up yet). This sets the status line in Claude Code's `settings.json` (`%USERPROFILE%\.claude\settings.json`) to `ImpiousBonum.Sensors.exe claude-statusline`, re-run every 15 seconds. It keeps your other settings and saves a copy of the file first. If you already have a status line, it asks before replacing it.
 2. Start Claude Code in a terminal (`claude`), or restart it if it's open. The new status line shows the model, context use and your limits, e.g. *Opus 5.5 · context 8% · session 24% (2h 14m) · week 41%*.
-3. Add the widget: *Edit layout…* → add *Claude usage*. The usage appears after Claude Code's next reply.
+3. Add the widget: *Add widget* → *Claude usage* in the editor. The usage appears after Claude Code's next reply.
 
 How it decides Claude Code is open: each status line run updates `claude-usage.json`, and Claude Code re-runs it every 15 seconds while it's open. If there's been no run for a minute, the widget hides. Usage you spend on claude.ai shows up the next time Claude Code reports. A window that has reset reads *0 % · not started* until you use Claude again.
 
@@ -427,7 +424,7 @@ Exported layouts carry their image widgets' pictures, like the background image 
 
 Warning colours only help if you're looking. An alert tells you when a reading stays out of bounds: the GPU hot spot above 95 °C for 10 seconds, a drive over 95% full, a frame rate below 30, a [custom data](#custom-data) source reporting an error.
 
-Tray → *Alerts…* → *Add…* picks the metric (the window shows its reading now), *Above* and/or *Below* a number, for how many seconds (so a brief spike doesn't count), an optional message (a template, so `GPU is cooking: {gpu.hotspot}` shows the reading), and what happens:
+*Alerts* → *Add…* picks the metric (the window shows its reading now), *Above* and/or *Below* a number, for how many seconds (so a brief spike doesn't count), an optional message (a template, so `GPU is cooking: {gpu.hotspot}` shows the reading), and what happens:
 
 - **A Windows notification**, with the reading in it.
 - **A banner flashing on the dashboard**, with a pulsing red outline, until the reading is back to normal. It shows over dimming too. Tap it to dismiss it.
@@ -436,16 +433,16 @@ An alert goes off once, and only goes off again after the reading has been back 
 
 ### Hotkeys
 
-Tray → *Hotkeys…* sets key combinations that work from anywhere in Windows, even while a game has focus:
+The *Hotkeys* page sets key combinations that work from anywhere in Windows, even while a game has focus:
 
 - **Show or hide the dashboard.** Hidden stays hidden until you press it again (or restart the app).
 - **Next page** and **Previous page**, through the same layouts as swiping (see [Pages](#pages)).
 - **Edit the layout.**
 - **Show** a particular layout: there's a row for each saved one.
 
-Click a box and press the keys; Backspace clears it. A hotkey needs Ctrl, Alt or Win, so it doesn't take a key away from
+Click a box and press the keys; Backspace clears it. Each is saved as soon as it's set, unless it clashes with another. A hotkey needs Ctrl, Alt or Win, so it doesn't take a key away from
 every other app, except F13 to F24, which macro pads and programmable keyboards can send. If another app already
-uses a combination, the tray says so and the rest still work. Hotkeys are saved in `settings.json` as
+uses a combination, a notification says so and the rest still work. Hotkeys are saved in `settings.json` as
 `"hotkeys": [{ "action": "show-hide", "keys": "Ctrl+Alt+D" }, { "action": "layout", "keys": "Ctrl+Alt+1", "layout": "Gaming" }]`
 (the actions are `show-hide`, `next-page`, `previous-page`, `edit` and `layout`), and they follow a layout when you rename it.
 
@@ -453,13 +450,13 @@ uses a combination, the tray says so and the rest still work. Hotkeys are saved 
 
 A game can have its own layout: FPS front and centre, its colours, a themed font. When a linked game has been in front for about 3 seconds the dashboard switches to its layout, and when it has been gone for about 3 seconds it goes back to the layout you chose. Alt-tabbing out briefly, or a launcher flashing up, doesn't switch anything.
 
-To link a game: with the game running, open tray → *Layout* → *Game layouts* → *Link "game" to* and pick a layout (the menu offers the last app you had in front, so click the tray icon straight after leaving the game). To keep your usual layout and only change its look, pick a theme under *Theme only* instead. The same menu lists the links with *Remove link*, and *Switch automatically* turns the whole thing off and on (remembered).
+To link a game: on the *Game layouts* page, under *Link a game*, pick the game (the list has the apps you've had in front lately, so play it for a moment first, or type its name) and a layout, then *Link*. To keep your usual layout and only change its look, pick *Theme only:* and a theme instead. The page lists the links with *Remove*, and *Switch automatically* turns the whole thing off and on (remembered).
 
 "In front" means the same thing as for the FPS reading: the foreground app, or with *Sensors → FPS from → Top app on a monitor*, the top app on that monitor, so a game on one screen keeps its layout while you type on another.
 
-Game layouts are temporary: picking a layout from the tray while a game is running makes that your choice to come back to, and the editor keeps whichever layout it opened on (switching waits until it closes). Switches are written to `dashboard.log`. A link to a layout or theme that no longer exists is ignored, with one notification and a line in the log; renaming a layout updates its links.
+Game layouts are temporary: picking a layout from the tray while a game is running makes that your choice to come back to, and the editor keeps whichever layout it opened on (switching waits until you leave the *Layouts* page). Switches are written to `dashboard.log`. A link to a layout or theme that no longer exists is ignored, with one notification and a line in the log; renaming a layout updates its links.
 
-Links live in `settings.json` (tray → *Help* → *Open settings folder*) and can be edited by hand while the dashboard isn't running. `process` is the program's name as Task Manager's *Details* tab shows it, with or without `.exe`, matched ignoring case. A link has a `layout`, a `theme` (which restyles whichever layout is showing), or both:
+Links live in `settings.json` (*General* → *Settings folder*) and can be edited by hand while the dashboard isn't running. `process` is the program's name as Task Manager's *Details* tab shows it, with or without `.exe`, matched ignoring case. A link has a `layout`, a `theme` (which restyles whichever layout is showing), or both:
 
 ```json
 "gameLayouts": [
@@ -483,14 +480,14 @@ minute (a launcher, a quick look) aren't recapped. FPS and temperatures need the
 
 The `session.*` metrics show the session so far while you play, and the last one afterwards, so a layout can show
 it: `{session.game}` · `{session.minutes} min` · `{session.fps.avg} average`, or a `stat` of `session.fps.avg`.
-`session.playing` reads *Playing* or *Last played*. Tray → Layout → Game layouts → *Recap each session* turns it off.
+`session.playing` reads *Playing* or *Last played*. *Game layouts* → *Recap each session* turns it off.
 This works whether or not *Switch automatically* is on.
 
 ### Schedule
 
 The dashboard can change with the time of day: the dim red *Night Watch* theme from 22:00 to 07:00, say, a calmer layout during working hours, or the screen at 30% overnight. It can also follow Windows' dark and light mode, e.g. *Nord* while Windows is dark and *Glacier* while it's light.
 
-Tray → *Layout* → *Schedule* → *Add…* picks when (between two times, which may cross midnight, or while Windows is in dark or light mode) and what to do: show a layout, a theme, dim the screen (see [Dimming](#dimming)), or any mix. The menu lists the rules, with the ones that apply now in bold, and *Follow the schedule* turns them all off and on. Rules combine: when several apply, the layout comes from the first of them that names a layout, the theme from the first that names a theme, and the brightness likewise.
+*Pages and schedule* → *Add to the schedule* picks when (between two times, which may cross midnight, or while Windows is in dark or light mode) and what to do: show a layout, a theme, dim the screen (see [Dimming](#dimming)), or any mix. The page lists the rules, marking the ones that apply now, and *Follow the schedule* turns them all off and on. Rules combine: when several apply, the layout comes from the first of them that names a layout, the theme from the first that names a theme, and the brightness likewise.
 
 A game linked under *Game layouts* still wins while it's in front, and the schedule fills in what its link doesn't set: a game linked to a layout gets the night theme at night. Like game layouts, scheduled ones are temporary: picking a layout from the tray makes it your choice, and renaming a layout updates the rules. The schedule is in `settings.json` too:
 
@@ -509,20 +506,20 @@ A game linked under *Game layouts* still wins while it's in front, and the sched
 A bright strip beside your bed or in a dark room is the most common complaint about these screens. Two things dim it, and the darker of the two wins:
 
 - **The schedule:** a rule's brightness, from 75% down to black (above).
-- **Being away:** tray → *Display* → *When you're away* dims the dashboard after 5 to 60 minutes without keyboard, mouse or touch input, to 40%, 20% or black. Any input brings it straight back. A game or video drawing frames in front counts as someone there, since a gamepad doesn't count as input to Windows. Stored as `awayDimMinutes` and `awayBrightness` in `settings.json`.
+- **Being away:** *Screens* → *When you're away* dims the dashboards after 5 to 60 minutes without keyboard, mouse or touch input, to 40%, 20% or black. Any input brings it straight back. A game or video drawing frames in front counts as someone there, since a gamepad doesn't count as input to Windows. Stored as `awayDimMinutes` and `awayBrightness` in `settings.json`.
 
 Dimming fades in and out. When the screen is too dark to see (20% or less), a tap shows it at full brightness for 30 seconds instead of pressing whatever is under your finger. Nothing dims while you edit the layout, and the tablet view isn't dimmed.
 
 ### Logging
 
-Tray → *Logging…* writes readings to CSV files for a spreadsheet, to see how temperatures crept up over an afternoon
+The *Logging* page writes readings to CSV files for a spreadsheet, to see how temperatures crept up over an afternoon
 or what the CPU was doing overnight. Pick the metrics (*Add…* opens the same picker as the editor), how often to
 write a row (every second to every 5 minutes) and how long to keep the files.
 
 Each row is one period, and the readings are taken every second within it, so a row every minute still catches a
 short spike: the time the period ended, then each metric's average, lowest and highest. A metric with no reading in a
 period has empty cells. Periods line up with the clock (10:00:00, 10:00:10, …). There's one file a day in the `logs`
-folder in the settings folder (*Open logs folder* in the window), e.g. `2026-10-11.csv`. Changing the metrics during
+folder in the settings folder (*Logs folder* → *Open* on the page), e.g. `2026-10-11.csv`. Changing the metrics during
 the day starts `2026-10-11 (2).csv`, so each file's header matches all its rows. Files older than the time you chose
 are deleted once a day. Numbers use a dot for decimals whatever the Windows region, so any spreadsheet reads them.
 
@@ -530,29 +527,29 @@ are deleted once a day. Numbers use a dot for decimals whatever the Windows regi
 
 ### More dashboards
 
-With more than one spare screen, each can have a dashboard of its own, with a different layout: tray → *Display* → *More dashboards* → *Add on*, then pick a screen. The new dashboard gets a new, empty layout of its own, named after the screen, the screen's size and in the main dashboard's theme, and the editor opens on it so you can add its widgets.
+With more than one spare screen, each can have a dashboard of its own, with a different layout: on the *Screens* page, pick a screen on the map, then *Add a dashboard*. (The *Gallery* page can add one too, showing a ready-made layout.) The new dashboard gets a new, empty layout of its own, named after the screen, the screen's size and in the main dashboard's theme, and the editor opens on it so you can add its widgets.
 
-- **Editing it:** right-click or press and hold on that dashboard, or tray → *Display* → *More dashboards* → the dashboard → *Edit layout…*. In the editor, the screen list beside *Layout* moves between dashboards. Changes show live on the dashboard you're editing (and on any other showing the same layout); the rest keep theirs.
-- **Its layout:** any saved layout can go on any screen: pick it in the editor's *Layout* list while you're on that screen, or under the dashboard's *Layout* in the tray. Two screens showing the same layout show the same changes, so give each its own (*Layouts ▾* → *Duplicate…* makes a copy to change).
-- **Which screen the tray means:** tray → *Layout*, *Edit layout…*, pages, game layouts, the schedule, hotkeys and buttons that switch layouts are all the main dashboard's; the others keep their layout. Each of the others has its own *Edit layout…*, *Layout*, *Move to* and *Remove* under *More dashboards*. Dimming, *Always on top*, *Hide over fullscreen apps* and the show/hide hotkey apply to all of them, and buttons and media controls work on each.
+- **Editing it:** right-click or press and hold on that dashboard, or pick its screen on the *Screens* page → *Edit*. In the editor, *Screen* moves between dashboards. Changes show live on the dashboard you're editing (and on any other showing the same layout); the rest keep theirs.
+- **Its layout:** any saved layout can go on any screen: pick it in the editor's *Layout* list while you're on that screen, or under *Layout* when you pick its screen on the *Screens* page. Two screens showing the same layout show the same changes, so give each its own (*Layouts ▾* → *Duplicate…* makes a copy to change).
+- **Which screen the tray means:** tray → *Layout*, *Edit layout…*, pages, game layouts, the schedule, hotkeys and buttons that switch layouts are all the main dashboard's; the others keep their layout. Pick another's screen on the *Screens* page for its *Layout*, *Edit* and *Remove this dashboard*. Dimming, *Always on top*, *Hide over fullscreen apps* and the show/hide hotkey apply to all of them, and buttons and media controls work on each.
 - A layout made for another screen's shape still fills it, scaled evenly. For a better fit, give it the screen's size: *Match dashboard screen* under *Canvas* in the editor.
-- A dashboard whose screen is unplugged or off hides until it's back, rather than landing on another screen. There's one dashboard to a screen: moving the main dashboard onto a screen that has another one removes the other. Dashboards can't be added, moved or removed while the editor is open.
+- A dashboard whose screen is unplugged or off hides until it's back, rather than landing on another screen. There's one dashboard to a screen: moving the main dashboard onto a screen that has another one removes the other.
 
 ### Tablet view
 
-A tablet or phone on the same Wi-Fi can show the dashboard in its web browser, as a wireless second screen. Tray → *Display* → *Tablet view* → *Show on tablets* turns it on and shows a link and a QR code; open it on the tablet. It shows exactly what the dashboard shows (same layout, theme, background and game layouts), updated once a second, and keeps going while the dashboard window is hidden over a fullscreen game.
+A tablet or phone on the same Wi-Fi can show the dashboard in its web browser, as a wireless second screen. *Tablet and USB screen* → *Show on tablets* turns it on and shows a link and a QR code (*Show QR code…* shows them again); open it on the tablet. It shows exactly what the dashboard shows (same layout, theme, background and game layouts), updated once a second, and keeps going while the dashboard window is hidden over a fullscreen game.
 
 - **Add it to the home screen** (Safari: Share → *Add to Home Screen*; Chrome: ⋮ → *Add to Home screen*) to open it without the browser's bars, or tap *Full screen* where the browser offers it. Set the tablet's screen timeout to never, since the page can't keep the screen on by itself over plain HTTP.
 - **Cost:** with no tablet watching it draws nothing. With one watching, it draws the layout off-screen and sends one JPEG a second, and only when something changed.
-- **Pressing buttons:** with *Let tablets press buttons* ticked (under *Tablet view*, off by default), tapping a button on the tablet presses it on the PC: the layout's *Buttons* widgets and the media controls, and nothing else. A ripple shows where the tap landed, and the result shows on the next frame. Anyone who has the link can then press those buttons, so only turn it on if the layout's buttons are ones you'd be happy for them to press, and use *New link* if a link gets out.
+- **Pressing buttons:** with *Let tablets press buttons* on (under *Tablet view*, off by default), tapping a button on the tablet presses it on the PC: the layout's *Buttons* widgets and the media controls, and nothing else. A ripple shows where the tap landed, and the result shows on the next frame. Anyone who has the link can then press those buttons, so only turn it on if the layout's buttons are ones you'd be happy for them to press, and use *New link* if a link gets out.
 - **Security:** it's off by default and read-only unless you let tablets press buttons: otherwise the page can't change anything on the PC. The link carries a random secret, and *New link* stops old links working. It only answers addresses on the local network (private, link-local and loopback addresses), never the internet. When Windows asks about the firewall the first time, allow **private networks** only. It's plain HTTP, so someone watching your Wi-Fi traffic could see the dashboard's numbers.
 - It listens on port 8787. If another app uses that port, change `tabletPort` in `settings.json` and turn the tablet view off and on.
 
 ### USB screens
 
 Small 3.5" USB screens (the *Turing Smart Screen* and the many unbranded ones like it, 320 × 480, sold for showing
-PC stats inside a case) can show a layout too, with no software of their own running. Plug it in, then tray →
-Display → *USB screen* → *Show on the USB screen*. It finds the screen by itself (or pick its COM port under *Port*),
+PC stats inside a case) can show a layout too, with no software of their own running. Plug it in, then *Tablet and USB
+screen* → *Show on a USB screen*. It finds the screen by itself (or pick its COM port under *Port*),
 and you choose its *Layout* (the dashboard's, or one made for its size: give a layout a 480 × 320 canvas, or 320 × 480
 for portrait), *Brightness* and *Way up* for how it's mounted. A layout of a different shape is scaled to fit, with the
 theme's background around it.
@@ -571,5 +568,5 @@ so please report what happens.
 | `--snapshot <file.png>` | Render the layout with live data to a PNG and exit |
 | `--layout <name>` | With `--snapshot`, render this saved layout instead of the one being shown |
 | `--warmup <seconds>` | Sampling time before a snapshot (default 3) |
-| `--demo` | Made-up readings instead of this PC's, the ones the screenshots use: with `--snapshot`, or to run a copy of the dashboard with them (pair it with `--data-dir` to leave your own settings alone) |
+| `--demo` | Made-up readings instead of this PC's, the ones the screenshots use: with `--snapshot`, or to run a copy of the dashboard with them (pair it with `--data-dir` to leave your own settings alone). Such a copy also pretends to find an update, to show *About and updates* at work |
 | `--widget-docs <file>` | Regenerate the widget reference from the widget descriptors |
