@@ -11,21 +11,43 @@ namespace ImpiousBonum.App;
 // Which layout shows: the editor, saved layouts, the gallery, game layouts, the schedule and pages.
 public partial class App
 {
+    /// <summary>Tray → Edit layout…, its double-click and the hotkey: the editor as it is, or on the main dashboard.</summary>
     private void OpenEditor()
+    {
+        if (_editor is not null)
+            BringToFront(_editor);
+        else
+            EditDashboard(null);
+    }
+
+    /// <summary>
+    /// The editor on the layout one dashboard shows: the main one (null) or another, by its monitor's id. An editor
+    /// already open on another dashboard moves to this one, asking about unsaved changes first.
+    /// </summary>
+    private void EditDashboard(string? screen)
     {
         if (_editor is not null)
         {
             BringToFront(_editor);
+            _editor.SwitchScreen(ScreenIndex(screen));
             return;
         }
 
-        var session = new LayoutSession(_layouts!.LoadOrDefault(), _layouts.Themes);
-        _editor = new EditorWindow(session, _layouts, () =>
-            !_settings.Fill && _settings.Area is { } area ? (area.Width, area.Height)
-            : DisplayMonitor.Resolve(_settings, DisplayMonitor.GetAll()) is { } monitor ? (monitor.Bounds.Width, monitor.Bounds.Height)
-            : null);
+        _editingScreen = ScreenIndex(screen) == 0 ? null : screen;
+        var session = new LayoutSession(_layouts!.LoadOrDefault(EditedLayout()), _layouts.Themes);
+        _editor = new EditorWindow(session, _layouts, EditedLayout, EditedScreenSize);
+        _editor.SetScreens(EditorScreens(), ScreenIndex(_editingScreen));
 
         session.Changed += (_, change) => MirrorToDashboard(session, change);
+        _editor.LayoutChosen += (_, name) => ShowOnEditedDashboard(name);
+        _editor.ScreenChosen += (_, index) =>
+        {
+            EditedWindow()?.EndEdit();
+            _editingScreen = index > 0 && index <= _settings.ExtraDashboards.Count ? _settings.ExtraDashboards[index - 1].MonitorId : null;
+            // Any changes left unsaved on the last dashboard are gone from the screen too.
+            ShowSavedLayouts();
+            EditedWindow()?.BeginEdit(session);
+        };
         _editor.Setups = WidgetSetups;
         _editor.WidgetAdded += (_, descriptor) =>
         {
@@ -37,7 +59,8 @@ public partial class App
         _editor.Closed += (_, _) =>
         {
             _editor = null;
-            _window?.EndEdit();
+            EditedWindow()?.EndEdit();
+            _editingScreen = null;
             // Catch up with any game that came or went while the editor had the layout.
             ApplyGameLayout();
             // Back to what's on disk: the saved layout, or the old one if changes were discarded.
@@ -45,8 +68,73 @@ public partial class App
         };
         _editor.Show();
         BringToFront(_editor);
-        _window?.BeginEdit(session);
+        EditedWindow()?.BeginEdit(session);
         Refresh();
+    }
+
+    /// <summary>Where a dashboard is in the editor's list of them: the main one first, then the others in order.</summary>
+    private int ScreenIndex(string? screen) =>
+        screen is null ? 0 : _settings.ExtraDashboards.FindIndex(e => e.MonitorId == screen) + 1;
+
+    /// <summary>The dashboards the editor can edit, by their screens' names, in <see cref="ScreenIndex"/> order.</summary>
+    private List<string> EditorScreens()
+    {
+        var monitors = DisplayMonitor.GetAll();
+        var main = DisplayMonitor.Resolve(_settings, monitors)?.DisplayName
+            ?? $"{DisplayMonitor.ShortName(_settings.MonitorDevice ?? "Dashboard")} (not connected)";
+        return [main, .. _settings.ExtraDashboards.Select(e => e.MonitorName(monitors))];
+    }
+
+    /// <summary>The extra dashboard the editor is on, or null for the main one.</summary>
+    private ExtraDashboard? EditedExtra() =>
+        _editingScreen is null ? null : _settings.ExtraDashboards.FirstOrDefault(e => e.MonitorId == _editingScreen);
+
+    /// <summary>The saved layout the dashboard being edited shows.</summary>
+    private string EditedLayout() => EditedExtra()?.Layout ?? _layouts!.Active;
+
+    /// <summary>The window of the dashboard being edited, which shows the editor's handles.</summary>
+    private DashboardWindow? EditedWindow()
+    {
+        if (_editingScreen is null)
+            return _window;
+        var index = ScreenIndex(_editingScreen) - 1;
+        return index >= 0 && index < _extras.Count ? _extras[index] : null;
+    }
+
+    /// <summary>The size in pixels of the dashboard being edited, for the editor's "Match dashboard screen".</summary>
+    private (int Width, int Height)? EditedScreenSize()
+    {
+        var monitors = DisplayMonitor.GetAll();
+        if (EditedExtra() is { } extra)
+            return extra.Resolve(monitors) is { } screen ? (screen.Bounds.Width, screen.Bounds.Height) : null;
+        return !_settings.Fill && _settings.Area is { } area ? (area.Width, area.Height)
+            : DisplayMonitor.Resolve(_settings, monitors) is { } monitor ? (monitor.Bounds.Width, monitor.Bounds.Height)
+            : null;
+    }
+
+    /// <summary>The editor moved to another saved layout: the dashboard it's on shows that one from now on.</summary>
+    private void ShowOnEditedDashboard(string name)
+    {
+        if (EditedExtra() is { } extra)
+        {
+            _settings.ExtraDashboards = _settings.ExtraDashboards.Select(e => e.MonitorId == extra.MonitorId ? e with { Layout = name } : e).ToList();
+            _settings.Save();
+            AppLog.Info($"Dashboard on {extra.MonitorDevice}: showing layout \"{name}\"");
+        }
+        else
+        {
+            try
+            {
+                _layouts?.SetActive(name);
+            }
+            catch (FileNotFoundException ex)
+            {
+                // Deleted on disk while the editor was picking it.
+                AppLog.Warning(ex.Message);
+            }
+        }
+        // Other dashboards that were showing unsaved changes to the last layout go back to its saved file.
+        ShowSavedLayouts();
     }
 
     /// <summary>The editor's buttons for what a widget needs set up outside the layout: the same as the tray's.</summary>
@@ -78,13 +166,17 @@ public partial class App
         };
     }
 
-    /// <summary>Tray → Layout. With the editor open, the editor switches (asking about unsaved changes first).</summary>
+    /// <summary>
+    /// Tray → Layout, pages, hotkeys and buttons: the main dashboard's layout. With the editor open, the editor moves to
+    /// the main dashboard if it's on another and switches (asking about unsaved changes first).
+    /// </summary>
     private void SelectLayout(string name)
     {
         if (_editor is not null)
         {
             BringToFront(_editor);
-            _editor.SwitchTo(name);
+            if (_editor.SwitchScreen(0))
+                _editor.SwitchTo(name);
             return;
         }
 
@@ -116,13 +208,14 @@ public partial class App
         AppLog.Info($"Imported layout \"{name}\" from the gallery");
     }
 
-    /// <summary>Tray → Layout → Import…: adds the layout and shows it. With the editor open, the editor does it.</summary>
+    /// <summary>Tray → Layout → Import…: adds the layout and shows it on the main dashboard. With the editor open, the editor does it.</summary>
     private void ImportLayout()
     {
         if (_editor is not null)
         {
             BringToFront(_editor);
-            _editor.ImportLayout();
+            if (_editor.SwitchScreen(0))
+                _editor.ImportLayout();
             return;
         }
         if (_layouts is null || LayoutTransfer.Import(null, _layouts) is not { } name)
@@ -296,18 +389,25 @@ public partial class App
         AppLog.Info($"Removed the link from \"{rule.Process}\" to {rule.Describe()}");
     }
 
-    /// <summary>Shows the editor's working copy on the real dashboard as you edit, so you see it at true size.</summary>
+    /// <summary>
+    /// Shows the editor's working copy on the real dashboards as you edit, so you see it at true size: the one being
+    /// edited, and any other showing the same layout.
+    /// </summary>
     private void MirrorToDashboard(LayoutSession session, LayoutChange change)
     {
-        if (_window is null)
+        if (_window is null || _layouts is null)
             return;
 
         if (change.Kind == ChangeKind.Geometry && change.WidgetIndex is { } index)
         {
             var r = LayoutSession.GeometryOf(session.Document.Widgets[index]);
-            _window.Dashboard.SetGeometry(index, r.X, r.Y, r.Width, r.Height);
-            _tablet?.SetGeometry(index, r.X, r.Y, r.Width, r.Height);
-            foreach (var extra in ExtrasShowing(_layouts?.Active))
+            var name = EditedLayout();
+            if (IsMainShowing(name))
+            {
+                _window.Dashboard.SetGeometry(index, r.X, r.Y, r.Width, r.Height);
+                _tablet?.SetGeometry(index, r.X, r.Y, r.Width, r.Height);
+            }
+            foreach (var extra in ExtrasShowing(name))
                 extra.Dashboard.SetGeometry(index, r.X, r.Y, r.Width, r.Height);
             return;
         }
@@ -318,22 +418,39 @@ public partial class App
         Dispatcher.BeginInvoke(() =>
         {
             _mirrorQueued = false;
-            _window.Background = Theme.From(session.ResolvedTheme).Background;
-            _window.Dashboard.Build(session.Document, session.ResolvedTheme);
-            _tablet?.Build(session.Document, session.ResolvedTheme);
-            foreach (var extra in ExtrasShowing(_layouts?.Active))
+            if (_editor is null)
+                return;
+            var name = EditedLayout();
+            var background = Theme.From(session.ResolvedTheme).Background;
+            if (IsMainShowing(name))
             {
-                extra.Background = _window.Background;
+                _window.Background = background;
+                _window.Dashboard.Build(session.Document, session.ResolvedTheme);
+                _tablet?.Build(session.Document, session.ResolvedTheme);
+            }
+            foreach (var extra in ExtrasShowing(name))
+            {
+                extra.Background = background;
                 extra.Dashboard.Build(session.Document, session.ResolvedTheme);
             }
             Refresh();
         }, DispatcherPriority.Background);
     }
 
+    private bool IsMainShowing(string name) => string.Equals(_layouts?.Active, name, StringComparison.OrdinalIgnoreCase);
+
     private void ApplyLayout()
     {
         // While the editor is open it owns the layout (including our own saves, which trigger the file watcher).
-        if (_layouts is null || _window is null || _editor is not null)
+        if (_editor is not null)
+            return;
+        ShowSavedLayouts();
+    }
+
+    /// <summary>Every dashboard, the tablet view and the USB screen show their layouts as saved.</summary>
+    private void ShowSavedLayouts()
+    {
+        if (_layouts is null || _window is null)
             return;
         ApplyExtraDashboards();
 

@@ -57,8 +57,15 @@
                     <ComboBox x:Name="SnapBox" Width="96" SelectionChanged="OnSnapChanged" ToolTip="Grid size for moving and resizing. Hold Alt while dragging to place freely." />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <!-- Only with more than one dashboard. -->
+                    <StackPanel x:Name="ScreenPanel" Orientation="Horizontal" Visibility="Collapsed">
+                        <TextBlock Style="{DynamicResource Glyph}" Text="&#xE7F4;" Margin="0,0,8,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   ToolTip="Screen" />
+                        <ComboBox x:Name="ScreenBox" Width="220" SelectionChanged="OnScreenBoxChanged" Margin="0,0,6,0"
+                                  ToolTip="The screen whose dashboard you're editing. Each screen's dashboard has a layout of its own." />
+                    </StackPanel>
                     <ComboBox x:Name="LayoutBox" Width="200" SelectionChanged="OnLayoutBoxChanged" Margin="0,0,6,0"
-                              ToolTip="The saved layout you're editing. The dashboard shows the same one." />
+                              ToolTip="The saved layout you're editing, which that screen's dashboard shows" />
                     <Button x:Name="LayoutMenuButton" Click="OnLayoutMenu"
                             ToolTip="Save as, rename, duplicate, export, import or delete saved layouts">
                         <StackPanel Orientation="Horizontal">

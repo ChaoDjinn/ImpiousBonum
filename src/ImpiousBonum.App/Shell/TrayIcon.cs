@@ -493,9 +493,14 @@ public sealed class TrayIcon : IDisposable
     /// <summary>Display → More dashboards changed, with the new list.</summary>
     public event EventHandler<List<ExtraDashboard>>? ExtraDashboardsChanged;
 
+    /// <summary>Display → More dashboards → Add on: a new dashboard on this monitor, with a layout of its own.</summary>
+    public event EventHandler<DisplayMonitor>? ExtraDashboardAddRequested;
+
+    /// <summary>Display → More dashboards → a dashboard → Edit layout…</summary>
+    public event EventHandler<ExtraDashboard>? ExtraDashboardEditRequested;
+
     /// <param name="main">The main dashboard's monitor, which can't have another.</param>
-    /// <param name="active">The main dashboard's layout; a new dashboard starts with another.</param>
-    public void SetExtraDashboards(IReadOnlyList<ExtraDashboard> extras, IReadOnlyList<DisplayMonitor> monitors, DisplayMonitor? main, IReadOnlyList<string> layouts, string active)
+    public void SetExtraDashboards(IReadOnlyList<ExtraDashboard> extras, IReadOnlyList<DisplayMonitor> monitors, DisplayMonitor? main, IReadOnlyList<string> layouts)
     {
         _extraDashboards.DropDownItems.Clear();
         var free = ExtraDashboard.FreeMonitors(monitors, main, extras);
@@ -504,6 +509,9 @@ public sealed class TrayIcon : IDisposable
             var index = i;
             var extra = extras[i];
             var item = new ToolStripMenuItem(Escape($"{extra.Layout} on {extra.MonitorName(monitors)}"));
+
+            var edit = new ToolStripMenuItem("Edit layout…") { ToolTipText = "Open the editor on this screen's layout" };
+            edit.Click += (_, _) => ExtraDashboardEditRequested?.Invoke(this, extra);
 
             var layout = new ToolStripMenuItem("Layout");
             foreach (var name in layouts)
@@ -519,15 +527,19 @@ public sealed class TrayIcon : IDisposable
 
             var remove = new ToolStripMenuItem("Remove");
             remove.Click += (_, _) => Change(list => list.RemoveAt(index));
-            item.DropDownItems.AddRange([layout, move, remove]);
+            item.DropDownItems.AddRange([edit, layout, move, remove]);
             _extraDashboards.DropDownItems.Add(item);
         }
 
         if (extras.Count > 0)
             _extraDashboards.DropDownItems.Add(new ToolStripSeparator());
-        var add = new ToolStripMenuItem("Add on") { Enabled = free.Count > 0, ToolTipText = free.Count > 0 ? null : "Every screen has a dashboard" };
+        var add = new ToolStripMenuItem("Add on")
+        {
+            Enabled = free.Count > 0,
+            ToolTipText = free.Count > 0 ? "A dashboard with a new, empty layout of its own, open in the editor" : "Every screen has a dashboard",
+        };
         foreach (var monitor in free)
-            add.DropDownItems.Add(Escape(monitor.DisplayName), null, (_, _) => Change(list => list.Add(ExtraDashboard.On(monitor, ExtraDashboard.FirstLayout(layouts, active)))));
+            add.DropDownItems.Add(Escape(monitor.DisplayName), null, (_, _) => ExtraDashboardAddRequested?.Invoke(this, monitor));
         _extraDashboards.DropDownItems.Add(add);
 
         void Change(Action<List<ExtraDashboard>> change)

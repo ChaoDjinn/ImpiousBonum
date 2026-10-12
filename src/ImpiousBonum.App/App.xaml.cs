@@ -41,6 +41,8 @@ public partial class App : Application
     private readonly HashSet<DashboardWindow> _extrasHiddenForFullscreen = [];
     private DispatcherTimer? _tick;
     private EditorWindow? _editor;
+    // The dashboard the editor is on: null for the main one, else an extra dashboard's monitor id.
+    private string? _editingScreen;
     private TabletView? _tablet;
     private UsbScreenView? _usb;
     private TabletLinkWindow? _tabletLink;
@@ -121,7 +123,7 @@ public partial class App : Application
         _sampler.Start();
 
         _window = new DashboardWindow();
-        _window.EditRequested += (_, _) => OpenEditor();
+        _window.EditRequested += (_, _) => EditDashboard(null);
         _window.SwipesEnabled = _settings.SwipePages;
         _window.SwipeRequested += (_, step) => TurnPage(step);
         _window.Touched += (_, _) => _lastTouch = DateTime.UtcNow;

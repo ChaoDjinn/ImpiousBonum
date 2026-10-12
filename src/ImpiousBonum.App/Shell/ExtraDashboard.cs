@@ -1,3 +1,6 @@
+using System.Text.Json.Nodes;
+using ImpiousBonum.App.Layout;
+
 namespace ImpiousBonum.App.Shell;
 
 /// <summary>
@@ -28,7 +31,28 @@ public sealed record ExtraDashboard(string MonitorId, string MonitorDevice, stri
         return monitors.Where(m => !taken.Contains(m.Id)).ToList();
     }
 
-    /// <summary>The layout a new dashboard starts with: one the main dashboard isn't showing, if there is one.</summary>
-    public static string FirstLayout(IReadOnlyList<string> layouts, string active) =>
-        layouts.FirstOrDefault(l => !string.Equals(l, active, StringComparison.OrdinalIgnoreCase)) ?? active;
+    /// <summary>
+    /// The name of a new dashboard's layout: its monitor's own name, such as "DELL U2720Q", or "Screen" when Windows
+    /// doesn't know it or it won't do as a file name, numbered if a layout already has it.
+    /// </summary>
+    public static string NewLayoutName(DisplayMonitor monitor, IReadOnlyList<string> layouts)
+    {
+        // Short enough to leave room for a number within the longest name a layout can have.
+        var name = monitor.Name is { Length: <= 40 } own && LayoutLibrary.ValidateName(own) is null ? own : "Screen";
+        var candidate = name;
+        for (var i = 2; layouts.Contains(candidate, StringComparer.OrdinalIgnoreCase); i++)
+            candidate = $"{name} {i}";
+        return candidate;
+    }
+
+    /// <summary>
+    /// A new dashboard's layout: empty, for widgets of its own rather than a copy of another screen's, the size of its
+    /// monitor so nothing is scaled, and in <paramref name="theme"/> (the main dashboard's) so the two look alike.
+    /// </summary>
+    public static LayoutDocument NewLayout(DisplayMonitor monitor, JsonObject theme) => new()
+    {
+        Width = monitor.Bounds.Width,
+        Height = monitor.Bounds.Height,
+        Theme = (JsonObject)theme.DeepClone(),
+    };
 }

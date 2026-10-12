@@ -185,4 +185,46 @@ public sealed class LayoutStoreTests : IDisposable
             }
         });
     }
+
+    [Fact]
+    public void Other_dashboards_follow_a_renamed_layout_and_move_off_a_deleted_one()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            var settings = new AppSettings
+            {
+                ExtraDashboards = [new ExtraDashboard("strip", @"\\.\DISPLAY2", "Clock"), new ExtraDashboard("square", @"\\.\DISPLAY3", "Gaming")],
+                UsbScreen = UsbScreenSettings.Default with { Layout = "Clock" },
+            };
+            using var store = new LayoutStore(settings);
+            store.Save("Clock", WithText("c"));
+            store.Save("Gaming", WithText("g"));
+
+            store.Rename("Clock", "Desk clock");
+            Assert.Equal(["Desk clock", "Gaming"], AppSettings.Load().ExtraDashboards.Select(e => e.Layout));
+            Assert.Equal("Desk clock", AppSettings.Load().UsbScreen.Layout);
+
+            // A dashboard whose layout is deleted shows the main dashboard's chosen layout, not a missing one.
+            store.Delete("Gaming");
+            Assert.Equal(["Desk clock", "Default"], AppSettings.Load().ExtraDashboards.Select(e => e.Layout));
+            Assert.Equal("Default", store.Active);
+        });
+    }
+
+    [Fact]
+    public void Any_saved_layout_loads_or_falls_back_to_the_built_in_one()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            store.Save("Clock", WithText("c"));
+            File.WriteAllText(store.Library.PathOf("Broken"), "{ not json");
+
+            Assert.Equal("c", TextOf(store.LoadOrDefault("clock")));
+            Assert.Equal(LayoutStore.LoadDefault().Widgets.Count, store.LoadOrDefault("Broken").Widgets.Count);
+            Assert.Equal(LayoutStore.LoadDefault().Widgets.Count, store.LoadOrDefault("Gone").Widgets.Count);
+        });
+    }
 }

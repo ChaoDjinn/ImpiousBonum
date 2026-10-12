@@ -11,8 +11,9 @@ namespace ImpiousBonum.App.Editor;
 
 /// <summary>
 /// The layout editor: widget list, live preview and properties. Edits go to a <see cref="LayoutSession"/>;
-/// the app mirrors that onto the real dashboard as you work. It edits the active saved layout, and can switch to,
-/// create, rename, duplicate, delete, export and import saved layouts.
+/// the app mirrors that onto the real dashboards as you work. It edits the saved layout one dashboard shows (the main
+/// one, or another screen's), can move to another dashboard, and can switch to, create, rename, duplicate, delete,
+/// export and import saved layouts for the one it's on.
 /// </summary>
 public partial class EditorWindow : Window
 {
@@ -23,18 +24,26 @@ public partial class EditorWindow : Window
     private readonly PropertyPanel _properties;
     private MetricStore? _store;
     private readonly LayoutStore _layouts;
+    private readonly Func<string> _shownLayout;
     private readonly MenuItem _deleteLayoutItem;
     private bool _syncingList;
     private bool _syncingLayouts;
+    private bool _syncingScreens;
+    private int _screen;
 
-    /// <param name="layouts">The saved layouts; the session holds a working copy of the active one.</param>
-    /// <param name="dashboardSize">The dashboard's size in pixels (its monitor, or its window when windowed), for "Match dashboard screen".</param>
-    public EditorWindow(LayoutSession session, LayoutStore layouts, Func<(int Width, int Height)?> dashboardSize)
+    /// <param name="layouts">The saved layouts; the session holds a working copy of the one being edited.</param>
+    /// <param name="shownLayout">The saved layout the dashboard being edited shows, which is the one to edit.</param>
+    /// <param name="dashboardSize">
+    /// The size in pixels of the dashboard being edited (its monitor, or its window when windowed), for "Match dashboard screen".
+    /// </param>
+    public EditorWindow(LayoutSession session, LayoutStore layouts, Func<string> shownLayout, Func<(int Width, int Height)?> dashboardSize)
     {
         InitializeComponent();
         PlaceOnMainScreen();
         _session = session;
         _layouts = layouts;
+        _shownLayout = shownLayout;
+        Editing = shownLayout();
 
         _preview = new PreviewSurface(session);
         PreviewHost.Content = _preview;
@@ -199,14 +208,76 @@ public partial class EditorWindow : Window
         }
     }
 
+    // ---- Screens ------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// The dashboards it can edit the layouts of, by their screens' names, and which one it's on. The list only shows
+    /// with more than one.
+    /// </summary>
+    public void SetScreens(IReadOnlyList<string> screens, int current)
+    {
+        ScreenPanel.Visibility = screens.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+        _syncingScreens = true;
+        ScreenBox.ItemsSource = screens;
+        _syncingScreens = false;
+        SelectScreen(current);
+    }
+
+    /// <summary>
+    /// Another dashboard is to be edited, by its place in the <see cref="SetScreens"/> list. Unsaved changes have been
+    /// dealt with; once the app has moved to it, the editor loads the layout it shows.
+    /// </summary>
+    public event EventHandler<int>? ScreenChosen;
+
+    /// <summary>Edits another dashboard's layout, asking about unsaved changes first.</summary>
+    /// <returns>False if the user cancelled.</returns>
+    public bool SwitchScreen(int index)
+    {
+        if (index == _screen)
+            return true;
+        if (!ConfirmLeave())
+        {
+            SelectScreen(_screen);
+            return false;
+        }
+
+        SelectScreen(index);
+        ScreenChosen?.Invoke(this, index);
+        Load(_shownLayout());
+        return true;
+    }
+
+    private void SelectScreen(int index)
+    {
+        _screen = index;
+        _syncingScreens = true;
+        ScreenBox.SelectedIndex = index;
+        _syncingScreens = false;
+    }
+
+    private void OnScreenBoxChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_syncingScreens && ScreenBox.SelectedIndex >= 0)
+            SwitchScreen(ScreenBox.SelectedIndex);
+    }
+
     // ---- Saved layouts ------------------------------------------------------------------------------
+
+    /// <summary>The saved layout being edited, which the dashboard being edited shows.</summary>
+    public string Editing { get; private set; }
+
+    /// <summary>
+    /// The editor moved to another saved layout (picked, saved as, duplicated, imported, or in place of a deleted one):
+    /// the dashboard being edited shows it from now on.
+    /// </summary>
+    public event EventHandler<string>? LayoutChosen;
 
     private void RefreshLayouts()
     {
         _syncingLayouts = true;
         var names = _layouts.List();
         LayoutBox.ItemsSource = names;
-        LayoutBox.SelectedItem = _layouts.Active;
+        LayoutBox.SelectedItem = names.FirstOrDefault(n => string.Equals(n, Editing, StringComparison.OrdinalIgnoreCase));
         _deleteLayoutItem.IsEnabled = names.Count > 1;
         _syncingLayouts = false;
     }
@@ -224,11 +295,11 @@ public partial class EditorWindow : Window
         LayoutMenuButton.ContextMenu.IsOpen = true;
     }
 
-    /// <summary>Edits another saved layout (the dashboard follows), asking about unsaved changes first.</summary>
+    /// <summary>Edits another saved layout (the dashboard being edited follows), asking about unsaved changes first.</summary>
     /// <returns>False if the user cancelled.</returns>
     public bool SwitchTo(string name)
     {
-        if (string.Equals(name, _layouts.Active, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(name, Editing, StringComparison.OrdinalIgnoreCase))
             return true;
         if (!ConfirmLeave())
         {
@@ -236,21 +307,21 @@ public partial class EditorWindow : Window
             return false;
         }
 
-        _layouts.SetActive(name);
-        LoadActive();
+        Choose(name);
         return true;
     }
 
     private void SaveAs()
     {
-        var name = NamePromptWindow.Ask(this, "Save layout as", "Name for the new layout", $"{_layouts.Active} copy",
+        var name = NamePromptWindow.Ask(this, "Save layout as", "Name for the new layout", $"{Editing} copy",
             n => _layouts.Library.CheckNewName(n));
         if (name is null)
             return;
 
         // Unsaved changes go to the new layout; the old one stays as it was last saved.
         _layouts.Save(name, _session.Document);
-        _layouts.SetActive(name);
+        Editing = name;
+        LayoutChosen?.Invoke(this, name);
         _session.MarkSaved();
         RefreshLayouts();
         UpdateState();
@@ -258,13 +329,15 @@ public partial class EditorWindow : Window
 
     private void RenameLayout()
     {
-        var current = _layouts.Active;
+        var current = Editing;
         var name = NamePromptWindow.Ask(this, "Rename layout", $"New name for \"{current}\"", current,
             n => _layouts.Library.CheckNewName(n, except: current));
         if (name is null || name == current)
             return;
 
+        // The store moves every dashboard showing it to the new name.
         _layouts.Rename(current, name);
+        Editing = _layouts.Library.Find(name) ?? name;
         RefreshLayouts();
         UpdateState();
     }
@@ -273,47 +346,54 @@ public partial class EditorWindow : Window
     {
         if (!ConfirmLeave())
             return;
-        var name = NamePromptWindow.Ask(this, "Duplicate layout", $"Name for the copy of \"{_layouts.Active}\"", $"{_layouts.Active} copy",
+        var name = NamePromptWindow.Ask(this, "Duplicate layout", $"Name for the copy of \"{Editing}\"", $"{Editing} copy",
             n => _layouts.Library.CheckNewName(n));
         if (name is null)
             return;
 
-        _layouts.Duplicate(_layouts.Active, name);
-        _layouts.SetActive(name);
-        LoadActive();
+        _layouts.Duplicate(Editing, name);
+        Choose(name);
     }
 
     /// <summary>Exports what's in the editor, unsaved changes included.</summary>
-    private void ExportLayout() => LayoutTransfer.Export(this, _session.Document, _layouts.Active, _session.Themes);
+    private void ExportLayout() => LayoutTransfer.Export(this, _session.Document, Editing, _session.Themes);
 
-    /// <summary>Imports a layout file and starts editing it (the dashboard follows).</summary>
+    /// <summary>Imports a layout file and starts editing it (the dashboard being edited follows).</summary>
     public void ImportLayout()
     {
         if (!ConfirmLeave())
             return;
         if (LayoutTransfer.Import(this, _layouts) is not { } name)
             return;
-        _layouts.SetActive(name);
-        LoadActive();
+        Choose(name);
     }
 
     private void DeleteLayout()
     {
         if (_layouts.List().Count <= 1)
             return;
-        var answer = MessageBox.Show(this, $"Delete the layout \"{_layouts.Active}\"? This can't be undone.", "Impious Bonum",
+        var answer = MessageBox.Show(this, $"Delete the layout \"{Editing}\"? This can't be undone.", "Impious Bonum",
             MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
         if (answer != MessageBoxResult.OK)
             return;
 
-        _layouts.Delete(_layouts.Active);
-        LoadActive();
+        // The store moves the dashboards that showed it to another layout; carry on with the one this dashboard has now.
+        _layouts.Delete(Editing);
+        Choose(_shownLayout());
     }
 
-    /// <summary>Starts editing the active layout from its saved file.</summary>
-    private void LoadActive()
+    /// <summary>Edits another saved layout, which the dashboard being edited shows from now on.</summary>
+    private void Choose(string name)
     {
-        _session.Reset(_layouts.LoadOrDefault());
+        LayoutChosen?.Invoke(this, name);
+        Load(name);
+    }
+
+    /// <summary>Starts editing a saved layout from its file.</summary>
+    private void Load(string name)
+    {
+        Editing = name;
+        _session.Reset(_layouts.LoadOrDefault(name));
         RefreshLayouts();
         UpdateState();
     }
@@ -324,7 +404,7 @@ public partial class EditorWindow : Window
         if (!_session.IsDirty)
             return true;
 
-        var answer = MessageBox.Show(this, $"Save your changes to \"{_layouts.Active}\"?", "Impious Bonum", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+        var answer = MessageBox.Show(this, $"Save your changes to \"{Editing}\"?", "Impious Bonum", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
         if (answer == MessageBoxResult.Yes)
             Save();
         return answer != MessageBoxResult.Cancel;
@@ -357,7 +437,7 @@ public partial class EditorWindow : Window
     {
         if (!_session.IsDirty)
             return;
-        _session.Replace(_layouts.LoadOrDefault());
+        _session.Replace(_layouts.LoadOrDefault(Editing));
     }
 
     private void OnSnapChanged(object sender, SelectionChangedEventArgs e)
@@ -368,7 +448,7 @@ public partial class EditorWindow : Window
 
     private void Save()
     {
-        _layouts.Save(_session.Document);
+        _layouts.Save(Editing, _session.Document);
         _session.MarkSaved();
         UpdateState();
     }
@@ -376,7 +456,7 @@ public partial class EditorWindow : Window
     private void UpdateState()
     {
         var dirty = _session.IsDirty;
-        Title = $"{(dirty ? "● " : string.Empty)}{_layouts.Active} · Impious Bonum layout editor";
+        Title = $"{(dirty ? "● " : string.Empty)}{Editing} · Impious Bonum layout editor";
         SaveButton.IsEnabled = dirty;
         RevertButton.IsEnabled = dirty;
         UndoButton.IsEnabled = _session.CanUndo;
