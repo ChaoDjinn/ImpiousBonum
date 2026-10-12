@@ -3,6 +3,12 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+**Drag to reorder in the editor**
+- Drag a widget up or down the editor's *Widgets* list to change which draws on top, in place of the arrow buttons in the toolbar. From the keyboard, Ctrl+] brings the selected widget forward and Ctrl+[ sends it back, and right-clicking a widget in the list has *Bring forward*, *Send back*, *Duplicate* and *Delete*.
+- Entries in a widget's lists (a rows widget's rows, buttons, other places, warning colours and so on) have a handle at their left to drag them into place, instead of up and down arrows. From the keyboard, Alt+Up and Alt+Down move the entry you're in.
+
 ## 0.13.0
 
 Impious Bonum has a window of its own, and the tray menu keeps to the basics.
