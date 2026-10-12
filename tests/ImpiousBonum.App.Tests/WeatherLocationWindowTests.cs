@@ -72,6 +72,33 @@ public sealed class WeatherLocationWindowTests
     }
 
     [Fact]
+    public void Enter_searches_again_once_the_search_has_changed()
+    {
+        Sta.Run(() =>
+        {
+            var window = new WeatherLocationWindow(null, (_, _) => Task.FromResult(new PlaceSearchResults([WestDerby], false)));
+            window.QueryBox.Text = "West Derby";
+            Assert.True(window.EnterSearches);
+            window.SearchAsync().GetAwaiter().GetResult();
+
+            // With the places for what's typed listed, Enter takes the one picked.
+            Assert.NotNull(window.Results.SelectedItem);
+            Assert.False(window.EnterSearches);
+
+            // Adding the town after a comma, as the hint says, makes Enter search again.
+            window.QueryBox.Text = "West Derby, Liverpool";
+            Assert.True(window.EnterSearches);
+            window.SearchAsync().GetAwaiter().GetResult();
+            Assert.False(window.EnterSearches);
+
+            // Coordinates are used as they are, never searched for.
+            window.QueryBox.Text = "53.43, -2.91";
+            Assert.False(window.EnterSearches);
+            window.Close();
+        });
+    }
+
+    [Fact]
     public void Nothing_found_says_so_and_shows_no_credit()
     {
         Sta.Run(() =>

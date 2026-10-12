@@ -38,7 +38,8 @@ public static class PlaceSearch
             return new([], false);
 
         var found = await openMeteo(name, areas.Count > 0 ? MostToNarrowDown : MostShown, cancellationToken).ConfigureAwait(false);
-        var places = Within(found, areas);
+        // Open-Meteo's search is fuzzy, so "London, UK" finds London Colney and Londonderry too: London itself comes first.
+        var places = Within(found.OrderBy(p => !IsCalled(p, name)), areas);
         if (places.Count > 0)
             return new(places, false);
 
@@ -61,6 +62,9 @@ public static class PlaceSearch
     /// </summary>
     internal static IReadOnlyList<WeatherPlace> Within(IEnumerable<WeatherPlace> places, IReadOnlyList<string> areas) =>
         [.. places.Where(p => areas.All(a => IsIn(p, a))).Take(MostShown)];
+
+    private static bool IsCalled(WeatherPlace place, string name) =>
+        string.Compare(place.Name, name, CultureInfo.InvariantCulture, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) == 0;
 
     private static bool IsIn(WeatherPlace place, string area)
     {

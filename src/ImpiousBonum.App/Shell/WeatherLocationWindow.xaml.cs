@@ -18,6 +18,9 @@ public partial class WeatherLocationWindow : Window
     private readonly Func<string, CancellationToken, Task<PlaceSearchResults>> _find;
     private CancellationTokenSource? _search;
 
+    /// <summary>What the places listed were found for, so Enter after changing it searches again.</summary>
+    private string? _searched;
+
     /// <param name="find">Searches for places; <see cref="PlaceSearch"/> unless a test swaps it.</param>
     internal WeatherLocationWindow(WeatherLocation? current, Func<string, CancellationToken, Task<PlaceSearchResults>>? find = null)
     {
@@ -70,13 +73,19 @@ public partial class WeatherLocationWindow : Window
 
     private void OnQueryKeyDown(object sender, KeyEventArgs e)
     {
-        // Enter searches; picking a result and pressing Enter again uses it.
-        if (e.Key == Key.Enter && OpenMeteo.ParseCoordinates(QueryBox.Text) is null && Results.SelectedItem is null)
+        if (e.Key == Key.Enter && EnterSearches)
         {
             e.Handled = true;
             OnSearch(sender, e);
         }
     }
+
+    /// <summary>
+    /// Enter in the box searches, unless the places listed are for what's typed: then it uses the one picked. So adding a
+    /// town after a comma and pressing Enter searches again rather than taking the first place from before.
+    /// </summary>
+    internal bool EnterSearches =>
+        OpenMeteo.ParseCoordinates(QueryBox.Text) is null && (Results.SelectedItem is null || QueryBox.Text.Trim() != _searched);
 
     private async void OnSearch(object sender, RoutedEventArgs e) => await SearchAsync();
 
@@ -89,6 +98,7 @@ public partial class WeatherLocationWindow : Window
 
         _search?.Cancel();
         var search = _search = new CancellationTokenSource();
+        _searched = query;
         Results.Items.Clear();
         Attribution.Visibility = Visibility.Collapsed;
         StatusText.Text = "Searching…";

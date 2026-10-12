@@ -194,6 +194,27 @@ public sealed class PlaceSearchTests
     }
 
     [Fact]
+    public async Task A_place_called_exactly_what_was_searched_for_comes_first()
+    {
+        // Open-Meteo's search is fuzzy: in its order, London Colney came before London.
+        WeatherPlace[] found =
+        [
+            new("London Colney", "England", "United Kingdom", 51.7, -0.3) { CountryCode = "GB" },
+            new("Londonderry", "Northern Ireland", "United Kingdom", 55.0, -7.3) { CountryCode = "GB" },
+            new("London", "England", "United Kingdom", 51.5, -0.13) { CountryCode = "GB" },
+            new("London", "Ontario", "Canada", 43.0, -81.2) { CountryCode = "CA" },
+        ];
+
+        var result = await PlaceSearch.SearchAsync(
+            "london, UK",
+            (_, _, _) => Task.FromResult<IReadOnlyList<WeatherPlace>>(found),
+            (_, _) => throw new InvalidOperationException("OpenStreetMap shouldn't be asked"),
+            CancellationToken.None);
+
+        Assert.Equal(["London", "London Colney", "Londonderry"], result.Places.Select(p => p.Name));
+    }
+
+    [Fact]
     public void OpenStreetMap_searches_are_kept_a_second_apart()
     {
         var time = new FakeTime(new DateTimeOffset(2026, 10, 12, 9, 0, 0, TimeSpan.Zero));
