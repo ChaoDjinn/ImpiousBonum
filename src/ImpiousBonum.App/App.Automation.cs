@@ -9,7 +9,6 @@ namespace ImpiousBonum.App;
 // What acts on readings and keys by itself: alerts, logging, session recaps and hotkeys.
 public partial class App
 {
-    private AlertsWindow? _alertsWindow;
     private readonly AlertMonitor _alerts = new();
 
     /// <summary>Checks the alert rules each second: notifies when one goes off, and keeps the dashboard's banner current.</summary>
@@ -24,20 +23,6 @@ public partial class App
                 _tray?.ShowAlert(alert.Text);
         }
         _window.ShowAlerts(_alerts.Active.Where(rule => rule.Flash).Select(rule => (rule.Describe(), rule.Text(_sampler.Store))).ToList());
-    }
-
-    /// <summary>Tray → Logging…; changes start a fresh logger (and a new file if the columns changed).</summary>
-    private void EditLogging()
-    {
-        if (LoggingWindow.Ask(_settings.Logging, _sampler?.Store) is not { } logging)
-            return;
-        _settings.Logging = logging;
-        _settings.Save();
-        _logger = null;
-        _prunedOn = default;
-        AppLog.Info(logging.Enabled
-            ? $"Logging {string.Join(", ", logging.Metrics)} every {logging.EverySeconds} s to {AppPaths.LogsFolder}"
-            : "Logging off");
     }
 
     /// <summary>Each tick: feeds the logger, writes a row when a period ends, and once a day removes old files.</summary>
@@ -102,22 +87,6 @@ public partial class App
             _tray?.ShowError(problems.Count == 1 ? "A hotkey isn't working" : "Some hotkeys aren't working", string.Join("\n", problems));
     }
 
-    /// <summary>Tray → Hotkeys…. The current ones are let go while it's open, so pressing them sets them again rather than running them.</summary>
-    private void EditHotkeys()
-    {
-        if (_layouts is null)
-            return;
-        _hotkeys?.Clear();
-        var chosen = HotkeysWindow.Ask(_settings.Hotkeys, _layouts.List());
-        if (chosen is not null)
-        {
-            _settings.Hotkeys = [.. chosen];
-            _settings.Save();
-            AppLog.Info(chosen.Count == 0 ? "Hotkeys: none" : $"Hotkeys: {string.Join(", ", chosen.Select(h => $"{h.Keys} = {h.Describe()}"))}");
-        }
-        ApplyHotkeys();
-    }
-
     private void RunHotkey(Hotkey hotkey)
     {
         // Settings have the latest: a layout may have been renamed since the keys were registered.
@@ -140,22 +109,8 @@ public partial class App
                 if (_layouts?.Library.Find(name) is { } found)
                     SelectLayout(found);
                 else
-                    _tray?.ShowError("Impious Bonum", $"There's no layout called \"{name}\" any more. Change its hotkey in tray → Hotkeys.");
+                    _tray?.ShowError("Impious Bonum", $"There's no layout called \"{name}\" any more. Change its hotkey on Impious Bonum's Hotkeys page.");
                 break;
         }
-    }
-
-    /// <summary>Tray → Alerts…: one window at a time.</summary>
-    private void OpenAlerts()
-    {
-        if (_alertsWindow is not null)
-        {
-            BringToFront(_alertsWindow);
-            return;
-        }
-        _alertsWindow = new AlertsWindow(_settings, () => _sampler?.Store);
-        _alertsWindow.Closed += (_, _) => _alertsWindow = null;
-        _alertsWindow.Show();
-        BringToFront(_alertsWindow);
     }
 }

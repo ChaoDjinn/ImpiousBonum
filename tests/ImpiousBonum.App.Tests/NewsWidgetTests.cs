@@ -56,18 +56,17 @@ public sealed class NewsWidgetTests
     }
 
     [Fact]
-    public void The_feeds_window_only_takes_web_links()
+    public void The_feeds_list_only_takes_web_links()
     {
         Sta.Run(() =>
         {
-            var window = new LinkListWindow([], "News feeds", "feed", LinkListWindow.FeedIntro, LinkListWindow.FeedNote, allowWebcal: false);
+            var window = LinkListPanel.ForFeeds();
             window.LinkBox.Text = "webcal://example.com/feed";
             Assert.Contains("https://", window.Problem());
             window.LinkBox.Text = "https://www.theverge.com/rss/index.xml";
             Assert.Null(window.Problem());
             window.Add();
             Assert.Equal([new NamedLink("www.theverge.com", "https://www.theverge.com/rss/index.xml")], window.Links);
-            window.Close();
         });
     }
 }

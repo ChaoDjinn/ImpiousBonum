@@ -29,6 +29,17 @@ public sealed class Updater
     /// <summary>Verified version downloaded and waiting for a restart, if any.</summary>
     public string? ReadyVersion => _ready?.Version?.ToString();
 
+    /// <summary>When the last check finished, whatever came of it.</summary>
+    public DateTime? LastChecked { get; private set; }
+
+    /// <summary>The last check failed: offline, GitHub's rate limit and the like.</summary>
+    public bool LastCheckFailed { get; private set; }
+
+    /// <summary>How much of the download under way is done, 0–100; null while not downloading. Set from another thread.</summary>
+    public int? DownloadProgress => _progress < 0 ? null : _progress;
+
+    private volatile int _progress = -1;
+
     /// <summary>Checks for a newer signed release and downloads it. Returns the new version when one is ready to apply.</summary>
     public async Task<string?> CheckAndDownloadAsync(CancellationToken cancellationToken = default)
     {
@@ -37,6 +48,7 @@ public sealed class Updater
 
         try
         {
+            LastCheckFailed = false;
             var update = await _manager.CheckForUpdatesAsync().ConfigureAwait(false);
             if (update is null)
             {
@@ -51,7 +63,8 @@ public sealed class Updater
             // Velopack checks the package it ends up with (downloaded whole or rebuilt from deltas) against target.SHA256,
             // which the signature has just vouched for.
             AppLog.Info($"Downloading {target.Version}{(update.DeltasToTarget.Any() ? " (delta)" : " (full)")}");
-            await _manager.DownloadUpdatesAsync(update, null, cancellationToken).ConfigureAwait(false);
+            _progress = 0;
+            await _manager.DownloadUpdatesAsync(update, percent => _progress = percent, cancellationToken).ConfigureAwait(false);
             _ready = target;
             AppLog.Info($"Downloaded {ReadyVersion}; ready to apply");
             return ReadyVersion;
@@ -60,7 +73,13 @@ public sealed class Updater
         {
             // Offline, GitHub rate limits and the like: try again next time.
             Trace.TraceWarning($"Update check failed: {ex.Message}");
-            return null;
+            LastCheckFailed = true;
+            return ReadyVersion;
+        }
+        finally
+        {
+            _progress = -1;
+            LastChecked = DateTime.Now;
         }
     }
 

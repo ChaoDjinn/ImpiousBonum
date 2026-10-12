@@ -43,11 +43,11 @@ public sealed class TrayTests
     [Fact]
     public void About_details_say_what_a_problem_report_needs()
     {
-        var details = AboutWindow.Details("0.10.0", "Running");
+        var details = ImpiousBonum.App.Settings.AboutPage.Details("0.10.0", "Running");
         Assert.StartsWith("Impious Bonum 0.10.0 · ", details);
         Assert.Contains(".NET", details);
         Assert.EndsWith("sensor service: Running", details);
-        Assert.StartsWith("Impious Bonum (development build) · ", AboutWindow.Details(null, "Not running"));
+        Assert.StartsWith("Impious Bonum (development build) · ", ImpiousBonum.App.Settings.AboutPage.Details(null, "Not running"));
     }
 
     [Fact]

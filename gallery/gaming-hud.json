@@ -1,5 +1,5 @@
 // Gaming HUD: frame rate front and centre, frame times, temperatures and how the session is going.
-// Needs the sensor service for FPS and temperatures; link your games under tray → Layout → Game layouts for the session line.
+// Needs the sensor service for FPS and temperatures; link your games on the Game layouts page for the session line.
 {
   "width": 1920,
   "height": 480,

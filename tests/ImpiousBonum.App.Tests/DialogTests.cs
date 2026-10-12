@@ -43,25 +43,6 @@ public sealed class DialogTests
     }
 
     [Fact]
-    public void Close_buttons_close_windows_that_arent_dialogs()
-    {
-        Sta.Run(() =>
-        {
-            // WPF's IsCancel alone only closes windows shown with ShowDialog, which left these Close buttons doing nothing.
-            foreach (var window in new Window[] { new AlertsWindow(new AppSettings(), () => null), new CustomDataWindow(new AppSettings(), _ => null), new AboutWindow("1.0.0", "Running") })
-            {
-                var closed = false;
-                window.Closed += (_, _) => closed = true;
-                var close = Buttons(window).Single(b => b.IsCancel);
-                Assert.True(Dialog.GetClosesWindow(close), $"{window.GetType().Name}'s Close button doesn't close it");
-
-                close.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
-                Assert.True(closed, $"{window.GetType().Name} didn't close");
-            }
-        });
-    }
-
-    [Fact]
     public void Every_widget_is_in_a_group_and_the_groups_dont_split()
     {
         Assert.All(WidgetFactory.Descriptors, d => Assert.False(string.IsNullOrEmpty(d.Category), d.Type));
@@ -80,24 +61,13 @@ public sealed class DialogTests
     [Fact]
     public void The_widget_list_shows_each_widgets_type_and_what_tells_it_apart()
     {
-        var graph = EditorWindow.ListEntry.Of(new JsonObject { ["type"] = "graph", ["label"] = "CPU" });
+        var graph = LayoutEditor.ListEntry.Of(new JsonObject { ["type"] = "graph", ["label"] = "CPU" });
         Assert.Equal(("Graph", " CPU"), (graph.Name, graph.Detail));
         Assert.Equal("Graph: CPU", graph.ToolTip);
 
-        var clock = EditorWindow.ListEntry.Of(new JsonObject { ["type"] = "clock" });
+        var clock = LayoutEditor.ListEntry.Of(new JsonObject { ["type"] = "clock" });
         Assert.Equal(("Clock", ""), (clock.Name, clock.Detail));
 
-        Assert.Equal("Unknown (dial)", EditorWindow.ListEntry.Of(new JsonObject { ["type"] = "dial" }).Name);
-    }
-
-    private static IEnumerable<Button> Buttons(DependencyObject root)
-    {
-        foreach (var child in LogicalTreeHelper.GetChildren(root).OfType<DependencyObject>())
-        {
-            if (child is Button button)
-                yield return button;
-            foreach (var inner in Buttons(child))
-                yield return inner;
-        }
+        Assert.Equal("Unknown (dial)", LayoutEditor.ListEntry.Of(new JsonObject { ["type"] = "dial" }).Name);
     }
 }

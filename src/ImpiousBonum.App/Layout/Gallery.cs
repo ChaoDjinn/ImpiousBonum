@@ -8,10 +8,16 @@ namespace ImpiousBonum.App.Layout;
 /// <summary>A layout someone has shared in the gallery.</summary>
 /// <param name="File">The file's name in the gallery folder: an <c>.ibl</c> package or a bare <c>.json</c> layout.</param>
 /// <param name="Width">The layout's canvas width, so a screen's shape can be matched; 0 if not given.</param>
-public sealed record GalleryEntry(string Name, string File, string? Author, string? Description, int Width, int Height)
+/// <param name="Widgets">How many widgets it has, not counting shapes and pictures, to tell busy layouts from simple ones; 0 if not given.</param>
+public sealed record GalleryEntry(string Name, string File, string? Author, string? Description, int Width, int Height, int Widgets = 0)
 {
-    /// <summary>"1920 × 480 · by someone", for the list.</summary>
-    public string Details => string.Join(" · ", new[] { Width > 0 && Height > 0 ? $"{Width} × {Height}" : null, Author is { Length: > 0 } a ? $"by {a}" : null }.OfType<string>());
+    /// <summary>"1920 × 480 · 12 widgets · by someone", for the list.</summary>
+    public string Details => string.Join(" · ", new[]
+    {
+        Width > 0 && Height > 0 ? $"{Width} × {Height}" : null,
+        Widgets > 0 ? $"{Widgets} widget{(Widgets == 1 ? "" : "s")}" : null,
+        Author is { Length: > 0 } a ? $"by {a}" : null,
+    }.OfType<string>());
 }
 
 /// <summary>
@@ -42,7 +48,7 @@ public static class Gallery
             if (string.IsNullOrEmpty(name) || file is null || !IsPlainFileName(file))
                 continue;
             entries.Add(new GalleryEntry(name, file, node.GetString("author"), node.GetString("description"),
-                (int)node.GetDouble("width", 0), (int)node.GetDouble("height", 0)));
+                (int)node.GetDouble("width", 0), (int)node.GetDouble("height", 0), (int)node.GetDouble("widgets", 0)));
         }
         return entries;
     }
@@ -90,9 +96,20 @@ public static class Gallery
 
     private static Uri Folder(string address) => new(address.EndsWith('/') ? address : address + "/");
 
-    /// <summary>Reads at most <paramref name="limit"/> bytes, counting what actually arrives rather than trusting the header.</summary>
+    /// <summary>
+    /// Reads at most <paramref name="limit"/> bytes, counting what actually arrives rather than trusting the header. A
+    /// gallery in a folder on this PC (a copy of the repository's, say, to try layouts before sharing them) is read from disk.
+    /// </summary>
     private static async Task<byte[]> GetAsync(Uri uri, long limit, CancellationToken cancellationToken)
     {
+        if (uri.IsFile)
+        {
+            var info = new FileInfo(uri.LocalPath);
+            if (info.Exists && info.Length > limit)
+                throw new InvalidDataException($"{info.Name} is bigger than {limit / (1024 * 1024)} MB.");
+            return await File.ReadAllBytesAsync(info.FullName, cancellationToken).ConfigureAwait(false);
+        }
+
         using var response = await Http.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);

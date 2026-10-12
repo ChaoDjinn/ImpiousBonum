@@ -1,38 +1,16 @@
-// The layout gallery (tray → Layout → Gallery…). Each entry is a file in this folder: an .ibl package made with
+// The layout gallery (the app's Gallery page). Each entry is a file in this folder: an .ibl package made with
 // Export… in the editor, or a bare layout .json. To share a layout, add its file and an entry here in a pull request.
+// "widgets" counts its widgets, not shapes and pictures: the gallery tells simple layouts from busy ones by it.
 {
   "layouts": [
     {
-      "name": "Gaming HUD",
-      "file": "gaming-hud.json",
+      "name": "USB Mini",
+      "file": "usb-mini.json",
       "author": "Impious Bonum",
-      "description": "Frame rate front and centre, frame times, 1% lows, temperatures and how the session's going. Neon Outrun theme.",
-      "width": 1920,
-      "height": 480
-    },
-    {
-      "name": "Desk Companion",
-      "file": "desk-companion.json",
-      "author": "Impious Bonum",
-      "description": "The time here and in two other places, today's calendar, the weather and what's playing.",
-      "width": 1920,
-      "height": 480
-    },
-    {
-      "name": "System Monitor",
-      "file": "system-monitor.json",
-      "author": "Impious Bonum",
-      "description": "Loads and network over time, every CPU thread as a heatmap, the busiest apps, drives and memory.",
-      "width": 1920,
-      "height": 480
-    },
-    {
-      "name": "Focus",
-      "file": "focus.json",
-      "author": "Impious Bonum",
-      "description": "A 25-minute focus timer, today's agenda, the time and your music.",
-      "width": 1920,
-      "height": 480
+      "description": "For a 3.5\" 480 × 320 USB screen: the time, and the CPU and GPU temperatures as dials.",
+      "width": 480,
+      "height": 320,
+      "widgets": 3
     },
     {
       "name": "Small Screen",
@@ -40,7 +18,107 @@
       "author": "Impious Bonum",
       "description": "For a 5 or 7 inch 800 × 480 display: the time, CPU and GPU load, and the CPU temperature.",
       "width": 800,
-      "height": 480
+      "height": 480,
+      "widgets": 4
+    },
+    {
+      "name": "Pocket",
+      "file": "pocket.json",
+      "author": "Impious Bonum",
+      "description": "For a 7\" 1024 × 600 display: the time, the weather, and CPU, GPU and memory dials.",
+      "width": 1024,
+      "height": 600,
+      "widgets": 5
+    },
+    {
+      "name": "Gaming HUD",
+      "file": "gaming-hud.json",
+      "author": "Impious Bonum",
+      "description": "Frame rate front and centre, frame times, 1% lows, temperatures and how the session's going. Neon Outrun theme.",
+      "width": 1920,
+      "height": 480,
+      "widgets": 10
+    },
+    {
+      "name": "Desk Companion",
+      "file": "desk-companion.json",
+      "author": "Impious Bonum",
+      "description": "The time here and in two other places, today's calendar, the weather and what's playing.",
+      "width": 1920,
+      "height": 480,
+      "widgets": 4
+    },
+    {
+      "name": "System Monitor",
+      "file": "system-monitor.json",
+      "author": "Impious Bonum",
+      "description": "Loads and network over time, every CPU thread as a heatmap, the busiest apps, drives and memory.",
+      "width": 1920,
+      "height": 480,
+      "widgets": 8
+    },
+    {
+      "name": "Focus",
+      "file": "focus.json",
+      "author": "Impious Bonum",
+      "description": "A 25-minute focus timer, today's agenda, the time and your music.",
+      "width": 1920,
+      "height": 480,
+      "widgets": 4
+    },
+    {
+      "name": "Sim Rig",
+      "file": "sim-rig.json",
+      "author": "Impious Bonum",
+      "description": "For a 12.3\" 1920 × 720 bar screen: the frame rate and how smooth it is, loads, temperatures and the time.",
+      "width": 1920,
+      "height": 720,
+      "widgets": 9
+    },
+    {
+      "name": "Living Room",
+      "file": "living-room.json",
+      "author": "Impious Bonum",
+      "description": "For a TV across the room: the time, the weather, today's calendar and what's playing, big enough to read from the sofa.",
+      "width": 1920,
+      "height": 1080,
+      "widgets": 5
+    },
+    {
+      "name": "Command Centre",
+      "file": "command-centre.json",
+      "author": "Impious Bonum",
+      "description": "For a 1080p monitor beside your main one: loads, network, every CPU thread, temperatures, frame rates, apps, drives and memory at once.",
+      "width": 1920,
+      "height": 1080,
+      "widgets": 12
+    },
+    {
+      "name": "Workstation",
+      "file": "workstation.json",
+      "author": "Impious Bonum",
+      "description": "For a 1440p monitor while you work: the time and your day, a focus timer, weather, news, music, loads and your Claude usage.",
+      "width": 2560,
+      "height": 1440,
+      "widgets": 13
+    },
+    {
+      "name": "Big Picture",
+      "file": "big-picture.json",
+      "author": "Impious Bonum",
+      "description": "For a 4K screen: your day and your PC on one wall, from world clocks, weather, calendar and news to loads, temperatures, FPS, apps and drives.",
+      "width": 3840,
+      "height": 2160,
+      "widgets": 17
+    },
+    {
+      "name": "Tower",
+      "file": "tower.json",
+      "author": "Impious Bonum",
+      "description": "For a 1080 × 1920 monitor on its side: the time, the weather, loads, temperatures and memory, the busiest apps and the drives.",
+      "width": 1080,
+      "height": 1920,
+      "widgets": 9
     }
   ]
 }

@@ -6,6 +6,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using ImpiousBonum.App.Editor;
 using ImpiousBonum.App.Layout;
+using ImpiousBonum.App.Settings;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core;
@@ -30,6 +31,8 @@ namespace ImpiousBonum.App;
 public partial class App : Application
 {
     private Mutex? _singleInstance;
+    private EventWaitHandle? _openSignal;
+    private RegisteredWaitHandle? _openWait;
     private AppSettings _settings = new();
     private Sampler? _sampler;
     private LayoutStore? _layouts;
@@ -40,7 +43,8 @@ public partial class App : Application
     private readonly List<DashboardWindow> _extras = [];
     private readonly HashSet<DashboardWindow> _extrasHiddenForFullscreen = [];
     private DispatcherTimer? _tick;
-    private EditorWindow? _editor;
+    // The layout editor, while the window shows its Layouts page.
+    private LayoutEditor? _editor;
     // The dashboard the editor is on: null for the main one, else an extra dashboard's monitor id.
     private string? _editingScreen;
     private TabletView? _tablet;
@@ -56,7 +60,6 @@ public partial class App : Application
     private DateTime _peekUntil;
     private DateTime _lastTouch = DateTime.MinValue;
     private DateTime _lastPageChange = DateTime.UtcNow;
-    private string? _recentApp;
 
     /// <summary>The linked game in front, for session recaps; written on the UI thread, read by the sampler's.</summary>
     private volatile string? _trackedGame;
@@ -71,6 +74,8 @@ public partial class App : Application
     private bool _reportedError;
     private bool _hiddenForFullscreen;
     private bool _hiddenByUser;
+    // --demo: made-up readings, and a made-up update to find on the About page.
+    private bool _demo;
     private GlobalHotkeys? _hotkeys;
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -98,9 +103,21 @@ public partial class App : Application
         _singleInstance = new Mutex(initiallyOwned: true, AppPaths.InstanceName, out var isFirstInstance);
         if (!isFirstInstance)
         {
+            // Started again (from the Start menu, say) while running: the copy that's running opens its window.
+            if (EventWaitHandle.TryOpenExisting(AppPaths.OpenSignalName, out var open))
+            {
+                using (open)
+                    open.Set();
+            }
             Shutdown();
             return;
         }
+        _openSignal = new EventWaitHandle(false, EventResetMode.AutoReset, AppPaths.OpenSignalName);
+        _openWait = ThreadPool.RegisterWaitForSingleObject(_openSignal, (_, _) => Dispatcher.BeginInvoke(() =>
+        {
+            if (_tray is not null)
+                ShowSettings();
+        }), null, Timeout.Infinite, executeOnlyOnce: false);
 
         AppLog.Start(_updater.CurrentVersion);
         DispatcherUnhandledException += OnDispatcherUnhandledException;
@@ -111,11 +128,12 @@ public partial class App : Application
             unobserved.SetObserved();
         };
 
+        _demo = args.ContainsKey("demo");
         _settings = AppSettings.Load();
         if (!_settings.HardwareRendering)
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         _frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
-        _sampler = args.ContainsKey("demo")
+        _sampler = _demo
             ? DemoSampler()
             : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData, () => _settings.Calendars,
                 () => _settings.NewsFeeds,
@@ -137,8 +155,7 @@ public partial class App : Application
         _window.PlacementChanged += (_, rect) => OnWindowMoved(rect);
         _tray = new TrayIcon();
         ConnectTray(_tray);
-        _tray.RestartToUpdateRequested += async (_, _) => await RestartToUpdateAsync();
-        _tray.SetVersion(_updater.CurrentVersion, _updater.IsInstalled);
+        _tray.SetVersion(_updater.CurrentVersion);
         StartUpdateChecks();
         if (_settings.LoadProblem is { } problem)
         {
@@ -160,7 +177,7 @@ public partial class App : Application
         _layouts.ThemeChanged += (_, _) =>
         {
             // A saved theme changed on disk, or a game's theme came or went. The editor restyles its own copy.
-            _editor?.RefreshTheme();
+            _settingsWindow?.RefreshTheme();
             ApplyLayout();
         };
         ApplyLayout();
@@ -210,7 +227,7 @@ public partial class App : Application
         _window?.Dashboard.Refresh(_sampler!.Store, now);
         foreach (var extra in _extras)
             extra.Dashboard.Refresh(_sampler!.Store, now);
-        _editor?.Refresh(_sampler!.Store, now);
+        _settingsWindow?.Refresh(_sampler!.Store, now);
         _tablet?.Refresh(_sampler!.Store, now);
         _usb?.Refresh(_sampler!.Store, now);
         UpdateGameLayout();
@@ -224,7 +241,8 @@ public partial class App : Application
         if (!_warnedOutdatedService && SensorServiceControl.IsOutdated(SensorVersion()))
         {
             _warnedOutdatedService = true;
-            _tray?.ShowInfo("Sensor service needs updating", "It's from an older version of Impious Bonum. Tray → Sensors → Update sensor service.");
+            _tray?.ShowInfo("Sensor service needs updating", "It's from an older version of Impious Bonum. Click here, then Update.",
+                () => ShowSettings().ShowPage(SettingsPage.Sensors));
         }
     }
 
@@ -251,13 +269,13 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Closes the editor (which may ask to save), removes the tray icon and stops sampling.
+    /// Closes the window (whose layout editor may ask to save), removes the tray icon and stops sampling.
     /// Returns false if the user cancelled the editor's save prompt, in which case nothing else is touched.
     /// </summary>
     private async Task<bool> ReleaseEverythingAsync()
     {
-        _editor?.Close();
-        if (_editor is not null)
+        _settingsWindow?.Close();
+        if (_settingsWindow is not null)
             return false;
 
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
@@ -278,6 +296,8 @@ public partial class App : Application
         _window?.Close();
         if (_sampler is not null)
             await _sampler.DisposeAsync();
+        _openWait?.Unregister(null);
+        _openSignal?.Dispose();
         _singleInstance?.ReleaseMutex();
         _singleInstance = null;
         return true;

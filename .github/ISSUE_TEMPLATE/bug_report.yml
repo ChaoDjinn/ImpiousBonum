@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time. The more of this you can fill in, the quicker it gets fixed.
-        Tray → *Help* → *About Impious Bonum* → *Copy details* copies the version and system details for the box below.
+        In Impious Bonum's window, *About and updates* → *Details* → *Copy* copies the version and system details for the box below.
   - type: textarea
     id: what
     attributes:
@@ -22,14 +22,14 @@ body:
       label: How to make it happen
       description: Steps from a fresh start, if you know them.
       placeholder: |
-        1. Tray → Weather → Set location… → Leeds
-        2. Edit layout… → Add widget → Weather
+        1. Weather → Set location… → Leeds
+        2. Layouts → Add widget → Weather
         3. …
   - type: textarea
     id: details
     attributes:
       label: Details
-      description: From tray → Help → About Impious Bonum → Copy details.
+      description: From About and updates → Details → Copy.
       placeholder: Impious Bonum 0.10.0 · Microsoft Windows 10.0.26100 · .NET 10.0.0 · sensor service: Running
       render: text
     validations:
@@ -39,7 +39,7 @@ body:
     attributes:
       label: dashboard.log
       description: |
-        Tray → Help → Open settings folder has `dashboard.log`. Drag it here, or paste the lines from around when it happened.
+        General → Dashboard log → Show finds `dashboard.log`. Drag it here, or paste the lines from around when it happened.
         It has no passwords, but may show layout names and file paths; remove anything you'd rather not share.
       render: text
   - type: textarea

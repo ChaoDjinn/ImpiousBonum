@@ -40,21 +40,4 @@ public static class Dialog
             window.PreviewMouseDown += Reveal;
         };
     }
-
-    /// <summary>
-    /// Closes the window when the button is clicked. WPF's IsCancel only closes windows shown with ShowDialog, so a
-    /// Close button on a window shown with Show needs this (or a Click handler).
-    /// </summary>
-    public static readonly DependencyProperty ClosesWindowProperty = DependencyProperty.RegisterAttached(
-        "ClosesWindow", typeof(bool), typeof(Dialog), new PropertyMetadata(false, OnClosesWindowChanged));
-
-    public static bool GetClosesWindow(DependencyObject element) => (bool)element.GetValue(ClosesWindowProperty);
-
-    public static void SetClosesWindow(DependencyObject element, bool value) => element.SetValue(ClosesWindowProperty, value);
-
-    private static void OnClosesWindowChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is System.Windows.Controls.Primitives.ButtonBase button && e.NewValue is true)
-            button.Click += (_, _) => Window.GetWindow(button)?.Close();
-    }
 }

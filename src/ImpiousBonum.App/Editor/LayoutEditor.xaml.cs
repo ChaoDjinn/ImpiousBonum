@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -10,12 +10,12 @@ using ImpiousBonum.Core.Metrics;
 namespace ImpiousBonum.App.Editor;
 
 /// <summary>
-/// The layout editor: widget list, live preview and properties. Edits go to a <see cref="LayoutSession"/>;
-/// the app mirrors that onto the real dashboards as you work. It edits the saved layout one dashboard shows (the main
-/// one, or another screen's), can move to another dashboard, and can switch to, create, rename, duplicate, delete,
-/// export and import saved layouts for the one it's on.
+/// The layout editor, the main window's Layouts page: widget list, live preview and properties. Edits go to a
+/// <see cref="LayoutSession"/>; the app mirrors that onto the real dashboards as you work. It edits the saved layout one
+/// dashboard shows (the main one, or another screen's), can move to another dashboard, and can switch to, create,
+/// rename, duplicate, delete, export and import saved layouts for the one it's on, or get one from the gallery.
 /// </summary>
-public partial class EditorWindow : Window
+public partial class LayoutEditor : UserControl
 {
     private static readonly double[] SnapSizes = [1, 5, 10, 20, 40];
 
@@ -36,10 +36,9 @@ public partial class EditorWindow : Window
     /// <param name="dashboardSize">
     /// The size in pixels of the dashboard being edited (its monitor, or its window when windowed), for "Match dashboard screen".
     /// </param>
-    public EditorWindow(LayoutSession session, LayoutStore layouts, Func<string> shownLayout, Func<(int Width, int Height)?> dashboardSize)
+    public LayoutEditor(LayoutSession session, LayoutStore layouts, Func<string> shownLayout, Func<(int Width, int Height)?> dashboardSize)
     {
         InitializeComponent();
-        PlaceOnMainScreen();
         _session = session;
         _layouts = layouts;
         _shownLayout = shownLayout;
@@ -83,8 +82,10 @@ public partial class EditorWindow : Window
         layoutMenu.Items.Add(MenuItemFor("Rename…", null, RenameLayout));
         layoutMenu.Items.Add(MenuItemFor("Duplicate…", "Copy the saved layout and edit the copy", DuplicateLayout));
         layoutMenu.Items.Add(new Separator());
+        layoutMenu.Items.Add(MenuItemFor("Get one from the gallery…", "Browse ready-made layouts and show one on this screen", FromGallery));
         layoutMenu.Items.Add(MenuItemFor("Export…", "Save this layout, with its font and background image, as one file to share or move to another PC", ExportLayout));
         layoutMenu.Items.Add(MenuItemFor("Import…", "Add a layout from an exported .ibl file", ImportLayout));
+        layoutMenu.Items.Add(MenuItemFor("Open layout file", "The saved layout's JSON file, to edit by hand. Revert then loads your changes.", OpenLayoutFile));
         layoutMenu.Items.Add(new Separator());
         _deleteLayoutItem = MenuItemFor("Delete", null, DeleteLayout);
         layoutMenu.Items.Add(_deleteLayoutItem);
@@ -107,24 +108,8 @@ public partial class EditorWindow : Window
         UpdateState();
     }
 
-    /// <summary>
-    /// Centred on the main screen and no bigger than it. WPF's CenterScreen uses the screen under the mouse, which when
-    /// the editor is opened from the dashboard is the dashboard's own screen: often a strip too short for the editor,
-    /// which then hung off it, and covered the dashboard it's editing anyway.
-    /// </summary>
-    private void PlaceOnMainScreen()
-    {
-        var (left, top, width, height) = Centred(SystemParameters.WorkArea, Width, Height);
-        (Left, Top, Width, Height) = (left, top, width, height);
-    }
-
-    /// <summary>A window of <paramref name="width"/>×<paramref name="height"/> centred in <paramref name="area"/>, shrunk to fit inside it.</summary>
-    internal static (double Left, double Top, double Width, double Height) Centred(Rect area, double width, double height)
-    {
-        width = Math.Min(width, area.Width * 0.95);
-        height = Math.Min(height, area.Height * 0.95);
-        return (area.Left + (area.Width - width) / 2, area.Top + (area.Height - height) / 2, width, height);
-    }
+    /// <summary>The window it's in, for the dialogs it opens.</summary>
+    private Window? Owner => Window.GetWindow(this);
 
     private static MenuItem MenuItemFor(string header, string? toolTip, Action action)
     {
@@ -146,6 +131,15 @@ public partial class EditorWindow : Window
 
     /// <summary>A widget was added from the Add menu.</summary>
     public event EventHandler<WidgetDescriptor>? WidgetAdded;
+
+    /// <summary>"Get one from the gallery…": the gallery is wanted, for this screen.</summary>
+    public event EventHandler? GalleryRequested;
+
+    /// <summary>What's being edited and whether it has unsaved changes, for the window's title.</summary>
+    public string Title { get; private set; } = string.Empty;
+
+    /// <summary>The title changed.</summary>
+    public event EventHandler? StateChanged;
 
     public void Refresh(MetricStore store, DateTime now)
     {
@@ -210,13 +204,9 @@ public partial class EditorWindow : Window
 
     // ---- Screens ------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// The dashboards it can edit the layouts of, by their screens' names, and which one it's on. The list only shows
-    /// with more than one.
-    /// </summary>
+    /// <summary>The dashboards it can edit the layouts of, by their screens' names, and which one it's on.</summary>
     public void SetScreens(IReadOnlyList<string> screens, int current)
     {
-        ScreenPanel.Visibility = screens.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
         _syncingScreens = true;
         ScreenBox.ItemsSource = screens;
         _syncingScreens = false;
@@ -313,7 +303,7 @@ public partial class EditorWindow : Window
 
     private void SaveAs()
     {
-        var name = NamePromptWindow.Ask(this, "Save layout as", "Name for the new layout", $"{Editing} copy",
+        var name = NamePromptWindow.Ask(Owner, "Save layout as", "Name for the new layout", $"{Editing} copy",
             n => _layouts.Library.CheckNewName(n));
         if (name is null)
             return;
@@ -330,7 +320,7 @@ public partial class EditorWindow : Window
     private void RenameLayout()
     {
         var current = Editing;
-        var name = NamePromptWindow.Ask(this, "Rename layout", $"New name for \"{current}\"", current,
+        var name = NamePromptWindow.Ask(Owner, "Rename layout", $"New name for \"{current}\"", current,
             n => _layouts.Library.CheckNewName(n, except: current));
         if (name is null || name == current)
             return;
@@ -346,7 +336,7 @@ public partial class EditorWindow : Window
     {
         if (!ConfirmLeave())
             return;
-        var name = NamePromptWindow.Ask(this, "Duplicate layout", $"Name for the copy of \"{Editing}\"", $"{Editing} copy",
+        var name = NamePromptWindow.Ask(Owner, "Duplicate layout", $"Name for the copy of \"{Editing}\"", $"{Editing} copy",
             n => _layouts.Library.CheckNewName(n));
         if (name is null)
             return;
@@ -356,23 +346,45 @@ public partial class EditorWindow : Window
     }
 
     /// <summary>Exports what's in the editor, unsaved changes included.</summary>
-    private void ExportLayout() => LayoutTransfer.Export(this, _session.Document, Editing, _session.Themes);
+    private void ExportLayout()
+    {
+        if (Owner is { } owner)
+            LayoutTransfer.Export(owner, _session.Document, Editing, _session.Themes);
+    }
 
     /// <summary>Imports a layout file and starts editing it (the dashboard being edited follows).</summary>
     public void ImportLayout()
     {
         if (!ConfirmLeave())
             return;
-        if (LayoutTransfer.Import(this, _layouts) is not { } name)
+        if (LayoutTransfer.Import(Owner, _layouts) is not { } name)
             return;
         Choose(name);
+    }
+
+    /// <summary>Off to the gallery, for a layout for the screen being edited. Leaving asks about unsaved changes.</summary>
+    private void FromGallery() => GalleryRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>The saved layout's file, in whatever edits JSON.</summary>
+    private void OpenLayoutFile()
+    {
+        var path = _layouts.Library.PathOf(Editing);
+        try
+        {
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // No handler registered for .json; fall back to Notepad.
+            Process.Start("notepad.exe", $"\"{path}\"");
+        }
     }
 
     private void DeleteLayout()
     {
         if (_layouts.List().Count <= 1)
             return;
-        var answer = MessageBox.Show(this, $"Delete the layout \"{Editing}\"? This can't be undone.", "Impious Bonum",
+        var answer = MessageBox.Show(Owner!, $"Delete the layout \"{Editing}\"? This can't be undone.", "Impious Bonum",
             MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
         if (answer != MessageBoxResult.OK)
             return;
@@ -399,12 +411,12 @@ public partial class EditorWindow : Window
     }
 
     /// <summary>Before leaving the layout being edited: save, discard, or (false) stay.</summary>
-    private bool ConfirmLeave()
+    public bool ConfirmLeave()
     {
         if (!_session.IsDirty)
             return true;
 
-        var answer = MessageBox.Show(this, $"Save your changes to \"{Editing}\"?", "Impious Bonum", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+        var answer = MessageBox.Show(Owner!, $"Save your changes to \"{Editing}\"?", "Impious Bonum", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
         if (answer == MessageBoxResult.Yes)
             Save();
         return answer != MessageBoxResult.Cancel;
@@ -456,7 +468,12 @@ public partial class EditorWindow : Window
     private void UpdateState()
     {
         var dirty = _session.IsDirty;
-        Title = $"{(dirty ? "● " : string.Empty)}{Editing} · Impious Bonum layout editor";
+        var title = $"{(dirty ? "● " : string.Empty)}{Editing} · Impious Bonum";
+        if (title != Title)
+        {
+            Title = title;
+            StateChanged?.Invoke(this, EventArgs.Empty);
+        }
         SaveButton.IsEnabled = dirty;
         RevertButton.IsEnabled = dirty;
         UndoButton.IsEnabled = _session.CanUndo;
@@ -525,14 +542,5 @@ public partial class EditorWindow : Window
                 return;
         }
         e.Handled = true;
-    }
-
-    // ---- Closing ------------------------------------------------------------------------------------
-
-    protected override void OnClosing(CancelEventArgs e)
-    {
-        base.OnClosing(e);
-        if (!ConfirmLeave())
-            e.Cancel = true;
     }
 }

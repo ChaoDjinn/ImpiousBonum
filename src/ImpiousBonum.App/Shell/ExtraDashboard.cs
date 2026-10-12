@@ -4,7 +4,7 @@ using ImpiousBonum.App.Layout;
 namespace ImpiousBonum.App.Shell;
 
 /// <summary>
-/// Another dashboard besides the main one (tray → Display → More dashboards): a saved layout filling a monitor of its
+/// Another dashboard besides the main one (the Screens page): a saved layout filling a monitor of its
 /// own. Pages, game layouts and the schedule's layouts are the main dashboard's; these always show their layout.
 /// </summary>
 /// <param name="MonitorId">The monitor's stable id (<see cref="DisplayMonitor.Id"/>).</param>

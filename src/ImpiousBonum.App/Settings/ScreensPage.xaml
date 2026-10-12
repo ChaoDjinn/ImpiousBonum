@@ -1,0 +1,72 @@
+<UserControl x:Class="ImpiousBonum.App.Settings.ScreensPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:ImpiousBonum.App.Controls">
+    <UserControl.Resources>
+        <!-- A monitor on the map, drawn where it sits; tinted when it has a dashboard, ringed when picked. -->
+        <Style x:Key="MonitorTile" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid>
+                            <Border x:Name="Back" CornerRadius="4" BorderThickness="1"
+                                    Background="{DynamicResource ControlFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}" />
+                            <Border x:Name="Tint" CornerRadius="4" Background="{DynamicResource AccentFillColorDefaultBrush}" Opacity="0" />
+                            <Border x:Name="Ring" CornerRadius="4" BorderThickness="2" BorderBrush="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Hidden" />
+                            <ContentPresenter Margin="6,4" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Tag" Value="dashboard">
+                                <Setter TargetName="Tint" Property="Opacity" Value="0.22" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Back" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <c:PageColumn Style="{DynamicResource PageColumn}">
+            <TextBlock Style="{DynamicResource PageTitle}" Text="Screens" />
+            <TextBlock Style="{DynamicResource PageIntro}"
+                       Text="Where the dashboards show. Pick a screen to choose its layout, or to put a dashboard on it. Each screen's dashboard has a layout of its own." />
+
+            <Border x:Name="MapCard" Style="{DynamicResource Card}" Padding="20">
+                <Canvas x:Name="Map" Height="240" HorizontalAlignment="Stretch" />
+            </Border>
+            <TextBlock x:Name="MissingText" Style="{DynamicResource NoteText}" Margin="2,8,0,0" Visibility="Collapsed" />
+
+            <TextBlock x:Name="ScreenHeading" Style="{DynamicResource GroupHeading}" />
+            <StackPanel x:Name="ScreenCards" />
+
+            <TextBlock Style="{DynamicResource GroupHeading}" Text="All dashboards" />
+            <c:SettingsCard Glyph="&#xE718;" Header="Always on top" Description="Keep the dashboards above other windows">
+                <CheckBox x:Name="OnTopSwitch" Style="{DynamicResource ToggleSwitch}" Click="OnOnTop" AutomationProperties.Name="Always on top" />
+            </c:SettingsCard>
+            <c:SettingsCard x:Name="FullscreenCard" Glyph="&#xE740;" Header="Hide over fullscreen apps"
+                            Description="Step aside while a game or video fills a dashboard's screen, rather than sit over it">
+                <CheckBox x:Name="FullscreenSwitch" Style="{DynamicResource ToggleSwitch}" Click="OnFullscreen" AutomationProperties.Name="Hide over fullscreen apps" />
+            </c:SettingsCard>
+            <c:SettingsCard Glyph="&#xE708;" Header="When you're away"
+                            Description="Dim the dashboards when there's been no keyboard, mouse or touch input for a while. A game drawing frames counts as you being there.">
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox x:Name="AwayBox" Width="190" SelectionChanged="OnAway" AutomationProperties.Name="Dim after" />
+                    <ComboBox x:Name="AwayLevelBox" Width="150" Margin="8,0,0,0" SelectionChanged="OnAway" AutomationProperties.Name="Dim to" />
+                </StackPanel>
+            </c:SettingsCard>
+            <c:SettingsCard Glyph="&#xE8A7;" Header="Bring to front" Description="Put the dashboards back on top of anything that's covering them">
+                <Button Content="Bring to front" Click="OnBringToFront" />
+            </c:SettingsCard>
+        </c:PageColumn>
+    </ScrollViewer>
+</UserControl>

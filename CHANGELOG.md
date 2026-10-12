@@ -3,6 +3,21 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## 0.13.0
+
+Impious Bonum has a window of its own, and the tray menu keeps to the basics.
+
+**A window for everything**
+- *Open Impious Bonum* in the tray (or double-click the icon, or start it again from the Start menu) opens a window with a sidebar, like Windows' Settings: *Layouts*, *Gallery*, *Screens*, *Tablet and USB screen*, *Pages and schedule*, *Game layouts*, *Sensors*, *Weather*, *Calendars*, *News feeds*, *Claude usage*, *Custom data*, *Alerts*, *Hotkeys*, *Logging*, *General* and *About and updates*. Changes take effect as you make them.
+- The layout editor is the *Layouts* page. Its *Screen* list is always there, so you pick which screen's dashboard you're editing, then its layout. Leaving the page with unsaved changes asks first.
+- *Screens* shows your monitors as Windows arranges them, with the dashboard on each. Pick one to choose its layout, edit it, make the main dashboard a window, add a dashboard there, or move the main one there.
+- *About and updates* checks for updates, shows the download as it goes, and has *Restart to update* right there once it's ready, instead of a second trip to the tray. A dot in the sidebar says when one is waiting.
+- The tray menu now has *Open Impious Bonum*, *Edit layout…*, *Layout* (to switch quickly) and *Exit*, plus *Restart to update* when there's an update.
+
+**A bigger gallery**
+- Eight new layouts for common screen sizes, from a 3.5" USB screen (480 × 320) and a 7" panel (1024 × 600) to a 1920 × 720 sim-rig bar, 1080p, 1440p and 4K monitors, a TV across the room, and a monitor turned on its side.
+- The *Gallery* page shows the layouts that suit one of your screens' shape, closest in size first, and can show only simple ones (a few big things) or busy ones (lots at once). *Show on* puts the layout straight on that screen, adding a dashboard there if it has none.
+
 ## 0.12.0
 
 Each screen can have a layout of its own: a new screen gets a new, empty layout, and the editor edits whichever screen you open it from.

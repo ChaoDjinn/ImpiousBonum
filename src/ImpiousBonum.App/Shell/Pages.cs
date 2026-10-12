@@ -4,7 +4,7 @@ namespace ImpiousBonum.App.Shell;
 
 /// <summary>
 /// Layouts as pages: swipe across the dashboard to move between them, or let them rotate on a timer.
-/// The pages are the layouts you picked (tray → Layout → Pages), in the Layout menu's order, or all of them.
+/// The pages are the layouts you picked (Pages and schedule), in the layouts' order, or all of them.
 /// </summary>
 public static class Pages
 {

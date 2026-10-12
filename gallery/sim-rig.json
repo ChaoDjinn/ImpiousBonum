@@ -1,0 +1,27 @@
+// Sim rig: for a 12.3" 1920 × 720 bar screen under the main monitor. The frame rate and how smooth it is, loads and
+// temperatures, and the time. FPS and temperatures need the sensor service.
+{
+  "width": 1920,
+  "height": 720,
+  "theme": "Stadium",
+  "widgets": [
+    { "type": "text", "x": 40, "y": 20, "width": 520, "height": 300, "fontSize": 240, "text": "{fps:0 nounit}",
+      "thresholds": [{ "below": 50, "color": "warning" }, { "below": 30, "color": "critical" }] },
+    { "type": "text", "x": 40, "y": 320, "width": 520, "height": 50, "fontSize": 34, "text": "FPS · {fps.app}", "color": "secondary" },
+    { "type": "stat", "x": 40, "y": 400, "width": 520, "height": 290, "label": "1% low", "metric": "fps.low1", "text": "{fps.low1:0 nounit}", "fontSize": 90, "labelSize": 26 },
+
+    { "type": "lines", "x": 600, "y": 30, "width": 720, "height": 330, "fontSize": 26, "lineThickness": 3,
+      "lines": [
+        { "label": "Frame time", "metric": "fps.frametime", "color": "accent" },
+        { "label": "Slowest", "metric": "fps.frametime.max", "color": "warning" }
+      ] },
+    { "type": "stat", "x": 600, "y": 400, "width": 340, "height": 290, "label": "CPU", "metric": "cpu.load", "fontSize": 80, "labelSize": 26 },
+    { "type": "stat", "x": 980, "y": 400, "width": 340, "height": 290, "label": "GPU", "metric": "gpu.load", "fontSize": 80, "labelSize": 26 },
+
+    { "type": "gauge", "x": 1360, "y": 30, "width": 250, "height": 330, "label": "CPU °C", "metric": "cpu.temp", "text": "{cpu.temp:nounit}",
+      "max": 100, "fontSize": 60, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }] },
+    { "type": "gauge", "x": 1640, "y": 30, "width": 250, "height": 330, "label": "GPU °C", "metric": "gpu.temp", "text": "{gpu.temp:nounit}",
+      "max": 100, "fontSize": 60, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 88, "color": "critical" }] },
+    { "type": "clock", "x": 1360, "y": 400, "width": 530, "height": 290, "timeSize": 140, "dateSize": 26 }
+  ]
+}

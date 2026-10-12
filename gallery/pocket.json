@@ -1,0 +1,14 @@
+// Pocket: for a 7" 1024 × 600 display. The time, the weather and three dials: CPU and GPU load, and memory.
+// Set your location on the Weather page.
+{
+  "width": 1024,
+  "height": 600,
+  "theme": "Sakura",
+  "widgets": [
+    { "type": "clock", "x": 20, "y": 10, "width": 560, "height": 290, "timeSize": 150, "dateSize": 26 },
+    { "type": "weather", "x": 600, "y": 20, "width": 404, "height": 270, "fontSize": 64, "forecast": "none" },
+    { "type": "gauge", "x": 20, "y": 320, "width": 314, "height": 260, "label": "CPU", "metric": "cpu.load", "fontSize": 56, "labelSize": 24 },
+    { "type": "gauge", "x": 355, "y": 320, "width": 314, "height": 260, "label": "GPU", "metric": "gpu.load", "fontSize": 56, "labelSize": 24 },
+    { "type": "gauge", "x": 690, "y": 320, "width": 314, "height": 260, "label": "RAM", "metric": "mem.load", "text": "{mem.used:GB}", "fontSize": 50, "labelSize": 24 }
+  ]
+}

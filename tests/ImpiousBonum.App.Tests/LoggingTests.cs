@@ -1,4 +1,5 @@
 using System.IO;
+using ImpiousBonum.App.Settings;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.Core.Metrics;
 
@@ -19,17 +20,17 @@ public sealed class LoggingTests : IDisposable
     }
 
     [Fact]
-    public void The_window_shows_and_returns_the_settings()
+    public void The_page_shows_and_returns_the_settings()
     {
         Sta.Run(() =>
         {
-            var window = new LoggingWindow(new LogSettings(true, ["cpu.load"], 30, 90), new MetricStore());
-            Assert.Equal(new LogSettings(true, ["cpu.load"], 30, 90), window.Settings(), new LogSettingsComparer());
+            var page = new LoggingPage(null);
+            page.Fill(new LogSettings(true, ["cpu.load"], 30, 90), new MetricStore());
+            Assert.Equal(new LogSettings(true, ["cpu.load"], 30, 90), page.Settings(), new LogSettingsComparer());
 
-            window.AddMetric("fps");
-            window.AddMetric("CPU.LOAD");
-            Assert.Equal(["cpu.load", "fps"], window.Settings().Metrics);
-            window.Close();
+            page.AddMetric("fps");
+            page.AddMetric("CPU.LOAD");
+            Assert.Equal(["cpu.load", "fps"], page.Settings().Metrics);
         });
     }
 
@@ -38,13 +39,13 @@ public sealed class LoggingTests : IDisposable
     {
         Sta.Run(() =>
         {
-            var window = new LoggingWindow(new LogSettings(true, [], 7, 3), null);
-            Assert.NotNull(window.Problem());
-            Assert.Equal(1, window.Settings().EverySeconds);
-            Assert.Equal(7, window.Settings().KeepDays);
-            window.EnabledCheck.IsChecked = false;
-            Assert.Null(window.Problem());
-            window.Close();
+            var page = new LoggingPage(null);
+            page.Fill(new LogSettings(true, [], 7, 3), null);
+            Assert.NotNull(page.Problem());
+            Assert.Equal(1, page.Settings().EverySeconds);
+            Assert.Equal(7, page.Settings().KeepDays);
+            page.EnabledCheck.IsChecked = false;
+            Assert.Null(page.Problem());
         });
     }
 
