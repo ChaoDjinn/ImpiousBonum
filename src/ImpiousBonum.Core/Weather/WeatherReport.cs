@@ -21,10 +21,53 @@ public sealed record WeatherRequest(string Name, double Latitude, double Longitu
 }
 
 /// <summary>A place found by name, to pick from when setting the weather location.</summary>
+/// <param name="Region">The state, province or the like, e.g. England or Missouri.</param>
 public sealed record WeatherPlace(string Name, string? Region, string? Country, double Latitude, double Longitude)
 {
-    /// <summary>"Springfield, Missouri, United States".</summary>
-    public string Description => string.Join(", ", new[] { Name, Region, Country }.Where(p => !string.IsNullOrWhiteSpace(p)).Distinct());
+    /// <summary>
+    /// Smaller areas the place is in, smallest first: a town or district, then a county (West Derby's is Liverpool). Shown
+    /// between the name and the region, and what "West Derby, Liverpool" is matched against.
+    /// </summary>
+    public IReadOnlyList<string> Areas { get; init; } = [];
+
+    /// <summary>The country's two-letter code, e.g. GB, so "London, GB" finds it too.</summary>
+    public string? CountryCode { get; init; }
+
+    /// <summary>
+    /// "West Derby, Liverpool, England, United Kingdom". Empty parts are left out, and so are areas that only repeat a part
+    /// before them, alone or within a longer name (London's "Greater London").
+    /// </summary>
+    public string Description
+    {
+        get
+        {
+            var parts = new List<string>();
+            foreach (var area in Areas.Prepend(Name))
+            {
+                if (!string.IsNullOrWhiteSpace(area) && !parts.Any(p => Names(area.Trim(), p)))
+                    parts.Add(area.Trim());
+            }
+            // A region or country is only left out when it's the same as a part before it: "York, New York" needs both.
+            foreach (var part in new[] { Region, Country })
+            {
+                if (!string.IsNullOrWhiteSpace(part) && !parts.Contains(part.Trim(), StringComparer.OrdinalIgnoreCase))
+                    parts.Add(part.Trim());
+            }
+            return string.Join(", ", parts);
+        }
+    }
+
+    /// <summary>Whether <paramref name="text"/> is <paramref name="name"/>, or has it as whole words ("Greater London", "City of Springfield").</summary>
+    private static bool Names(string text, string name)
+    {
+        for (var i = text.IndexOf(name, StringComparison.OrdinalIgnoreCase); i >= 0; i = text.IndexOf(name, i + 1, StringComparison.OrdinalIgnoreCase))
+        {
+            var end = i + name.Length;
+            if ((i == 0 || !char.IsLetterOrDigit(text[i - 1])) && (end == text.Length || !char.IsLetterOrDigit(text[end])))
+                return true;
+        }
+        return false;
+    }
 }
 
 /// <summary>
