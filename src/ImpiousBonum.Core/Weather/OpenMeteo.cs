@@ -21,8 +21,8 @@ public static class OpenMeteo
     }
 
     /// <summary>
-    /// Everything the forecast has in one request. The three hours before this one are for the pressure trend; the
-    /// widget's hours start after the current one.
+    /// Everything the forecast has in one request. The three hours before this one are for the pressure trend. The
+    /// widget's hours start after this one, so 49 hours from it leaves 48 to show.
     /// </summary>
     internal static string ForecastUrl(WeatherRequest request) =>
         FormattableString.Invariant($"https://api.open-meteo.com/v1/forecast?latitude={request.Latitude:0.####}&longitude={request.Longitude:0.####}")
@@ -31,7 +31,7 @@ public static class OpenMeteo
         + "&hourly=temperature_2m,weather_code,is_day,precipitation_probability,precipitation,pressure_msl,wind_speed_10m,wind_gusts_10m,uv_index"
         + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,sunrise,sunset,"
         + "daylight_duration,uv_index_max,wind_speed_10m_max,wind_gusts_10m_max"
-        + "&timezone=auto&forecast_days=16&past_hours=3&forecast_hours=48"
+        + "&timezone=auto&forecast_days=16&past_hours=3&forecast_hours=49"
         + (request.Units == WeatherUnits.Imperial ? "&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch" : "&wind_speed_unit=kmh");
 
     /// <summary>Places matching <paramref name="name"/> (a town, or "Town, Country"), best first, in the user's language where known.</summary>

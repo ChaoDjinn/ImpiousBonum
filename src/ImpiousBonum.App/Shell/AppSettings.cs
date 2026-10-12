@@ -205,7 +205,10 @@ public sealed class AppSettings
     /// <summary>Where the weather is for (the Weather page), or null: then no forecast is fetched at all.</summary>
     public WeatherLocation? WeatherLocation { get; set; }
 
-    /// <summary><c>auto</c> follows Windows' region; <c>metric</c> is °C and km/h, <c>imperial</c> °F and mph.</summary>
+    /// <summary>
+    /// <c>auto</c> follows Windows' region; <c>metric</c> is °C, km/h, mm, km and hPa, <c>imperial</c> °F, mph, inches,
+    /// miles and inches of mercury.
+    /// </summary>
     public string WeatherUnits { get; set; } = WeatherUnitsAuto;
 
     public const string WeatherUnitsAuto = "auto";

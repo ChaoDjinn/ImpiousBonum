@@ -143,8 +143,8 @@ public static class DemoReadings
         // The weather in a made-up town, and the forecast.
         var weather = new WeatherProvider(() => null, (_, _) => Task.FromException<WeatherReport>(new InvalidOperationException("Demo")));
         weather.Initialize(store);
-        // The pressure falls ahead of the rain due in nine hours or so.
-        var hours = Enumerable.Range(-3, 51).Select(h =>
+        // Three hours back to 48 ahead, like Open-Meteo's. The pressure falls ahead of the rain due in nine hours or so.
+        var hours = Enumerable.Range(-3, 52).Select(h =>
         {
             var time = now.Date.AddHours(now.Hour + h);
             var daytime = time.Hour is >= 7 and < 20;

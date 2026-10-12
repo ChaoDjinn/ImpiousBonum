@@ -189,7 +189,7 @@ public sealed class WeatherProvider(
         store.Set(Clouds, report?.Clouds);
         store.Set(Precipitation, report?.Precipitation);
         store.Set(PrecipitationToday, report?.Today?.Precipitation);
-        store.Set(RainChanceHour, report?.HourAt(report.LocalTime(now))?.RainChance);
+        store.Set(RainChanceHour, report?.HourEndingAfter(report.LocalTime(now))?.RainChance);
         store.Set(TomorrowRainChance, report?.Tomorrow?.RainChance);
         store.Set(Uv, report?.Uv);
         store.Set(UvMax, report?.Today?.Uv);

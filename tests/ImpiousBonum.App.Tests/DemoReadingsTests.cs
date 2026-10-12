@@ -6,6 +6,7 @@ using ImpiousBonum.App.Shell;
 using ImpiousBonum.Core.Demo;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
+using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.App.Tests;
 
@@ -69,6 +70,11 @@ public sealed class DemoReadingsTests
         Assert.All(weather, d => Assert.True(store.TryGet(d.Id, out var sample) && sample.HasValue, d.Id));
         store.TryGet(WeatherProvider.PressureTrend, out var trend);
         Assert.Equal("Falling", trend.Text);
+
+        // As long a forecast as Open-Meteo's, so the widget can be shown at its longest.
+        var forecast = (WeatherReport)store.GetAttachment(WeatherProvider.Forecast)!;
+        Assert.Equal(48, forecast.HoursAhead.Count());
+        Assert.Equal(16, forecast.Days.Count);
     }
 
     [Fact]

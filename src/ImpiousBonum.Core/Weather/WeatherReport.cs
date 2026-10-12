@@ -33,15 +33,16 @@ public sealed record WeatherPlace(string Name, string? Region, string? Country, 
 /// </summary>
 /// <param name="Time">Local time at the place.</param>
 /// <param name="Low">For days, the day's low; null for hours.</param>
+/// <param name="RainChance">For hours, the chance of rain in the hour up to <paramref name="Time"/>; for days, the day's highest.</param>
 public sealed record WeatherPeriod(DateTime Time, double Temperature, double? Low, int Code, bool IsDay, double? RainChance)
 {
-    /// <summary>Rain, showers and snow, in mm or inches: in the hour, or the day's total.</summary>
+    /// <summary>Rain, showers and snow, in mm or inches: in the hour up to <see cref="Time"/>, or the day's total.</summary>
     public double? Precipitation { get; init; }
 
     /// <summary>Wind speed: in the hour, or the day's strongest.</summary>
     public double? Wind { get; init; }
 
-    /// <summary>Wind gusts: in the hour, or the day's strongest.</summary>
+    /// <summary>Wind gusts: in the hour up to <see cref="Time"/>, or the day's strongest.</summary>
     public double? Gusts { get; init; }
 
     /// <summary>UV index: in the hour, or the day's highest.</summary>
@@ -109,8 +110,11 @@ public sealed record WeatherReport(
     public DateTime LocalTime(DateTimeOffset utc) =>
         UtcOffset is { } offset ? DateTime.SpecifyKind(utc.UtcDateTime + offset, DateTimeKind.Unspecified) : Time;
 
-    /// <summary>The hour that <paramref name="time"/> (local, at the place) is in, if the forecast has it.</summary>
-    public WeatherPeriod? HourAt(DateTime time) => Hours.LastOrDefault(h => h.Time <= time && time < h.Time.AddHours(1));
+    /// <summary>
+    /// The hour that <paramref name="time"/> (local, at the place) is in, for its rain, gusts and chance of rain, if the
+    /// forecast has it. Open-Meteo gives those for the hour up to each hour's time, so at 9:45 it's the 10:00 hour.
+    /// </summary>
+    public WeatherPeriod? HourEndingAfter(DateTime time) => Hours.FirstOrDefault(h => h.Time > time && h.Time <= time.AddHours(1));
 
     /// <summary>
     /// Reads Open-Meteo's forecast JSON (current, hourly and daily blocks as requested by <see cref="OpenMeteo"/>).

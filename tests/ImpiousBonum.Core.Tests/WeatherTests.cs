@@ -162,7 +162,8 @@ public sealed class WeatherTests
         Assert.Contains("wind_gusts_10m,uv_index,pressure_msl,dew_point_2m,visibility,cloud_cover,precipitation&", metric);
         Assert.Contains("uv_index_max", metric);
         Assert.Contains("daylight_duration", metric);
-        Assert.Contains("&forecast_days=16&past_hours=3&forecast_hours=48", metric);
+        // The current hour and 48 after it, so the widget has 48 hours ahead.
+        Assert.Contains("&forecast_days=16&past_hours=3&forecast_hours=49", metric);
         Assert.DoesNotContain("inch", metric);
 
         var imperial = OpenMeteo.ForecastUrl(London with { Units = WeatherUnits.Imperial });
@@ -194,6 +195,20 @@ public sealed class WeatherTests
         Assert.Null(WeatherReadings.Trend(hours, new DateTime(2026, 10, 12, 8, 30, 0)));
         Assert.Null(WeatherReadings.Trend(hours, new DateTime(2026, 10, 12, 5, 0, 0)));
         Assert.Null(WeatherReadings.Trend(hours.Select(h => h with { Pressure = null }).ToList(), new DateTime(2026, 10, 12, 9, 45, 0)));
+    }
+
+    [Fact]
+    public void The_chance_of_rain_this_hour_is_from_the_hour_that_ends_next()
+    {
+        // Open-Meteo's 10:00 hour has the rain and its chance from 9:00 to 10:00.
+        var report = WeatherReport.Parse(FullForecast, WeatherUnits.Metric);
+        Assert.Equal(75, report.HourEndingAfter(new DateTime(2026, 10, 12, 9, 45, 0))!.RainChance);
+        Assert.Equal(75, report.HourEndingAfter(new DateTime(2026, 10, 12, 9, 0, 0))!.RainChance);
+        Assert.Equal(40, report.HourEndingAfter(new DateTime(2026, 10, 12, 10, 0, 0))!.RainChance);
+        Assert.Equal(10, report.HourEndingAfter(new DateTime(2026, 10, 12, 5, 30, 0))!.RainChance);
+        // Past the forecast's last hour, or more than an hour before its first, it isn't known.
+        Assert.Null(report.HourEndingAfter(new DateTime(2026, 10, 12, 11, 0, 0)));
+        Assert.Null(report.HourEndingAfter(new DateTime(2026, 10, 12, 4, 30, 0)));
     }
 
     [Theory]
@@ -240,7 +255,7 @@ public sealed class WeatherTests
         Assert.Equal("0.3 mm", Format(store, WeatherProvider.Precipitation));
         Assert.Equal("6.4 mm", Format(store, WeatherProvider.PrecipitationToday));
         Assert.Equal("80 %", Format(store, WeatherProvider.RainChance));
-        Assert.Equal("60 %", Format(store, WeatherProvider.RainChanceHour));
+        Assert.Equal("75 %", Format(store, WeatherProvider.RainChanceHour));
         Assert.Equal("25 %", Format(store, WeatherProvider.TomorrowRainChance));
         Assert.Equal("2", Format(store, WeatherProvider.Uv));
         Assert.Equal("3", Format(store, WeatherProvider.UvMax));
@@ -252,7 +267,7 @@ public sealed class WeatherTests
         time.Advance(TimeSpan.FromMinutes(30));
         await provider.SampleAsync(store, CancellationToken.None);
         Assert.Equal("23°", Format(store, WeatherProvider.SunElevation));
-        Assert.Equal("75 %", Format(store, WeatherProvider.RainChanceHour));
+        Assert.Equal("40 %", Format(store, WeatherProvider.RainChanceHour));
 
         wanted = London with { Units = WeatherUnits.Imperial };
         await provider.SampleAsync(store, CancellationToken.None);

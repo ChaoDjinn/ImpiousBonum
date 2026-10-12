@@ -257,7 +257,7 @@ There's more in the forecast than the widget shows, for text, gauges and the res
 - **Rain:** how much fell in the last 15 minutes (`weather.precipitation`) and is forecast today (`weather.precipitation.today`), and the chance of rain this hour (`weather.rain.hour`) and tomorrow (`weather.tomorrow.rain`), as well as today's (`weather.rain`).
 - **The sun:** today's daylight (`weather.daylight`, e.g. *10 h 49 min*) and how high the sun is (`weather.sun.elevation`, in degrees, below 0 after sunset). The sun's height is worked out on your PC from the place and the time, so it keeps moving between forecasts without fetching anything.
 
-For example, `UV {weather.uv} ({weather.uv.level}) · {weather.pressure} {weather.pressure.trend}` in a text widget reads *UV 3 (Moderate) · 1012 hPa Falling*. They all come with the one forecast, so they cost nothing extra.
+For example, `UV {weather.uv} ({weather.uv.level}) · {weather.pressure} {weather.pressure.trend}` in a text widget reads *UV 3 (Moderate) · 1012 hPa Falling*. They all come in the one request for the forecast, so there are no extra requests.
 
 The location is set once for the PC, so every layout shows the same place. Units follow your Windows region (°C, km/h, mm, km and hPa, or °F, mph, inches, miles and inches of mercury); *Weather* → *Units* changes them.
 

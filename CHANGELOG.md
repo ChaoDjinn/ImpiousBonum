@@ -6,7 +6,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 ## Unreleased
 
 **More weather readings and longer forecasts**
-- New weather readings for any widget: wind gusts and the wind direction in degrees, the UV index now and today's highest with its level (*Low* to *Extreme*), air pressure and whether it's rising, falling or steady over the last three hours, dew point, visibility, cloud cover, rain or snow in the last 15 minutes and today's total, the chance of rain this hour and tomorrow, and today's daylight (*10 h 49 min*). They come with the forecast Impious Bonum already fetches, so nothing more is sent or downloaded.
+- New weather readings for any widget: wind gusts and the wind direction in degrees, the UV index now and today's highest with its level (*Low* to *Extreme*), air pressure and whether it's rising, falling or steady over the last three hours, dew point, visibility, cloud cover, rain or snow in the last 15 minutes and today's total, the chance of rain this hour and tomorrow, and today's daylight (*10 h 49 min*). They come in the same request as the forecast Impious Bonum already fetches, so there are no extra requests and nothing more is sent.
 - How high the sun is, in degrees, worked out on your PC from your location and the time, so it keeps moving between forecasts.
 - The *Weather* widget's forecast goes up to 16 days, or 48 hours, ahead.
 - *Chance of rain from* on the *Weather* widget chooses when a day or hour shows its chance of rain: from 30% as before, or 0 to always show it.
