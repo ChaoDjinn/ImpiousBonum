@@ -70,12 +70,6 @@
                         <TextBlock Text="Delete" />
                     </StackPanel>
                 </Button>
-                <Button x:Name="ForwardButton" Click="OnForward" Margin="6,0,0,0" ToolTip="Bring forward: draw on top of the next widget">
-                    <TextBlock Style="{DynamicResource Glyph}" Text="&#xE74A;" />
-                </Button>
-                <Button x:Name="BackwardButton" Click="OnBackward" Margin="6,0,0,0" ToolTip="Send back: draw behind the previous widget">
-                    <TextBlock Style="{DynamicResource Glyph}" Text="&#xE74B;" />
-                </Button>
                 <Border Style="{StaticResource ToolbarSeparator}" />
                 <Button x:Name="UndoButton" Click="OnUndo" ToolTip="Undo (Ctrl+Z)">
                     <TextBlock Style="{DynamicResource Glyph}" Text="&#xE7A7;" />
@@ -108,12 +102,13 @@
                 <ColumnDefinition Width="440" />
             </Grid.ColumnDefinitions>
 
-            <!-- Widget list -->
+            <!-- Widget list, in drawing order: drag a widget up or down it to reorder, or right-click for its menu. -->
             <DockPanel Grid.Column="0" Margin="12,14,6,12">
                 <TextBlock DockPanel.Dock="Top" Text="Widgets" Style="{DynamicResource SectionHeading}" Margin="4,0,0,8" />
                 <TextBlock DockPanel.Dock="Bottom" Style="{DynamicResource NoteText}" Margin="4,10,0,0"
-                           Text="Lower in the list draws on top. Click empty canvas (or press Esc) for canvas and theme settings." />
-                <ListBox x:Name="WidgetList" SelectionChanged="OnListSelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                           Text="Lower in the list draws on top: drag a widget up or down to change the order. Click empty canvas (or press Esc) for canvas and theme settings." />
+                <ListBox x:Name="WidgetList" SelectionChanged="OnListSelectionChanged" ContextMenuOpening="OnListMenuOpening"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock TextTrimming="CharacterEllipsis" ToolTip="{Binding ToolTip}">
