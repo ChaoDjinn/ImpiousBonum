@@ -200,6 +200,44 @@ public sealed class WeatherWidgetTests
         Assert.Null(new AppSettings().WeatherRequest());
     }
 
+    [Fact]
+    public void Air_quality_is_off_until_turned_on_and_needs_a_location()
+    {
+        var settings = new AppSettings();
+        Assert.False(settings.AirQuality);
+        Assert.Equal(AppSettings.AirQualityScaleAuto, settings.AirQualityScale);
+        Assert.Null(settings.AirQualityRequest());
+
+        // A location alone isn't enough, and nor is turning it on without one.
+        settings.WeatherLocation = new WeatherLocation("Leeds, England, United Kingdom", 53.8, -1.55);
+        Assert.Null(settings.AirQualityRequest());
+        Assert.Null(new AppSettings { AirQuality = true }.AirQualityRequest());
+
+        settings.AirQuality = true;
+        Assert.Equal(new AirQualityRequest(53.8, -1.55, AqiScale.Automatic), settings.AirQualityRequest());
+    }
+
+    [Fact]
+    public void Air_quality_is_saved_with_its_scale()
+    {
+        var settings = new AppSettings
+        {
+            WeatherLocation = new WeatherLocation("Leeds, England, United Kingdom", 53.8, -1.55), AirQuality = true, AirQualityScale = AppSettings.AirQualityScaleUs,
+        };
+        var json = JsonSerializer.Serialize(settings, JsonDefaults.Options);
+        var restored = JsonSerializer.Deserialize<AppSettings>(json, JsonDefaults.Options)!;
+
+        Assert.Contains("\"airQuality\": true", json);
+        Assert.Contains("\"airQualityScale\": \"us\"", json);
+        Assert.Equal(new AirQualityRequest(53.8, -1.55, AqiScale.Us), restored.AirQualityRequest());
+        // Settings from before air quality was there leave it off.
+        Assert.False(JsonSerializer.Deserialize<AppSettings>("""{ "weatherLocation": { "name": "Leeds", "latitude": 53.8, "longitude": -1.55 } }""", JsonDefaults.Options)!.AirQuality);
+
+        Assert.Equal(AqiScale.European, AppSettings.ResolveAirQualityScale("European"));
+        Assert.Equal(AqiScale.Automatic, AppSettings.ResolveAirQualityScale("something else"));
+        Assert.Equal(AqiScale.Automatic, AppSettings.ResolveAirQualityScale(null));
+    }
+
     private static List<string> Texts(DependencyObject root) =>
         Descendants<TextBlock>(root).Select(t => string.Concat(t.Inlines.OfType<System.Windows.Documents.Run>().Select(r => r.Text)) is { Length: > 0 } runs ? runs : t.Text).ToList();
 

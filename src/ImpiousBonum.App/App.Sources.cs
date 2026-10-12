@@ -15,7 +15,7 @@ public partial class App
             ? text
             : SensorHostProvider.NotRunning;
 
-    /// <summary>"Leeds: 12° Light rain", or what's missing.</summary>
+    /// <summary>"Leeds: 12° Light rain", then the air quality and pollen when they're on, or what's missing.</summary>
     private string WeatherStatus()
     {
         if (_settings.WeatherLocation is not { } place)
@@ -24,7 +24,19 @@ public partial class App
         if (store is null || !store.TryGet(WeatherProvider.Temperature, out var temperature) || temperature.Value is null)
             return $"{place.Name.Split(',')[0]}: waiting for the forecast";
         store.TryGet(WeatherProvider.Condition, out var condition);
-        return $"{place.Name.Split(',')[0]}: {MetricFormatter.Format(temperature)} {condition.Text}".TrimEnd();
+        var weather = $"{place.Name.Split(',')[0]}: {MetricFormatter.Format(temperature)} {condition.Text}".TrimEnd();
+        return _settings.AirQuality ? weather + AirQualityStatus(store) : weather;
+    }
+
+    /// <summary>" · Air quality: Good · Pollen: Grass low", as far as there are readings.</summary>
+    private static string AirQualityStatus(MetricStore store)
+    {
+        var status = "";
+        if (store.TryGet(AirQualityProvider.Level, out var level) && level.Text is { } words)
+            status += $" · Air quality: {words}";
+        if (store.TryGet(AirQualityProvider.Pollen, out var pollen) && pollen.Text is { } summary)
+            status += $" · Pollen: {summary}";
+        return status;
     }
 
     /// <summary>The news widget's button in the editor.</summary>

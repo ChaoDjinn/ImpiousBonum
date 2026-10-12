@@ -56,6 +56,8 @@ public static class MetricFormatter
                     MetricUnit.Kilometres => ("0.0", "km"),
                     MetricUnit.Miles => ("0.0", "mi"),
                     MetricUnit.Degrees => ("0", "°"),
+                    MetricUnit.MicrogramsPerCubicMetre => ("0", "µg/m³"),
+                    MetricUnit.GrainsPerCubicMetre => ("0", "grains/m³"),
                     _ => ("0.##", ""),
                 };
                 var number = value.ToString(spec.NumberFormat ?? sample.Definition.Format ?? defaultFormat, culture);

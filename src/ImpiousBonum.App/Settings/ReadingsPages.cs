@@ -1,6 +1,7 @@
 using System.Windows;
 using ImpiousBonum.App.Controls;
 using ImpiousBonum.App.Shell;
+using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.App.Settings;
 
@@ -51,9 +52,9 @@ internal sealed class SensorsPage(ISettingsHost host) : CardPage("Sensors",
     }
 }
 
-/// <summary>Weather: where the forecast is for, and in which units.</summary>
+/// <summary>Weather: where the forecast is for, in which units, and air quality and pollen if wanted.</summary>
 internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
-    "The weather widget's forecast, from Open-Meteo. Nothing is fetched until you set a location.")
+    "The weather widget's forecast, and air quality and pollen if you like, from Open-Meteo. Nothing is fetched until you set a location.")
 {
     private SettingsCard? _location;
 
@@ -70,6 +71,24 @@ internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
         Add(Ui.Card("", "Units", "Metric also has rain in mm, visibility in km and pressure in hPa; imperial has inches, miles and inches of mercury",
             Ui.Choice([(AppSettings.WeatherUnitsAuto, "Automatic (your region)"), (AppSettings.WeatherUnitsMetric, "Metric (°C, km/h)"), (AppSettings.WeatherUnitsImperial, "Imperial (°F, mph)")],
                 host.Settings.WeatherUnits.ToLowerInvariant(), "Units", host.SetWeatherUnits)));
+
+        var airQuality = host.Settings.AirQuality;
+        Add(Ui.Card("", "Air quality and pollen",
+            "The air quality index, particles, ozone and nitrogen dioxide, and grass, tree and weed pollen (in Europe, in season). "
+            + "Once an hour, the location's coordinates go to Open-Meteo.com for them.",
+            Ui.Switch(airQuality, "Air quality and pollen", on =>
+            {
+                host.SetAirQuality(on);
+                Load();
+            })));
+        if (airQuality)
+        {
+            Add(Ui.Card("", "Air quality index",
+                "The European index goes from Good to Extremely poor (0 to 100 and over), the US index from Good to Hazardous (0 to 500). Automatic uses the European one in Europe.",
+                Ui.Choice([(AppSettings.AirQualityScaleAuto, "Automatic (by location)"), (AppSettings.AirQualityScaleEuropean, "European"), (AppSettings.AirQualityScaleUs, "US")],
+                    host.Settings.AirQualityScale.ToLowerInvariant(), "Air quality index", host.SetAirQualityScale)));
+        }
+        Add(Ui.Note(OpenMeteo.AirQualityAttribution + "."));
         if (hasLocation)
         {
             Add(Ui.Card("", "Turn off weather", "Forget the location and stop fetching forecasts",

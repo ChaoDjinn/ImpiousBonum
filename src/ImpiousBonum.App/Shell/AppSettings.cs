@@ -226,6 +226,30 @@ public sealed class AppSettings
         _ => RegionInfo.CurrentRegion.IsMetric ? Core.Weather.WeatherUnits.Metric : Core.Weather.WeatherUnits.Imperial,
     };
 
+    /// <summary>Air quality and pollen for the weather's location (the Weather page). Off by default: nothing is fetched until it's on.</summary>
+    public bool AirQuality { get; set; }
+
+    /// <summary>
+    /// Which air quality index: <c>auto</c> is the European one in Europe and the US one elsewhere (see
+    /// <see cref="AirQualityReadings.ScaleFor"/>); <c>european</c> and <c>us</c> are always that one.
+    /// </summary>
+    public string AirQualityScale { get; set; } = AirQualityScaleAuto;
+
+    public const string AirQualityScaleAuto = "auto";
+    public const string AirQualityScaleEuropean = "european";
+    public const string AirQualityScaleUs = "us";
+
+    /// <summary>What the air quality provider should fetch, or null when it's off or no location is set.</summary>
+    public AirQualityRequest? AirQualityRequest() =>
+        AirQuality && WeatherLocation is { } place ? new AirQualityRequest(place.Latitude, place.Longitude, ResolveAirQualityScale(AirQualityScale)) : null;
+
+    public static AqiScale ResolveAirQualityScale(string? setting) => setting?.ToLowerInvariant() switch
+    {
+        AirQualityScaleEuropean => AqiScale.European,
+        AirQualityScaleUs => AqiScale.Us,
+        _ => AqiScale.Automatic,
+    };
+
     public static AppSettings Load()
     {
         try

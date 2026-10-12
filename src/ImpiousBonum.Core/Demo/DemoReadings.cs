@@ -166,6 +166,15 @@ public static class DemoReadings
         };
         weather.Publish(store, report, new WeatherRequest("Harbourton", 50.6, -2.0, WeatherUnits.Metric), now);
 
+        // Its air: fair, with the last of the season's grass pollen.
+        var air = new AirQualityProvider(() => null);
+        air.Initialize(store);
+        air.Publish(store, new AirQualityReport
+        {
+            EuropeanAqi = 24, UsAqi = 31, Pm25 = 5.2, Pm10 = 9.6, Ozone = 54, NitrogenDioxide = 11.3,
+            Alder = 0, Birch = 0, Olive = 0, Grass = 6.4, Mugwort = 0.3, Ragweed = 0,
+        }, new AirQualityRequest(50.6, -2.0, AqiScale.Automatic));
+
         // Today's calendar.
         new CalendarProvider(() => []).Initialize(store);
         // An evening's worth: something later on, then tomorrow's. Times are from the start of the day, so the
