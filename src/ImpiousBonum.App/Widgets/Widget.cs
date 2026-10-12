@@ -84,22 +84,62 @@ public abstract class Widget : Grid
     };
 
     /// <summary>
-    /// Puts <paramref name="text"/> in a <see cref="ShrinkToWidth"/> that takes over its alignment, margin and grid cell,
-    /// so it gets smaller to fit the widget's width rather than being cut off.
+    /// With the widget's <c>shrinkToFit</c> setting on (see <see cref="Setting.ShrinkToFit"/>), puts
+    /// <paramref name="content"/> in a <see cref="ShrinkToFit"/> that takes over its margin and grid cell, so it gets
+    /// smaller to fit its space rather than being cut off. With it off, the content is returned as it is.
     /// </summary>
-    protected static FrameworkElement ShrinkToFit(TextBlock text)
+    protected FrameworkElement Fit(FrameworkElement content, FitDirection direction)
     {
-        var box = new ShrinkToWidth
-        {
-            HorizontalAlignment = text.HorizontalAlignment,
-            VerticalAlignment = text.VerticalAlignment,
-            Margin = text.Margin,
-        };
-        SetColumn(box, GetColumn(text));
-        SetRow(box, GetRow(text));
-        text.Margin = default;
-        box.Child = text;
+        if (!Settings.Bool(Setting.ShrinkToFitKey))
+            return content;
+        var box = new ShrinkToFit { Direction = direction, Margin = content.Margin };
+        SetColumn(box, GetColumn(content));
+        SetColumnSpan(box, GetColumnSpan(content));
+        SetRow(box, GetRow(content));
+        SetRowSpan(box, GetRowSpan(content));
+        content.Margin = default;
+        box.Child = content;
         return box;
+    }
+
+    /// <summary>
+    /// With shrink to fit on, moves everything in the widget, its rows and columns too, into a <see cref="ShrinkToFit"/>,
+    /// so it all gets smaller together when it doesn't fit. Call it once the widget is built, with how the content sits
+    /// in the widget's height.
+    /// </summary>
+    protected void FitContent(FitDirection direction, VerticalAlignment alignment = VerticalAlignment.Stretch)
+    {
+        if (!Settings.Bool(Setting.ShrinkToFitKey))
+            return;
+        var content = new Grid { VerticalAlignment = alignment };
+        var rows = RowDefinitions.ToList();
+        var columns = ColumnDefinitions.ToList();
+        var children = Children.Cast<UIElement>().ToList();
+        RowDefinitions.Clear();
+        ColumnDefinitions.Clear();
+        Children.Clear();
+        rows.ForEach(content.RowDefinitions.Add);
+        columns.ForEach(content.ColumnDefinitions.Add);
+        children.ForEach(child => content.Children.Add(child));
+        Children.Add(new ShrinkToFit { Direction = direction, Child = content });
+    }
+
+    /// <summary>
+    /// A label on the left and a value on the right of one line. With shrink to fit they sit side by side, with a little
+    /// gap, and get smaller together rather than run into each other or off the edge.
+    /// </summary>
+    protected FrameworkElement LabelAndValue(TextBlock label, TextBlock value)
+    {
+        var line = new Grid();
+        line.Children.Add(label);
+        line.Children.Add(value);
+        if (!Settings.Bool(Setting.ShrinkToFitKey))
+            return line;
+        line.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        line.ColumnDefinitions.Add(new ColumnDefinition());
+        SetColumn(value, 1);
+        value.Margin = new Thickness(value.FontSize * 0.25, 0, 0, 0);
+        return Fit(line, FitDirection.Width);
     }
 
     protected static HorizontalAlignment ParseAlignment(string? value) => value?.ToLowerInvariant() switch

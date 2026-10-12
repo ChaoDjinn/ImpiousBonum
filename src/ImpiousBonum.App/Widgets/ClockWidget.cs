@@ -21,6 +21,7 @@ public sealed class ClockWidget : Widget
             Setting.Number("dateSize", "Date size", 30, 6, 200),
             Setting.Toggle("uppercaseDate", "Uppercase date", true),
             Setting.Choice("align", "Alignment", "center", Setting.HorizontalAlignments),
+            Setting.ShrinkToFit(),
             Setting.PlainText("timeZone", "Time zone", null, help: "Empty is this PC's. " + ZoneHelp),
             Setting.Items("zones", "Other places",
             [
@@ -61,16 +62,16 @@ public sealed class ClockWidget : Widget
         _time.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
         _time.LineHeight = timeSize * 1.05;
         _date = CreateText(settings.Number("dateSize"), alignment: alignment);
-        stack.Children.Add(_time);
+        stack.Children.Add(Fit(_time, FitDirection.Width));
         if (_dateFormat.Length > 0)
-            stack.Children.Add(_date);
+            stack.Children.Add(Fit(_date, FitDirection.Width));
         _zone = FindZone(settings.String("timeZone"));
         _zoneFormat = settings.String("zoneFormat");
 
         var places = settings.Items("zones");
         if (places.Count > 0)
             stack.Children.Add(BuildPlaces(places, settings.Number("zoneSize"), settings.String("zoneLayout") == "rows", alignment));
-        Children.Add(stack);
+        Children.Add(Fit(stack, FitDirection.Height));
     }
 
     private UIElement BuildPlaces(IReadOnlyList<WidgetSettings> places, double size, bool rows, HorizontalAlignment alignment)

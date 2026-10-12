@@ -30,6 +30,7 @@ public sealed class WeatherWidget : Widget
             Setting.Toggle("showLocation", "Location", false, group: Setting.Content),
             Setting.Number("fontSize", "Temperature size", 80, 6, 400),
             Setting.Number("forecastSize", "Forecast size", 22, 6, 200),
+            Setting.ShrinkToFit(),
             Setting.Choice("iconStyle", "Icons", "outline", ["outline", "colour"], group: Setting.Appearance,
                 help: "outline draws them in the icon colour below; colour in their own: a yellow sun, white clouds, blue rain, white lightning."),
             Setting.Color("iconColor", "Icon colour", "accent", help: "For outline icons."),
@@ -96,6 +97,8 @@ public sealed class WeatherWidget : Widget
                 SetColumnSpan(_ahead, 2);
             Children.Add(_ahead);
         }
+        // A wide font or a big temperature makes the weather now and the forecast smaller together, rather than squeezing the forecast.
+        FitContent(FitDirection.Both, VerticalAlignment.Center);
         ShowEmpty();
     }
 

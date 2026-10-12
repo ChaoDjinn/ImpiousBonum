@@ -65,7 +65,7 @@ public sealed class BarsWidgetTests
             }, Theme.From(new ThemeSettings()));
 
             widget.Refresh(store, DateTime.Now);
-            var rows = ((StackPanel)widget.Children[0]).Children;
+            var rows = ((StackPanel)((ShrinkToFit)widget.Children[0]).Child).Children;
             Assert.Equal(Visibility.Visible, widget.Visibility);
             Assert.Equal(Visibility.Visible, rows[0].Visibility);
             Assert.Equal(Visibility.Collapsed, rows[1].Visibility);

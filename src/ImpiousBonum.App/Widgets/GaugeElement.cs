@@ -38,6 +38,12 @@ public sealed class GaugeElement : FrameworkElement
 
     public double ValueSize { get; init; } = 48;
 
+    /// <summary>Draws the value smaller when it's too wide or too tall for the inside of the dial.</summary>
+    public bool ShrinkValue { get; init; } = true;
+
+    /// <summary>The size the value was last drawn at: <see cref="ValueSize"/>, or smaller to fit; for tests.</summary>
+    internal double ShownValueSize { get; private set; }
+
     /// <summary>0–1, how much of the dial is filled.</summary>
     public double Fraction { get; private set; }
 
@@ -112,10 +118,18 @@ public sealed class GaugeElement : FrameworkElement
             DrawArc(dc, CreatePen(Fill, t, true), centre, radius, start, sweep * Fraction);
 
         // The value, shrunk if it doesn't fit inside the dial.
-        var inner = 2 * (radius - t / 2) * (Shape == GaugeShape.Half ? 0.8 : 0.78);
         var value = Text(Value, ValueSize, ValueBrush, dpi);
-        if (value.Width > inner && inner > 0)
-            value = Text(Value, Math.Max(6, ValueSize * inner / value.Width), ValueBrush, dpi);
+        ShownValueSize = ValueSize;
+        if (ShrinkValue)
+        {
+            var (roomWidth, roomHeight) = ValueRoom(Shape, radius - t / 2);
+            var scale = Math.Min(ShrinkToFit.ScaleFor(value.Width, roomWidth), ShrinkToFit.ScaleFor(value.Extent, roomHeight));
+            if (scale < 1)
+            {
+                ShownValueSize = Math.Max(6, ValueSize * scale);
+                value = Text(Value, ShownValueSize, ValueBrush, dpi);
+            }
+        }
 
         switch (Shape)
         {
@@ -145,6 +159,13 @@ public sealed class GaugeElement : FrameworkElement
                 break;
         }
     }
+
+    /// <summary>
+    /// How wide and tall the value can be inside a dial whose inner radius is <paramref name="room"/>: a box that
+    /// size, centred (or standing on a half dial's flat edge), stays clear of the track.
+    /// </summary>
+    internal static (double Width, double Height) ValueRoom(GaugeShape shape, double room) =>
+        shape == GaugeShape.Half ? (2 * room * 0.8, room * 0.6) : (2 * room * 0.78, 2 * room * 0.62);
 
     private FormattedText Text(string text, double size, Brush brush, double pixelsPerDip) =>
         new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface, size, brush, pixelsPerDip);

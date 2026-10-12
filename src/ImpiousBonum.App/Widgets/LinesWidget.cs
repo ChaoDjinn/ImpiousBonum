@@ -31,6 +31,7 @@ public sealed class LinesWidget : Widget
                 help: "Empty uses the metrics' natural maximum when they share one (100 for percentages), else scales to fit the highest line."),
             Setting.Number("lineThickness", "Line thickness", 2, 0.5, 20, group: Setting.Appearance),
             Setting.Number("fontSize", "Font size", 18, 6, 200),
+            Setting.ShrinkToFit(),
         ],
         (settings, theme) => new LinesWidget(settings, theme));
 
@@ -92,7 +93,8 @@ public sealed class LinesWidget : Widget
                 value.Margin = new Thickness(fontSize * 0.3, 0, 0, 0);
                 value.VerticalAlignment = VerticalAlignment.Center;
                 entry.Children.Add(value);
-                header.Children.Add(entry);
+                // Entries wrap onto more lines as they need; one too wide for the widget on its own shrinks.
+                header.Children.Add(Fit(entry, FitDirection.Width));
             }
 
             var template = ValueTemplate.Parse(line.OptionalString("text") is { Length: > 0 } text ? text : $"{{{metric}}}");

@@ -23,6 +23,7 @@ public sealed class GraphWidget : Widget
                 help: "Empty uses the metric's natural maximum (100 for percentages, the total for memory), else scales to fit."),
             Setting.Number("lineThickness", "Line thickness", 2.5, 0.5, 20, group: Setting.Appearance),
             Setting.Number("fontSize", "Font size", 26, 6, 200),
+            Setting.ShrinkToFit(),
             Setting.Thresholds("Changes the line or area and the value. An empty metric uses the graph's metric."),
         ],
         (settings, theme) => new GraphWidget(settings, theme));
@@ -52,8 +53,7 @@ public sealed class GraphWidget : Widget
         label.Text = settings.String("label");
         _value = CreateText(fontSize * 0.9, theme.Secondary, HorizontalAlignment.Right);
         _value.VerticalAlignment = VerticalAlignment.Center;
-        Children.Add(label);
-        Children.Add(_value);
+        Children.Add(LabelAndValue(label, _value));
 
         _graph = new GraphElement
         {

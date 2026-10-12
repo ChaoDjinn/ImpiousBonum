@@ -3,6 +3,14 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+**Text that fits, whatever the font**
+- Changing a widget's font no longer cuts its text off. The clock, timer, stat tile, gauge, graphs, bars, rows, drives, *Top apps*, *Now playing*, buttons, weather and *Claude usage* now have *Shrink to fit* too, on by default as on the text and *Icon and value* widgets. Text that doesn't fit gets smaller evenly until it does, and text that fits keeps its size.
+- *Shrink to fit* minds the height too, so a big font, or one with tall letters, shrinks instead of losing the top or bottom of its text. A line that's only a little taller than its widget, with nothing actually cut off, is left as it is.
+- A label and its value on one line, as in graphs, bars, rows and drives, get smaller together rather than run into each other.
+- The weather gets smaller as a whole, so a wide font no longer squeezes the forecast into a jumble.
+
 ## 0.13.0
 
 Impious Bonum has a window of its own, and the tray menu keeps to the basics.

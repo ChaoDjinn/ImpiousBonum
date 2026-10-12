@@ -1,5 +1,7 @@
 using System.Text.Json.Nodes;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
@@ -44,11 +46,23 @@ public sealed class StatWidgetTests
             }, theme);
             widget.Refresh(store, DateTime.Now);
 
-            var texts = widget.Children.OfType<TextBlock>().ToList();
+            var texts = Descendants<TextBlock>(widget).ToList();
             Assert.Equal("GPU", texts[0].Text);
             Assert.Equal("↓ 60.0 °C   ↑ 72.0 °C", texts[1].Text);
             Assert.Equal("66.0 °C", texts[2].Text);
             Assert.Same(theme.Warning, texts[2].Foreground);
         });
+    }
+
+    private static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T match)
+                yield return match;
+            foreach (var deeper in Descendants<T>(child))
+                yield return deeper;
+        }
     }
 }

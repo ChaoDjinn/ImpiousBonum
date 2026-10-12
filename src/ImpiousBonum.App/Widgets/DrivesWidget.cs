@@ -18,6 +18,7 @@ public sealed class DrivesWidget : Widget
             Setting.DriveTemplate("label", "Row label", "{letter}:", help: RowHelp),
             Setting.DriveTemplate("text", "Row value", "{free} free / {total}", help: RowHelp),
             Setting.Number("fontSize", "Font size", 25, 6, 200),
+            Setting.ShrinkToFit(),
             Setting.Number("barHeight", "Bar height", 5, 1, 100, group: Setting.Appearance),
             Setting.Number("spacing", "Row spacing", 12, 0, 200, group: Setting.Appearance),
             Setting.Color("color", "Bar colour", "accent"),
@@ -64,7 +65,7 @@ public sealed class DrivesWidget : Widget
         _track = theme.Resolve(settings.String("trackColor"), theme.Track);
         _label = theme.Resolve(settings.String("labelColor"), theme.Foreground);
         _value = theme.Resolve(settings.String("valueColor"), theme.Secondary);
-        Children.Add(_rows);
+        Children.Add(Fit(_rows, FitDirection.Height));
     }
 
     public override void Refresh(MetricStore store, DateTime now)
@@ -94,12 +95,10 @@ public sealed class DrivesWidget : Widget
 
         foreach (var letter in letters.Where(l => _only is null || _only.Contains(l)))
         {
-            var header = new Grid();
             var label = CreateText(_fontSize, _label);
             var value = CreateText(_fontSize * 0.9, _value, HorizontalAlignment.Right);
             value.VerticalAlignment = VerticalAlignment.Center;
-            header.Children.Add(label);
-            header.Children.Add(value);
+            var header = LabelAndValue(label, value);
 
             var bar = new Grid { Height = _barHeight, Background = _track, Margin = new Thickness(0, 2, 0, 0) };
             bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) });

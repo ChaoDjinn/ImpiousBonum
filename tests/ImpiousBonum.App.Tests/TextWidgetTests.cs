@@ -9,22 +9,13 @@ namespace ImpiousBonum.App.Tests;
 
 public sealed class TextWidgetTests
 {
-    [Theory]
-    [InlineData(300, 400, 1)]
-    [InlineData(400, 400, 1)]
-    [InlineData(800, 400, 0.5)]
-    [InlineData(0, 400, 1)]
-    [InlineData(800, 0, 1)]
-    public void Only_text_wider_than_its_space_shrinks(double natural, double available, double scale) =>
-        Assert.Equal(scale, ShrinkToWidth.ScaleFor(natural, available));
-
     [Fact]
     public void Long_text_shrinks_to_the_widgets_width_and_short_text_keeps_its_size()
     {
         Sta.Run(() =>
         {
             var (widget, store) = Create(new JsonObject { ["text"] = "{fps:0 nounit}", ["fontSize"] = 100 }, width: 300);
-            var fit = Assert.IsType<ShrinkToWidth>(Assert.Single(widget.Children.Cast<object>()));
+            var fit = Assert.IsType<ShrinkToFit>(Assert.Single(widget.Children.Cast<object>()));
 
             store.Set("fps", 60);
             Measure(widget, store);

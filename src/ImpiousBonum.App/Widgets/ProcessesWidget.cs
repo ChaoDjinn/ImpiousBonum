@@ -22,6 +22,7 @@ public sealed class ProcessesWidget : Widget
             Setting.Choice("columns", "Show", "both", ["both", "cpu", "memory"], group: Setting.Content,
                 help: "Which numbers each row shows after the app's name."),
             Setting.Number("fontSize", "Font size", 20, 6, 200),
+            Setting.ShrinkToFit(),
             Setting.Number("spacing", "Row spacing", 4, 0, 200, group: Setting.Appearance),
             Setting.Thresholds("Changes the colour of each row's CPU figure. An empty metric uses that app's CPU."),
         ],
@@ -76,7 +77,8 @@ public sealed class ProcessesWidget : Widget
             panel.Children.Add(grid);
             _rows.Add(new Row(grid, name, cpu, memory));
         }
-        Children.Add(panel);
+        // Names end with … when they're too long; the rows get smaller when they don't all fit.
+        Children.Add(Fit(panel, FitDirection.Height));
     }
 
     public override void Refresh(MetricStore store, DateTime now)

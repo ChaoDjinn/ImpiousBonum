@@ -23,8 +23,9 @@ public sealed class GaugeWidget : Widget
             Setting.Number("thickness", "Thickness", 16, 1, 200, group: Setting.Appearance),
             Setting.Color("color", "Colour", "accent", help: "The filled part of the dial."),
             Setting.Color("trackColor", "Track colour", "track", help: "The empty part of the dial. track is the theme's bar track."),
-            Setting.Number("fontSize", "Value size", 56, 6, 400, help: "Shrinks to fit inside the dial."),
+            Setting.Number("fontSize", "Value size", 56, 6, 400),
             Setting.Number("labelSize", "Label size", 24, 6, 200),
+            Setting.ShrinkToFit(),
             Setting.Thresholds("Changes the dial and the value. An empty metric uses the gauge's metric."),
         ],
         (settings, theme) => new GaugeWidget(settings, theme));
@@ -61,6 +62,7 @@ public sealed class GaugeWidget : Widget
             LabelSize = settings.Number("labelSize"),
             LabelBrush = theme.Secondary,
             ValueSize = settings.Number("fontSize"),
+            ShrinkValue = settings.Bool(Setting.ShrinkToFitKey),
         };
         Children.Add(_gauge);
     }

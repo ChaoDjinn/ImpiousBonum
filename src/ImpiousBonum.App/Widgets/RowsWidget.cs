@@ -19,6 +19,7 @@ public sealed class RowsWidget : Widget
             ]),
             Setting.Number("fontSize", "Label size", 28, 6, 200),
             Setting.Number("valueFontSize", "Value size", null, 6, 200, help: "Empty uses 85% of the label size."),
+            Setting.ShrinkToFit(),
             Setting.Choice("align", "Stack from", "top", ["top", "bottom"], group: Setting.Appearance),
         ],
         (settings, theme) => new RowsWidget(settings, theme));
@@ -36,18 +37,15 @@ public sealed class RowsWidget : Widget
 
         foreach (var row in settings.Items("rows"))
         {
-            var grid = new Grid();
             var label = CreateText(fontSize);
             label.Text = row.String("label");
             var value = CreateText(valueFontSize, Theme.Secondary, HorizontalAlignment.Right);
             value.VerticalAlignment = VerticalAlignment.Center;
-            grid.Children.Add(label);
-            grid.Children.Add(value);
-            stack.Children.Add(grid);
+            stack.Children.Add(LabelAndValue(label, value));
             _rows.Add((ValueTemplate.Parse(row.String("text")), value));
         }
 
-        Children.Add(stack);
+        Children.Add(Fit(stack, FitDirection.Height));
     }
 
     public override void Refresh(MetricStore store, DateTime now)
