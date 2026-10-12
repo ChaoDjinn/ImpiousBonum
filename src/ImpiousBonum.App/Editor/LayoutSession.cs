@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
@@ -57,15 +56,19 @@ public sealed class LayoutSession
 
     private readonly Stack<string> _undo = new();
     private readonly Stack<string> _redo = new();
+    private readonly TimeProvider _clock;
     private string _saved;
     private string? _lastMergeKey;
     private long _lastEditTimestamp;
     private ThemeSettings? _resolvedTheme;
+    private PreviewState? _preview;
 
     /// <param name="themes">Themes the layout can name; null for only the built-in ones.</param>
-    public LayoutSession(LayoutDocument document, ThemeLibrary? themes = null)
+    /// <param name="clock">For how close together edits are; the system's unless testing.</param>
+    public LayoutSession(LayoutDocument document, ThemeLibrary? themes = null, TimeProvider? clock = null)
     {
         Themes = themes ?? new ThemeLibrary(null);
+        _clock = clock ?? TimeProvider.System;
         Document = Clone(document);
         _saved = Serialize(Document);
     }
@@ -88,7 +91,8 @@ public sealed class LayoutSession
 
     public JsonObject? SelectedWidget => SelectedIndex >= 0 ? Document.Widgets[SelectedIndex] : null;
 
-    public bool IsDirty => Serialize(Document) != _saved;
+    /// <summary>Whether the layout differs from the saved one. A <see cref="Preview"/> isn't a change until it's kept.</summary>
+    public bool IsDirty => (_preview?.Before ?? Serialize(Document)) != _saved;
 
     public bool CanUndo => _undo.Count > 0;
 
@@ -129,45 +133,108 @@ public sealed class LayoutSession
     };
 
     /// <summary>Sets a value, or removes it (back to the default) when <paramref name="value"/> is null.</summary>
-    public void SetValue(SettingTarget target, string key, JsonNode? value, object? origin)
+    /// <param name="run">
+    /// Edits to the setting in the same run share one undo step for as long as nothing else is edited in between, however
+    /// long the pauses: stepping through fonts with the arrow keys, stopping to look at each. Without one, only a quick
+    /// burst of edits to the setting does, such as typing.
+    /// </param>
+    public void SetValue(SettingTarget target, string key, JsonNode? value, object? origin, string? run = null)
     {
         // Controls often write back the value they were just given (e.g. a drop-down finishing loading).
         // Ignoring no-op writes keeps them out of the undo history and avoids pointless rebuilds.
         if (JsonNode.DeepEquals(GetValue(target, key), value))
             return;
 
-        var isGeometry = target.Kind == SettingTargetKind.Widget && key is "x" or "y" or "width" or "height";
-        var kind = isGeometry ? ChangeKind.Geometry : ChangeKind.Content;
+        var (mergeKey, window) = run is null ? ($"set:{target}:{key}", MergeWindow) : ($"run:{run}:{target}:{key}", TimeSpan.MaxValue);
+        Edit(KindOf(target, key), WidgetIndexOf(target), mergeKey, window, origin, _ => Put(target, key, value));
+    }
 
-        Edit(kind, target.Kind is SettingTargetKind.Widget or SettingTargetKind.Item ? target.WidgetIndex : null, $"set:{target}:{key}", origin, document =>
+    /// <summary>Puts a value in the document as it is, with no undo step or notification.</summary>
+    private void Put(SettingTarget target, string key, JsonNode? value)
+    {
+        switch (target.Kind)
         {
-            switch (target.Kind)
-            {
-                case SettingTargetKind.Canvas:
-                    var size = JsonDefaults.TryGetNumber(value, out var n) ? n : key == "width" ? 1920 : 480;
-                    if (key == "width")
-                        document.Width = size;
-                    else
-                        document.Height = size;
-                    break;
+            case SettingTargetKind.Canvas:
+                var size = JsonDefaults.TryGetNumber(value, out var n) ? n : key == "width" ? 1920 : 480;
+                if (key == "width")
+                    Document.Width = size;
+                else
+                    Document.Height = size;
+                break;
 
-                case SettingTargetKind.Theme:
-                    // Removing a value goes back to the named theme's (or the built-in default).
-                    if (value is null)
-                        document.Theme.Remove(key);
-                    else
-                        document.Theme[key] = value.DeepClone();
-                    break;
+            case SettingTargetKind.Theme:
+                // Removing a value goes back to the named theme's (or the built-in default).
+                if (value is null)
+                    Document.Theme.Remove(key);
+                else
+                    Document.Theme[key] = value.DeepClone();
+                break;
 
-                default:
-                    var obj = Resolve(target)!;
-                    if (value is null)
-                        obj.Remove(key);
-                    else
-                        obj[key] = value.DeepClone();
-                    break;
-            }
-        });
+            default:
+                var obj = Resolve(target)!;
+                if (value is null)
+                    obj.Remove(key);
+                else
+                    obj[key] = value.DeepClone();
+                break;
+        }
+        _resolvedTheme = null;
+    }
+
+    private static ChangeKind KindOf(SettingTarget target, string key) =>
+        target.Kind == SettingTargetKind.Widget && key is "x" or "y" or "width" or "height" ? ChangeKind.Geometry : ChangeKind.Content;
+
+    private static int? WidgetIndexOf(SettingTarget target) =>
+        target.Kind is SettingTargetKind.Widget or SettingTargetKind.Item ? target.WidgetIndex : null;
+
+    // ---- Previews -------------------------------------------------------------------------------
+
+    /// <summary>A setting showing a value it hasn't been given yet: what it had, and the whole layout before.</summary>
+    private sealed record PreviewState(SettingTarget Target, string Key, JsonNode? Original, string Before);
+
+    /// <summary>A <see cref="Preview"/> is showing.</summary>
+    public bool IsPreviewing => _preview is not null;
+
+    /// <summary>
+    /// Shows <paramref name="value"/> for a setting without making it an edit yet, such as the font under the mouse in a
+    /// drop-down: views redraw, but there's no undo step and the layout doesn't count as changed. Call again to show
+    /// another value, then <see cref="EndPreview"/>. An edit, or saving, keeps the value shown first; undo, redo and
+    /// revert drop it.
+    /// </summary>
+    public void Preview(SettingTarget target, string key, JsonNode? value, object? origin)
+    {
+        if (_preview is { } current && (current.Target != target || current.Key != key))
+            EndPreview(keep: true, origin);
+        var shown = GetValue(target, key);
+        if (JsonNode.DeepEquals(shown, value))
+            return;
+
+        _preview ??= new PreviewState(target, key, shown?.DeepClone(), Serialize(Document));
+        Put(target, key, value);
+        Changed?.Invoke(this, new LayoutChange(KindOf(target, key), WidgetIndexOf(target), origin));
+    }
+
+    /// <summary>
+    /// Ends a <see cref="Preview"/>. <paramref name="keep"/> makes the value shown an edit, one undo step back to before
+    /// the preview; otherwise the setting goes back exactly as it was. Nothing if there's no preview.
+    /// </summary>
+    public void EndPreview(bool keep, object? origin)
+    {
+        if (_preview is not { } preview)
+            return;
+        _preview = null;
+
+        var (target, key) = (preview.Target, preview.Key);
+        var shown = GetValue(target, key)?.DeepClone();
+        if (JsonNode.DeepEquals(shown, preview.Original))
+            return;
+
+        // Back as it was. Kept, the value goes in again as an ordinary edit, so undo has the layout from before the preview.
+        Put(target, key, preview.Original);
+        if (keep)
+            Edit(KindOf(target, key), WidgetIndexOf(target), null, MergeWindow, origin, _ => Put(target, key, shown));
+        else
+            Changed?.Invoke(this, new LayoutChange(KindOf(target, key), WidgetIndexOf(target), origin));
     }
 
     public void SetGeometry(int index, Rect rect, string mergeKey, object? origin)
@@ -324,6 +391,7 @@ public sealed class LayoutSession
     /// <summary>Replaces the working copy (e.g. "revert to saved"). Undoable.</summary>
     public void Replace(LayoutDocument document)
     {
+        EndPreview(keep: false, null);
         PushUndo();
         _redo.Clear();
         _lastMergeKey = null;
@@ -337,6 +405,7 @@ public sealed class LayoutSession
     /// <summary>Starts over on another document (switching layouts): no undo history, and nothing unsaved.</summary>
     public void Reset(LayoutDocument document)
     {
+        _preview = null;
         _undo.Clear();
         _redo.Clear();
         _lastMergeKey = null;
@@ -348,8 +417,10 @@ public sealed class LayoutSession
         SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>The layout as it is now has been saved. A preview showing was saved with it, so it's kept.</summary>
     public void MarkSaved()
     {
+        EndPreview(keep: true, null);
         _saved = Serialize(Document);
         _lastMergeKey = null;
     }
@@ -358,10 +429,16 @@ public sealed class LayoutSession
     /// Applies a change. Consecutive edits with the same <paramref name="mergeKey"/> within a short window
     /// share one undo step; a null key always starts a new one.
     /// </summary>
-    public void Edit(ChangeKind kind, int? widgetIndex, string? mergeKey, object? origin, Action<LayoutDocument> change)
+    public void Edit(ChangeKind kind, int? widgetIndex, string? mergeKey, object? origin, Action<LayoutDocument> change) =>
+        Edit(kind, widgetIndex, mergeKey, MergeWindow, origin, change);
+
+    private void Edit(ChangeKind kind, int? widgetIndex, string? mergeKey, TimeSpan mergeWindow, object? origin, Action<LayoutDocument> change)
     {
-        var now = Stopwatch.GetTimestamp();
-        var merge = mergeKey is not null && mergeKey == _lastMergeKey && Stopwatch.GetElapsedTime(_lastEditTimestamp, now) < MergeWindow;
+        // A preview showing becomes an edit of its own first, so it's neither lost nor mixed into this one.
+        EndPreview(keep: true, origin);
+
+        var now = _clock.GetTimestamp();
+        var merge = mergeKey is not null && mergeKey == _lastMergeKey && _clock.GetElapsedTime(_lastEditTimestamp, now) < mergeWindow;
         if (!merge)
             PushUndo();
 
@@ -389,6 +466,8 @@ public sealed class LayoutSession
 
     private void Restore(Stack<string> from, Stack<string> to)
     {
+        // A preview isn't an edit, so there's nothing of it to undo: it goes, and undo or redo carries on as usual.
+        EndPreview(keep: false, null);
         if (from.Count == 0)
             return;
         to.Push(Serialize(Document));

@@ -18,7 +18,7 @@ namespace ImpiousBonum.App.Editor;
 /// Shows the settings of the current selection (a widget, or the canvas and theme when nothing is selected),
 /// generated from descriptors. Each row has an editor that suits the setting's kind and a reset-to-default button.
 /// </summary>
-public sealed class PropertyPanel : StackPanel
+public sealed partial class PropertyPanel : StackPanel
 {
     private const double LabelWidth = 128;
 
@@ -28,7 +28,6 @@ public sealed class PropertyPanel : StackPanel
     private readonly List<Action> _refreshers = [];
     private readonly List<Action> _liveRefreshers = [];
     private bool _updating;
-    private static IReadOnlyList<string>? _fontNames;
 
     public PropertyPanel(LayoutSession session, Func<(int Width, int Height)?> dashboardSize, Func<MetricStore?> store)
     {
@@ -53,6 +52,8 @@ public sealed class PropertyPanel : StackPanel
 
     public void Rebuild()
     {
+        // A font still being tried in a drop-down that's going away goes back.
+        _session.EndPreview(keep: false, this);
         Children.Clear();
         _refreshers.Clear();
         _liveRefreshers.Clear();
@@ -537,20 +538,6 @@ public sealed class PropertyPanel : StackPanel
                 Write(target, setting.Key, JsonValue.Create(choice));
         };
         return (combo, () => combo.SelectedItem = CurrentString(target, setting));
-    }
-
-    private (FrameworkElement, Action) FontEditor(SettingTarget target, SettingDescriptor setting)
-    {
-        _fontNames ??= Fonts.SystemFontFamilies.Select(f => f.Source).Distinct().Order().ToList();
-        var combo = new ComboBox { ItemsSource = _fontNames, IsEditable = true, IsTextSearchEnabled = true };
-        combo.AddHandler(TextBoxBase.TextChangedEvent, new TextChangedEventHandler((_, _) => WriteIfChanged(target, setting, combo.Text)));
-        return (combo, Refresh);
-
-        void Refresh()
-        {
-            if (!combo.IsKeyboardFocusWithin)
-                combo.Text = CurrentString(target, setting);
-        }
     }
 
     private (FrameworkElement, Action) FileEditor(SettingTarget target, SettingDescriptor setting, string filter, string title)

@@ -207,4 +207,219 @@ public sealed class LayoutSessionTests
     [Fact]
     public void Whole_numbers_are_stored_as_integers() =>
         Assert.Equal("12", LayoutSession.Number(12.0).ToJsonString());
+
+    // ---- Typing and runs of edits ----------------------------------------------------------------
+
+    [Fact]
+    public void Typing_after_a_pause_is_a_new_undo_step()
+    {
+        var clock = new FakeClock();
+        var session = new LayoutSession(Session().Document, clock: clock);
+        session.SetValue(SettingTarget.Widget(0), "text", JsonValue.Create("H"), null);
+        clock.Advance(TimeSpan.FromSeconds(10));
+        session.SetValue(SettingTarget.Widget(0), "text", JsonValue.Create("Hi"), null);
+
+        session.Undo();
+        Assert.Equal("H", Text(session, 0));
+    }
+
+    [Fact]
+    public void A_run_of_edits_is_one_undo_step_however_long_the_pauses()
+    {
+        var clock = new FakeClock();
+        var session = new LayoutSession(Session().Document, clock: clock);
+        foreach (var font in new[] { "Arial", "Bahnschrift", "Calibri" })
+        {
+            session.SetValue(SettingTarget.Widget(0), "fontFamily", JsonValue.Create(font), null, run: "1");
+            clock.Advance(TimeSpan.FromSeconds(10));
+        }
+
+        Assert.Equal("Calibri", session.Document.Widgets[0].GetString("fontFamily"));
+        session.Undo();
+        Assert.Null(session.Document.Widgets[0]["fontFamily"]);
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void Another_edit_ends_a_run()
+    {
+        var session = Session();
+        session.SetValue(SettingTarget.Widget(0), "fontFamily", JsonValue.Create("Arial"), null, run: "1");
+        session.SetValue(SettingTarget.Widget(1), "text", JsonValue.Create("Y"), null);
+        session.SetValue(SettingTarget.Widget(0), "fontFamily", JsonValue.Create("Calibri"), null, run: "1");
+
+        session.Undo();
+        Assert.Equal("Arial", session.Document.Widgets[0].GetString("fontFamily"));
+        Assert.Equal("Y", Text(session, 1));
+    }
+
+    // ---- Previews --------------------------------------------------------------------------------
+
+    private static string Json(LayoutSession session) => System.Text.Json.JsonSerializer.Serialize(session.Document, JsonDefaults.Options);
+
+    private static string? Font(LayoutSession session, int index) => session.Document.Widgets[index].GetString("fontFamily");
+
+    private static void Preview(LayoutSession session, int index, string? font) =>
+        session.Preview(SettingTarget.Widget(index), "fontFamily", font is null ? null : JsonValue.Create(font), null);
+
+    [Fact]
+    public void A_preview_redraws_without_an_undo_step_or_unsaved_changes()
+    {
+        var session = Session();
+        var changes = new List<LayoutChange>();
+        session.Changed += (_, change) => changes.Add(change);
+
+        Preview(session, 0, "Arial");
+        Preview(session, 0, "Georgia");
+
+        Assert.Equal("Georgia", Font(session, 0));
+        Assert.Equal([ChangeKind.Content, ChangeKind.Content], changes.Select(c => c.Kind));
+        Assert.All(changes, c => Assert.Equal(0, c.WidgetIndex));
+        Assert.True(session.IsPreviewing);
+        Assert.False(session.IsDirty);
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void A_preview_not_kept_leaves_the_layout_exactly_as_it_was()
+    {
+        var session = Session();
+        // Something to redo, which a preview mustn't lose.
+        session.SetValue(SettingTarget.Widget(1), "text", JsonValue.Create("Z"), null);
+        session.Undo();
+        var before = Json(session);
+
+        // A value the widget has (its place among the others must stay) and one it doesn't.
+        session.Preview(SettingTarget.Widget(0), "text", JsonValue.Create("Previewed"), null);
+        session.Preview(SettingTarget.Widget(0), "text", JsonValue.Create("Again"), null);
+        session.EndPreview(keep: false, null);
+        Preview(session, 1, "Arial");
+        session.EndPreview(keep: false, null);
+
+        Assert.Equal(before, Json(session));
+        Assert.False(session.IsPreviewing);
+        Assert.False(session.IsDirty);
+        Assert.False(session.CanUndo);
+        Assert.True(session.CanRedo);
+    }
+
+    [Fact]
+    public void A_preview_kept_is_one_undo_step()
+    {
+        var session = Session();
+        Preview(session, 0, "Arial");
+        Preview(session, 0, "Bahnschrift");
+        Preview(session, 0, "Georgia");
+        session.EndPreview(keep: true, null);
+
+        Assert.Equal("Georgia", Font(session, 0));
+        Assert.False(session.IsPreviewing);
+        Assert.True(session.IsDirty);
+
+        session.Undo();
+        Assert.Null(Font(session, 0));
+        Assert.False(session.CanUndo);
+        Assert.False(session.IsDirty);
+        session.Redo();
+        Assert.Equal("Georgia", Font(session, 0));
+    }
+
+    [Fact]
+    public void Keeping_a_preview_back_on_the_value_it_had_is_not_an_edit()
+    {
+        var session = Session();
+        var before = Json(session);
+        Preview(session, 0, "Arial");
+        Preview(session, 0, null);
+        session.EndPreview(keep: true, null);
+
+        Assert.Equal(before, Json(session));
+        Assert.False(session.CanUndo);
+        Assert.False(session.IsDirty);
+    }
+
+    [Fact]
+    public void An_edit_during_a_preview_keeps_the_preview_as_a_step_of_its_own()
+    {
+        var session = Session();
+        Preview(session, 0, "Arial");
+        session.SetValue(SettingTarget.Widget(1), "text", JsonValue.Create("Y"), null);
+
+        Assert.False(session.IsPreviewing);
+        session.Undo();
+        Assert.Equal(("Arial", "B"), (Font(session, 0), Text(session, 1)));
+        session.Undo();
+        Assert.Null(Font(session, 0));
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void Previewing_another_setting_keeps_the_first()
+    {
+        var session = Session();
+        Preview(session, 0, "Arial");
+        Preview(session, 1, "Georgia");
+        session.EndPreview(keep: false, null);
+
+        Assert.Equal("Arial", Font(session, 0));
+        Assert.Null(Font(session, 1));
+        Assert.True(session.CanUndo);
+    }
+
+    [Fact]
+    public void Undo_during_a_preview_drops_it_and_undoes_the_last_edit()
+    {
+        var session = Session();
+        session.SetValue(SettingTarget.Widget(0), "text", JsonValue.Create("X"), null);
+        Preview(session, 0, "Arial");
+
+        session.Undo();
+        Assert.False(session.IsPreviewing);
+        Assert.Equal("A", Text(session, 0));
+        Assert.Null(Font(session, 0));
+        session.Redo();
+        Assert.Equal("X", Text(session, 0));
+        Assert.Null(Font(session, 0));
+    }
+
+    [Fact]
+    public void Saving_during_a_preview_keeps_it()
+    {
+        var session = Session();
+        Preview(session, 0, "Arial");
+        session.MarkSaved();
+
+        Assert.False(session.IsPreviewing);
+        Assert.False(session.IsDirty);
+        Assert.Equal("Arial", Font(session, 0));
+        // Undo still goes back to before it, which is then a change from what was saved.
+        session.Undo();
+        Assert.Null(Font(session, 0));
+        Assert.True(session.IsDirty);
+    }
+
+    [Fact]
+    public void Switching_layouts_drops_a_preview()
+    {
+        var session = Session();
+        Preview(session, 0, "Arial");
+        session.Reset(Session().Document);
+
+        Assert.False(session.IsPreviewing);
+        session.EndPreview(keep: true, null);
+        Assert.Null(Font(session, 0));
+        Assert.False(session.CanUndo);
+    }
+
+    /// <summary>A clock that only moves when told, for how far apart edits are.</summary>
+    private sealed class FakeClock : TimeProvider
+    {
+        private long _ticks;
+
+        public override long TimestampFrequency => TimeSpan.TicksPerSecond;
+
+        public override long GetTimestamp() => _ticks;
+
+        public void Advance(TimeSpan by) => _ticks += by.Ticks;
+    }
 }
