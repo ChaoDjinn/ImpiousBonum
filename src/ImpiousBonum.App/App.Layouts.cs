@@ -3,21 +3,21 @@ using System.Text.Json;
 using System.Windows.Threading;
 using ImpiousBonum.App.Editor;
 using ImpiousBonum.App.Layout;
+using ImpiousBonum.App.Settings;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
 
 namespace ImpiousBonum.App;
 
-// Which layout shows: the editor, saved layouts, the gallery, game layouts, the schedule and pages.
+// Which layout shows: the editor, saved layouts, game layouts, the schedule and pages.
 public partial class App
 {
-    /// <summary>Tray → Edit layout…, its double-click and the hotkey: the editor as it is, or on the main dashboard.</summary>
+    /// <summary>Tray → Edit layout…, the hotkey and the dashboard's own edit button: the editor as it is, or on the main dashboard.</summary>
     private void OpenEditor()
     {
-        if (_editor is not null)
-            BringToFront(_editor);
-        else
-            EditDashboard(null);
+        var window = ShowSettings();
+        if (_editor is null)
+            window.EditScreen(null);
     }
 
     /// <summary>
@@ -26,50 +26,11 @@ public partial class App
     /// </summary>
     private void EditDashboard(string? screen)
     {
+        var window = ShowSettings(openEditor: false);
         if (_editor is not null)
-        {
-            BringToFront(_editor);
             _editor.SwitchScreen(ScreenIndex(screen));
-            return;
-        }
-
-        _editingScreen = ScreenIndex(screen) == 0 ? null : screen;
-        var session = new LayoutSession(_layouts!.LoadOrDefault(EditedLayout()), _layouts.Themes);
-        _editor = new EditorWindow(session, _layouts, EditedLayout, EditedScreenSize);
-        _editor.SetScreens(EditorScreens(), ScreenIndex(_editingScreen));
-
-        session.Changed += (_, change) => MirrorToDashboard(session, change);
-        _editor.LayoutChosen += (_, name) => ShowOnEditedDashboard(name);
-        _editor.ScreenChosen += (_, index) =>
-        {
-            EditedWindow()?.EndEdit();
-            _editingScreen = index > 0 && index <= _settings.ExtraDashboards.Count ? _settings.ExtraDashboards[index - 1].MonitorId : null;
-            // Any changes left unsaved on the last dashboard are gone from the screen too.
-            ShowSavedLayouts();
-            EditedWindow()?.BeginEdit(session);
-        };
-        _editor.Setups = WidgetSetups;
-        _editor.WidgetAdded += (_, descriptor) =>
-        {
-            if (descriptor.Type == BarsWidget.ClaudeDescriptor.Type && _editor is { } editor)
-                OfferClaudeCodeConnection(editor);
-            else if (descriptor.Type == WeatherWidget.Descriptor.Type && _settings.WeatherLocation is null && _editor is { } owner)
-                SetWeatherLocation(owner);
-        };
-        _editor.Closed += (_, _) =>
-        {
-            _editor = null;
-            EditedWindow()?.EndEdit();
-            _editingScreen = null;
-            // Catch up with any game that came or went while the editor had the layout.
-            ApplyGameLayout();
-            // Back to what's on disk: the saved layout, or the old one if changes were discarded.
-            ApplyLayout();
-        };
-        _editor.Show();
-        BringToFront(_editor);
-        EditedWindow()?.BeginEdit(session);
-        Refresh();
+        else
+            window.EditScreen(screen);
     }
 
     /// <summary>Where a dashboard is in the editor's list of them: the main one first, then the others in order.</summary>
@@ -167,14 +128,15 @@ public partial class App
     }
 
     /// <summary>
-    /// Tray → Layout, pages, hotkeys and buttons: the main dashboard's layout. With the editor open, the editor moves to
+    /// Tray → Layout, the Screens page, pages, hotkeys and buttons: the main dashboard's layout. With the editor open, the editor moves to
     /// the main dashboard if it's on another and switches (asking about unsaved changes first).
     /// </summary>
     private void SelectLayout(string name)
     {
         if (_editor is not null)
         {
-            BringToFront(_editor);
+            if (_settingsWindow is not null)
+                BringToFront(_settingsWindow);
             if (_editor.SwitchScreen(0))
                 _editor.SwitchTo(name);
             return;
@@ -190,41 +152,6 @@ public partial class App
         }
     }
 
-    /// <summary>Tray → Layout → Gallery…; shows what was imported. Not while the editor is open, which has its own copy of the layouts.</summary>
-    private void OpenGallery()
-    {
-        if (_editor is not null)
-        {
-            BringToFront(_editor);
-            _tray?.ShowInfo("Layout gallery", "Close the layout editor first, then open the gallery from the tray.");
-            return;
-        }
-        if (_layouts is null)
-            return;
-        var gallery = new GalleryWindow(_settings.GalleryAddress ?? Gallery.DefaultAddress, _layouts, _sampler?.Store);
-        if (gallery.ShowDialog() != true || gallery.Imported is not { } name)
-            return;
-        _layouts.SetActive(name);
-        AppLog.Info($"Imported layout \"{name}\" from the gallery");
-    }
-
-    /// <summary>Tray → Layout → Import…: adds the layout and shows it on the main dashboard. With the editor open, the editor does it.</summary>
-    private void ImportLayout()
-    {
-        if (_editor is not null)
-        {
-            BringToFront(_editor);
-            if (_editor.SwitchScreen(0))
-                _editor.ImportLayout();
-            return;
-        }
-        if (_layouts is null || LayoutTransfer.Import(null, _layouts) is not { } name)
-            return;
-
-        _layouts.SetActive(name);
-        AppLog.Info($"Imported layout \"{name}\"");
-    }
-
     /// <summary>
     /// Follows the app the user is looking at (the same one the FPS reading follows) and switches to a linked game's
     /// layout once it has been in front for a few seconds, and back once it has gone.
@@ -236,7 +163,7 @@ public partial class App
 
         var (_, app) = _frameRateTarget.Get();
         if (app is not null && !NotGames.Contains(app))
-            _recentApp = app;
+            NoteRecentApp(app);
         _trackedGame = _settings.SessionRecaps && GameLayoutSwitcher.Match(_settings.GameLayouts, app) is { } game
             ? game.Layout ?? GameLayoutRule.Normalize(game.Process)
             : null;
@@ -283,12 +210,12 @@ public partial class App
         _window?.ShowPage(pages.ToList().FindIndex(p => string.Equals(p, next, StringComparison.OrdinalIgnoreCase)), pages.Count);
     }
 
-    /// <summary>Tray → Layout → Schedule → Add…</summary>
-    private void AddScheduleRule()
+    /// <summary>Pages and schedule → Add to the schedule.</summary>
+    private void AddScheduleRule(System.Windows.Window owner)
     {
         if (_layouts is null)
             return;
-        if (ScheduleRuleWindow.Ask(_layouts.List(), _layouts.Themes.List(), "Night Watch") is not { } rule)
+        if (ScheduleRuleWindow.Ask(owner, _layouts.List(), _layouts.Themes.List(), "Night Watch") is not { } rule)
             return;
         _settings.Schedule.Add(rule);
         _settings.Save();
@@ -354,7 +281,7 @@ public partial class App
             return;
         AppLog.Warning($"{who} the {kind} \"{name}\", which doesn't exist; ignored");
         _tray?.ShowError($"{char.ToUpperInvariant(kind[0])}{kind[1..]} not found",
-            $"{who} the {kind} \"{name}\", which doesn't exist any more. Tray → Layout → Game layouts or Schedule.");
+            $"{who} the {kind} \"{name}\", which doesn't exist any more. Change it in Impious Bonum: Game layouts, or Pages and schedule.");
     }
 
     private void SetGameLayoutsEnabled(bool enabled)
@@ -377,9 +304,6 @@ public partial class App
         _reportedMissingLinks.Remove($"layout:{rule.Layout}");
         _reportedMissingLinks.Remove($"theme:{rule.Theme}");
         AppLog.Info($"Linked \"{rule.Process}\" to {rule.Describe()}");
-        _tray?.ShowInfo("Game layout linked", rule.Layout is null
-            ? $"The theme \"{rule.Theme}\" will restyle the dashboard a few seconds after \"{rule.Process}\" comes to the front."
-            : $"\"{rule.Describe()}\" will show a few seconds after \"{rule.Process}\" comes to the front.");
     }
 
     private void UnlinkGame(GameLayoutRule rule)

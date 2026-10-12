@@ -96,7 +96,7 @@ public sealed class AppSettings
     public bool ScheduleEnabled { get; set; } = true;
 
     /// <summary>
-    /// Your own metrics from web addresses and commands (tray → Custom data…). Replaced as a whole when edited, never
+    /// Your own metrics from web addresses and commands (the Custom data page). Replaced as a whole when edited, never
     /// changed in place, since the sampler reads it from another thread.
     /// </summary>
     public List<CustomSource> CustomData
@@ -118,7 +118,7 @@ public sealed class AppSettings
         set => _pages = value ?? [];
     }
 
-    /// <summary>Notifications and flashing banners when a reading is out of bounds for a while (tray → Alerts…).</summary>
+    /// <summary>Notifications and flashing banners when a reading is out of bounds for a while (the Alerts page).</summary>
     public List<AlertRule> Alerts
     {
         get => _alerts;
@@ -126,7 +126,7 @@ public sealed class AppSettings
     }
 
     /// <summary>
-    /// Calendars to show events from (tray → Calendar…). Replaced as a whole when edited, never changed in place, since
+    /// Calendars to show events from (the Calendars page). Replaced as a whole when edited, never changed in place, since
     /// the sampler reads it from another thread.
     /// </summary>
     public List<CalendarLink> Calendars
@@ -139,7 +139,7 @@ public sealed class AppSettings
     public string? GalleryAddress { get; set; }
 
     /// <summary>
-    /// News feeds whose headlines the news widget shows (tray → News feeds…). Replaced as a whole when edited, never
+    /// News feeds whose headlines the news widget shows (the News feeds page). Replaced as a whole when edited, never
     /// changed in place, since the sampler reads it from another thread.
     /// </summary>
     public List<NewsFeed> NewsFeeds
@@ -148,28 +148,28 @@ public sealed class AppSettings
         set => _newsFeeds = value ?? [];
     }
 
-    /// <summary>More dashboards, each a layout filling a monitor of its own (tray → Display → More dashboards). None by default.</summary>
+    /// <summary>More dashboards, each a layout filling a monitor of its own (the Screens page). None by default.</summary>
     public List<ExtraDashboard> ExtraDashboards
     {
         get => _extraDashboards;
         set => _extraDashboards = value ?? [];
     }
 
-    /// <summary>A small USB screen to show a layout on too (tray → Display → USB screen). Off by default.</summary>
+    /// <summary>A small USB screen to show a layout on too (the Tablet and USB screen page). Off by default.</summary>
     public UsbScreenSettings UsbScreen
     {
         get => _usbScreen;
         set => _usbScreen = value ?? UsbScreenSettings.Default;
     }
 
-    /// <summary>Logging readings to CSV files (tray → Logging…). Off by default.</summary>
+    /// <summary>Logging readings to CSV files (the Logging page). Off by default.</summary>
     public LogSettings Logging
     {
         get => _logging;
         set => _logging = value ?? LogSettings.Default;
     }
 
-    /// <summary>Key combinations that work from anywhere (tray → Hotkeys…). None by default.</summary>
+    /// <summary>Key combinations that work from anywhere (the Hotkeys page). None by default.</summary>
     public List<Hotkey> Hotkeys
     {
         get => _hotkeys;
@@ -191,18 +191,18 @@ public sealed class AppSettings
     /// </summary>
     public bool HardwareRendering { get; set; }
 
-    /// <summary>Serve the dashboard to browsers on the local network (tray → Display → Tablet view). Off by default.</summary>
+    /// <summary>Serve the dashboard to browsers on the local network (the Tablet and USB screen page). Off by default.</summary>
     public bool TabletView { get; set; }
 
     public int TabletPort { get; set; } = TabletServer.DefaultPort;
 
-    /// <summary>Let tablets press the layout's buttons and media controls (tray → Display → Tablet view). Off by default.</summary>
+    /// <summary>Let tablets press the layout's buttons and media controls (the Tablet and USB screen page). Off by default.</summary>
     public bool TabletButtons { get; set; }
 
     /// <summary>The secret in the tablet link. Created when the tablet view is first turned on; replaced by "New link".</summary>
     public string? TabletToken { get; set; }
 
-    /// <summary>Where the weather is for (tray → Weather → Set location…), or null: then no forecast is fetched at all.</summary>
+    /// <summary>Where the weather is for (the Weather page), or null: then no forecast is fetched at all.</summary>
     public WeatherLocation? WeatherLocation { get; set; }
 
     /// <summary><c>auto</c> follows Windows' region; <c>metric</c> is °C and km/h, <c>imperial</c> °F and mph.</summary>
@@ -280,7 +280,7 @@ public sealed record PixelRect(int X, int Y, int Width, int Height);
 /// <param name="Name">The place as you picked it, e.g. "Leeds, England, United Kingdom".</param>
 public sealed record WeatherLocation(string Name, double Latitude, double Longitude);
 
-/// <summary>What tray → Logging… logs: these metrics, a row every so many seconds, files kept for so many days (0 = always).</summary>
+/// <summary>What the Logging page logs: these metrics, a row every so many seconds, files kept for so many days (0 = always).</summary>
 public sealed record LogSettings(bool Enabled, IReadOnlyList<string> Metrics, int EverySeconds, int KeepDays)
 {
     public static readonly LogSettings Default = new(false, ["cpu.load", "mem.load", "gpu.load", "cpu.temp", "gpu.temp", "fps"], 10, 30);

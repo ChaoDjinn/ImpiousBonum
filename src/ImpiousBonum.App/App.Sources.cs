@@ -27,43 +27,37 @@ public partial class App
         return $"{place.Name.Split(',')[0]}: {MetricFormatter.Format(temperature)} {condition.Text}".TrimEnd();
     }
 
-    private CustomDataWindow? _customData;
-
-    /// <summary>Tray → News feeds…. The list is replaced, not changed in place, since the sampler reads it.</summary>
+    /// <summary>The news widget's button in the editor.</summary>
     private void EditNews(Window? owner = null)
     {
-        if (LinkListWindow.AskFeeds(_settings.NewsFeeds, owner) is not { } feeds)
-            return;
+        if (LinkListWindow.AskFeeds(_settings.NewsFeeds, owner) is { } feeds)
+            SetNewsFeeds(feeds);
+    }
+
+    /// <summary>The list is replaced, not changed in place, since the sampler reads it.</summary>
+    private void SetNewsFeeds(IReadOnlyList<NewsFeed> feeds)
+    {
         _settings.NewsFeeds = [.. feeds];
         _settings.Save();
         AppLog.Info(feeds.Count == 0 ? "News feeds: none" : $"News feeds: {string.Join(", ", feeds.Select(f => f.Name))}");
     }
 
-    /// <summary>Tray → Calendar…. The list is replaced, not changed in place, since the sampler reads it.</summary>
+    /// <summary>The agenda widget's button in the editor.</summary>
     private void EditCalendars(Window? owner = null)
     {
-        if (LinkListWindow.AskCalendars(_settings.Calendars, owner) is not { } links)
-            return;
+        if (LinkListWindow.AskCalendars(_settings.Calendars, owner) is { } links)
+            SetCalendars(links);
+    }
+
+    /// <summary>The list is replaced, not changed in place, since the sampler reads it.</summary>
+    private void SetCalendars(IReadOnlyList<CalendarLink> links)
+    {
         _settings.Calendars = [.. links];
         _settings.Save();
         AppLog.Info(links.Count == 0 ? "Calendars: none" : $"Calendars: {string.Join(", ", links.Select(l => l.Name))}");
     }
 
-    /// <summary>Tray → Custom data…: one window at a time.</summary>
-    private void OpenCustomData()
-    {
-        if (_customData is not null)
-        {
-            BringToFront(_customData);
-            return;
-        }
-        _customData = new CustomDataWindow(_settings, id => _sampler?.Store.TryGet(id, out var status) == true ? status.Text : null);
-        _customData.Closed += (_, _) => _customData = null;
-        _customData.Show();
-        BringToFront(_customData);
-    }
-
-    /// <summary>Tray → Weather → Set location…, or adding a weather widget when there's no location yet.</summary>
+    /// <summary>The Weather page's Set location…, or adding a weather widget when there's no location yet.</summary>
     private void SetWeatherLocation(Window? owner)
     {
         if (WeatherLocationWindow.Ask(owner, _settings.WeatherLocation) is not { } place)

@@ -79,9 +79,9 @@ public sealed class PropertyPanelTests
     public void The_editor_opens_centred_on_the_main_screen_and_fits_it()
     {
         // A 4K main screen at 150% scaling, less the taskbar.
-        Assert.Equal((530.0, 130.0, 1500.0, 900.0), EditorWindow.Centred(new Rect(0, 0, 2560, 1160), 1500, 900));
+        Assert.Equal((530.0, 130.0, 1500.0, 900.0), ImpiousBonum.App.Settings.SettingsWindow.Centred(new Rect(0, 0, 2560, 1160), 1500, 900));
         // A laptop screen too small for the editor's usual size: it shrinks to fit, with a margin.
-        var (left, top, width, height) = EditorWindow.Centred(new Rect(0, 0, 1280, 680), 1500, 900);
+        var (left, top, width, height) = ImpiousBonum.App.Settings.SettingsWindow.Centred(new Rect(0, 0, 1280, 680), 1500, 900);
         Assert.Equal((32, 17, 1216, 646), (left, top, width, height));
     }
 

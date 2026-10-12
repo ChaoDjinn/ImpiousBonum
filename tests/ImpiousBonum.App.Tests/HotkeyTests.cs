@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows.Input;
 using ImpiousBonum.App.Layout;
+using ImpiousBonum.App.Settings;
 using ImpiousBonum.App.Shell;
 
 namespace ImpiousBonum.App.Tests;
@@ -63,7 +64,7 @@ public sealed class HotkeyTests : IDisposable
     public void Modifiers_alone_arent_a_hotkey_yet(Key key) => Assert.Null(Hotkey.Text(ModifierKeys.Control, key));
 
     [Fact]
-    public void The_window_offers_every_action_and_layout_and_refuses_clashes()
+    public void The_page_offers_every_action_and_layout_and_refuses_clashes()
     {
         Sta.Run(() =>
         {
@@ -72,22 +73,22 @@ public sealed class HotkeyTests : IDisposable
                 new(Hotkey.ShowHide, "Ctrl+Alt+D"),
                 new(Hotkey.SwitchLayout, "Ctrl+Alt+1", "Gone"),
             };
-            var window = new HotkeysWindow(current, ["Default", "Gaming"]);
-            Assert.Equal(current, window.Hotkeys());
-            Assert.Null(window.Problem());
+            var page = new HotkeysPage(null);
+            page.Fill(current, ["Default", "Gaming"]);
+            Assert.Equal(current, page.Hotkeys());
+            Assert.Null(page.Problem());
 
-            window.Set(new Hotkey(Hotkey.SwitchLayout, "", "gaming"), "Ctrl+Alt+2");
-            window.Set(new Hotkey(Hotkey.SwitchLayout, "", "Gone"), "");
+            page.Set(new Hotkey(Hotkey.SwitchLayout, "", "gaming"), "Ctrl+Alt+2");
+            page.Set(new Hotkey(Hotkey.SwitchLayout, "", "Gone"), "");
             Assert.Equal(
                 [new Hotkey(Hotkey.ShowHide, "Ctrl+Alt+D"), new Hotkey(Hotkey.SwitchLayout, "Ctrl+Alt+2", "Gaming")],
-                window.Hotkeys());
+                page.Hotkeys());
 
-            window.Set(new Hotkey(Hotkey.NextPage, ""), "ctrl+alt+d");
-            Assert.Contains("both", window.Problem());
+            page.Set(new Hotkey(Hotkey.NextPage, ""), "ctrl+alt+d");
+            Assert.Contains("both", page.Problem());
 
-            window.Set(new Hotkey(Hotkey.NextPage, ""), "Shift+N");
-            Assert.Contains("Ctrl, Alt or Win", window.Problem());
-            window.Close();
+            page.Set(new Hotkey(Hotkey.NextPage, ""), "Shift+N");
+            Assert.Contains("Ctrl, Alt or Win", page.Problem());
         });
     }
 

@@ -1,0 +1,51 @@
+// Big picture: for a 4K screen, a big TV or monitor close by. Your day and your PC on one wall: the time around the world,
+// the weather, your calendar and the news beside loads, temperatures, frame rates, apps and drives.
+// Set your calendars, news feeds and location on their pages; temperatures and FPS need the sensor service.
+{
+  "width": 3840,
+  "height": 2160,
+  "theme": "Catppuccin",
+  "widgets": [
+    { "type": "clock", "x": 60, "y": 60, "width": 885, "height": 640, "timeSize": 280, "dateSize": 48, "zoneSize": 40,
+      "zones": [
+        { "label": "New York", "zone": "America/New_York" },
+        { "label": "Tokyo", "zone": "Asia/Tokyo" }
+      ] },
+    { "type": "weather", "x": 1005, "y": 60, "width": 885, "height": 300, "fontSize": 130, "forecast": "none", "iconStyle": "colour" },
+    { "type": "weather", "x": 1005, "y": 400, "width": 885, "height": 300, "showCurrent": false, "count": 5, "forecastSize": 40, "iconStyle": "colour" },
+    { "type": "lines", "x": 1950, "y": 60, "width": 885, "height": 640, "fontSize": 40, "lineThickness": 4,
+      "lines": [
+        { "label": "CPU", "metric": "cpu.load", "color": "accent" },
+        { "label": "GPU", "metric": "gpu.load", "color": "warning" }
+      ] },
+    { "type": "gauge", "x": 2895, "y": 60, "width": 425, "height": 640, "label": "CPU °C", "metric": "cpu.temp", "text": "{cpu.temp:nounit}",
+      "max": 100, "thickness": 28, "fontSize": 110, "labelSize": 40, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }] },
+    { "type": "gauge", "x": 3355, "y": 60, "width": 425, "height": 640, "label": "GPU °C", "metric": "gpu.temp", "text": "{gpu.temp:nounit}",
+      "max": 100, "thickness": 28, "fontSize": 110, "labelSize": 40, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 88, "color": "critical" }] },
+
+    { "type": "agenda", "x": 60, "y": 760, "width": 885, "height": 640, "days": 3, "count": 8, "fontSize": 38, "headerSize": 28, "spacing": 10 },
+    { "type": "media", "x": 1005, "y": 760, "width": 885, "height": 300, "fontSize": 46, "controlSize": 72 },
+    { "type": "stat", "x": 1005, "y": 1100, "width": 425, "height": 300, "label": "FPS", "metric": "fps", "text": "{fps:0 nounit}", "fontSize": 110, "labelSize": 34 },
+    { "type": "stat", "x": 1465, "y": 1100, "width": 425, "height": 300, "label": "1% low", "metric": "fps.low1", "text": "{fps.low1:0 nounit}", "fontSize": 110, "labelSize": 34 },
+    { "type": "cores", "x": 1950, "y": 760, "width": 885, "height": 640, "style": "heatmap", "gap": 6, "cornerRadius": 6 },
+    { "type": "lines", "x": 2895, "y": 760, "width": 885, "height": 640, "fontSize": 40, "lineThickness": 4,
+      "lines": [
+        { "label": "Down", "metric": "net.down", "color": "accent" },
+        { "label": "Up", "metric": "net.up", "color": "critical" }
+      ] },
+
+    { "type": "news", "x": 60, "y": 1460, "width": 885, "height": 640, "count": 5, "fontSize": 36, "spacing": 18, "lines": 2 },
+    { "type": "processes", "x": 1005, "y": 1460, "width": 885, "height": 640, "count": 8, "fontSize": 42, "spacing": 14 },
+    { "type": "drives", "x": 1950, "y": 1460, "width": 885, "height": 640, "fontSize": 44, "barHeight": 12, "spacing": 30 },
+    { "type": "bars", "x": 2895, "y": 1460, "width": 885, "height": 400, "fontSize": 42, "barHeight": 14, "spacing": 30,
+      "bars": [
+        { "label": "Memory", "metric": "mem.load", "text": "{mem.used:GB} / {mem.total:GB}" },
+        { "label": "Video memory", "metric": "gpu.vram.used", "text": "{gpu.vram.used:GB} / {gpu.vram.total:GB}" }
+      ] },
+    { "type": "rows", "x": 2895, "y": 1900, "width": 885, "height": 200, "fontSize": 40, "align": "bottom",
+      "rows": [
+        { "label": "Ping", "text": "{net.ping}" },
+        { "label": "Up for", "text": "{sys.uptime}" }
+      ] }
+  ]
+}

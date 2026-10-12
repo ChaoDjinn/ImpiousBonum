@@ -19,13 +19,16 @@ public static class AppPaths
         ? @"Local\ImpiousBonum"
         : $@"Local\ImpiousBonum-{Hash(DataDirectory)}";
 
+    /// <summary>Set by a second copy started while this one runs, asking it to open its window.</summary>
+    public static string OpenSignalName => InstanceName + ".Open";
+
     private static string Hash(string path) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path.ToUpperInvariant())))[..16];
 
     public static string SettingsFile => Path.Combine(DataDirectory, "settings.json");
 
     public static string LogFile => Path.Combine(DataDirectory, "dashboard.log");
 
-    /// <summary>Where tray → Logging… writes its daily CSV files.</summary>
+    /// <summary>Where logging (the Logging page) writes its daily CSV files.</summary>
     public static string LogsFolder => Path.Combine(DataDirectory, "logs");
 
     /// <summary>One line per game session (see <see cref="Core.Sessions.SessionLog"/>).</summary>

@@ -9,7 +9,7 @@ using ImpiousBonum.Core.Screens;
 
 namespace ImpiousBonum.App.Shell;
 
-/// <summary>What tray → Display → USB screen is set to.</summary>
+/// <summary>What the USB screen is set to, on the Tablet and USB screen page.</summary>
 /// <param name="Port">"auto" to find the screen, or a serial port such as COM5.</param>
 /// <param name="Layout">The layout to show on it, or null for the one the dashboard shows.</param>
 /// <param name="Brightness">0–100.</param>

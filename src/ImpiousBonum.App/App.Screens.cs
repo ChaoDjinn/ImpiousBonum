@@ -81,7 +81,7 @@ public partial class App
         }
     }
 
-    /// <summary>Tray → Display → Tablet view → Show on tablets. Turning it on shows the link to open.</summary>
+    /// <summary>Tablet and USB screen → Show on tablets. Turning it on shows the link to open.</summary>
     private void SetTabletView(bool on)
     {
         _settings.TabletView = on;
@@ -118,7 +118,7 @@ public partial class App
             // In use by another app, or a hand-edited port that isn't one.
             AppLog.Warning($"Tablet view couldn't use port {_settings.TabletPort}: {ex.Message}");
             _tray?.ShowError("Couldn't start the tablet view",
-                $"Port {_settings.TabletPort} is in use or isn't a valid port. Change tabletPort in settings.json (tray → Help → Open settings folder), then try again.");
+                $"Port {_settings.TabletPort} is in use or isn't a valid port. Change tabletPort in settings.json (Impious Bonum → General → Settings folder), then try again.");
             return false;
         }
     }
@@ -186,7 +186,7 @@ public partial class App
                 AppLog.Info("No spare screen, so the dashboard starts as a window on the main screen");
                 ApplyWindowBehaviour();
                 _tray?.ShowInfo("The dashboard is a window for now",
-                    "There's no spare screen, so it's on your main screen. Drag it where you like and resize it from its edges, then tray → Display → Lock position.");
+                    "There's no spare screen, so it's on your main screen. Drag it where you like and resize it from its edges, then lock it on Impious Bonum's Screens page.");
             }
         }
 
@@ -228,7 +228,7 @@ public partial class App
             extra.SetBehaviour(movable: false, clickThrough: false, topmost: _settings.AlwaysOnTop);
     }
 
-    /// <summary>Tray → Display: fill screen or windowed, lock, click-through, always on top.</summary>
+    /// <summary>Screens: fill screen or windowed, lock, click-through, always on top.</summary>
     private void SetWindowOptions(WindowOptions options)
     {
         var becameWindowed = options.Windowed && _settings.Fill;
@@ -246,7 +246,7 @@ public partial class App
         UpdateFullscreenHide();
         Place();
         if (becameWindowed)
-            _tray?.ShowInfo("Dashboard windowed", "Drag it where you want and resize it from the edges, then tray → Display → Lock position.");
+            _tray?.ShowInfo("Dashboard windowed", "Drag it where you want and resize it from the edges, then lock its position here.");
     }
 
     /// <summary>Back to the default windowed size, centred on the dashboard's monitor.</summary>
@@ -274,6 +274,7 @@ public partial class App
         }
         // Dropped off every screen: Place puts it back where it was.
         Place();
+        _settingsWindow?.Reload();
     }
 
     /// <summary>
@@ -331,7 +332,7 @@ public partial class App
                 layout = LayoutStore.LoadDefault();
             }
             if (name is null && _reportedMissingLinks.Add($"extra:{wanted[i].Layout}"))
-                _tray?.ShowError("Impious Bonum", $"There's no layout called \"{wanted[i].Layout}\" any more. Pick another in tray → Display → More dashboards.");
+                _tray?.ShowError("Impious Bonum", $"There's no layout called \"{wanted[i].Layout}\" any more. Pick another on Impious Bonum's Screens page.");
 
             var theme = _layouts.ResolveTheme(layout);
             _extras[i].Background = Theme.From(theme).Background;
@@ -362,33 +363,34 @@ public partial class App
     }
 
     /// <summary>
-    /// Tray → Display → More dashboards → Add on: a dashboard on <paramref name="monitor"/> with a new, empty layout of
-    /// its own (see <see cref="ExtraDashboard.NewLayout"/>), open in the editor to fill.
+    /// Screens → Add a dashboard, or the gallery: a dashboard on <paramref name="monitor"/> showing <paramref name="layout"/>,
+    /// or with a new, empty layout of its own (see <see cref="ExtraDashboard.NewLayout"/>), open in the editor to fill.
     /// </summary>
-    private void AddDashboard(DisplayMonitor monitor)
+    private void AddDashboard(DisplayMonitor monitor, string? layout = null)
     {
         if (_layouts is null || RefuseWhileEditing())
             return;
-        var name = ExtraDashboard.NewLayoutName(monitor, _layouts.List());
-        _layouts.Save(name, ExtraDashboard.NewLayout(monitor, _layouts.LoadOrDefault().Theme));
+        var name = layout ?? ExtraDashboard.NewLayoutName(monitor, _layouts.List());
+        if (layout is null)
+            _layouts.Save(name, ExtraDashboard.NewLayout(monitor, _layouts.LoadOrDefault().Theme));
         _settings.ExtraDashboards = [.. _settings.ExtraDashboards, ExtraDashboard.On(monitor, name)];
         _settings.Save();
         AppLog.Info($"More dashboards: added \"{name}\" on {monitor.Device}");
         ApplyExtraDashboards();
         Place();
-        EditDashboard(monitor.Id);
+        if (layout is null)
+            EditDashboard(monitor.Id);
     }
 
     /// <summary>
     /// Dashboards aren't added, moved or removed while the editor is open, since it may be editing one of them: says so
-    /// and returns true then.
+    /// and returns true then. (The window's other pages, where that's done, don't show while the editor does.)
     /// </summary>
     private bool RefuseWhileEditing()
     {
         if (_editor is null)
             return false;
-        BringToFront(_editor);
-        _tray?.ShowInfo("Close the layout editor first", "Then add, move or remove the dashboard from the tray again.");
+        _tray?.ShowInfo("Leave the layout editor first", "Then add, move or remove the dashboard again.");
         return true;
     }
 
@@ -465,5 +467,6 @@ public partial class App
         {
             await Task.Delay(750);
             Place();
+            _settingsWindow?.Reload();
         });
 }

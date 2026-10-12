@@ -1,0 +1,41 @@
+// Command centre: for a 1080p monitor beside your main one. Everything at once: loads, network, every CPU thread,
+// temperatures, frame rates, the busiest apps, drives and memory. Temperatures and FPS need the sensor service.
+{
+  "width": 1920,
+  "height": 1080,
+  "theme": "Cockpit",
+  "widgets": [
+    { "type": "lines", "x": 30, "y": 30, "width": 600, "height": 320, "fontSize": 24,
+      "lines": [
+        { "label": "CPU", "metric": "cpu.load", "color": "accent" },
+        { "label": "GPU", "metric": "gpu.load", "color": "warning" }
+      ] },
+    { "type": "lines", "x": 30, "y": 380, "width": 600, "height": 320, "fontSize": 24,
+      "lines": [
+        { "label": "Down", "metric": "net.down", "color": "accent" },
+        { "label": "Up", "metric": "net.up", "color": "critical" }
+      ] },
+    { "type": "processes", "x": 30, "y": 730, "width": 600, "height": 320, "count": 7, "fontSize": 26, "spacing": 8 },
+
+    { "type": "clock", "x": 660, "y": 30, "width": 600, "height": 320, "timeSize": 150, "dateSize": 28 },
+    { "type": "gauge", "x": 660, "y": 380, "width": 290, "height": 320, "label": "CPU °C", "metric": "cpu.temp", "text": "{cpu.temp:nounit}",
+      "max": 100, "fontSize": 64, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }] },
+    { "type": "gauge", "x": 970, "y": 380, "width": 290, "height": 320, "label": "GPU °C", "metric": "gpu.temp", "text": "{gpu.temp:nounit}",
+      "max": 100, "fontSize": 64, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 88, "color": "critical" }] },
+    { "type": "drives", "x": 660, "y": 730, "width": 600, "height": 320, "fontSize": 28, "barHeight": 8, "spacing": 18 },
+
+    { "type": "stat", "x": 1290, "y": 30, "width": 290, "height": 320, "label": "FPS", "metric": "fps", "text": "{fps:0 nounit}", "fontSize": 80 },
+    { "type": "stat", "x": 1600, "y": 30, "width": 290, "height": 320, "label": "1% low", "metric": "fps.low1", "text": "{fps.low1:0 nounit}", "fontSize": 80 },
+    { "type": "cores", "x": 1290, "y": 380, "width": 600, "height": 320, "style": "heatmap" },
+    { "type": "bars", "x": 1290, "y": 730, "width": 600, "height": 200, "fontSize": 28, "barHeight": 10, "spacing": 18,
+      "bars": [
+        { "label": "Memory", "metric": "mem.load", "text": "{mem.used:GB} / {mem.total:GB}" },
+        { "label": "Video memory", "metric": "gpu.vram.used", "text": "{gpu.vram.used:GB} / {gpu.vram.total:GB}" }
+      ] },
+    { "type": "rows", "x": 1290, "y": 950, "width": 600, "height": 100, "fontSize": 26, "align": "bottom",
+      "rows": [
+        { "label": "Ping", "text": "{net.ping}" },
+        { "label": "Up for", "text": "{sys.uptime}" }
+      ] }
+  ]
+}

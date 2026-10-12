@@ -12,13 +12,13 @@ namespace ImpiousBonum.App.Widgets;
 
 /// <summary>
 /// The weather where you are: an icon, the temperature and conditions now, and a row of days or hours ahead.
-/// The location is set once for the PC (tray → Weather), so every layout shows the same place.
+/// The location is set once for the PC (the Weather page), so every layout shows the same place.
 /// </summary>
 public sealed class WeatherWidget : Widget
 {
     public static WidgetDescriptor Descriptor { get; } = new(
         "weather", "Weather",
-        "The weather now and the days or hours ahead, from Open-Meteo.com. Set your location in the editor (select the widget) or from the tray: Weather → Set location.",
+        "The weather now and the days or hours ahead, from Open-Meteo.com. Set your location in the editor (select the widget) or on the Weather page.",
         900, 180,
         [
             Setting.Toggle("showCurrent", "Weather now", true, group: Setting.Content,
@@ -123,11 +123,11 @@ public sealed class WeatherWidget : Widget
         _temperature.Text = "—";
         _details?.Children.Clear();
         _details?.Children.Add(Line("No weather yet", _fontSize * 0.3, _text));
-        _details?.Children.Add(Line("Tray → Weather → Set location", _fontSize * 0.22, _detail));
+        _details?.Children.Add(Line("Set a location on the Weather page", _fontSize * 0.22, _detail));
         _ahead?.Children.Clear();
         // With only a forecast showing, say why it's empty there instead.
         if (!_showCurrent && _ahead is not null)
-            _ahead.Children.Add(Line("No weather yet: tray → Weather → Set location", _forecastSize, _detail));
+            _ahead.Children.Add(Line("No weather yet: set a location on the Weather page", _forecastSize, _detail));
     }
 
     private void Show(WeatherReport report, string? location)

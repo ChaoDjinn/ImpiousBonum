@@ -37,7 +37,7 @@ public sealed class WeatherWidgetTests
             widget.Refresh(new MetricStore(), DateTime.Now);
             var texts = Texts(widget);
             Assert.Contains("—", texts);
-            Assert.Contains(texts, t => t.Contains("Set location"));
+            Assert.Contains(texts, t => t.Contains("Weather page"));
         });
     }
 
@@ -80,7 +80,7 @@ public sealed class WeatherWidgetTests
 
             var empty = WidgetFactory.Create(new JsonObject { ["type"] = "weather", ["showCurrent"] = false }, Theme.From(new ThemeSettings()));
             empty.Refresh(new MetricStore(), DateTime.Now);
-            Assert.Contains(Texts(empty), t => t.Contains("Set location"));
+            Assert.Contains(Texts(empty), t => t.Contains("Weather page"));
         });
     }
 

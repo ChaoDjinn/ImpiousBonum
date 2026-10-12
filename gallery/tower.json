@@ -1,0 +1,25 @@
+// Tower: for a 1080 × 1920 monitor turned on its side. Top to bottom: the time, the weather, loads over time,
+// temperatures and memory, the busiest apps and the drives. Set your location on the Weather page; temperatures need
+// the sensor service.
+{
+  "width": 1080,
+  "height": 1920,
+  "theme": "Dracula",
+  "widgets": [
+    { "type": "clock", "x": 40, "y": 40, "width": 1000, "height": 320, "timeSize": 200, "dateSize": 36 },
+    { "type": "weather", "x": 40, "y": 390, "width": 1000, "height": 170, "fontSize": 100, "forecast": "none" },
+    { "type": "weather", "x": 40, "y": 580, "width": 1000, "height": 190, "showCurrent": false, "count": 5, "forecastSize": 30 },
+    { "type": "lines", "x": 40, "y": 800, "width": 1000, "height": 270, "fontSize": 28, "lineThickness": 3,
+      "lines": [
+        { "label": "CPU", "metric": "cpu.load", "color": "accent" },
+        { "label": "GPU", "metric": "gpu.load", "color": "warning" }
+      ] },
+    { "type": "gauge", "x": 40, "y": 1110, "width": 313, "height": 300, "label": "CPU °C", "metric": "cpu.temp", "text": "{cpu.temp:nounit}",
+      "max": 100, "fontSize": 64, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }] },
+    { "type": "gauge", "x": 383, "y": 1110, "width": 313, "height": 300, "label": "GPU °C", "metric": "gpu.temp", "text": "{gpu.temp:nounit}",
+      "max": 100, "fontSize": 64, "thresholds": [{ "above": 80, "color": "warning" }, { "above": 88, "color": "critical" }] },
+    { "type": "gauge", "x": 727, "y": 1110, "width": 313, "height": 300, "label": "RAM", "metric": "mem.load", "text": "{mem.used:GB}", "fontSize": 56 },
+    { "type": "processes", "x": 40, "y": 1450, "width": 1000, "height": 250, "count": 5, "fontSize": 30, "spacing": 8 },
+    { "type": "drives", "x": 40, "y": 1730, "width": 1000, "height": 160, "fontSize": 28, "spacing": 14 }
+  ]
+}

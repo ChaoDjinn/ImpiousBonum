@@ -64,18 +64,7 @@ public static class TrayMenuStyle
     {
         public const char Edit = '';
         public const char Layout = '';
-        public const char Display = '';
-        public const char Sensors = '';
-        public const char Weather = '';
-        public const char Calendar = '';
-        public const char News = '';
-        public const char Chat = '';
-        public const char Globe = '';
-        public const char Bell = '';
-        public const char Keyboard = '';
-        public const char History = '';
-        public const char Sync = '';
-        public const char Help = '';
+        public const char Settings = '';
         public const char Power = '';
         public const char Restart = '';
         public const char Check = '';

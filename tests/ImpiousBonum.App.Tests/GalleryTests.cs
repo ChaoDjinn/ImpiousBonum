@@ -86,7 +86,32 @@ public sealed class GalleryTests
             Assert.Equal((entry.Width, entry.Height), (package.Layout.Width, package.Layout.Height));
             Assert.True(entry.Description is { Length: > 0 }, $"{entry.Name} has no description.");
             Assert.Empty(LayoutValidator.Validate(package.Layout));
+            // What the gallery's "how much it shows" filter goes by.
+            Assert.Equal(package.Layout.Widgets.Count(w => !GalleryFit.Decorations.Contains(w.GetString("type") ?? "")), entry.Widgets);
         }
+    }
+
+    [Fact]
+    public void Layouts_suit_screens_of_their_shape_closest_in_size_first()
+    {
+        GalleryEntry Entry(string name, int width, int height, int widgets = 0) => new(name, $"{name}.json", null, null, width, height, widgets);
+        var strip = Entry("Strip", 1920, 480);
+        var hd = Entry("HD", 1920, 1080, 12);
+        var uhd = Entry("4K", 3840, 2160, 17);
+        var tv = Entry("TV", 1920, 1080, 4);
+        var small = Entry("Small", 800, 480, 4);
+        var portrait = Entry("Portrait", 1080, 1920, 9);
+        GalleryEntry[] all = [strip, hd, uhd, tv, small, portrait];
+
+        // A 4K TV: the 16:9 layouts, the 4K one first, and 800 × 480 (5:3) is near enough; not the strip or the portrait one.
+        Assert.Equal([uhd, hd, tv, small], GalleryFit.For(all, (3840, 2160), GalleryDetail.Any));
+        // The same TV across the room: only the simple ones.
+        Assert.Equal([tv, small], GalleryFit.For(all, (3840, 2160), GalleryDetail.Few));
+        Assert.Equal([strip], GalleryFit.For(all, (1920, 480), GalleryDetail.Any));
+        Assert.Equal([portrait], GalleryFit.For(all, (1080, 1920), GalleryDetail.Lots));
+        // Any screen: everything, in the gallery's order; a layout without a count shows whatever the filter.
+        Assert.Equal(all, GalleryFit.For(all, null, GalleryDetail.Any));
+        Assert.Equal([strip, hd, uhd, portrait], GalleryFit.For(all, null, GalleryDetail.Lots));
     }
 
     [Fact]

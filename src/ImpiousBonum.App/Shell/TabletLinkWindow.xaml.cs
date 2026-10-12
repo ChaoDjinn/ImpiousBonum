@@ -8,7 +8,7 @@ using QRCoder;
 
 namespace ImpiousBonum.App.Shell;
 
-/// <summary>Tray → Display → Tablet view → Show link: the link as a QR code and as text, with copy and new-link buttons.</summary>
+/// <summary>Tablet and USB screen → Show QR code: the link as a QR code and as text, with copy and new-link buttons.</summary>
 public partial class TabletLinkWindow : Window
 {
     private readonly int _port;

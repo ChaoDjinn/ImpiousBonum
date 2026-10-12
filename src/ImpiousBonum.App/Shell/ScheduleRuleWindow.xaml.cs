@@ -26,9 +26,14 @@ public partial class ScheduleRuleWindow : Window
 
     /// <param name="suggestedTheme">Picked to start with, if it exists (Night Watch suits a night-time rule).</param>
     /// <returns>The new rule, or null if cancelled.</returns>
-    public static ScheduleRule? Ask(IReadOnlyList<string> layouts, IReadOnlyList<string> themes, string? suggestedTheme)
+    public static ScheduleRule? Ask(Window? owner, IReadOnlyList<string> layouts, IReadOnlyList<string> themes, string? suggestedTheme)
     {
         var window = new ScheduleRuleWindow(layouts, themes, suggestedTheme);
+        if (owner is not null)
+        {
+            window.Owner = owner;
+            window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        }
         return window.ShowDialog() == true ? window.Rule() : null;
     }
 

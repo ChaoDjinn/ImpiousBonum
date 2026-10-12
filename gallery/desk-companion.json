@@ -1,5 +1,5 @@
 // Desk companion: the time here and in two other places, what's on today, the weather and what's playing.
-// Set your calendars in tray → Calendar… and your location in tray → Weather → Set location…; change the places in the editor.
+// Set your calendars on the Calendars page and your location on the Weather page; change the places in the editor.
 {
   "width": 1920,
   "height": 480,

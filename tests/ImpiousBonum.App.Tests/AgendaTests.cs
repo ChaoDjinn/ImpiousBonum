@@ -62,12 +62,12 @@ public sealed class AgendaTests
     }
 
     [Fact]
-    public void The_calendar_window_adds_and_checks_links()
+    public void The_calendar_list_adds_and_checks_links()
     {
         Sta.Run(() =>
         {
-            var window = new LinkListWindow([new NamedLink("Work", "https://example.com/work.ics")], "Calendars", "calendar",
-                LinkListWindow.CalendarIntro, LinkListWindow.CalendarNote, allowWebcal: true);
+            var window = LinkListPanel.ForCalendars();
+            window.Links = [new NamedLink("Work", "https://example.com/work.ics")];
             window.LinkBox.Text = "not a link";
             Assert.NotNull(window.Problem());
             window.LinkBox.Text = "https://example.com/work.ics";
@@ -83,7 +83,6 @@ public sealed class AgendaTests
                 [new NamedLink("Work", "https://example.com/work.ics"), new NamedLink("p01-caldav.icloud.com", "webcal://p01-caldav.icloud.com/published/2/abc"),
                  new NamedLink("Family", "https://calendar.google.com/calendar/ical/x/private-y/basic.ics")],
                 window.Links);
-            window.Close();
         });
     }
 }

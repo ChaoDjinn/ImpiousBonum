@@ -1,0 +1,33 @@
+// Workstation: for a 1440p monitor beside your main one, while you work. The time and your day, a focus timer, the
+// weather and the news, what's playing, how hard the PC is working and your Claude usage.
+// Set your calendars, news feeds and location on their pages, and connect Claude Code on the Claude usage page.
+{
+  "width": 2560,
+  "height": 1440,
+  "theme": "Solarized",
+  "widgets": [
+    { "type": "clock", "x": 40, "y": 40, "width": 800, "height": 426, "timeSize": 190, "dateSize": 34 },
+    { "type": "agenda", "x": 880, "y": 40, "width": 800, "height": 426, "days": 2, "count": 6, "fontSize": 28, "headerSize": 20, "spacing": 8 },
+    { "type": "weather", "x": 1720, "y": 40, "width": 800, "height": 200, "fontSize": 96, "forecast": "none" },
+    { "type": "weather", "x": 1720, "y": 250, "width": 800, "height": 216, "showCurrent": false, "count": 5, "forecastSize": 26 },
+
+    { "type": "timer", "x": 40, "y": 506, "width": 800, "height": 426, "label": "Focus", "duration": "25:00", "fontSize": 150, "labelSize": 32 },
+    { "type": "gauge", "x": 880, "y": 506, "width": 253, "height": 426, "label": "CPU", "metric": "cpu.load", "fontSize": 52 },
+    { "type": "gauge", "x": 1153, "y": 506, "width": 253, "height": 426, "label": "GPU", "metric": "gpu.load", "fontSize": 52 },
+    { "type": "gauge", "x": 1426, "y": 506, "width": 254, "height": 426, "label": "RAM", "metric": "mem.load", "text": "{mem.used:GB}", "fontSize": 46 },
+    { "type": "news", "x": 1720, "y": 506, "width": 800, "height": 426, "count": 5, "fontSize": 26, "spacing": 12, "lines": 2 },
+
+    { "type": "lines", "x": 40, "y": 972, "width": 800, "height": 428, "fontSize": 28, "lineThickness": 3,
+      "lines": [
+        { "label": "CPU", "metric": "cpu.load", "color": "accent" },
+        { "label": "GPU", "metric": "gpu.load", "color": "warning" }
+      ] },
+    { "type": "media", "x": 880, "y": 1080, "width": 800, "height": 240, "fontSize": 36, "controlSize": 56 },
+    { "type": "claude", "x": 1720, "y": 972, "width": 800, "height": 150, "fontSize": 28, "barHeight": 10,
+      "bars": [
+        { "label": "Session", "metric": "claude.session", "text": "{claude.session} · resets {claude.session.resets}" },
+        { "label": "Week", "metric": "claude.week", "text": "{claude.week} · resets {claude.week.resets}" }
+      ] },
+    { "type": "processes", "x": 1720, "y": 1160, "width": 800, "height": 240, "count": 5, "fontSize": 26, "spacing": 6 }
+  ]
+}
