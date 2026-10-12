@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using ImpiousBonum.App.Controls;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
@@ -26,6 +27,8 @@ public partial class LayoutEditor : UserControl
     private readonly LayoutStore _layouts;
     private readonly Func<string> _shownLayout;
     private readonly MenuItem _deleteLayoutItem;
+    private readonly MenuItem _bringForwardItem;
+    private readonly MenuItem _sendBackItem;
     private bool _syncingList;
     private bool _syncingLayouts;
     private bool _syncingScreens;
@@ -91,6 +94,18 @@ public partial class LayoutEditor : UserControl
         layoutMenu.Items.Add(_deleteLayoutItem);
         LayoutMenuButton.ContextMenu = layoutMenu;
 
+        // A widget's menu in the list (right-clicking one selects it), with the keyboard's ways of doing the same.
+        var widgetMenu = new ContextMenu();
+        _bringForwardItem = MenuItemFor("Bring forward", "Draw on top of the next widget", () => _session.MoveSelected(+1), "Ctrl+]");
+        _sendBackItem = MenuItemFor("Send back", "Draw behind the previous widget", () => _session.MoveSelected(-1), "Ctrl+[");
+        widgetMenu.Items.Add(_bringForwardItem);
+        widgetMenu.Items.Add(_sendBackItem);
+        widgetMenu.Items.Add(new Separator());
+        widgetMenu.Items.Add(MenuItemFor("Duplicate", null, _session.DuplicateSelected, "Ctrl+D"));
+        widgetMenu.Items.Add(MenuItemFor("Delete", null, _session.DeleteSelected, "Del"));
+        WidgetList.ContextMenu = widgetMenu;
+        DragReorder.Attach(WidgetList, _session.MoveWidget);
+
         session.Changed += (_, change) =>
         {
             if (change.Kind != ChangeKind.Geometry)
@@ -111,9 +126,10 @@ public partial class LayoutEditor : UserControl
     /// <summary>The window it's in, for the dialogs it opens.</summary>
     private Window? Owner => Window.GetWindow(this);
 
-    private static MenuItem MenuItemFor(string header, string? toolTip, Action action)
+    /// <param name="gesture">The shortcut that does the same, shown beside it.</param>
+    private static MenuItem MenuItemFor(string header, string? toolTip, Action action, string? gesture = null)
     {
-        var item = new MenuItem { Header = header, ToolTip = toolTip };
+        var item = new MenuItem { Header = header, ToolTip = toolTip, InputGestureText = gesture };
         item.Click += (_, _) => action();
         return item;
     }
@@ -159,10 +175,24 @@ public partial class LayoutEditor : UserControl
 
     private void RefreshList()
     {
+        // A new list loses the row that had focus; someone using the keyboard carries on from the selected widget.
+        var focused = WidgetList.IsKeyboardFocusWithin;
         _syncingList = true;
         WidgetList.ItemsSource = _session.Document.Widgets.Select(ListEntry.Of).ToList();
         _syncingList = false;
         SyncListSelection();
+        if (focused && WidgetList.SelectedIndex >= 0)
+        {
+            WidgetList.UpdateLayout();
+            (WidgetList.ItemContainerGenerator.ContainerFromIndex(WidgetList.SelectedIndex) as UIElement)?.Focus();
+        }
+    }
+
+    /// <summary>The widget menu is for a widget, so not over the empty space below them.</summary>
+    private void OnListMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (e.OriginalSource is not DependencyObject source || ItemsControl.ContainerFromElement(WidgetList, source) is null)
+            e.Handled = true;
     }
 
     private void SyncListSelection()
@@ -435,10 +465,6 @@ public partial class LayoutEditor : UserControl
 
     private void OnDelete(object sender, RoutedEventArgs e) => _session.DeleteSelected();
 
-    private void OnForward(object sender, RoutedEventArgs e) => _session.MoveSelected(+1);
-
-    private void OnBackward(object sender, RoutedEventArgs e) => _session.MoveSelected(-1);
-
     private void OnUndo(object sender, RoutedEventArgs e) => _session.Undo();
 
     private void OnRedo(object sender, RoutedEventArgs e) => _session.Redo();
@@ -482,13 +508,13 @@ public partial class LayoutEditor : UserControl
         var selected = _session.SelectedIndex >= 0;
         DuplicateButton.IsEnabled = selected;
         DeleteButton.IsEnabled = selected;
-        ForwardButton.IsEnabled = selected && _session.SelectedIndex < _session.Document.Widgets.Count - 1;
-        BackwardButton.IsEnabled = selected && _session.SelectedIndex > 0;
+        _bringForwardItem.IsEnabled = selected && _session.SelectedIndex < _session.Document.Widgets.Count - 1;
+        _sendBackItem.IsEnabled = selected && _session.SelectedIndex > 0;
 
         if (_session.SelectedWidget is { } widget)
         {
             var r = LayoutSession.GeometryOf(widget);
-            StatusText.Text = $"{Describe(widget)} · position {r.X:0}, {r.Y:0} · size {r.Width:0}×{r.Height:0} · arrows nudge (Shift for 10)";
+            StatusText.Text = $"{Describe(widget)} · position {r.X:0}, {r.Y:0} · size {r.Width:0}×{r.Height:0} · arrows nudge (Shift for 10) · Ctrl+] brings forward, Ctrl+[ sends back";
         }
         else
         {
@@ -525,6 +551,12 @@ public partial class LayoutEditor : UserControl
                 break;
             case Key.D when ctrl:
                 _session.DuplicateSelected();
+                break;
+            case Key.OemCloseBrackets when ctrl:
+                _session.MoveSelected(+1);
+                break;
+            case Key.OemOpenBrackets when ctrl:
+                _session.MoveSelected(-1);
                 break;
             case Key.Delete when !typing:
                 _session.DeleteSelected();
