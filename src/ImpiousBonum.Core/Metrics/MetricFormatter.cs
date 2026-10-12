@@ -49,10 +49,20 @@ public static class MetricFormatter
                     MetricUnit.Fahrenheit => ("0.0", "°F"),
                     MetricUnit.KilometresPerHour => ("0", "km/h"),
                     MetricUnit.MilesPerHour => ("0", "mph"),
+                    MetricUnit.Hectopascals => ("0", "hPa"),
+                    MetricUnit.InchesOfMercury => ("0.00", "inHg"),
+                    MetricUnit.Millimetres => ("0.0", "mm"),
+                    MetricUnit.Inches => ("0.00", "in"),
+                    MetricUnit.Kilometres => ("0.0", "km"),
+                    MetricUnit.Miles => ("0.0", "mi"),
+                    MetricUnit.Degrees => ("0", "°"),
                     _ => ("0.##", ""),
                 };
                 var number = value.ToString(spec.NumberFormat ?? sample.Definition.Format ?? defaultFormat, culture);
-                return spec.NoUnit || suffix.Length == 0 ? number : $"{number} {suffix}";
+                if (spec.NoUnit || suffix.Length == 0)
+                    return number;
+                // An angle's degree sign goes straight after the number ("225°"); a temperature's unit is spaced ("11 °C").
+                return sample.Definition.Unit == MetricUnit.Degrees ? number + suffix : $"{number} {suffix}";
             }
         }
     }
