@@ -3,6 +3,13 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+**More precise weather places**
+- *Set location…* finds suburbs, villages and postcodes, and you can say which place you mean by adding its town, county or country after a comma: `West Derby, Liverpool` finds the one in Liverpool rather than the one in South Africa. The start of a name is enough, and `UK` and `USA` work as countries.
+- Places in the list say which town or county they're in, such as *West Derby, Liverpool, England, United Kingdom*, so places with the same name are easy to tell apart.
+- When Open-Meteo doesn't know a place, the search asks OpenStreetMap instead, which knows more suburbs, parks and postcodes (`L12 5HJ`, say). It's only asked when you press *Search* or Enter, never as you type, and the forecast still comes from Open-Meteo using the place's coordinates.
+
 ## 0.13.0
 
 Impious Bonum has a window of its own, and the tray menu keeps to the basics.

@@ -27,15 +27,23 @@ public static class OpenMeteo
         return WeatherReport.Parse(json, request.Units);
     }
 
-    /// <summary>Places matching <paramref name="name"/> (a town, or "Town, Country"), best first, in the user's language where known.</summary>
-    public static async Task<IReadOnlyList<WeatherPlace>> SearchAsync(string name, CancellationToken cancellationToken)
+    /// <summary>
+    /// Up to <paramref name="count"/> places called <paramref name="name"/>, best first, in the user's language where known.
+    /// <see cref="PlaceSearch"/> adds "Place, Area" searches and falls back to OpenStreetMap.
+    /// </summary>
+    public static async Task<IReadOnlyList<WeatherPlace>> SearchAsync(string name, int count, CancellationToken cancellationToken)
     {
         var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        var url = $"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(name.Trim())}&count=10&language={language}&format=json";
+        var url = FormattableString.Invariant($"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(name.Trim())}&count={count}&language={language}&format=json");
         var json = await Http.GetStringAsync(url, cancellationToken).ConfigureAwait(false);
         return ParsePlaces(json);
     }
 
+    /// <summary>
+    /// Reads Open-Meteo's place search. Of the finer areas, admin4 (often the town, such as Munich for Schwabing) and admin2
+    /// (the county or district, such as Liverpool for West Derby) are kept; admin3 is mostly townships and arrondissements
+    /// that people don't know places by.
+    /// </summary>
     internal static IReadOnlyList<WeatherPlace> ParsePlaces(string json)
     {
         using var document = JsonDocument.Parse(json);
@@ -48,7 +56,11 @@ public static class OpenMeteo
                 Text(r, "admin1"),
                 Text(r, "country"),
                 r.GetProperty("latitude").GetDouble(),
-                r.GetProperty("longitude").GetDouble()))
+                r.GetProperty("longitude").GetDouble())
+            {
+                Areas = [.. new[] { Text(r, "admin4"), Text(r, "admin2") }.OfType<string>()],
+                CountryCode = Text(r, "country_code"),
+            })
             .ToList();
     }
 
