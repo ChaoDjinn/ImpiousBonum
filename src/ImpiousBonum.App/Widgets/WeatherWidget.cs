@@ -24,8 +24,10 @@ public sealed class WeatherWidget : Widget
             Setting.Toggle("showCurrent", "Weather now", true, group: Setting.Content,
                 help: "The big icon and temperature for now. Off leaves just the forecast, e.g. for a widget of the hours ahead beside another of the days."),
             Setting.Choice("forecast", "Forecast", "days", ["days", "hours", "none"]),
-            Setting.Number("count", "Days or hours", 5, 1, 14, group: Setting.Content),
+            Setting.Number("count", "Days or hours", 5, 1, 48, group: Setting.Content, help: "Up to 16 days, or 48 hours."),
             Setting.Number("hourStep", "Hours apart", 1, 1, 12, group: Setting.Content, help: "For an hourly forecast, e.g. 3 for every three hours."),
+            Setting.Number("rainFrom", "Chance of rain from", 30, 0, 100, group: Setting.Content,
+                help: "Show the chance of rain from this percentage; 0 always shows it."),
             Setting.Toggle("showDetails", "Details", true, group: Setting.Content, help: "Conditions, today's high and low, and feels like, beside the temperature."),
             Setting.Toggle("showLocation", "Location", false, group: Setting.Content),
             Setting.Number("fontSize", "Temperature size", 80, 6, 400),
@@ -41,6 +43,7 @@ public sealed class WeatherWidget : Widget
     private readonly string _forecast;
     private readonly int _count;
     private readonly int _hourStep;
+    private readonly double _rainFrom;
     private readonly bool _showLocation;
     private readonly double _fontSize;
     private readonly double _forecastSize;
@@ -61,6 +64,7 @@ public sealed class WeatherWidget : Widget
         _forecast = settings.String("forecast");
         _count = (int)settings.Number("count");
         _hourStep = (int)settings.Number("hourStep");
+        _rainFrom = settings.Number("rainFrom");
         _showLocation = settings.Bool("showLocation");
         _fontSize = settings.Number("fontSize");
         _forecastSize = settings.Number("forecastSize");
@@ -158,7 +162,7 @@ public sealed class WeatherWidget : Widget
             _ahead.Children.Add(Column(period, report));
     }
 
-    /// <summary>One day or hour: when, an icon, the temperature (and low), and the chance of rain if it's worth mentioning.</summary>
+    /// <summary>One day or hour: when, an icon, the temperature (and low), and the chance of rain if it's at least <c>rainFrom</c>.</summary>
     private StackPanel Column(WeatherPeriod period, WeatherReport report)
     {
         var column = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
@@ -179,7 +183,7 @@ public sealed class WeatherWidget : Widget
         ApplyFont(temperature, _forecastSize);
         column.Children.Add(temperature);
 
-        if (period.RainChance is >= 30 and var chance)
+        if (period.RainChance is double chance && chance >= _rainFrom)
             column.Children.Add(Line($"{chance:0}%", _forecastSize * 0.75, _detail, HorizontalAlignment.Center));
         return column;
     }

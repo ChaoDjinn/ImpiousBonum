@@ -13,19 +13,26 @@ public static class OpenMeteo
 
     private static readonly HttpClient Http = CreateClient();
 
-    /// <summary>The forecast for <paramref name="request"/>: now, 48 hours and 7 days. Throws <see cref="HttpRequestException"/> and the like on failure.</summary>
+    /// <summary>The forecast for <paramref name="request"/>: now, 48 hours and 16 days. Throws <see cref="HttpRequestException"/> and the like on failure.</summary>
     public static async Task<WeatherReport> ForecastAsync(WeatherRequest request, CancellationToken cancellationToken)
     {
-        var imperial = request.Units == WeatherUnits.Imperial;
-        var url = FormattableString.Invariant($"https://api.open-meteo.com/v1/forecast?latitude={request.Latitude:0.####}&longitude={request.Longitude:0.####}")
-            + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m"
-            + "&hourly=temperature_2m,weather_code,is_day,precipitation_probability"
-            + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"
-            + "&timezone=auto&forecast_days=7&forecast_hours=48"
-            + (imperial ? "&temperature_unit=fahrenheit&wind_speed_unit=mph" : "&wind_speed_unit=kmh");
-        var json = await Http.GetStringAsync(url, cancellationToken).ConfigureAwait(false);
+        var json = await Http.GetStringAsync(ForecastUrl(request), cancellationToken).ConfigureAwait(false);
         return WeatherReport.Parse(json, request.Units);
     }
+
+    /// <summary>
+    /// Everything the forecast has in one request. The three hours before this one are for the pressure trend. The
+    /// widget's hours start after this one, so 49 hours from it leaves 48 to show.
+    /// </summary>
+    internal static string ForecastUrl(WeatherRequest request) =>
+        FormattableString.Invariant($"https://api.open-meteo.com/v1/forecast?latitude={request.Latitude:0.####}&longitude={request.Longitude:0.####}")
+        + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m,"
+        + "wind_gusts_10m,uv_index,pressure_msl,dew_point_2m,visibility,cloud_cover,precipitation"
+        + "&hourly=temperature_2m,weather_code,is_day,precipitation_probability,precipitation,pressure_msl,wind_speed_10m,wind_gusts_10m,uv_index"
+        + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,sunrise,sunset,"
+        + "daylight_duration,uv_index_max,wind_speed_10m_max,wind_gusts_10m_max"
+        + "&timezone=auto&forecast_days=16&past_hours=3&forecast_hours=49"
+        + (request.Units == WeatherUnits.Imperial ? "&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch" : "&wind_speed_unit=kmh");
 
     /// <summary>
     /// Up to <paramref name="count"/> places called <paramref name="name"/>, best first, in the user's language where known.

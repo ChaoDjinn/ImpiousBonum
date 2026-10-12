@@ -67,8 +67,8 @@ internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
                     host.SetWeatherLocation(owner);
                 Load();
             }, accent: !hasLocation)));
-        Add(Ui.Card("", "Units", null,
-            Ui.Choice([(AppSettings.WeatherUnitsAuto, "Automatic (your region)"), (AppSettings.WeatherUnitsMetric, "°C and km/h"), (AppSettings.WeatherUnitsImperial, "°F and mph")],
+        Add(Ui.Card("", "Units", "Metric also has rain in mm, visibility in km and pressure in hPa; imperial has inches, miles and inches of mercury",
+            Ui.Choice([(AppSettings.WeatherUnitsAuto, "Automatic (your region)"), (AppSettings.WeatherUnitsMetric, "Metric (°C, km/h)"), (AppSettings.WeatherUnitsImperial, "Imperial (°F, mph)")],
                 host.Settings.WeatherUnits.ToLowerInvariant(), "Units", host.SetWeatherUnits)));
         if (hasLocation)
         {
