@@ -6,6 +6,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using ImpiousBonum.App.Controls;
@@ -54,6 +55,12 @@ public sealed class PropertyPanel : StackPanel
 
     /// <summary>What a widget needs set up outside the layout, shown as buttons when it's selected; none if not set.</summary>
     public Func<WidgetDescriptor, IReadOnlyList<WidgetSetup>>? Setups { get; set; }
+
+    /// <summary>
+    /// The names in a list the app keeps, by the name a setting gives it (<see cref="SettingDescriptor.OptionsSource"/>),
+    /// such as the news feeds for the news widget's; none if not set.
+    /// </summary>
+    public Func<string, IReadOnlyList<string>>? Options { get; set; }
 
     public void Rebuild()
     {
@@ -314,14 +321,30 @@ public sealed class PropertyPanel : StackPanel
         grid.RowDefinitions.Add(new RowDefinition());
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-        var label = new TextBlock { Text = setting.Label, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = setting.Help };
+        // Beside the first line of an editor taller than one (a list of names to pick), not halfway down it.
+        var tall = setting.Kind == SettingKind.Picks;
+        var label = new TextBlock
+        {
+            Text = setting.Label,
+            VerticalAlignment = tall ? VerticalAlignment.Top : VerticalAlignment.Center,
+            Margin = new Thickness(0, tall ? 6 : 0, 0, 0),
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            ToolTip = setting.Help,
+        };
         grid.Children.Add(label);
 
         var (editor, refresh) = CreateEditor(target, setting);
         Grid.SetColumn(editor, 1);
         grid.Children.Add(editor);
 
-        var reset = new Button { Content = Glyph("\uE7A7"), ToolTip = "Reset to default", Padding = new Thickness(8, 4, 8, 4), Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+        var reset = new Button
+        {
+            Content = Glyph("\uE7A7"),
+            ToolTip = "Reset to default",
+            Padding = new Thickness(8, 4, 8, 4),
+            Margin = new Thickness(6, 0, 0, 0),
+            VerticalAlignment = tall ? VerticalAlignment.Top : VerticalAlignment.Center,
+        };
         reset.Click += (_, _) => _session.SetValue(target, setting.Key, null, this);
         Grid.SetColumn(reset, 2);
         grid.Children.Add(reset);
@@ -355,6 +378,7 @@ public sealed class PropertyPanel : StackPanel
             "Choose a background picture, GIF or video"),
         SettingKind.ImageFile => FileEditor(target, setting, "Images (*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff)|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff|All files|*.*", "Choose a background image"),
         SettingKind.Template or SettingKind.DriveTemplate or SettingKind.Metric => MetricTextEditor(target, setting),
+        SettingKind.Picks => PicksEditor(target, setting),
         _ => TextEditor(target, setting),
     };
 
@@ -635,6 +659,130 @@ public sealed class PropertyPanel : StackPanel
                 show(value);
             swatch.Background = ResolveColor(input.IsKeyboardFocusWithin ? read() : value) is { } color ? new SolidColorBrush(color) : Brushes.Transparent;
         }
+    }
+
+    /// <summary>
+    /// Some names from a list, in order: a box for each, the ticked ones first in their order, dragged into place by their
+    /// handles (or Alt+Up/Alt+Down). Where "all" is allowed, a box for it comes first and greys out the rest. A ticked
+    /// name that isn't an option any more (a feed since removed or renamed) still shows, marked, so it can be unticked.
+    /// Each change is an undo step of its own.
+    /// </summary>
+    private (FrameworkElement, Action) PicksEditor(SettingTarget target, SettingDescriptor setting)
+    {
+        var allowAll = setting.AllLabel is not null;
+        var panel = new StackPanel();
+        var all = new CheckBox { Content = setting.AllLabel, Visibility = allowAll ? Visibility.Visible : Visibility.Collapsed };
+        var entries = new StackPanel();
+        var none = Secondary(new TextBlock { Text = setting.NoOptions ?? "Nothing to choose from yet.", TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 4) });
+        panel.Children.Add(all);
+        panel.Children.Add(entries);
+        panel.Children.Add(none);
+
+        // What the boxes show, so they're only made afresh when it changes; and how many are ticked, which can be reordered.
+        string? shown = null;
+        var ticked = 0;
+
+        // Checked and Unchecked rather than Click, so Narrator ticking a box counts too. Unticking all starts from every
+        // option ticked, so nothing changes on screen until some are unticked.
+        all.Checked += (_, _) => Save(PickList.Everything);
+        all.Unchecked += (_, _) => Save(PickList.Of(OptionsOf(setting)));
+        DragReorder.Attach(entries, (from, to) =>
+        {
+            // Only the ticked ones have an order, and they stay above the rest.
+            if (from < ticked)
+                Save(Current().Move(from, Math.Min(to, ticked - 1)));
+        }, byHandle: true);
+        return (panel, Refresh);
+
+        // The names as the options spell them, so a change also tidies "bbc" to "BBC".
+        PickList Current()
+        {
+            var value = PickList.Parse(CurrentString(target, setting), allowAll);
+            return value.All ? value : PickList.Of(value.Entries(OptionsOf(setting)).Where(e => e.Ticked).Select(e => e.Name));
+        }
+
+        void Save(PickList value)
+        {
+            if (!_updating)
+                _session.SetValue(target, setting.Key, JsonValue.Create(value.ToString()), this, merge: false);
+        }
+
+        void Refresh()
+        {
+            var options = OptionsOf(setting);
+            var value = Current();
+            var key = string.Join("\n", options.Prepend(value.ToString()));
+            if (key == shown)
+                return;
+            shown = key;
+
+            // The box or handle with focus is made afresh too; focus goes to the new one for the same name.
+            var focused = Keyboard.FocusedElement as FrameworkElement;
+            var refocus = focused is { Tag: string name } && entries.IsAncestorOf(focused) ? (Name: name, Handle: DragReorder.GetIsHandle(focused), Index: IndexIn(entries, focused)) : default;
+
+            var list = value.Entries(options);
+            ticked = value.All ? 0 : list.Count(e => e.Ticked);
+            all.IsChecked = value.All;
+            // With no options, unticking all would leave nothing ticked, which is all again.
+            all.IsEnabled = !(value.All && options.Count == 0);
+            entries.IsEnabled = !value.All;
+            none.Visibility = options.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            entries.Children.Clear();
+            foreach (var entry in list)
+                entries.Children.Add(PickRow(entry, reorderable: entry.Ticked && !value.All));
+
+            if (refocus.Name is null)
+                return;
+            // Laid out first, so the new boxes can take focus. A name that's gone (unticked, and not an option) leaves it
+            // with the one that took its place.
+            UpdateLayout();
+            var rows = entries.Children.OfType<DockPanel>().ToList();
+            var row = rows.FirstOrDefault(r => r.Tag as string == refocus.Name) ?? (rows.Count > 0 ? rows[Math.Clamp(refocus.Index, 0, rows.Count - 1)] : null);
+            if (!(refocus.Handle && row?.Children[0].Focus() == true) && row?.Children[1].Focus() != true)
+                all.Focus();
+        }
+
+        DockPanel PickRow(PickEntry entry, bool reorderable)
+        {
+            var row = new DockPanel { Tag = entry.Name };
+            var handle = DragHandle(entry.Name);
+            handle.Tag = entry.Name;
+            // Hidden rather than left out, so every name lines up.
+            handle.Visibility = reorderable ? Visibility.Visible : Visibility.Hidden;
+            DockPanel.SetDock(handle, Dock.Left);
+            // A text block rather than the name itself, so an underscore in it shows rather than marking a shortcut key.
+            var label = new TextBlock { Text = entry.Name, TextTrimming = TextTrimming.CharacterEllipsis };
+            var box = new CheckBox { IsChecked = entry.Ticked, Tag = entry.Name, Content = label };
+            AutomationProperties.SetName(box, entry.Name);
+            if (!entry.Found)
+            {
+                var missing = new Run(" (not found)");
+                missing.SetResourceReference(TextElement.ForegroundProperty, CriticalBrush);
+                label.Inlines.Add(missing);
+                box.ToolTip = "This isn't one of the choices any more: it may have been removed or renamed. Untick it to take it off.";
+                AutomationProperties.SetName(box, $"{entry.Name} (not found)");
+            }
+            box.Checked += (_, _) => Save(Current().Tick(entry.Name));
+            box.Unchecked += (_, _) => Save(Current().Untick(entry.Name, allowAll));
+            row.Children.Add(handle);
+            row.Children.Add(box);
+            return row;
+        }
+    }
+
+    /// <summary>What a <see cref="SettingKind.Picks"/> setting can pick from: its own choices, or the app's list it names.</summary>
+    private IReadOnlyList<string> OptionsOf(SettingDescriptor setting) =>
+        setting.Choices ?? (setting.OptionsSource is { } source ? Options?.Invoke(source) : null) ?? [];
+
+    /// <summary>Which of a panel's children an element is in, or -1.</summary>
+    private static int IndexIn(Panel panel, DependencyObject element)
+    {
+        for (var e = element; e is not null; e = VisualTreeHelper.GetParent(e))
+        {
+            if (VisualTreeHelper.GetParent(e) == panel)
+                return panel.Children.IndexOf((UIElement)e);
+        }
+        return -1;
     }
 
     private void AddItems(Panel parent, SettingTarget target, SettingDescriptor setting)

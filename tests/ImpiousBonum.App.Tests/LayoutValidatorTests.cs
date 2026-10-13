@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using ImpiousBonum.App.Layout;
+using ImpiousBonum.App.Widgets;
 
 namespace ImpiousBonum.App.Tests;
 
@@ -69,6 +70,36 @@ public sealed class LayoutValidatorTests
         Assert.Contains(issues, i => i.Contains("thresholds[1]: 'metric' should be a metric id"));
         Assert.Contains(issues, i => i.Contains("thresholds[2]: 'color' should be foreground"));
         Assert.Contains(issues, i => i.Contains("thresholds[3]: needs 'above' or 'below'"));
+    }
+
+    [Fact]
+    public void Picked_feeds_are_text_and_any_names_will_do()
+    {
+        // Feeds come from the News feeds page, so the names can't be checked here; the editor shows ones that have gone.
+        Assert.Empty(Validate(Widget("news", ("feeds", "all")), Widget("news", ("feeds", "BBC, Gone")), Widget("news", ("feeds", ""))));
+        var issue = Assert.Single(Validate(Widget("news", ("feeds", 3))));
+        Assert.Contains("'feeds' should be text", issue);
+    }
+
+    [Fact]
+    public void Names_picked_from_a_fixed_list_must_be_on_it()
+    {
+        SettingDescriptor[] settings =
+        [
+            Setting.Picks("readings", "Readings", "wind, uv", choices: ["wind", "uv", "pressure"]),
+            Setting.Picks("more", "More", "all", choices: ["wind", "uv"], all: "All readings"),
+        ];
+        var issues = new List<string>();
+        LayoutValidator.CheckSettings(new JsonObject { ["readings"] = "Pressure, wind", ["more"] = "all" }, settings, "Widget 1", issues, skip: []);
+        Assert.Empty(issues);
+
+        LayoutValidator.CheckSettings(new JsonObject { ["readings"] = "wind, rainbows, all", ["more"] = "wind, fog" }, settings, "Widget 1", issues, skip: []);
+        Assert.Equal(
+            [
+                "Widget 1: 'readings' has 'rainbows', but should be some of wind, uv, pressure, separated by commas.",
+                "Widget 1: 'more' has 'fog', but should be all, or some of wind, uv, separated by commas.",
+            ],
+            issues);
     }
 
     [Fact]

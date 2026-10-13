@@ -92,7 +92,7 @@ The editor is the *Layouts* page of the window, which opens on your main screen:
 
 - **Preview:** click a widget to select it, drag to move, drag the handles to resize. Moves snap to a grid (toolbar); hold Alt to place freely. Arrow keys nudge, Shift+arrows by 10.
 - **Metrics:** template and metric fields have a `{…}` button that opens a searchable list of every metric (about 280 on a typical PC, including every raw sensor) with live values. Pick one and choose how to show it (e.g. `18.7 GB`, `19,138 MB` or just `18.7`) and it's inserted at the cursor. Under each field a live preview shows what it renders now and flags unknown metric ids.
-- **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme. To reorder a list (a rows widget's rows, a clock's other places, buttons, warning colours…), drag an entry by the handle at its left, or move it a place at a time with Alt+Up and Alt+Down from its handle or one of its text or number boxes (in a drop-down, they open its list instead).
+- **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists, boxes to tick such as a news widget's feeds) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme. To reorder a list (a rows widget's rows, a clock's other places, buttons, warning colours, the feeds ticked…), drag an entry by the handle at its left, or move it a place at a time with Alt+Up and Alt+Down from its handle or one of its text or number boxes (in a drop-down, they open its list instead).
 - **Setting a widget up:** the weather, agenda, news and Claude usage widgets need something set up outside the layout. Select one and *Set up*, at the top of its properties, says what's set up now and has a button for it: *Set location…*, *Calendars…*, *News feeds…* or *Connect Claude Code…*. They do the same as the window's own pages.
 - **Widgets:** add, duplicate (Ctrl+D) and delete. The *Widgets* list is the drawing order, and lower in the list draws on top: drag a widget up or down it to change the order, or press Ctrl+] to bring the selected widget forward and Ctrl+[ to send it back. Right-click a widget in the list for *Bring forward*, *Send back*, *Duplicate* and *Delete*.
 - **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
@@ -287,12 +287,19 @@ The metrics put the next event anywhere: `{calendar.next.title}` at `{calendar.n
 
 ### News
 
-The `news` widget shows headlines from news feeds (RSS or Atom), newest first: a list of the latest few, or a
-*ticker* that shows one at a time and moves on every few seconds. Each shows where it's from and how old it is, and
-tapping one opens the article in your browser. Add feeds on the *News feeds* page (or select the widget in the editor → *News feeds…*): most news sites and blogs have
+The `news` widget shows headlines from news feeds (RSS or Atom), newest first: a list of the latest few, a
+*ticker* that shows one at a time and moves on every few seconds, or *tickers*: a ticker for each feed, a line each,
+taking turns to move on so they don't all change at once (*Headlines* is how many each goes through). Each headline
+shows where it's from and how old it is, and tapping one opens the article in your browser. Add feeds on the *News feeds* page (or select the widget in the editor → *News feeds…*): most news sites and blogs have
 one (look for an RSS link, or try the site's address with `/feed` or `/rss` on the end), and so do YouTube channels
-and subreddits. Each feed is checked every 15 minutes, and the same story in two feeds shows once. A widget can show
-some feeds and not others (*Feeds*: `BBC, The Verge`), and `{news.title}` puts the newest headline anywhere.
+and subreddits. Each feed is checked every 15 minutes. In the list and the ticker the same story in two feeds shows
+once; with tickers, it's in each feed's.
+
+A widget can show some feeds and not others. In the editor, *Feeds* lists your feeds: untick *All feeds*, tick the
+ones to show, and drag them into order by the handles at their left (or Alt+Up and Alt+Down). That's the order the
+tickers go in; with *All feeds*, they follow the *News feeds* page's order. A feed you've since removed or renamed
+stays ticked, marked *not found*, until you untick it. In a layout file, `feeds` is `all` or the names separated by
+commas (`BBC, The Verge`). `{news.title}` puts the newest headline anywhere.
 
 <p align="center"><img src="images/widgets/news.png" width="600" alt="Four headlines, newest first, each with where it's from and how long ago"></p>
 

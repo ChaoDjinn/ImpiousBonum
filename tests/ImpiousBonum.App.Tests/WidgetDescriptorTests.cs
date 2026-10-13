@@ -48,6 +48,11 @@ public sealed class WidgetDescriptorTests
                 case SettingKind.Items:
                     Assert.NotEmpty(setting.ItemSettings!);
                     break;
+                case SettingKind.Picks:
+                    Assert.True(setting.Default is null or string, $"{setting.Key}: text default expected");
+                    // Something to pick from: a list of its own, or one the app keeps.
+                    Assert.True(setting.Choices is not null || setting.OptionsSource is not null, $"{setting.Key}: choices or a source expected");
+                    break;
                 default:
                     Assert.True(setting.Default is null or string, $"{setting.Key}: text default expected");
                     break;

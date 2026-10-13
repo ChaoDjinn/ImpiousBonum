@@ -97,6 +97,9 @@ public static class WidgetDocs
         SettingKind.Choice or SettingKind.Icon => string.Join(" / ", s.Choices!.Select(c => $"`{c}`")),
         SettingKind.Items => "list",
         SettingKind.DriveTemplate => "template (per drive)",
+        SettingKind.Picks => (s.AllLabel is null ? "" : "`all`, or ")
+            + (s.Choices is { } choices ? $"some of {string.Join(" / ", choices.Select(c => $"`{c}`"))}" : "names")
+            + " in order, separated by commas",
         _ => s.Kind.ToString().ToLowerInvariant(),
     };
 

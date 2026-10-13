@@ -129,7 +129,11 @@ public sealed class LayoutSession
     };
 
     /// <summary>Sets a value, or removes it (back to the default) when <paramref name="value"/> is null.</summary>
-    public void SetValue(SettingTarget target, string key, JsonNode? value, object? origin)
+    /// <param name="merge">
+    /// Whether it can share an undo step with the edits just before it to the same setting, as a burst of typing does.
+    /// False for a change made in one go, such as ticking a box, which is a step of its own however quickly the next comes.
+    /// </param>
+    public void SetValue(SettingTarget target, string key, JsonNode? value, object? origin, bool merge = true)
     {
         // Controls often write back the value they were just given (e.g. a drop-down finishing loading).
         // Ignoring no-op writes keeps them out of the undo history and avoids pointless rebuilds.
@@ -139,7 +143,7 @@ public sealed class LayoutSession
         var isGeometry = target.Kind == SettingTargetKind.Widget && key is "x" or "y" or "width" or "height";
         var kind = isGeometry ? ChangeKind.Geometry : ChangeKind.Content;
 
-        Edit(kind, target.Kind is SettingTargetKind.Widget or SettingTargetKind.Item ? target.WidgetIndex : null, $"set:{target}:{key}", origin, document =>
+        Edit(kind, target.Kind is SettingTargetKind.Widget or SettingTargetKind.Item ? target.WidgetIndex : null, merge ? $"set:{target}:{key}" : null, origin, document =>
         {
             switch (target.Kind)
             {
