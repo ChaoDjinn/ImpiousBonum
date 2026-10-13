@@ -77,6 +77,7 @@ public partial class App : ISettingsHost
         };
         editor.Setups = WidgetSetups;
         editor.Options = PickOptions;
+        editor.PickedOption = PickedOption;
         editor.WidgetAdded += (_, descriptor) =>
         {
             if (_settingsWindow is not { } owner)
@@ -238,9 +239,28 @@ public partial class App : ISettingsHost
     void ISettingsHost.TurnOffWeather()
     {
         _settings.WeatherLocation = null;
+        _settings.WeatherPlaces = [];
         _settings.Save();
         AppLog.Info("Weather off");
     }
+
+    void ISettingsHost.SetWeatherPlaces(IReadOnlyList<WeatherLocation> places, string log)
+    {
+        // A new list, not a change to the old one: the sampler reads it from another thread.
+        _settings.WeatherPlaces = [.. places];
+        _settings.Save();
+        AppLog.Info(log);
+    }
+
+    void ISettingsHost.MakeMainWeatherPlace(WeatherLocation place)
+    {
+        _settings.MakeMainWeatherPlace(place);
+        _settings.Save();
+        // Not which place: it says where you are, and the log goes with bug reports.
+        AppLog.Info("Weather location swapped with one of the more places");
+    }
+
+    string ISettingsHost.WeatherPlaceStatus(WeatherLocation place) => WeatherPlaceStatus(place);
 
     void ISettingsHost.SetWeatherUnits(string units)
     {

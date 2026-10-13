@@ -325,6 +325,32 @@ public sealed class PropertyPanelTests
     }
 
     [Fact]
+    public void A_weather_place_picked_by_another_spelling_is_ticked_as_the_widget_shows_it()
+    {
+        Sta.Run(() =>
+        {
+            // Picked while there were two Parises; the other has since gone, so this one is plain Paris now.
+            string[] places = ["Leeds, England, United Kingdom", "Paris, Texas, United States"];
+            var weather = Widget("weather");
+            weather["places"] = "Paris (Texas), Leeds";
+            var session = new LayoutSession(new LayoutDocument { Widgets = [weather] });
+            var (panel, window) = Show(session, WeatherWidget.ShortNames(places), (_, name) => WeatherWidget.PlaceOption(name, places));
+            session.Select(0);
+            Pump();
+
+            var picks = Picks(panel).Select(b => (string)b.Tag).ToList();
+            var found = Picks(panel).All(b => b.IsChecked == true && !Text(b).Contains("not found"));
+            // A change writes it as it's spelt now.
+            Toggle(Pick(panel, "Leeds"));
+            window.Close();
+
+            Assert.Equal(["Paris", "Leeds"], picks);
+            Assert.True(found);
+            Assert.Equal("Paris", (string?)session.Document.Widgets[0]["places"]);
+        });
+    }
+
+    [Fact]
     public void Without_any_feeds_the_list_says_where_to_add_them()
     {
         Sta.Run(() =>
@@ -399,9 +425,10 @@ public sealed class PropertyPanelTests
 
     /// <summary>The panel in a window off screen, as in the editor: some controls only fill in their text once shown.</summary>
     /// <param name="options">The names a setting picking from a list the app keeps (the news feeds) is offered.</param>
-    private static (PropertyPanel Panel, Window Window) Show(LayoutSession session, IReadOnlyList<string>? options = null)
+    /// <param name="pickedOption">For a name picked that's spelt another way now, the one it stands for.</param>
+    private static (PropertyPanel Panel, Window Window) Show(LayoutSession session, IReadOnlyList<string>? options = null, Func<string, string, string?>? pickedOption = null)
     {
-        var panel = new PropertyPanel(session, () => (1920, 480), () => new MetricStore()) { Options = _ => options ?? [] };
+        var panel = new PropertyPanel(session, () => (1920, 480), () => new MetricStore()) { Options = _ => options ?? [], PickedOption = pickedOption };
         var window = new Window
         {
             Content = panel, Width = 440, Height = 3000, Left = -30000, Top = -30000,

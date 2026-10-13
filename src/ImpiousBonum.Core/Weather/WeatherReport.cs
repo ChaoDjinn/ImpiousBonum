@@ -20,6 +20,11 @@ public sealed record WeatherRequest(string Name, double Latitude, double Longitu
     public string Key => FormattableString.Invariant($"{Latitude:0.####},{Longitude:0.####},{Units}");
 }
 
+/// <summary>A place's forecast, for the weather widget to move between places.</summary>
+/// <param name="Name">The place's name as it was picked, e.g. "Paris, Île-de-France, France".</param>
+/// <param name="Report">Null until it's fetched, and again once it's too old to show.</param>
+public sealed record PlaceForecast(string Name, WeatherReport? Report);
+
 /// <summary>A place found by name, to pick from when setting the weather location.</summary>
 /// <param name="Region">The state, province or the like, e.g. England or Missouri.</param>
 public sealed record WeatherPlace(string Name, string? Region, string? Country, double Latitude, double Longitude)

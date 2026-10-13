@@ -104,7 +104,13 @@ public partial class App
         if (descriptor.Type == WeatherWidget.Descriptor.Type)
         {
             return [new(_settings.WeatherLocation is null ? "Set location…" : "Change location…",
-                () => _settings.WeatherLocation is { } place ? $"Forecasts for {place.Name}." : "No location yet, so there's no forecast.",
+                () => _settings.WeatherLocation is not { } place ? "No location yet, so there's no forecast."
+                    : _settings.WeatherPlaces.Count switch
+                    {
+                        0 => $"Forecasts for {place.Name}.",
+                        1 => $"Forecasts for {place.Name}, and 1 more place on the Weather page.",
+                        var more => $"Forecasts for {place.Name}, and {more} more places on the Weather page.",
+                    },
                 SetWeatherLocation)];
         }
         if (descriptor.Type == AgendaWidget.Descriptor.Type)
@@ -127,9 +133,27 @@ public partial class App
         };
     }
 
-    /// <summary>The names a widget setting can pick from that the app keeps: the news feeds, in the News feeds page's order.</summary>
-    internal IReadOnlyList<string> PickOptions(string source) =>
-        source == NewsWidget.FeedNames ? [.. _settings.NewsFeeds.Select(f => f.Name)] : [];
+    /// <summary>
+    /// The names a widget setting can pick from that the app keeps: the news feeds, in the News feeds page's order, or the
+    /// weather's places, the location first and then the Weather page's more places (none without a location).
+    /// </summary>
+    internal IReadOnlyList<string> PickOptions(string source) => source switch
+    {
+        NewsWidget.FeedNames => [.. _settings.NewsFeeds.Select(f => f.Name)],
+        WeatherWidget.PlaceNames => WeatherWidget.ShortNames(WeatherPlaceNames()),
+        _ => [],
+    };
+
+    /// <summary>
+    /// For a name picked from <see cref="PickOptions"/> that isn't spelt as one of them now, the one it stands for, as the
+    /// weather widget finds it: a place picked as Paris (Texas) is plain Paris once it's the only Paris, and the other way round.
+    /// </summary>
+    internal string? PickedOption(string source, string name) =>
+        source == WeatherWidget.PlaceNames ? WeatherWidget.PlaceOption(name, WeatherPlaceNames()) : null;
+
+    /// <summary>The weather's places by their full names, the location first; none without a location.</summary>
+    private List<string> WeatherPlaceNames() =>
+        _settings.WeatherLocation is { } main ? [main.Name, .. _settings.WeatherPlaces.Select(p => p.Name)] : [];
 
     /// <summary>
     /// Tray → Layout, the Screens page, pages, hotkeys and buttons: the main dashboard's layout. With the editor open, the editor moves to

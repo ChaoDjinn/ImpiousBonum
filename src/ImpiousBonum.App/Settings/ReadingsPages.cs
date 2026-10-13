@@ -1,6 +1,9 @@
 using System.Windows;
+using System.Windows.Automation;
+using System.Windows.Controls;
 using ImpiousBonum.App.Controls;
 using ImpiousBonum.App.Shell;
+using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.App.Settings;
@@ -52,12 +55,24 @@ internal sealed class SensorsPage(ISettingsHost host) : CardPage("Sensors",
     }
 }
 
-/// <summary>Weather: where the forecast is for, in which units, and air quality and pollen and severe weather warnings if wanted.</summary>
+/// <summary>
+/// Weather: where the forecast is for, more places for the widget to move between, in which units, and air quality and
+/// pollen and severe weather warnings if wanted.
+/// </summary>
 internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
     "The weather widget's forecast from Open-Meteo, with air quality and pollen and severe weather warnings if you like. Nothing is fetched until you set a location.")
 {
     private SettingsCard? _location;
     private SettingsCard? _warnings;
+
+    /// <summary>Each of the more places, with the line that shows its weather now (kept up to date by <see cref="Refresh"/>) and its handle.</summary>
+    private readonly List<(WeatherLocation Place, TextBlock Status, UIElement Handle)> _placeRows = [];
+
+    /// <summary>Why the last place picked wasn't added, shown once.</summary>
+    private string? _placeProblem;
+
+    /// <summary>Asks for another place: the weather location window, unless a test swaps it.</summary>
+    internal Func<Window?, WeatherLocation?> AskPlace { get; set; } = owner => WeatherLocationWindow.Ask(owner, null, another: true);
 
     protected override void Build()
     {
@@ -69,6 +84,9 @@ internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
                     host.SetWeatherLocation(owner);
                 Load();
             }, accent: !hasLocation)));
+        _placeRows.Clear();
+        if (hasLocation)
+            AddPlaces();
         Add(Ui.Card("", "Units", "Metric also has rain in mm, visibility in km and pressure in hPa; imperial has inches, miles and inches of mercury",
             Ui.Choice([(AppSettings.WeatherUnitsAuto, "Automatic (your region)"), (AppSettings.WeatherUnitsMetric, "Metric (°C, km/h)"), (AppSettings.WeatherUnitsImperial, "Imperial (°F, mph)")],
                 host.Settings.WeatherUnits.ToLowerInvariant(), "Units", host.SetWeatherUnits)));
@@ -95,13 +113,101 @@ internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
         AddWarnings();
         if (hasLocation)
         {
-            Add(Ui.Card("", "Turn off weather", "Forget the location and stop fetching forecasts",
+            var forget = host.Settings.WeatherPlaces.Count == 0 ? "Forget the location" : "Forget the location and the more places,";
+            Add(Ui.Card("", "Turn off weather", $"{forget} and stop fetching forecasts",
                 Ui.Button("Turn off", () =>
                 {
                     host.TurnOffWeather();
                     Load();
                 })));
         }
+    }
+
+    /// <summary>
+    /// More places for the weather widget to move between, each with its weather now: dragged into order by their handles
+    /// (or Alt+Up and Alt+Down), made the location, or removed. Add… finds another.
+    /// </summary>
+    private void AddPlaces()
+    {
+        var places = host.Settings.WeatherPlaces;
+        var list = new StackPanel();
+        foreach (var place in places)
+            list.Children.Add(PlaceRow(place));
+        DragReorder.Attach(list, (from, to) =>
+        {
+            var reordered = host.Settings.WeatherPlaces.ToList();
+            var place = reordered[from];
+            reordered.RemoveAt(from);
+            reordered.Insert(to, place);
+            // From the keyboard, focus stays with the place's handle once the list is made afresh.
+            var refocus = list.IsKeyboardFocusWithin;
+            ChangePlaces(reordered, "Weather places reordered");
+            if (refocus && to < _placeRows.Count)
+            {
+                UpdateLayout();
+                _placeRows[to].Handle.Focus();
+            }
+        }, byHandle: true);
+
+        Add(Ui.Card("", "More places",
+            "Other places for the weather widget to move between, such as a holiday destination or family abroad: choose them under Places in the editor. "
+            + "Each one's coordinates go to Open-Meteo.com every 15 minutes for its forecast, like your location's. Air quality and warnings stay with your location.",
+            Ui.Button("Add…", AddPlace), detail: places.Count == 0 ? null : list));
+        if (_placeProblem is { } problem)
+            Add(Ui.Note(problem));
+        _placeProblem = null;
+    }
+
+    /// <summary>A place: its handle, its name and weather now, and its buttons.</summary>
+    private DockPanel PlaceRow(WeatherLocation place)
+    {
+        var row = new DockPanel { Margin = new Thickness(0, 3, 0, 3) };
+        var handle = DragReorder.Handle(place.Name, new Thickness(0, 4, 12, 4));
+        DockPanel.SetDock(handle, Dock.Left);
+        row.Children.Add(handle);
+
+        var makeMain = Ui.Button("Make main", () =>
+        {
+            host.MakeMainWeatherPlace(place);
+            Load();
+        });
+        makeMain.ToolTip = "Make it your location, with the weather readings, air quality and warnings. Your location becomes one of these places instead.";
+        AutomationProperties.SetName(makeMain, $"Make {place.Name} the main place");
+        var remove = Ui.Button("Remove", () => ChangePlaces(host.Settings.WeatherPlaces.Where(p => p != place).ToList(), "Removed a weather place"));
+        AutomationProperties.SetName(remove, $"Remove {place.Name}");
+        var buttons = Ui.Row(makeMain, remove);
+        buttons.Margin = new Thickness(12, 0, 0, 0);
+        buttons.VerticalAlignment = VerticalAlignment.Center;
+        DockPanel.SetDock(buttons, Dock.Right);
+        row.Children.Add(buttons);
+
+        var status = SettingsWindow.Styled(new TextBlock { Text = host.WeatherPlaceStatus(place), TextTrimming = TextTrimming.CharacterEllipsis }, "NoteText");
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        text.Children.Add(new TextBlock { Text = place.Name, TextTrimming = TextTrimming.CharacterEllipsis });
+        text.Children.Add(status);
+        row.Children.Add(text);
+        _placeRows.Add((place, status, handle));
+        return row;
+    }
+
+    private void AddPlace()
+    {
+        if (AskPlace(Window.GetWindow(this)) is not { } place)
+            return;
+        if (host.Settings.HasWeatherPlace(place))
+        {
+            _placeProblem = $"{WeatherWidget.ShortName(place.Name)} is one of your places already.";
+            Load();
+            return;
+        }
+        ChangePlaces([.. host.Settings.WeatherPlaces, place], "Added a weather place");
+    }
+
+    /// <summary>Not which places: they say where you and your family are, and the log goes with bug reports.</summary>
+    private void ChangePlaces(IReadOnlyList<WeatherLocation> places, string log)
+    {
+        host.SetWeatherPlaces(places, log);
+        Load();
     }
 
     /// <summary>
@@ -150,6 +256,8 @@ internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
             _location.Description = host.WeatherStatus;
         if (_warnings is not null)
             _warnings.Description = host.WeatherWarningsStatus;
+        foreach (var (place, status, _) in _placeRows)
+            status.Text = host.WeatherPlaceStatus(place);
     }
 }
 

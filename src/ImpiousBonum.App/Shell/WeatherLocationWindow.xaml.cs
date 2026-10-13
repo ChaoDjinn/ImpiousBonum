@@ -21,11 +21,24 @@ public partial class WeatherLocationWindow : Window
     /// <summary>What the places listed were found for, so Enter after changing it searches again.</summary>
     private string? _searched;
 
+    /// <summary>For the Weather page's More places, which only get a forecast, rather than the location.</summary>
+    internal const string AnotherPlaceNote =
+        "What you search for goes to Open-Meteo.com, and to OpenStreetMap's place search only when Open-Meteo doesn't find it. For the forecast, "
+        + "the place's coordinates go to Open-Meteo.com every 15 minutes, like your location's. Nothing else is sent for it: air quality and warnings stay with your location.";
+
     /// <param name="find">Searches for places; <see cref="PlaceSearch"/> unless a test swaps it.</param>
-    internal WeatherLocationWindow(WeatherLocation? current, Func<string, CancellationToken, Task<PlaceSearchResults>>? find = null)
+    /// <param name="another">Finding another place for the weather widget to move between, rather than the location.</param>
+    internal WeatherLocationWindow(WeatherLocation? current, Func<string, CancellationToken, Task<PlaceSearchResults>>? find = null, bool another = false)
     {
         InitializeComponent();
         _find = find ?? PlaceSearch.SearchAsync;
+        if (another)
+        {
+            Title = "Add a place";
+            Question.Text = "Where else should there be a forecast for?";
+            OkButton.Content = "Add this place";
+            PrivacyNote.Text = AnotherPlaceNote;
+        }
         var credit = new Hyperlink(new Run(OpenStreetMap.Attribution)) { NavigateUri = new Uri(OpenStreetMap.CopyrightPage) };
         credit.Click += (_, _) => Ui.Open(OpenStreetMap.CopyrightPage);
         Attribution.Inlines.Add(credit);
@@ -38,10 +51,11 @@ public partial class WeatherLocationWindow : Window
         Closed += (_, _) => _search?.Cancel();
     }
 
+    /// <param name="another">Another place for the weather widget to move between (the Weather page's More places), not the location.</param>
     /// <returns>The place picked, or null if cancelled.</returns>
-    public static WeatherLocation? Ask(Window? owner, WeatherLocation? current)
+    public static WeatherLocation? Ask(Window? owner, WeatherLocation? current, bool another = false)
     {
-        var window = new WeatherLocationWindow(current);
+        var window = new WeatherLocationWindow(current, another: another);
         if (owner is not null)
         {
             window.Owner = owner;

@@ -8,7 +8,8 @@ namespace ImpiousBonum.Core.Providers;
 /// The weather where you've said you are, from Open-Meteo, every 15 minutes: conditions now and today's range as metrics,
 /// and the whole forecast (a <see cref="WeatherReport"/>) as an attachment for the weather widget. Nothing is fetched
 /// until a location is set, and nothing has a reading after that until the first forecast arrives. The sun's height is
-/// worked out here on every sample rather than fetched, so it keeps up between forecasts.
+/// worked out here on every sample rather than fetched, so it keeps up between forecasts. Other places the user has
+/// saved get their forecasts too, for the widget to move between (see <see cref="Places"/>).
 /// </summary>
 /// <param name="request">Where and in which units, or null when no location is set. Read on every sample, so changes apply quickly.</param>
 /// <param name="fetch">Gets a forecast; Open-Meteo unless a test swaps it.</param>
@@ -17,12 +18,18 @@ namespace ImpiousBonum.Core.Providers;
 /// loop of their own would wake every 30 seconds whether they're on or not.
 /// </param>
 /// <param name="warnings">Severe weather warnings for the same place, sampled on this loop too, for the same reason.</param>
+/// <param name="places">
+/// More places besides the main one, in their order: none unless the user saves some. Their forecasts come on this loop
+/// and the same schedule as the main place's, but only as the <see cref="Places"/> attachment: the metrics, air quality
+/// and warnings are the main place's alone. They're only fetched along with a main place.
+/// </param>
 public sealed class WeatherProvider(
     Func<WeatherRequest?> request,
     Func<WeatherRequest, CancellationToken, Task<WeatherReport>>? fetch = null,
     TimeProvider? time = null,
     AirQualityProvider? airQuality = null,
-    WeatherWarningsProvider? warnings = null) : IMetricProvider
+    WeatherWarningsProvider? warnings = null,
+    Func<IReadOnlyList<WeatherRequest>>? places = null) : IMetricProvider
 {
     public const string Temperature = "weather.temp";
     public const string FeelsLike = "weather.feels";
@@ -59,6 +66,13 @@ public sealed class WeatherProvider(
     /// <summary>The latest <see cref="WeatherReport"/>, as a <see cref="MetricStore"/> attachment.</summary>
     public const string Forecast = "weather.forecast";
 
+    /// <summary>
+    /// While there are more places than the main one, every place's forecast as a <see cref="MetricStore"/> attachment:
+    /// an <c>IReadOnlyList&lt;PlaceForecast&gt;</c> of the main place (the same report as <see cref="Forecast"/>), then
+    /// the others in their order. None without more places.
+    /// </summary>
+    public const string Places = "weather.places";
+
     public static readonly TimeSpan RefreshEvery = TimeSpan.FromMinutes(15);
 
     /// <summary>After a failed fetch (offline, say), how long until trying again.</summary>
@@ -74,6 +88,12 @@ public sealed class WeatherProvider(
     private DateTimeOffset _fetched;
     private DateTimeOffset _nextTry;
     private WeatherUnits? _registeredUnits;
+
+    /// <summary>The more places' forecasts and schedules, by <see cref="WeatherRequest.Key"/>; empty without any.</summary>
+    private Dictionary<string, PlaceState> _places = [];
+
+    /// <summary>What <see cref="Places"/> holds, so it's only replaced when something in it changes.</summary>
+    private List<PlaceForecast>? _published;
 
     public TimeSpan Interval => TimeSpan.FromSeconds(30);
 
@@ -131,23 +151,27 @@ public sealed class WeatherProvider(
 
     public async ValueTask SampleAsync(MetricStore store, CancellationToken cancellationToken)
     {
-        await SampleWeatherAsync(store, cancellationToken).ConfigureAwait(false);
+        var wanted = request();
+        var fetched = await SampleWeatherAsync(store, wanted, cancellationToken).ConfigureAwait(false);
+        // Without a main place the weather is off, so the others are too.
+        var others = wanted is null || places is null ? [] : places();
+        await SamplePlacesAsync(store, wanted, others, fetched, cancellationToken).ConfigureAwait(false);
         if (airQuality is not null)
             await airQuality.SampleAsync(store, cancellationToken).ConfigureAwait(false);
         if (warnings is not null)
             await warnings.SampleAsync(store, cancellationToken).ConfigureAwait(false);
     }
 
-    private async ValueTask SampleWeatherAsync(MetricStore store, CancellationToken cancellationToken)
+    /// <returns>Whether it asked for a forecast, so the other places can wait for the next sample.</returns>
+    private async ValueTask<bool> SampleWeatherAsync(MetricStore store, WeatherRequest? wanted, CancellationToken cancellationToken)
     {
         var now = _time.GetUtcNow();
-        var wanted = request();
         if (wanted is null)
         {
             _key = null;
             _report = null;
             Publish(store, null, null, now);
-            return;
+            return false;
         }
 
         // A new place or units: fetch now, and stop showing the old place's weather meanwhile.
@@ -158,7 +182,8 @@ public sealed class WeatherProvider(
             _nextTry = now;
         }
 
-        if (now >= _nextTry)
+        var due = now >= _nextTry;
+        if (due)
         {
             try
             {
@@ -166,7 +191,7 @@ public sealed class WeatherProvider(
                 _fetched = now;
                 _nextTry = now + RefreshEvery;
             }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or FormatException or KeyNotFoundException or InvalidOperationException)
+            catch (Exception ex) when (IsFetchFailure(ex))
             {
                 if (cancellationToken.IsCancellationRequested)
                     throw;
@@ -177,7 +202,75 @@ public sealed class WeatherProvider(
         if (_report is not null && now - _fetched > KeepFor)
             _report = null;
         Publish(store, _report, wanted, now);
+        return due;
     }
+
+    /// <summary>
+    /// Fetches the other places' forecasts when they're due, on the main place's schedule, and publishes them all as
+    /// <see cref="Places"/>. At most one is fetched a sample, and none in a sample the main place's was, so a few places
+    /// don't all go at once. Without other places there's nothing to do at all.
+    /// </summary>
+    /// <param name="main">The main place, which comes first in the list.</param>
+    /// <param name="wanted">The other places, in their order.</param>
+    /// <param name="busy">Whether the main place's forecast was asked for this sample.</param>
+    private async ValueTask SamplePlacesAsync(MetricStore store, WeatherRequest? main, IReadOnlyList<WeatherRequest> wanted, bool busy, CancellationToken cancellationToken)
+    {
+        if (main is null || wanted.Count == 0)
+        {
+            // None, or none any more: their forecasts go, and after that there's nothing to do.
+            if (_published is not null)
+            {
+                _places = [];
+                _published = null;
+                store.SetAttachment(Places, null);
+            }
+            return;
+        }
+
+        var now = _time.GetUtcNow();
+        // Places still there keep their forecasts and schedules, in their new order, and a new one is due now. A place
+        // removed is forgotten, so it's never fetched again.
+        var places = new Dictionary<string, PlaceState>();
+        foreach (var place in wanted)
+            places.TryAdd(place.Key, _places.GetValueOrDefault(place.Key) ?? new PlaceState { NextTry = now });
+        _places = places;
+
+        // The one that's waited longest, or the first in the list.
+        var next = busy ? null : wanted.Where(p => now >= places[p.Key].NextTry).MinBy(p => places[p.Key].NextTry);
+        if (next is not null)
+        {
+            var state = places[next.Key];
+            try
+            {
+                state.Report = await _fetch(next, cancellationToken).ConfigureAwait(false);
+                state.Fetched = now;
+                state.NextTry = now + RefreshEvery;
+            }
+            catch (Exception ex) when (IsFetchFailure(ex))
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                state.NextTry = now + RetryAfter;
+            }
+        }
+
+        foreach (var state in places.Values)
+        {
+            if (state.Report is not null && now - state.Fetched > KeepFor)
+                state.Report = null;
+        }
+
+        // Replaced only when a place or a forecast changes, so the widget can tell nothing has.
+        List<PlaceForecast> forecasts = [new(main.Name, _report), .. wanted.Select(p => new PlaceForecast(p.Name, places[p.Key].Report))];
+        if (_published is not null && forecasts.SequenceEqual(_published))
+            return;
+        _published = forecasts;
+        store.SetAttachment(Places, forecasts);
+    }
+
+    /// <summary>What a forecast that couldn't be fetched (offline, say, or a garbled answer) throws.</summary>
+    private static bool IsFetchFailure(Exception ex) =>
+        ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or FormatException or KeyNotFoundException or InvalidOperationException;
 
     /// <param name="place">Where the forecast is for: its name, and where the sun is seen from.</param>
     /// <param name="now">For the readings that move on between forecasts: the sun, and which hour it is at the place.</param>
@@ -226,5 +319,15 @@ public sealed class WeatherProvider(
 
     public void Dispose()
     {
+    }
+
+    /// <summary>One of the other places: its last forecast, when that was fetched, and when to try next.</summary>
+    private sealed class PlaceState
+    {
+        public WeatherReport? Report { get; set; }
+
+        public DateTimeOffset Fetched { get; set; }
+
+        public DateTimeOffset NextTry { get; set; }
     }
 }

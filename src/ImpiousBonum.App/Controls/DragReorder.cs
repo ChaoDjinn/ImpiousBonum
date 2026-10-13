@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -26,6 +27,38 @@ public sealed class DragReorder
     public static bool GetIsHandle(DependencyObject element) => (bool)element.GetValue(IsHandleProperty);
 
     public static void SetIsHandle(DependencyObject element, bool value) => element.SetValue(IsHandleProperty, value);
+
+    /// <summary>
+    /// A grip for an entry to be dragged by, at the left of it, marked <see cref="IsHandleProperty"/>. It takes focus too
+    /// (Tab, or a click), so Alt+Up and Alt+Down can move the entry from the keyboard.
+    /// </summary>
+    /// <param name="name">What the entry is, for screen readers, which hear "Reorder" and the name.</param>
+    /// <param name="padding">Room around the grip; on the right, between it and the rest of the entry.</param>
+    public static Border Handle(string name, Thickness padding)
+    {
+        var glyph = new TextBlock { Text = "\uE76F" };
+        glyph.SetResourceReference(FrameworkElement.StyleProperty, "Glyph");
+        glyph.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
+        var handle = new Border
+        {
+            Child = glyph,
+            // Transparent rather than none, so the whole grip catches the mouse and not just the glyph's lines.
+            Background = Brushes.Transparent,
+            Padding = padding,
+            Cursor = Cursors.SizeNS,
+            Focusable = true,
+            ToolTip = "Drag to reorder, or press Alt+Up/Alt+Down",
+        };
+        AutomationProperties.SetName(handle, $"Reorder {name}");
+        SetIsHandle(handle, true);
+        handle.MouseLeftButtonDown += (_, e) =>
+        {
+            // Handled, or the scroll viewer around the list takes focus for itself next. Dragging listens before this.
+            handle.Focus();
+            e.Handled = true;
+        };
+        return handle;
+    }
 
     private static readonly DependencyProperty InstanceProperty = DependencyProperty.RegisterAttached(
         "Instance", typeof(DragReorder), typeof(DragReorder));

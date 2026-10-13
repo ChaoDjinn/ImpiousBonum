@@ -22,6 +22,7 @@ public sealed class AppSettings
     private List<CalendarLink> _calendars = [];
     private List<NewsFeed> _newsFeeds = [];
     private List<ExtraDashboard> _extraDashboards = [];
+    private List<WeatherLocation> _weatherPlaces = [];
     private UsbScreenSettings _usbScreen = UsbScreenSettings.Default;
     private LogSettings _logging = LogSettings.Default;
 
@@ -226,6 +227,66 @@ public sealed class AppSettings
         _ => RegionInfo.CurrentRegion.IsMetric ? Core.Weather.WeatherUnits.Metric : Core.Weather.WeatherUnits.Imperial,
     };
 
+    /// <summary>
+    /// More places for the weather widget to move between (the Weather page's More places), besides
+    /// <see cref="WeatherLocation"/>, which stays the main one: only it has the weather readings, air quality and
+    /// warnings. None by default. Replaced as a whole when edited, never changed in place, since the sampler reads it
+    /// from another thread.
+    /// </summary>
+    public List<WeatherLocation> WeatherPlaces
+    {
+        get => _weatherPlaces;
+        set => _weatherPlaces = value ?? [];
+    }
+
+    /// <summary>What the weather provider should fetch for <see cref="WeatherPlaces"/>, in their order: none without a location, as the weather is off.</summary>
+    public IReadOnlyList<WeatherRequest> WeatherPlaceRequests()
+    {
+        var places = WeatherPlaces;
+        if (WeatherLocation is null || places.Count == 0)
+            return [];
+        var units = ResolveWeatherUnits(WeatherUnits);
+        return [.. places.Select(p => new WeatherRequest(p.Name, p.Latitude, p.Longitude, units))];
+    }
+
+    /// <summary>
+    /// Makes <paramref name="place"/>, one of <see cref="WeatherPlaces"/>, the location, and puts the location where it
+    /// was among them. As with any new location, the Met Office area goes back to automatic.
+    /// </summary>
+    public void MakeMainWeatherPlace(WeatherLocation place)
+    {
+        var index = WeatherPlaces.IndexOf(place);
+        if (index < 0 || WeatherLocation is not { } main)
+            return;
+        var places = WeatherPlaces.ToList();
+        places[index] = main;
+        // The location first: a sample in between then fetches only the new location, as it would anyway, rather than the old one as a new place too.
+        WeatherLocation = place;
+        WeatherPlaces = places;
+        MetOfficeArea = MetOfficeAreaAuto;
+    }
+
+    /// <summary>
+    /// A new location, from Set location… or Change location…. The Met Office area goes back to automatic, as one chosen
+    /// for the last place is unlikely to suit this one, and if it's one of <see cref="WeatherPlaces"/> (arriving on
+    /// holiday, say), it comes out of them, so it isn't listed or fetched twice.
+    /// </summary>
+    public void SetWeatherLocation(WeatherLocation place)
+    {
+        WeatherLocation = place;
+        MetOfficeArea = MetOfficeAreaAuto;
+        if (WeatherPlaces.Any(p => SamePlace(p, place)))
+            WeatherPlaces = [.. WeatherPlaces.Where(p => !SamePlace(p, place))];
+    }
+
+    /// <summary>Whether <paramref name="place"/> is the location or one of <see cref="WeatherPlaces"/> already, by where it is rather than its name.</summary>
+    public bool HasWeatherPlace(WeatherLocation place) =>
+        WeatherPlaces.Prepend(WeatherLocation).Any(p => p is not null && SamePlace(p, place));
+
+    /// <summary>Close enough to be the same forecast: the coordinates sent are rounded to four places.</summary>
+    private static bool SamePlace(WeatherLocation a, WeatherLocation b) =>
+        Math.Round(a.Latitude, 4) == Math.Round(b.Latitude, 4) && Math.Round(a.Longitude, 4) == Math.Round(b.Longitude, 4);
+
     /// <summary>Air quality and pollen for the weather's location (the Weather page). Off by default: nothing is fetched until it's on.</summary>
     public bool AirQuality { get; set; }
 
@@ -295,6 +356,7 @@ public sealed class AppSettings
                 settings.Schedule.RemoveAll(rule => rule is null || !rule.IsUsable);
                 settings.CustomData.RemoveAll(source => source is null);
                 settings.Alerts.RemoveAll(rule => rule is null || !rule.IsUsable);
+                settings.WeatherPlaces.RemoveAll(place => place?.Name is null);
                 return settings;
             }
         }

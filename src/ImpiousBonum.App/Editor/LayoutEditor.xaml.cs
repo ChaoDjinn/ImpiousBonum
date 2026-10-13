@@ -156,6 +156,17 @@ public partial class LayoutEditor : UserControl
         }
     }
 
+    /// <summary>For a name picked from one of those lists that's spelt another way now, the one it stands for (see <see cref="PropertyPanel.PickedOption"/>).</summary>
+    public Func<string, string, string?>? PickedOption
+    {
+        get => _properties.PickedOption;
+        set
+        {
+            _properties.PickedOption = value;
+            _properties.Rebuild();
+        }
+    }
+
     /// <summary>A widget was added from the Add menu.</summary>
     public event EventHandler<WidgetDescriptor>? WidgetAdded;
 
