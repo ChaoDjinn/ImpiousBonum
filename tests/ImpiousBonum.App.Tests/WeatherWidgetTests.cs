@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
@@ -5,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using ImpiousBonum.App.Layout;
+using ImpiousBonum.App.Settings;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
@@ -199,6 +201,78 @@ public sealed class WeatherWidgetTests
         Assert.Equal(WeatherUnits.Metric, AppSettings.ResolveWeatherUnits(AppSettings.WeatherUnitsMetric));
         Assert.Null(new AppSettings().WeatherRequest());
     }
+
+    [Fact]
+    public void Air_quality_is_off_until_turned_on_and_needs_a_location()
+    {
+        var settings = new AppSettings();
+        Assert.False(settings.AirQuality);
+        Assert.Equal(AppSettings.AirQualityScaleAuto, settings.AirQualityScale);
+        Assert.Null(settings.AirQualityRequest());
+
+        // A location alone isn't enough, and nor is turning it on without one.
+        settings.WeatherLocation = new WeatherLocation("Leeds, England, United Kingdom", 53.8, -1.55);
+        Assert.Null(settings.AirQualityRequest());
+        Assert.Null(new AppSettings { AirQuality = true }.AirQualityRequest());
+
+        settings.AirQuality = true;
+        Assert.Equal(new AirQualityRequest(53.8, -1.55, AqiScale.Automatic), settings.AirQualityRequest());
+    }
+
+    [Fact]
+    public void Air_quality_is_saved_with_its_scale()
+    {
+        var settings = new AppSettings
+        {
+            WeatherLocation = new WeatherLocation("Leeds, England, United Kingdom", 53.8, -1.55), AirQuality = true, AirQualityScale = AppSettings.AirQualityScaleUs,
+        };
+        var json = JsonSerializer.Serialize(settings, JsonDefaults.Options);
+        var restored = JsonSerializer.Deserialize<AppSettings>(json, JsonDefaults.Options)!;
+
+        Assert.Contains("\"airQuality\": true", json);
+        Assert.Contains("\"airQualityScale\": \"us\"", json);
+        Assert.Equal(new AirQualityRequest(53.8, -1.55, AqiScale.Us), restored.AirQualityRequest());
+        // Settings from before air quality was there leave it off.
+        Assert.False(JsonSerializer.Deserialize<AppSettings>("""{ "weatherLocation": { "name": "Leeds", "latitude": 53.8, "longitude": -1.55 } }""", JsonDefaults.Options)!.AirQuality);
+
+        Assert.Equal(AqiScale.European, AppSettings.ResolveAirQualityScale("European"));
+        Assert.Equal(AqiScale.Automatic, AppSettings.ResolveAirQualityScale("something else"));
+        Assert.Equal(AqiScale.Automatic, AppSettings.ResolveAirQualityScale(null));
+    }
+
+    [Fact]
+    public void The_weather_page_credits_cams_only_while_air_quality_is_on()
+    {
+        Sta.Run(() =>
+        {
+            var settings = new AppSettings { WeatherLocation = new WeatherLocation("Leeds, England, United Kingdom", 53.8, -1.55) };
+            var host = DispatchProxy.Create<ISettingsHost, SettingsOnlyHost>();
+            ((SettingsOnlyHost)(object)host).Settings = settings;
+            var page = new WeatherPage(host);
+
+            page.Load();
+            Assert.DoesNotContain(LogicalTexts(page), text => text.Contains("CAMS", StringComparison.Ordinal));
+
+            settings.AirQuality = true;
+            page.Load();
+            Assert.Contains(OpenMeteo.AirQualityAttribution + ".", LogicalTexts(page));
+        });
+    }
+
+    /// <summary>A settings host with just the settings: everything else answers with nothing.</summary>
+    public class SettingsOnlyHost : DispatchProxy
+    {
+        public AppSettings Settings { get; set; } = new();
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>
+            targetMethod?.Name == "get_Settings" ? Settings
+            : targetMethod?.ReturnType is { IsValueType: true } type && type != typeof(void) ? Activator.CreateInstance(type)
+            : null;
+    }
+
+    /// <summary>Text in a page that hasn't been shown, so has no visual tree yet.</summary>
+    private static List<string> LogicalTexts(DependencyObject root) =>
+        [.. LogicalTreeHelper.GetChildren(root).OfType<DependencyObject>().SelectMany(child => child is TextBlock text ? [text.Text] : LogicalTexts(child))];
 
     private static List<string> Texts(DependencyObject root) =>
         Descendants<TextBlock>(root).Select(t => string.Concat(t.Inlines.OfType<System.Windows.Documents.Run>().Select(r => r.Text)) is { Length: > 0 } runs ? runs : t.Text).ToList();

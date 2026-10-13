@@ -12,10 +12,15 @@ namespace ImpiousBonum.Core.Providers;
 /// </summary>
 /// <param name="request">Where and in which units, or null when no location is set. Read on every sample, so changes apply quickly.</param>
 /// <param name="fetch">Gets a forecast; Open-Meteo unless a test swaps it.</param>
+/// <param name="airQuality">
+/// Air quality and pollen for the same place, sampled after the weather on this loop: they're off by default, and a
+/// loop of their own would wake every 30 seconds whether they're on or not.
+/// </param>
 public sealed class WeatherProvider(
     Func<WeatherRequest?> request,
     Func<WeatherRequest, CancellationToken, Task<WeatherReport>>? fetch = null,
-    TimeProvider? time = null) : IMetricProvider
+    TimeProvider? time = null,
+    AirQualityProvider? airQuality = null) : IMetricProvider
 {
     public const string Temperature = "weather.temp";
     public const string FeelsLike = "weather.feels";
@@ -70,7 +75,11 @@ public sealed class WeatherProvider(
 
     public TimeSpan Interval => TimeSpan.FromSeconds(30);
 
-    public void Initialize(MetricStore store) => Register(store, WeatherUnits.Metric);
+    public void Initialize(MetricStore store)
+    {
+        Register(store, WeatherUnits.Metric);
+        airQuality?.Initialize(store);
+    }
 
     private void Register(MetricStore store, WeatherUnits units)
     {
@@ -118,6 +127,13 @@ public sealed class WeatherProvider(
     }
 
     public async ValueTask SampleAsync(MetricStore store, CancellationToken cancellationToken)
+    {
+        await SampleWeatherAsync(store, cancellationToken).ConfigureAwait(false);
+        if (airQuality is not null)
+            await airQuality.SampleAsync(store, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async ValueTask SampleWeatherAsync(MetricStore store, CancellationToken cancellationToken)
     {
         var now = _time.GetUtcNow();
         var wanted = request();
