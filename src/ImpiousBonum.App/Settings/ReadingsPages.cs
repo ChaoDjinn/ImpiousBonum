@@ -87,8 +87,9 @@ internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
                 "The European index goes from Good to Extremely poor (0 to 100 and over), the US index from Good to Hazardous (0 to 500). Automatic uses the European one in Europe.",
                 Ui.Choice([(AppSettings.AirQualityScaleAuto, "Automatic (by location)"), (AppSettings.AirQualityScaleEuropean, "European"), (AppSettings.AirQualityScaleUs, "US")],
                     host.Settings.AirQualityScale.ToLowerInvariant(), "Air quality index", host.SetAirQualityScale)));
+            // CAMS asks to be credited where its data is used, so only while it is.
+            Add(Ui.Note(OpenMeteo.AirQualityAttribution + "."));
         }
-        Add(Ui.Note(OpenMeteo.AirQualityAttribution + "."));
         if (hasLocation)
         {
             Add(Ui.Card("", "Turn off weather", "Forget the location and stop fetching forecasts",

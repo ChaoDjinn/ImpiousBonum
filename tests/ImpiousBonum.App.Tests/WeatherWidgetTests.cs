@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
@@ -5,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using ImpiousBonum.App.Layout;
+using ImpiousBonum.App.Settings;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
@@ -237,6 +239,40 @@ public sealed class WeatherWidgetTests
         Assert.Equal(AqiScale.Automatic, AppSettings.ResolveAirQualityScale("something else"));
         Assert.Equal(AqiScale.Automatic, AppSettings.ResolveAirQualityScale(null));
     }
+
+    [Fact]
+    public void The_weather_page_credits_cams_only_while_air_quality_is_on()
+    {
+        Sta.Run(() =>
+        {
+            var settings = new AppSettings { WeatherLocation = new WeatherLocation("Leeds, England, United Kingdom", 53.8, -1.55) };
+            var host = DispatchProxy.Create<ISettingsHost, SettingsOnlyHost>();
+            ((SettingsOnlyHost)(object)host).Settings = settings;
+            var page = new WeatherPage(host);
+
+            page.Load();
+            Assert.DoesNotContain(LogicalTexts(page), text => text.Contains("CAMS", StringComparison.Ordinal));
+
+            settings.AirQuality = true;
+            page.Load();
+            Assert.Contains(OpenMeteo.AirQualityAttribution + ".", LogicalTexts(page));
+        });
+    }
+
+    /// <summary>A settings host with just the settings: everything else answers with nothing.</summary>
+    public class SettingsOnlyHost : DispatchProxy
+    {
+        public AppSettings Settings { get; set; } = new();
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>
+            targetMethod?.Name == "get_Settings" ? Settings
+            : targetMethod?.ReturnType is { IsValueType: true } type && type != typeof(void) ? Activator.CreateInstance(type)
+            : null;
+    }
+
+    /// <summary>Text in a page that hasn't been shown, so has no visual tree yet.</summary>
+    private static List<string> LogicalTexts(DependencyObject root) =>
+        [.. LogicalTreeHelper.GetChildren(root).OfType<DependencyObject>().SelectMany(child => child is TextBlock text ? [text.Text] : LogicalTexts(child))];
 
     private static List<string> Texts(DependencyObject root) =>
         Descendants<TextBlock>(root).Select(t => string.Concat(t.Inlines.OfType<System.Windows.Documents.Run>().Select(r => r.Text)) is { Length: > 0 } runs ? runs : t.Text).ToList();
