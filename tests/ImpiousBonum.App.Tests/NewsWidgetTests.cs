@@ -91,8 +91,11 @@ public sealed class NewsWidgetTests
             {
                 var widget = WidgetFactory.Create(new JsonObject { ["type"] = "news", ["style"] = style, ["lines"] = 2 }, Theme.From(new ThemeSettings()));
                 widget.Refresh(store, Ten.UtcDateTime);
-                widget.Refresh(store, Ten.UtcDateTime);
+                var first = ((StackPanel)widget.Children[0]).Children[0];
+                widget.Refresh(store, Ten.UtcDateTime.AddSeconds(1));
                 Assert.Equal(rows, ((StackPanel)widget.Children[0]).Children.Count);
+                // Nothing on show changed, so nothing was built afresh.
+                Assert.Same(first, ((StackPanel)widget.Children[0]).Children[0]);
                 widget.Refresh(new MetricStore(), Ten.UtcDateTime);
                 Assert.Empty(((StackPanel)widget.Children[0]).Children);
             }
