@@ -266,6 +266,26 @@ public sealed class WeatherWidgetTests
     private static readonly WeatherWarning Red = Yellow with { Id = "wind", Headline = "Red warning of wind affecting Wales", Level = WarningLevel.Extreme, LevelText = "Red", Link = "https://example.com/wind" };
 
     [Fact]
+    public void A_forecast_only_widget_leaves_the_warning_to_the_one_with_the_weather_now()
+    {
+        Sta.Run(() =>
+        {
+            var store = new MetricStore();
+            store.SetAttachment(WeatherProvider.Forecast, Report());
+            store.SetAttachment(WeatherWarningsProvider.Warnings, (IReadOnlyList<WeatherWarning>)[Yellow]);
+            var theme = Theme.From(new ThemeSettings());
+
+            var now = WidgetFactory.Create(new JsonObject { ["type"] = "weather", ["forecast"] = "none" }, theme);
+            now.Refresh(store, DateTime.Now);
+            Assert.Equal(Visibility.Visible, Descendants<TapTarget>(now).Single().Visibility);
+
+            var forecast = WidgetFactory.Create(new JsonObject { ["type"] = "weather", ["showCurrent"] = false }, theme);
+            forecast.Refresh(store, DateTime.Now);
+            Assert.Empty(Descendants<TapTarget>(forecast));
+        });
+    }
+
+    [Fact]
     public void Warnings_show_along_the_bottom_and_take_no_room_without_any()
     {
         Sta.Run(() =>
@@ -317,10 +337,10 @@ public sealed class WeatherWidgetTests
             store.SetAttachment(WeatherWarningsProvider.Warnings, (IReadOnlyList<WeatherWarning>)[Yellow]);
             (Rect Strip, Rect Hours) Arranged(double height)
             {
-                // The hours ahead, as in the README's picture: by themselves they fill a widget 120 high.
+                // The weather now beside the hours ahead, as in the README's picture: they fill a widget 120 high.
                 var widget = WidgetFactory.Create(new JsonObject
                 {
-                    ["type"] = "weather", ["showCurrent"] = false, ["forecast"] = "hours", ["forecastSize"] = 22, ["rainFrom"] = 0,
+                    ["type"] = "weather", ["fontSize"] = 40, ["forecast"] = "hours", ["forecastSize"] = 22, ["rainFrom"] = 0,
                 }, Theme.From(new ThemeSettings()));
                 widget.Refresh(store, DateTime.Now);
                 widget.Measure(new Size(760, height));

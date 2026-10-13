@@ -7,7 +7,7 @@
   "widgets": [
     { "type": "clock", "x": 60, "y": 60, "width": 1060, "height": 500, "timeSize": 300, "dateSize": 52 },
     { "type": "weather", "x": 1140, "y": 90, "width": 740, "height": 240, "fontSize": 120, "forecast": "none", "iconStyle": "colour" },
-    { "type": "weather", "x": 1140, "y": 360, "width": 740, "height": 230, "showCurrent": false, "count": 4, "forecastSize": 34, "iconStyle": "colour", "showWarnings": false },
+    { "type": "weather", "x": 1140, "y": 360, "width": 740, "height": 230, "showCurrent": false, "count": 4, "forecastSize": 34, "iconStyle": "colour" },
     { "type": "agenda", "x": 80, "y": 620, "width": 1020, "height": 400, "days": 2, "count": 5, "fontSize": 40, "headerSize": 28, "spacing": 12 },
     { "type": "media", "x": 1140, "y": 760, "width": 740, "height": 200, "fontSize": 40, "controlSize": 56 }
   ]

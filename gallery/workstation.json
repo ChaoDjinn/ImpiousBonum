@@ -9,7 +9,7 @@
     { "type": "clock", "x": 40, "y": 40, "width": 800, "height": 426, "timeSize": 190, "dateSize": 34 },
     { "type": "agenda", "x": 880, "y": 40, "width": 800, "height": 426, "days": 2, "count": 6, "fontSize": 28, "headerSize": 20, "spacing": 8 },
     { "type": "weather", "x": 1720, "y": 40, "width": 800, "height": 200, "fontSize": 96, "forecast": "none" },
-    { "type": "weather", "x": 1720, "y": 250, "width": 800, "height": 216, "showCurrent": false, "count": 5, "forecastSize": 26, "showWarnings": false },
+    { "type": "weather", "x": 1720, "y": 250, "width": 800, "height": 216, "showCurrent": false, "count": 5, "forecastSize": 26 },
 
     { "type": "timer", "x": 40, "y": 506, "width": 800, "height": 426, "label": "Focus", "duration": "25:00", "fontSize": 150, "labelSize": 32 },
     { "type": "gauge", "x": 880, "y": 506, "width": 253, "height": 426, "label": "CPU", "metric": "cpu.load", "fontSize": 52 },

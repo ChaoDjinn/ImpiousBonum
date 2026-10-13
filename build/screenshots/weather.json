@@ -7,6 +7,6 @@
   "widgets": [
     { "type": "weather", "x": 20, "y": 20, "width": 760, "height": 220, "fontSize": 88, "forecastSize": 24, "count": 4, "iconStyle": "colour" },
     { "type": "weather", "x": 20, "y": 260, "width": 760, "height": 120, "showCurrent": false, "forecast": "hours", "hourStep": 3,
-      "count": 7, "forecastSize": 22, "iconStyle": "colour", "showWarnings": false }
+      "count": 7, "forecastSize": 22, "iconStyle": "colour" }
   ]
 }

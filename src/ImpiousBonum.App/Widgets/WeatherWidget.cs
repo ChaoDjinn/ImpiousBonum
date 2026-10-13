@@ -33,6 +33,7 @@ public sealed class WeatherWidget : Widget
             Setting.Toggle("showLocation", "Location", false, group: Setting.Content),
             Setting.Toggle("showWarnings", "Warnings", true, group: Setting.Content,
                 help: "With severe weather warnings on (the Weather page), the most serious one along the bottom while there are any: in the warning colour, or the critical colour for red, severe and extreme ones. "
+                    + "Only with Weather now, so a forecast-only widget beside it doesn't show it again. "
                     + "Its size follows Forecast size, or Temperature size without a forecast. Tap it to read the warning (not in the tablet view)."),
             Setting.Number("fontSize", "Temperature size", 80, 6, 400),
             Setting.Number("forecastSize", "Forecast size", 22, 6, 200),
@@ -110,7 +111,8 @@ public sealed class WeatherWidget : Widget
             Children.Add(_ahead);
         }
 
-        if (settings.Bool("showWarnings"))
+        // Only with the weather now: a forecast-only widget is usually the second of two, and a warning should show once.
+        if (settings.Bool("showWarnings") && _showCurrent)
         {
             // Under the rest, and only there while there's a warning (see PlaceWarning).
             _warning = new TapTarget { Background = Brushes.Transparent, Visibility = Visibility.Collapsed, Margin = new Thickness(0, WarningSize / 3, 0, 0) };
