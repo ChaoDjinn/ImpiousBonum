@@ -37,6 +37,7 @@ public sealed class WeatherWidget : Widget
                     + "Its size follows Forecast size, or Temperature size without a forecast. Tap it to read the warning (not in the tablet view)."),
             Setting.Number("fontSize", "Temperature size", 80, 6, 400),
             Setting.Number("forecastSize", "Forecast size", 22, 6, 200),
+            Setting.ShrinkToFit(),
             Setting.Choice("iconStyle", "Icons", "outline", ["outline", "colour"], group: Setting.Appearance,
                 help: "outline draws them in the icon colour below; colour in their own: a yellow sun, white clouds, blue rain, white lightning."),
             Setting.Color("iconColor", "Icon colour", "accent", help: "For outline icons."),
@@ -62,6 +63,9 @@ public sealed class WeatherWidget : Widget
     private readonly StackPanel? _details;
     private readonly UniformGrid? _ahead;
     private readonly TapTarget? _warning;
+
+    /// <summary>The weather now and the forecast, shrinking together, when shrink to fit is on.</summary>
+    private readonly ShrinkToFit? _fitted;
     private WeatherReport? _shown;
     private bool _shownEmpty;
 
@@ -110,11 +114,14 @@ public sealed class WeatherWidget : Widget
                 SetColumnSpan(_ahead, 2);
             Children.Add(_ahead);
         }
+        // A wide font or a big temperature makes the weather now and the forecast smaller together, rather than squeezing the forecast.
+        FitContent(FitDirection.Both, VerticalAlignment.Center);
+        _fitted = Children.OfType<ShrinkToFit>().FirstOrDefault();
 
         // Only with the weather now: a forecast-only widget is usually the second of two, and a warning should show once.
         if (settings.Bool("showWarnings") && _showCurrent)
         {
-            // Under the rest, and only there while there's a warning (see PlaceWarning).
+            // Under the rest, outside its fit so it keeps its size, and only there while there's a warning (see PlaceWarning).
             _warning = new TapTarget { Background = Brushes.Transparent, Visibility = Visibility.Collapsed, Margin = new Thickness(0, WarningSize / 3, 0, 0) };
             _warning.Tapped += (_, _) =>
             {
@@ -146,16 +153,22 @@ public sealed class WeatherWidget : Widget
     }
 
     /// <summary>
-    /// When the weather and the warning are taller than the widget, the weather gives way (its top and bottom are cut
-    /// off) rather than the warning going off the bottom, where it couldn't be seen at all.
+    /// When the weather and the warning are taller than the widget, the weather gives way rather than the warning going
+    /// off the bottom, where it couldn't be seen at all: with shrink to fit it gets smaller to fit above the warning,
+    /// without it its top and bottom are cut off.
     /// </summary>
     protected override Size MeasureOverride(Size constraint)
     {
+        var room = double.PositiveInfinity;
         if (_warning is { Visibility: Visibility.Visible } && RowDefinitions.Count == 4)
         {
             _warning.Measure(new Size(constraint.Width, double.PositiveInfinity));
-            RowDefinitions[1].MaxHeight = Math.Max(0, constraint.Height - _warning.DesiredSize.Height);
+            room = Math.Max(0, constraint.Height - _warning.DesiredSize.Height);
+            RowDefinitions[1].MaxHeight = room;
         }
+        // The row is sized to its content, so the fit is only told the room it has through its own MaxHeight.
+        if (_fitted is not null)
+            _fitted.MaxHeight = room;
         return base.MeasureOverride(constraint);
     }
 

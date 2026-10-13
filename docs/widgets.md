@@ -47,7 +47,7 @@ A line of text with live values, e.g. "{gpu.load}" or "{cpu.temp:nounit} °C".
 | `fontSize` | number (6–400) | `48` | Font size |
 | `align` | `left` / `center` / `right` | `left` | Alignment |
 | `uppercase` | true/false | `false` | Uppercase |
-| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too long for the widget gets smaller to fit its width, instead of being cut off. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `hideUnavailable` | true/false | `false` | Hide without a reading. Hides the text while none of its metrics has a reading, e.g. a game's session before you've played. It shows faded while you edit the layout. |
 | `color` | color | `foreground` | Colour |
 | `thresholds` | list | — | Warning colours. Changes the text colour. An empty metric uses the first metric in the text. When several rules match, the last one wins, so list them mildest first. |
@@ -76,6 +76,7 @@ A label and live value above a scrolling history of one metric, drawn as a line 
 | `max` | number | — | Maximum. Empty uses the metric's natural maximum (100 for percentages, the total for memory), else scales to fit. |
 | `lineThickness` | number (0.5–20) | `2.5` | Line thickness |
 | `fontSize` | number (6–200) | `26` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `thresholds` | list | — | Warning colours. Changes the line or area and the value. An empty metric uses the graph's metric. When several rules match, the last one wins, so list them mildest first. |
 
 Each entry in `thresholds`:
@@ -100,6 +101,7 @@ Several metrics' histories on one scale, each in its own colour, e.g. CPU and GP
 | `max` | number | — | Maximum. Empty uses the metrics' natural maximum when they share one (100 for percentages), else scales to fit the highest line. |
 | `lineThickness` | number (0.5–20) | `2` | Line thickness |
 | `fontSize` | number (6–200) | `18` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 
 Each entry in `lines`:
 
@@ -125,8 +127,9 @@ A dial filled to a metric's share of its range, with the value in the middle, e.
 | `thickness` | number (1–200) | `16` | Thickness |
 | `color` | color | `accent` | Colour. The filled part of the dial. |
 | `trackColor` | color | `track` | Track colour. The empty part of the dial. track is the theme's bar track. |
-| `fontSize` | number (6–400) | `56` | Value size. Shrinks to fit inside the dial. |
+| `fontSize` | number (6–400) | `56` | Value size |
 | `labelSize` | number (6–200) | `24` | Label size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `thresholds` | list | — | Warning colours. Changes the dial and the value. An empty metric uses the gauge's metric. When several rules match, the last one wins, so list them mildest first. |
 
 Each entry in `thresholds`:
@@ -152,6 +155,7 @@ A big value with a small trend line and its lowest and highest readings over the
 | `showRange` | true/false | `true` | Lowest and highest |
 | `fontSize` | number (6–400) | `56` | Value size |
 | `labelSize` | number (6–200) | `20` | Label size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `thresholds` | list | — | Warning colours. Changes the value and the trend line. An empty metric uses the tile's metric. When several rules match, the last one wins, so list them mildest first. |
 
 Each entry in `thresholds`:
@@ -195,7 +199,7 @@ An accent-coloured line icon followed by a live value, e.g. a chip and the CPU t
 | `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` | `cpu` | Icon |
 | `text` | template | `{cpu.temp:nounit} °C` | Text |
 | `fontSize` | number (6–400) | `64` | Font size |
-| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too long for the widget gets smaller to fit its width, instead of being cut off. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `iconSize` | number (8–400) | `60` | Icon size |
 | `iconStroke` | number (0.5–6) | `2` | Icon line width. On the icon's 24×24 grid. |
 | `gap` | number (0–400) | `50` | Gap after icon |
@@ -219,6 +223,7 @@ Labelled bars, one per metric, each filled to the metric's share of its maximum,
 | `bars` | list | 2 entries | Bars |
 | `fontSize` | number (6–200) | `25` | Label size |
 | `valueFontSize` | number (6–200) | — | Value size. Empty uses 85% of the label size. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `barHeight` | number (1–100) | `8` | Bar height |
 | `spacing` | number (0–200) | `12` | Bar spacing |
 | `hideUnavailable` | true/false | `true` | Hide without a reading. Hides a bar whose metric has no reading, and the whole widget when none has one. They show faded while you edit the layout. |
@@ -255,6 +260,7 @@ A stack of label and value rows, e.g. Download / Upload / Ping.
 | `rows` | list | — | Rows |
 | `fontSize` | number (6–200) | `28` | Label size |
 | `valueFontSize` | number (6–200) | — | Value size. Empty uses 85% of the label size. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `align` | `top` / `bottom` | `top` | Stack from |
 
 Each entry in `rows`:
@@ -274,6 +280,7 @@ One row per drive with free space and a bar showing how full it is. Follows driv
 | `label` | template (per drive) | `{letter}:` | Row label. Each row's own drive: {letter}, {free}, {used}, {total}, {usedPct}, {label}, {read}, {write}, {active}, and with the sensor service {life}, {temp}, {status}, {model}, {hours}. In a metric id, * is the row's drive, e.g. {disk.*.read}. Other metrics work too. |
 | `text` | template (per drive) | `{free} free / {total}` | Row value. Each row's own drive: {letter}, {free}, {used}, {total}, {usedPct}, {label}, {read}, {write}, {active}, and with the sensor service {life}, {temp}, {status}, {model}, {hours}. In a metric id, * is the row's drive, e.g. {disk.*.read}. Other metrics work too. |
 | `fontSize` | number (6–200) | `25` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `barHeight` | number (1–100) | `5` | Bar height |
 | `spacing` | number (0–200) | `12` | Row spacing |
 | `color` | color | `accent` | Bar colour |
@@ -301,6 +308,7 @@ The apps using the most CPU or memory, like a small Task Manager. An app's proce
 | `count` | number (1–30) | `5` | Rows |
 | `columns` | `both` / `cpu` / `memory` | `both` | Show. Which numbers each row shows after the app's name. |
 | `fontSize` | number (6–200) | `20` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `spacing` | number (0–200) | `4` | Row spacing |
 | `thresholds` | list | — | Warning colours. Changes the colour of each row's CPU figure. An empty metric uses that app's CPU. When several rules match, the last one wins, so list them mildest first. |
 
@@ -325,6 +333,7 @@ The time with the date underneath, in your Windows language and region, and the 
 | `dateSize` | number (6–200) | `30` | Date size |
 | `uppercaseDate` | true/false | `true` | Uppercase date |
 | `align` | `left` / `center` / `right` | `center` | Alignment |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `timeZone` | text | — | Time zone. Empty is this PC's. A place's time zone, e.g. Europe/London, America/Los_Angeles, Asia/Tokyo, or a Windows name such as GMT Standard Time. |
 | `zones` | list | — | Other places. Smaller clocks under the date, each with its own time zone: a world clock. |
 | `zoneFormat` | text | `HH:mm` | Other places' format. .NET date/time format, e.g. HH:mm, h:mm tt, dddd d MMMM. |
@@ -354,6 +363,7 @@ A stopwatch, a countdown, or the time left until a time or date. Tap the time to
 | `fontSize` | number (6–600) | `72` | Time size |
 | `labelSize` | number (6–200) | `22` | Label size |
 | `align` | `left` / `center` / `right` | `center` | Alignment |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `doneColor` | color | `critical` | Done colour. The time's colour once it has reached zero; it also blinks. |
 | `pausedColor` | color | `secondary` | Paused colour. The time's colour while stopped or paused. |
 
@@ -372,6 +382,7 @@ What's coming up in your calendars (set them in the editor, or on the Calendars 
 | `timeFormat` | text | `HH:mm` | Time format. .NET time format, e.g. HH:mm or h:mm tt. |
 | `fontSize` | number (6–200) | `20` | Font size |
 | `headerSize` | number (6–200) | `15` | Heading size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Rows that would be cut off at the bottom, say in a bigger font, are left out, and a first row too tall for the widget gets smaller to fit. |
 | `spacing` | number (0–100) | `6` | Event spacing |
 | `nowColor` | color | `accent` | What's on now. The colour of events that are happening now. |
 
@@ -385,6 +396,7 @@ What's playing in Spotify, a browser, Media Player or any app in Windows' media 
 | `subtitle` | template | `{media.artist}` | Second line. E.g. the artist, or {media.artist} · {media.album}. Empty hides it. |
 | `fontSize` | number (6–200) | `34` | Title size |
 | `subtitleSize` | number (6–200) | — | Second line size. Empty uses 70% of the title size. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `showArt` | true/false | `true` | Album art |
 | `showProgress` | true/false | `true` | Progress bar. With the position and length under it. |
 | `showControls` | true/false | `true` | Buttons. Previous, play/pause and next. They work like the keyboard's media keys. |
@@ -422,6 +434,7 @@ Buttons to tap: play/pause, skip and volume, open a program, file or web address
 | `buttons` | list | 4 entries | Buttons |
 | `columns` | number (0–50) | `0` | Columns. 0 puts every button in one row. |
 | `fontSize` | number (6–200) | `20` | Label size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `iconSize` | number (0–400) | `40` | Icon size |
 | `spacing` | number (0–200) | `10` | Spacing |
 | `style` | `tile` / `plain` | `tile` | Style. tile gives each button a background. |
@@ -456,6 +469,7 @@ The weather now and the days or hours ahead, from Open-Meteo.com, and severe wea
 | `showWarnings` | true/false | `true` | Warnings. With severe weather warnings on (the Weather page), the most serious one along the bottom while there are any: in the warning colour, or the critical colour for red, severe and extreme ones. Only with Weather now, so a forecast-only widget beside it doesn't show it again. Its size follows Forecast size, or Temperature size without a forecast. Tap it to read the warning (not in the tablet view). |
 | `fontSize` | number (6–400) | `80` | Temperature size |
 | `forecastSize` | number (6–200) | `22` | Forecast size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `iconStyle` | `outline` / `colour` | `outline` | Icons. outline draws them in the icon colour below; colour in their own: a yellow sun, white clouds, blue rain, white lightning. |
 | `iconColor` | color | `accent` | Icon colour. For outline icons. |
 | `textColor` | color | `foreground` | Text colour. The temperatures and conditions. |
@@ -475,6 +489,7 @@ Headlines from your news feeds (set them in the editor, or on the News feeds pag
 | `age` | true/false | `true` | Show how old |
 | `tapToOpen` | true/false | `true` | Tap to open. Opens the article in your browser. Not in the tablet view. |
 | `fontSize` | number (6–200) | `22` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Rows that would be cut off at the bottom, say in a bigger font, are left out, and a first row too tall for the widget gets smaller to fit. |
 | `spacing` | number (0–100) | `8` | Spacing |
 | `lines` | number (1–4) | `1` | Lines per headline. Long headlines wrap onto this many lines, then end with … |
 
@@ -487,6 +502,7 @@ Your Claude plan's session (5-hour) and weekly usage, as Claude Code reports the
 | `bars` | list | 2 entries | Bars |
 | `fontSize` | number (6–200) | `25` | Label size |
 | `valueFontSize` | number (6–200) | — | Value size. Empty uses 85% of the label size. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `barHeight` | number (1–100) | `8` | Bar height |
 | `spacing` | number (0–200) | `12` | Bar spacing |
 | `hideUnavailable` | true/false | `true` | Hide without a reading. Hides a bar whose metric has no reading, and the whole widget when none has one. They show faded while you edit the layout. |

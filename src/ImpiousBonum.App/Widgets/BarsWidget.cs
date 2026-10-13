@@ -43,6 +43,7 @@ public sealed class BarsWidget : Widget
             defaults: bars),
             Setting.Number("fontSize", "Label size", 25, 6, 200),
             Setting.Number("valueFontSize", "Value size", null, 6, 200, help: "Empty uses 85% of the label size."),
+            Setting.ShrinkToFit(),
             Setting.Number("barHeight", "Bar height", 8, 1, 100, group: Setting.Appearance),
             Setting.Number("spacing", "Bar spacing", 12, 0, 200, group: Setting.Appearance),
             Setting.Toggle("hideUnavailable", "Hide without a reading", true, group: Setting.Appearance,
@@ -85,13 +86,11 @@ public sealed class BarsWidget : Widget
         foreach (var bar in settings.Items("bars"))
         {
             var metric = bar.String("metric");
-            var header = new Grid();
             var label = CreateText(fontSize, labelBrush);
             label.Text = bar.String("label");
             var value = CreateText(valueFontSize, valueBrush, HorizontalAlignment.Right);
             value.VerticalAlignment = VerticalAlignment.Center;
-            header.Children.Add(label);
-            header.Children.Add(value);
+            var header = LabelAndValue(label, value);
 
             var track = new Grid { Height = barHeight, Background = trackBrush, Margin = new Thickness(0, 2, 0, 0) };
             track.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) });
@@ -108,7 +107,7 @@ public sealed class BarsWidget : Widget
             _rows.Add(new Row(metric, bar.OptionalNumber("max"), ValueTemplate.Parse(text), row, value, track, fill));
         }
 
-        Children.Add(stack);
+        Children.Add(Fit(stack, FitDirection.Height));
     }
 
     public override void Refresh(MetricStore store, DateTime now)

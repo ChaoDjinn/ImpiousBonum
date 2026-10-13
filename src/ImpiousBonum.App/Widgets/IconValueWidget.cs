@@ -17,7 +17,7 @@ public sealed class IconValueWidget : Widget
             Setting.Icon("icon", "Icon", "cpu"),
             Setting.Template("text", "Text", "{cpu.temp:nounit} °C"),
             Setting.Number("fontSize", "Font size", 64, 6, 400),
-            Setting.Toggle("shrinkToFit", "Shrink to fit", true, help: TextWidget.ShrinkHelp),
+            Setting.ShrinkToFit(),
             Setting.Number("iconSize", "Icon size", 60, 8, 400, group: Setting.Appearance),
             Setting.Number("iconStroke", "Icon line width", 2, 0.5, 6, group: Setting.Appearance, help: "On the icon's 24×24 grid."),
             Setting.Number("gap", "Gap after icon", 50, 0, 400, group: Setting.Appearance),
@@ -62,7 +62,7 @@ public sealed class IconValueWidget : Widget
         _text = CreateText(settings.Number("fontSize"));
         _text.VerticalAlignment = VerticalAlignment.Center;
         SetColumn(_text, 1);
-        Children.Add(settings.Bool("shrinkToFit") ? ShrinkToFit(_text) : _text);
+        Children.Add(Fit(_text, FitDirection.Both));
     }
 
     public override void Refresh(MetricStore store, DateTime now)

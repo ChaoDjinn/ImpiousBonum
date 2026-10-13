@@ -155,6 +155,18 @@ public static class Setting
 
     public static readonly IReadOnlyList<string> HorizontalAlignments = ["left", "center", "right"];
 
+    public const string ShrinkToFitKey = "shrinkToFit";
+
+    /// <summary>The <c>shrinkToFit</c> toggle of every widget whose text can be too big for it. Widgets read it through <c>Widget.Fit</c>.</summary>
+    public static SettingDescriptor ShrinkToFit() =>
+        Toggle(ShrinkToFitKey, "Shrink to fit", true,
+            help: "Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off.");
+
+    /// <summary>The <c>shrinkToFit</c> toggle of a list (agenda, news), which leaves rows out rather than shrink them all.</summary>
+    public static SettingDescriptor ShrinkListToFit() =>
+        Toggle(ShrinkToFitKey, "Shrink to fit", true,
+            help: "Rows that would be cut off at the bottom, say in a bigger font, are left out, and a first row too tall for the widget gets smaller to fit.");
+
     public const string ThresholdsKey = "thresholds";
 
     /// <summary>The group every widget's theme overrides are in.</summary>

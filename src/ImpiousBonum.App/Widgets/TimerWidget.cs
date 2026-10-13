@@ -34,6 +34,7 @@ public sealed class TimerWidget : Widget
             Setting.Number("fontSize", "Time size", 72, 6, 600),
             Setting.Number("labelSize", "Label size", 22, 6, 200),
             Setting.Choice("align", "Alignment", "center", Setting.HorizontalAlignments),
+            Setting.ShrinkToFit(),
             Setting.Color("doneColor", "Done colour", "critical", help: "The time's colour once it has reached zero; it also blinks."),
             Setting.Color("pausedColor", "Paused colour", "secondary", help: "The time's colour while stopped or paused."),
         ],
@@ -67,17 +68,17 @@ public sealed class TimerWidget : Widget
         _label = CreateText(settings.Number("labelSize"), Theme.Secondary, alignment);
         _label.Text = labelText;
         if (labelText.Length > 0)
-            stack.Children.Add(_label);
+            stack.Children.Add(Fit(_label, FitDirection.Width));
 
         var timeSize = settings.Number("fontSize");
         _time = CreateText(timeSize, alignment: alignment);
         _time.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
         _time.LineHeight = timeSize * 1.1;
         if (_mode == "until")
-            stack.Children.Add(_time);
+            stack.Children.Add(Fit(_time, FitDirection.Width));
         else
         {
-            var timeTap = new TapTarget { Child = _time, Background = Brushes.Transparent, HorizontalAlignment = alignment };
+            var timeTap = new TapTarget { Child = Fit(_time, FitDirection.Width), Background = Brushes.Transparent, HorizontalAlignment = alignment };
             timeTap.Tapped += (_, _) => Toggle(DateTime.Now);
             stack.Children.Add(timeTap);
 
@@ -96,7 +97,7 @@ public sealed class TimerWidget : Widget
                 stack.Children.Add(reset);
             }
         }
-        Children.Add(stack);
+        Children.Add(Fit(stack, FitDirection.Height));
     }
 
     public override void Refresh(MetricStore store, DateTime now)

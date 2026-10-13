@@ -25,6 +25,7 @@ public sealed class StatWidget : Widget
             Setting.Toggle("showRange", "Lowest and highest", true, group: Setting.Appearance),
             Setting.Number("fontSize", "Value size", 56, 6, 400),
             Setting.Number("labelSize", "Label size", 20, 6, 200),
+            Setting.ShrinkToFit(),
             Setting.Thresholds("Changes the value and the trend line. An empty metric uses the tile's metric."),
         ],
         (settings, theme) => new StatWidget(settings, theme));
@@ -52,18 +53,19 @@ public sealed class StatWidget : Widget
 
         var label = CreateText(labelSize, theme.Secondary);
         label.Text = settings.String("label");
-        Children.Add(label);
         if (settings.Bool("showRange"))
         {
             _range = CreateText(labelSize * 0.8, theme.Secondary, HorizontalAlignment.Right);
             _range.VerticalAlignment = VerticalAlignment.Center;
-            Children.Add(_range);
+            Children.Add(LabelAndValue(label, _range));
         }
+        else
+            Children.Add(Fit(label, FitDirection.Width));
 
         _value = CreateText(settings.Number("fontSize"));
         _value.TextTrimming = TextTrimming.CharacterEllipsis;
         SetRow(_value, 1);
-        Children.Add(_value);
+        Children.Add(Fit(_value, FitDirection.Width));
 
         var style = settings.String("style");
         if (style != "none")
@@ -80,6 +82,8 @@ public sealed class StatWidget : Widget
             SetRow(_trend, 2);
             Children.Add(_trend);
         }
+        // The trend line takes what's left, and everything shrinks when the label and value alone are too tall.
+        FitContent(FitDirection.Height);
     }
 
     public override void Refresh(MetricStore store, DateTime now)

@@ -34,12 +34,13 @@ public sealed class DrivesWidgetTests
             }, Theme.From(new ThemeSettings()));
             widget.Refresh(store, DateTime.Now);
 
-            var rows = ((StackPanel)widget.Children[0]).Children.Cast<StackPanel>().ToList();
+            var rows = ((StackPanel)((ShrinkToFit)widget.Children[0]).Child).Children.Cast<StackPanel>().ToList();
             Assert.Equal(2, rows.Count);
             Assert.Equal(["C: Fast SSD", "D: Big HDD"], rows.Select(r => Texts(r)[0]));
             Assert.Equal(["98 % life · 98.0 %", "71 % life · 71.0 %"], rows.Select(r => Texts(r)[1]));
         });
     }
 
-    private static List<string> Texts(StackPanel row) => ((Grid)row.Children[0]).Children.OfType<TextBlock>().Select(t => t.Text).ToList();
+    private static List<string> Texts(StackPanel row) =>
+        ((Grid)((ShrinkToFit)row.Children[0]).Child).Children.OfType<TextBlock>().Select(t => t.Text).ToList();
 }

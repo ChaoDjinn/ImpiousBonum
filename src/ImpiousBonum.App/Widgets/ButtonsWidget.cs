@@ -40,6 +40,7 @@ public sealed class ButtonsWidget : Widget
             ]),
             Setting.Number("columns", "Columns", 0, 0, 50, group: Setting.Appearance, help: "0 puts every button in one row."),
             Setting.Number("fontSize", "Label size", 20, 6, 200),
+            Setting.ShrinkToFit(),
             Setting.Number("iconSize", "Icon size", 40, 0, 400, group: Setting.Appearance),
             Setting.Number("spacing", "Spacing", 10, 0, 200, group: Setting.Appearance),
             Setting.Choice("style", "Style", "tile", ["tile", "plain"], group: Setting.Appearance, help: "tile gives each button a background."),
@@ -89,7 +90,8 @@ public sealed class ButtonsWidget : Widget
 
             var target = new TapTarget
             {
-                Child = content,
+                // Labels end with … when they're too long; a button too short for its icon and label shrinks them.
+                Child = Fit(content, FitDirection.Height),
                 Background = tile ? tileBrush : Brushes.Transparent,
                 CornerRadius = radius,
                 Margin = new Thickness(spacing / 2),

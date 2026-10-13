@@ -32,12 +32,13 @@ public sealed class NewsWidget : Widget
             Setting.Toggle("age", "Show how old", true, group: Setting.Content),
             Setting.Toggle("tapToOpen", "Tap to open", true, group: Setting.Content, help: "Opens the article in your browser. Not in the tablet view."),
             Setting.Number("fontSize", "Font size", 22, 6, 200),
+            Setting.ShrinkListToFit(),
             Setting.Number("spacing", "Spacing", 8, 0, 100, group: Setting.Appearance),
             Setting.Number("lines", "Lines per headline", 1, 1, 4, group: Setting.Appearance, help: "Long headlines wrap onto this many lines, then end with …"),
         ],
         (settings, theme) => new NewsWidget(settings, theme));
 
-    private readonly StackPanel _rows = new();
+    private readonly Panel _rows;
     private readonly bool _ticker;
     private readonly bool _tickers;
     private readonly int _count;
@@ -66,6 +67,7 @@ public sealed class NewsWidget : Widget
         _fontSize = settings.Number("fontSize");
         _spacing = settings.Number("spacing");
         _lines = (int)settings.Number("lines");
+        _rows = CreateList();
         Children.Add(_rows);
     }
 
@@ -144,6 +146,7 @@ public sealed class NewsWidget : Widget
             {
                 var detail = CreateText(_fontSize * 0.7, Theme.Secondary);
                 detail.Text = details;
+                detail.TextTrimming = TextTrimming.CharacterEllipsis;
                 row.Children.Add(detail);
             }
 
@@ -155,7 +158,7 @@ public sealed class NewsWidget : Widget
                 item = tap;
             }
             item.Margin = new Thickness(0, 0, 0, _spacing);
-            _rows.Children.Add(item);
+            AddRow(_rows, item);
         }
     }
 }

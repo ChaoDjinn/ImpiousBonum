@@ -26,6 +26,7 @@ public sealed class MediaWidget : Widget
             Setting.Template("subtitle", "Second line", $"{{{MediaProvider.Artist}}}", help: "E.g. the artist, or {media.artist} · {media.album}. Empty hides it."),
             Setting.Number("fontSize", "Title size", 34, 6, 200),
             Setting.Number("subtitleSize", "Second line size", null, 6, 200, help: "Empty uses 70% of the title size."),
+            Setting.ShrinkToFit(),
             Setting.Toggle("showArt", "Album art", true, group: Setting.Appearance),
             Setting.Toggle("showProgress", "Progress bar", true, group: Setting.Appearance, help: "With the position and length under it."),
             Setting.Toggle("showControls", "Buttons", true, group: Setting.Appearance, help: "Previous, play/pause and next. They work like the keyboard's media keys."),
@@ -88,9 +89,10 @@ public sealed class MediaWidget : Widget
             Children.Add(_art);
         }
 
+        // The title and second line end with … when they're too long; all of it gets smaller when it's too tall.
         var info = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         SetColumn(info, 1);
-        Children.Add(info);
+        Children.Add(Fit(info, FitDirection.Height));
 
         _titleText = CreateText(fontSize, text);
         _titleText.TextTrimming = TextTrimming.CharacterEllipsis;

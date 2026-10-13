@@ -335,12 +335,13 @@ public sealed class WeatherWidgetTests
             var store = new MetricStore();
             store.SetAttachment(WeatherProvider.Forecast, Report());
             store.SetAttachment(WeatherWarningsProvider.Warnings, (IReadOnlyList<WeatherWarning>)[Yellow]);
-            (Rect Strip, Rect Hours) Arranged(double height)
+            (Rect Strip, Rect Hours) Arranged(double height, bool shrinkToFit = false)
             {
                 // The weather now beside the hours ahead, as in the README's picture: they fill a widget 120 high.
                 var widget = WidgetFactory.Create(new JsonObject
                 {
                     ["type"] = "weather", ["fontSize"] = 40, ["forecast"] = "hours", ["forecastSize"] = 22, ["rainFrom"] = 0,
+                    [Setting.ShrinkToFitKey] = shrinkToFit,
                 }, Theme.From(new ThemeSettings()));
                 widget.Refresh(store, DateTime.Now);
                 widget.Measure(new Size(760, height));
@@ -355,6 +356,11 @@ public sealed class WeatherWidgetTests
             var (strip, hours) = Arranged(120);
             Assert.True(hours.Height > 100, $"{hours}");
             Assert.True(strip.Top > 0 && Math.Abs(strip.Bottom - 120) < 0.5, $"{strip}");
+
+            // With shrink to fit, the weather gets smaller to fit above the warning instead of being cut off.
+            (strip, hours) = Arranged(120, shrinkToFit: true);
+            Assert.True(hours.Bottom <= strip.Top + 0.5 && hours.Height < 100, $"{hours} {strip}");
+            Assert.True(Math.Abs(strip.Bottom - 120) < 0.5, $"{strip}");
 
             // With room to spare, the warning is just under the hours, and the two are centred together.
             (strip, hours) = Arranged(300);
