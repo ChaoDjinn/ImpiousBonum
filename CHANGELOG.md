@@ -27,6 +27,14 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - They're readings for any widget, like the weather's: `{weather.aqi.level}` or `{weather.pollen}` in a text widget, say, or a gauge of `weather.aqi`. The *Weather* page's location line shows them too.
 - It's off until you turn it on. Then the place's coordinates go to Open-Meteo once an hour, and nothing else is sent. Air quality data by CAMS (Copernicus), via Open-Meteo.com.
 
+**Severe weather warnings**
+- Turn on *Weather* → *Severe weather warnings* for warnings of storms, floods, snow, ice, heat and the like where you are: from the Met Office in the UK, and the National Weather Service in the US. Elsewhere, the *Weather* page says they aren't available there yet.
+- The *Weather* widget shows the most serious one along the bottom, with *and 2 more* if there are others: yellow and amber warnings in the theme's warning colour, red ones in its critical colour. Tap it to read the warning on the Met Office's or the NWS's site. Without any warnings the widget looks as it always has, and *Warnings* in the editor leaves them out.
+- A Windows notification when a warning comes out or gets more serious; click it to read the warning. Each comes up once, and *Notify me* turns them off.
+- Readings for any widget: `{weather.warning}` for the most serious one's headline, `{weather.warning.level}` for its level (*Yellow*, *Amber* or *Red*, or the NWS's *Minor* to *Extreme*) and `weather.warnings` for how many there are.
+- In the UK, *Automatic* picks the Met Office area your location is in, and *Met Office area* chooses another if you're near the edge of one. Places you pick now remember their country, which decides whose warnings they get.
+- It's off until you turn it on. Then every 10 minutes, for a UK place only its Met Office area is sent to the Met Office, and for a US place its coordinates go to the National Weather Service. A place anywhere else is sent nowhere. Warnings from the Met Office (© Crown copyright) and the US National Weather Service.
+
 ## 0.13.0
 
 Impious Bonum has a window of its own, and the tray menu keeps to the basics.
