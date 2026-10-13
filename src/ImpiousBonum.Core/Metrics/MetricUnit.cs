@@ -17,4 +17,13 @@ public enum MetricUnit
     Fahrenheit,
     KilometresPerHour,
     MilesPerHour,
+    Hectopascals,
+    InchesOfMercury,
+    Millimetres,
+    Inches,
+    Kilometres,
+    Miles,
+
+    /// <summary>An angle, such as a wind direction or how high the sun is.</summary>
+    Degrees,
 }

@@ -460,8 +460,9 @@ The weather now and the days or hours ahead, from Open-Meteo.com. Set your locat
 |---|---|---|---|
 | `showCurrent` | true/false | `true` | Weather now. The big icon and temperature for now. Off leaves just the forecast, e.g. for a widget of the hours ahead beside another of the days. |
 | `forecast` | `days` / `hours` / `none` | `days` | Forecast |
-| `count` | number (1–14) | `5` | Days or hours |
+| `count` | number (1–48) | `5` | Days or hours. Up to 16 days, or 48 hours. |
 | `hourStep` | number (1–12) | `1` | Hours apart. For an hourly forecast, e.g. 3 for every three hours. |
+| `rainFrom` | number (0–100) | `30` | Chance of rain from. Show the chance of rain from this percentage; 0 always shows it. |
 | `showDetails` | true/false | `true` | Details. Conditions, today's high and low, and feels like, beside the temperature. |
 | `showLocation` | true/false | `false` | Location |
 | `fontSize` | number (6–400) | `80` | Temperature size |
