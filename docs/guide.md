@@ -250,7 +250,7 @@ The *Weather* widget shows an icon, the temperature and conditions now (with tod
 
 For a suburb or village, or one of several places with the same name, add its town, county or country after a comma: `West Derby, Liverpool` finds the one in Liverpool rather than the one in South Africa. The start of a name is enough (`West Derby, Liv`), and `UK` and `USA` work as countries. Each place in the list says where it is, and hovering over it shows its coordinates.
 
-It's adjustable in the editor: turn off *Weather now* to leave just the forecast (say, one widget of the hours ahead beside another of the days), choose *colour* icons for a yellow sun, white clouds, grey rain clouds with blue rain and white lightning instead of outlines in one colour, and give the widget its own text and detail colours rather than the theme's. A day or hour shows its chance of rain from 30%; *Chance of rain from* changes that, and 0 always shows it.
+It's adjustable in the editor: turn off *Weather now* to leave just the forecast (say, one widget of the hours ahead beside another of the days), choose *colour* icons for a yellow sun, white clouds, grey rain clouds with blue rain and white lightning instead of outlines in one colour, and give the widget its own text and detail colours rather than the theme's.
 
 There's more in the forecast than the widget shows, for text, gauges and the rest:
 
