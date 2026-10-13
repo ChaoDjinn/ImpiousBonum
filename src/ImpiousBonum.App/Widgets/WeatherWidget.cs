@@ -38,7 +38,8 @@ public sealed class WeatherWidget : Widget
             Setting.Picks("places", "Places", null, source: PlaceNames, none: "No location yet: set one on the Weather page.",
                 help: "Which places to show, in order: your location and the more places on the Weather page, by their names up to the first comma, such as Leeds "
                     + "(or Paris (Texas) where two places would share one). None shows just your location. "
-                    + "With more than one, the widget shows one at a time with its name, moving on every Seconds per place, and a tap moves on straight away (the tablet view moves on by itself). "
+                    + "With more than one, the widget shows one at a time with its name, moving on every Seconds per place, and a tap moves it (and any other weather widget showing the same places) on straight away; "
+                    + "the tablet view moves on by itself. A place other than your location always shows its name. "
                     + "Warnings are your location's, so they only show while it's on show."),
             Setting.Number("placeSeconds", "Seconds per place", 10, 3, 600, group: Setting.Content, help: "With more than one place, how long each one shows."),
             Setting.Toggle("showWarnings", "Warnings", true, group: Setting.Content,
@@ -87,7 +88,10 @@ public sealed class WeatherWidget : Widget
     private readonly PickList _places;
     private readonly TimeSpan _placeTime;
 
-    /// <summary>A forecast-only widget's place name, above the forecast, while it moves between places.</summary>
+    /// <summary>Whether more than one place is chosen, so it moves between them, has more to tap and always names them.</summary>
+    private readonly bool _moves;
+
+    /// <summary>A forecast-only widget's place name, above the forecast, while it names one (see <see cref="OnShow"/>).</summary>
     private readonly TextBlock? _placeLine;
 
     /// <summary>
@@ -113,8 +117,9 @@ public sealed class WeatherWidget : Widget
     {
         _places = settings.Picks("places");
         _placeTime = TimeSpan.FromSeconds(settings.Number("placeSeconds"));
-        // Only a widget with more than one place chosen ever moves between them, so only it has more to show and tap.
-        var moves = _places.Names.Count > 1;
+        _moves = _places.Names.Count > 1;
+        // With any place chosen there may be one other than the location on show, which is always named.
+        var named = _places.Names.Count > 0;
         _forecast = settings.String("forecast");
         _count = (int)settings.Number("count");
         _hourStep = (int)settings.Number("hourStep");
@@ -134,8 +139,8 @@ public sealed class WeatherWidget : Widget
         _temperature.VerticalAlignment = VerticalAlignment.Center;
         now.Children.Add(_icon);
         now.Children.Add(_temperature);
-        // The place's name goes with the details, so one moving between places has them even without Details or Location.
-        if (settings.Bool("showDetails") || _showLocation || moves)
+        // The place's name goes with the details, so one with places chosen has them even without Details or Location.
+        if (settings.Bool("showDetails") || _showLocation || named)
         {
             _details = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(_fontSize * 0.25, 0, 0, 0) };
             now.Children.Add(_details);
@@ -151,15 +156,15 @@ public sealed class WeatherWidget : Widget
             // Without the weather now, the forecast has the whole width.
             _ahead = new UniformGrid { Rows = 1, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(_showCurrent ? _fontSize * 0.5 : 0, 0, 0, 0) };
             FrameworkElement forecast = _ahead;
-            if (!_showCurrent && moves)
+            if (!_showCurrent && named)
             {
                 // Without the weather now there are no details to name the place in, so its name goes above the forecast.
                 _placeLine = Line(string.Empty, _forecastSize * 0.85, _detail);
                 _placeLine.Visibility = Visibility.Collapsed;
-                var named = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-                named.Children.Add(_placeLine);
-                named.Children.Add(_ahead);
-                forecast = named;
+                var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+                stack.Children.Add(_placeLine);
+                stack.Children.Add(_ahead);
+                forecast = stack;
             }
             SetColumn(forecast, _showCurrent ? 1 : 0);
             if (!_showCurrent)
@@ -169,7 +174,7 @@ public sealed class WeatherWidget : Widget
         // A wide font or a big temperature makes the weather now and the forecast smaller together, rather than squeezing the forecast.
         FitContent(FitDirection.Both, VerticalAlignment.Center);
         _fitted = Children.OfType<ShrinkToFit>().FirstOrDefault();
-        if (moves)
+        if (_moves)
             TapForNextPlace();
 
         // Only with the weather now: a forecast-only widget is usually the second of two, and a warning should show once.
@@ -261,6 +266,8 @@ public sealed class WeatherWidget : Widget
     /// <summary>
     /// The place on show: its forecast, the name to show with it (null for none), and whether it's the main place. With no
     /// places chosen, or none of them found, it's the main place, named only with Location on, as it always was.
+    /// Otherwise it's named while it moves between places, and whenever it isn't the main place, so another place's
+    /// weather never looks like your own (with only one of several chosen still found, say).
     /// </summary>
     private (WeatherReport? Report, string? Name, bool Main) OnShow(MetricStore store, DateTime now)
     {
@@ -282,8 +289,7 @@ public sealed class WeatherWidget : Widget
             {
                 MoveOn(_chosen.Count, now);
                 var place = _chosen[_place];
-                // Moving between places, it always says which one it's on.
-                var name = _showLocation || _chosen.Count > 1 ? _shortNames[place] : null;
+                var name = _showLocation || _moves || place != 0 ? _shortNames[place] : null;
                 return (places[place].Report, name, place == 0);
             }
         }
@@ -315,14 +321,33 @@ public sealed class WeatherWidget : Widget
         _place %= count;
     }
 
-    /// <summary>A tap: on to the next place straight away, which then has its full time.</summary>
+    /// <summary>
+    /// A tap: on to the next place straight away, which then has its full time. Any other weather widget on the dashboard
+    /// moving between the same places at the same pace moves on with it, so a pair side by side (the weather now over
+    /// a forecast, say) keeps showing the same place.
+    /// </summary>
     private void NextPlace()
+    {
+        if (_store is null)
+            return;
+        var place = _place + 1;
+        var widgets = Parent is Panel dashboard ? dashboard.Children.OfType<WeatherWidget>().Where(MovesWith) : [this];
+        foreach (var widget in widgets)
+            widget.ShowPlace(place, _refreshed);
+    }
+
+    /// <summary>Whether <paramref name="other"/> moves between the same places as this one, at the same pace.</summary>
+    private bool MovesWith(WeatherWidget other) =>
+        other == this || (other._moves && other._placeTime == _placeTime && other._places.ToString().Equals(_places.ToString(), StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Shows the <paramref name="place"/>th of the places chosen (round again past the last), from <paramref name="now"/>.</summary>
+    private void ShowPlace(int place, DateTime now)
     {
         if (_store is not { } store)
             return;
-        _place++;
-        _placeSince = _refreshed;
-        Refresh(store, _refreshed);
+        _place = place;
+        _placeSince = now;
+        Refresh(store, now);
     }
 
     /// <summary>
@@ -354,9 +379,13 @@ public sealed class WeatherWidget : Widget
         _nameShown = place;
         _icon.Content = Icon("cloud", _fontSize * 0.9, Theme.Secondary);
         _temperature.Text = "—";
-        _details?.Children.Clear();
-        _details?.Children.Add(Line("No weather yet", _fontSize * 0.3, _text));
-        _details?.Children.Add(Line(place ?? "Set a location on the Weather page", _fontSize * 0.22, _detail));
+        if (_details is not null)
+        {
+            _details.Children.Clear();
+            _details.Children.Add(Line("No weather yet", _fontSize * 0.3, _text));
+            _details.Children.Add(Line(place ?? "Set a location on the Weather page", _fontSize * 0.22, _detail));
+            _details.Visibility = Visibility.Visible;
+        }
         ShowPlaceLine(place);
         _ahead?.Children.Clear();
         // With only a forecast showing, say why it's empty there instead.
@@ -382,6 +411,8 @@ public sealed class WeatherWidget : Widget
             }
             if (!string.IsNullOrEmpty(name))
                 _details.Children.Add(Line(name, _fontSize * 0.22, _detail));
+            // Without Details, and no name to show, it takes no room (nor its margin) beside the temperature.
+            _details.Visibility = _details.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
         ShowPlaceLine(name);
 
@@ -406,43 +437,56 @@ public sealed class WeatherWidget : Widget
 
     /// <summary>
     /// What the editor's Places offers, and the widget shows, for each of the places <paramref name="names"/> (the main
-    /// place first): its name up to the first comma, such as Leeds, or where another's would be the same, with the next
+    /// place first): its <see cref="ShortName"/>, such as Leeds, or where another's would be the same, with the next
     /// part of its name too, as in Paris (Texas), so each can be told apart and picked.
     /// </summary>
     public static IReadOnlyList<string> ShortNames(IReadOnlyList<string> names)
     {
-        var parts = names.Select(n => n.Split(',', StringSplitOptions.TrimEntries)).ToList();
-        return [.. parts.Select(p => p.Length > 1 && parts.Count(other => other[0].Equals(p[0], StringComparison.OrdinalIgnoreCase)) > 1 ? $"{p[0]} ({p[1]})" : p[0])];
+        var first = names.Select(ShortName).ToList();
+        return [.. names.Select((name, i) => first.Count(f => f.Equals(first[i], StringComparison.OrdinalIgnoreCase)) > 1 && TwoParts(name) is { } longer ? longer : first[i])];
     }
 
     /// <summary>
-    /// Which of the places <paramref name="names"/> (the main place first) are chosen, in the order chosen. A name that
-    /// isn't one of their short names any more stands for the first place it starts: one chosen as Paris before another
-    /// Paris was added, which made it Paris (Île-de-France). Names not found are left out.
+    /// A place's name up to the first comma, such as Leeds. Coordinates typed in have no name, so they keep both numbers
+    /// without the comma, such as 50.21 -5.48, to tell which place it is (and so it can still be picked).
     /// </summary>
+    internal static string ShortName(string name) =>
+        OpenMeteo.ParseCoordinates(name) is null ? name.Split(',')[0].Trim() : string.Join(' ', name.Split(',', StringSplitOptions.TrimEntries));
+
+    /// <summary>A place's name up to the second comma, as in Paris (Texas), or null for one with no more to it.</summary>
+    private static string? TwoParts(string name) =>
+        OpenMeteo.ParseCoordinates(name) is null && name.Split(',', StringSplitOptions.TrimEntries) is [var first, var second, ..] ? $"{first} ({second})" : null;
+
+    /// <summary>Which of the places <paramref name="names"/> (the main place first) are chosen, in the order chosen; names not found are left out.</summary>
     internal static IReadOnlyList<int> Chosen(IReadOnlyList<string> chosen, IReadOnlyList<string> names)
     {
-        var shortNames = ShortNames(names);
+        var find = Finder(names);
         var found = new List<int>();
         foreach (var name in chosen)
         {
-            var index = IndexOf(shortNames, name);
-            if (index < 0)
-                index = IndexOf([.. names.Select(n => n.Split(',')[0].Trim())], name);
-            if (index >= 0 && !found.Contains(index))
+            if (find(name) is >= 0 and var index && !found.Contains(index))
                 found.Add(index);
         }
         return found;
+    }
 
-        static int IndexOf(IReadOnlyList<string> list, string name)
-        {
-            for (var i = 0; i < list.Count; i++)
-            {
-                if (list[i].Equals(name, StringComparison.OrdinalIgnoreCase))
-                    return i;
-            }
-            return -1;
-        }
+    /// <summary>
+    /// The short name of the place among <paramref name="names"/> that <paramref name="chosen"/> stands for, when it's
+    /// spelt another way, or null for none: what the editor's Places ticks for it, so it agrees with the widget.
+    /// </summary>
+    public static string? PlaceOption(string chosen, IReadOnlyList<string> names) =>
+        Finder(names)(chosen) is >= 0 and var index ? ShortNames(names)[index] : null;
+
+    /// <summary>
+    /// Finds which of the places <paramref name="names"/> a name chosen stands for, or -1. Short names change as places
+    /// of the same name come and go, so it's one's short name, or failing that one's name up to the second comma (chosen
+    /// as Paris (Texas) while there was another Paris), or the first whose name starts with it (chosen as Paris before
+    /// another Paris was added).
+    /// </summary>
+    private static Func<string, int> Finder(IReadOnlyList<string> names)
+    {
+        List<string?>[] spellings = [[.. ShortNames(names)], [.. names.Select(TwoParts)], [.. names.Select(ShortName)]];
+        return chosen => spellings.Select(list => list.FindIndex(n => chosen.Equals(n, StringComparison.OrdinalIgnoreCase))).FirstOrDefault(i => i >= 0, -1);
     }
 
     /// <summary>One day or hour: when, an icon, the temperature (and low), and the chance of rain if it's at least <c>rainFrom</c>.</summary>

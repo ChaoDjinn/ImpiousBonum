@@ -140,9 +140,20 @@ public partial class App
     internal IReadOnlyList<string> PickOptions(string source) => source switch
     {
         NewsWidget.FeedNames => [.. _settings.NewsFeeds.Select(f => f.Name)],
-        WeatherWidget.PlaceNames when _settings.WeatherLocation is { } main => WeatherWidget.ShortNames([main.Name, .. _settings.WeatherPlaces.Select(p => p.Name)]),
+        WeatherWidget.PlaceNames => WeatherWidget.ShortNames(WeatherPlaceNames()),
         _ => [],
     };
+
+    /// <summary>
+    /// For a name picked from <see cref="PickOptions"/> that isn't spelt as one of them now, the one it stands for, as the
+    /// weather widget finds it: a place picked as Paris (Texas) is plain Paris once it's the only Paris, and the other way round.
+    /// </summary>
+    internal string? PickedOption(string source, string name) =>
+        source == WeatherWidget.PlaceNames ? WeatherWidget.PlaceOption(name, WeatherPlaceNames()) : null;
+
+    /// <summary>The weather's places by their full names, the location first; none without a location.</summary>
+    private List<string> WeatherPlaceNames() =>
+        _settings.WeatherLocation is { } main ? [main.Name, .. _settings.WeatherPlaces.Select(p => p.Name)] : [];
 
     /// <summary>
     /// Tray → Layout, the Screens page, pages, hotkeys and buttons: the main dashboard's layout. With the editor open, the editor moves to

@@ -112,16 +112,37 @@ public sealed class WeatherPlacesTests
         Assert.False(settings.HasWeatherPlace(Sydney));
     }
 
+    [Fact]
+    public void A_new_location_that_was_one_of_the_places_is_not_kept_twice()
+    {
+        var settings = new AppSettings { WeatherLocation = Leeds, WeatherPlaces = [Paris, Sydney], MetOfficeArea = "yh" };
+        // Arriving in Paris, and setting the location there by searching for it again.
+        settings.SetWeatherLocation(Paris with { Name = "Paris, France" });
+
+        Assert.Equal("Paris, France", settings.WeatherLocation!.Name);
+        Assert.Equal([Sydney], settings.WeatherPlaces);
+        Assert.Equal([new WeatherRequest(Sydney.Name, -33.87, 151.21, settings.WeatherRequest()!.Units)], settings.WeatherPlaceRequests());
+        Assert.Equal(AppSettings.MetOfficeAreaAuto, settings.MetOfficeArea);
+
+        // Anywhere else leaves the places be.
+        settings.SetWeatherLocation(Leeds);
+        Assert.Equal(Leeds, settings.WeatherLocation);
+        Assert.Equal([Sydney], settings.WeatherPlaces);
+    }
+
     // ---- Names --------------------------------------------------------------------------------------
 
     [Fact]
     public void Places_go_by_their_short_names_and_places_with_the_same_one_are_told_apart()
     {
         Assert.Equal(["Leeds", "Sydney"], WeatherWidget.ShortNames([Leeds.Name, Sydney.Name]));
-        Assert.Equal(["Leeds", "Paris (Île-de-France)", "Paris (Texas)", "51.5"],
-            WeatherWidget.ShortNames([Leeds.Name, Paris.Name, "Paris, Texas, United States", "51.5, -0.12"]));
+        Assert.Equal(["Leeds", "Paris (Île-de-France)", "Paris (Texas)"],
+            WeatherWidget.ShortNames([Leeds.Name, Paris.Name, "Paris, Texas, United States"]));
         // The same whatever their case, as picking goes.
         Assert.Equal(["Paris (Île-de-France)", "paris (Ontario)"], WeatherWidget.ShortNames([Paris.Name, "paris, Ontario, Canada"]));
+        // Coordinates typed in have no name, so they keep both numbers, without the comma that can't be picked.
+        Assert.Equal(["Leeds", "51.5 -0.12", "51.5 2"], WeatherWidget.ShortNames([Leeds.Name, "51.5, -0.12", "51.5,2"]));
+        Assert.True(PickList.CanPick("51.5 -0.12", allowAll: false));
     }
 
     [Fact]
@@ -132,6 +153,30 @@ public sealed class WeatherPlacesTests
         // Chosen as plain Paris before Paris, Texas came along: the first Paris.
         Assert.Equal([1], WeatherWidget.Chosen(["Paris", "Paris (Île-de-France)"], names));
         Assert.Empty(WeatherWidget.Chosen(["Gone"], names));
+        Assert.Equal([1], WeatherWidget.Chosen(["51.5 -0.12"], [Leeds.Name, "51.5, -0.12"]));
+    }
+
+    [Fact]
+    public void A_place_chosen_by_its_longer_name_is_still_found_once_the_other_of_that_name_goes()
+    {
+        // Chosen while there were two Parises; then one is removed, and the other is plain Paris.
+        string[] withoutFrance = [Leeds.Name, "Paris, Texas, United States"];
+        Assert.Equal([0, 1], WeatherWidget.Chosen(["Leeds", "Paris (Texas)"], withoutFrance));
+        Assert.Equal([1, 0], WeatherWidget.Chosen(["Paris (Île-de-France)", "Leeds"], [Leeds.Name, Paris.Name]));
+        // The one removed isn't taken for the other.
+        Assert.Equal([0], WeatherWidget.Chosen(["Leeds", "Paris (Île-de-France)"], withoutFrance));
+
+        // And the editor ticks what the widget shows, rather than saying it's not found.
+        Assert.Equal("Paris", WeatherWidget.PlaceOption("Paris (Texas)", withoutFrance));
+        Assert.Equal("Paris (Île-de-France)", WeatherWidget.PlaceOption("Paris", [Leeds.Name, Paris.Name, "Paris, Texas, United States"]));
+        Assert.Null(WeatherWidget.PlaceOption("Paris (Île-de-France)", withoutFrance));
+        Assert.Equal(
+            [new PickEntry("Paris", Ticked: true, Found: true), new PickEntry("Leeds", Ticked: false, Found: true)],
+            PickList.Parse("Paris (Texas)", allowAll: false).Entries(WeatherWidget.ShortNames(withoutFrance), name => WeatherWidget.PlaceOption(name, withoutFrance)));
+        // Two spellings of the same place are ticked once.
+        Assert.Equal(
+            [new PickEntry("Paris", Ticked: true, Found: true), new PickEntry("Leeds", Ticked: false, Found: true)],
+            PickList.Parse("Paris (Texas), paris", allowAll: false).Entries(WeatherWidget.ShortNames(withoutFrance), name => WeatherWidget.PlaceOption(name, withoutFrance)));
     }
 
     // ---- The widget ---------------------------------------------------------------------------------
@@ -215,20 +260,83 @@ public sealed class WeatherPlacesTests
     }
 
     [Fact]
-    public void One_place_chosen_stays_put_and_is_named_only_with_location_on()
+    public void One_place_chosen_stays_put_and_is_named_unless_it_is_the_location()
     {
         Sta.Run(() =>
         {
             var store = Store();
-            var widget = Weather(new JsonObject { ["places"] = "Paris" });
-            widget.Refresh(store, Start);
-            widget.Refresh(store, Start.AddMinutes(5));
-            Assert.Contains("18°", Texts(widget));
-            Assert.DoesNotContain("Paris", Texts(widget));
+            // Another place's weather is never shown as if it were your own, even without Details.
+            foreach (var details in new[] { true, false })
+            {
+                var widget = Weather(new JsonObject { ["places"] = "Paris", ["showDetails"] = details });
+                widget.Refresh(store, Start);
+                widget.Refresh(store, Start.AddMinutes(5));
+                Assert.Contains("18°", Texts(widget));
+                Assert.Contains("Paris", Texts(widget));
+                Assert.Single(Descendants<TapTarget>(widget));
+            }
 
-            var named = Weather(new JsonObject { ["places"] = "Paris", ["showLocation"] = true });
+            // Your location is named only with Location on, as without places chosen.
+            var location = Weather(new JsonObject { ["places"] = "Leeds", ["showDetails"] = false });
+            location.Refresh(store, Start);
+            Assert.Contains("11°", Texts(location));
+            Assert.DoesNotContain("Leeds", Texts(location));
+            // Nor does it leave room beside the temperature for a name it doesn't show.
+            Assert.DoesNotContain(Descendants<StackPanel>(location), p => p.Visibility == Visibility.Visible && p.Children.Count == 0);
+            var named = Weather(new JsonObject { ["places"] = "Leeds", ["showLocation"] = true });
             named.Refresh(store, Start);
-            Assert.Contains("Paris", Texts(named));
+            Assert.Contains("Leeds", Texts(named));
+        });
+    }
+
+    [Fact]
+    public void Places_chosen_but_only_one_still_found_name_it()
+    {
+        Sta.Run(() =>
+        {
+            // Leeds was the location when they were chosen; now Manchester is, and only Paris is left of them.
+            var store = Store(morePlaces: false);
+            store.SetText(WeatherProvider.Location, "Manchester, England, United Kingdom");
+            store.SetAttachment(WeatherProvider.Places, (IReadOnlyList<PlaceForecast>)[new("Manchester, England, United Kingdom", LeedsWeather), new(Paris.Name, ParisWeather)]);
+            var widget = Weather(new JsonObject { ["places"] = "Leeds, Paris" });
+            widget.Refresh(store, Start);
+            widget.Refresh(store, Start.AddSeconds(30));
+            Assert.Contains("18°", Texts(widget));
+            Assert.Contains("Paris", Texts(widget));
+        });
+    }
+
+    [Fact]
+    public void A_tap_moves_on_every_weather_widget_beside_it_showing_the_same_places()
+    {
+        Sta.Run(() =>
+        {
+            var store = Store();
+            var dashboard = new Canvas();
+            var now = Weather(new JsonObject { ["places"] = "Leeds, Paris" });
+            var days = Weather(new JsonObject { ["places"] = "leeds, paris", ["showCurrent"] = false });
+            // Other places, or another pace, go their own way.
+            var others = Weather(new JsonObject { ["places"] = "Leeds, Sydney", ["showCurrent"] = false });
+            var slower = Weather(new JsonObject { ["places"] = "Leeds, Paris", ["placeSeconds"] = 30 });
+            Widget[] widgets = [now, days, others, slower];
+            foreach (var widget in widgets)
+            {
+                dashboard.Children.Add(widget);
+                widget.Refresh(store, Start);
+                widget.Refresh(store, Start.AddSeconds(4));
+            }
+
+            Descendants<TapTarget>(now).First().Tap();
+            Assert.Contains("Paris", Texts(now));
+            Assert.Contains("Paris", Texts(days));
+            Assert.Contains("Leeds", Texts(others));
+            Assert.Contains("Leeds", Texts(slower));
+
+            // And they keep together from there.
+            foreach (var widget in widgets)
+                widget.Refresh(store, Start.AddSeconds(14));
+            Assert.Contains("Leeds", Texts(now));
+            Assert.Contains("Leeds", Texts(days));
         });
     }
 

@@ -45,12 +45,20 @@ public sealed class PickList
     /// <see cref="All"/>, every option, ticked. A picked name that isn't an option any more (a feed since removed or
     /// renamed) is still there, ticked, so it can be unticked; one that is takes the option's spelling.
     /// </summary>
-    public IReadOnlyList<PickEntry> Entries(IReadOnlyList<string> options)
+    /// <param name="find">
+    /// For a picked name that isn't spelt as an option, the option it stands for, if any: a weather place picked as Paris
+    /// before another Paris made it Paris (Île-de-France), say.
+    /// </param>
+    public IReadOnlyList<PickEntry> Entries(IReadOnlyList<string> options, Func<string, string?>? find = null)
     {
         if (All)
             return [.. options.Select(o => new PickEntry(o, Ticked: true, Found: true))];
-        var picked = Names.Select(n => Option(options, n) is { } option ? new PickEntry(option, true, true) : new PickEntry(n, true, false)).ToList();
-        return [.. picked, .. options.Where(o => !Contains(Names, o)).Select(o => new PickEntry(o, Ticked: false, Found: true))];
+        var picked = Names
+            .Select(n => (Option(options, n) ?? (find?.Invoke(n) is { } other ? Option(options, other) : null)) is { } option ? new PickEntry(option, true, true) : new PickEntry(n, true, false))
+            // Two spellings of the same option are one.
+            .DistinctBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return [.. picked, .. options.Where(o => !picked.Any(p => p.Name.Equals(o, StringComparison.OrdinalIgnoreCase))).Select(o => new PickEntry(o, Ticked: false, Found: true))];
     }
 
     /// <summary>With <paramref name="name"/> picked too, after the others.</summary>

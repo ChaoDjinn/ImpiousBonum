@@ -125,9 +125,7 @@ public partial class App
     {
         if (WeatherLocationWindow.Ask(owner, _settings.WeatherLocation) is not { } place)
             return;
-        _settings.WeatherLocation = place;
-        // An area chosen for the last place is unlikely to suit this one.
-        _settings.MetOfficeArea = AppSettings.MetOfficeAreaAuto;
+        _settings.SetWeatherLocation(place);
         _settings.Save();
         AppLog.Info("Weather location set");
         _tray?.ShowInfo("Weather", $"Forecasts for {place.Name} will appear in a few seconds.");

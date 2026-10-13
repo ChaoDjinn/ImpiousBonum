@@ -266,6 +266,19 @@ public sealed class AppSettings
         MetOfficeArea = MetOfficeAreaAuto;
     }
 
+    /// <summary>
+    /// A new location, from Set location… or Change location…. The Met Office area goes back to automatic, as one chosen
+    /// for the last place is unlikely to suit this one, and if it's one of <see cref="WeatherPlaces"/> (arriving on
+    /// holiday, say), it comes out of them, so it isn't listed or fetched twice.
+    /// </summary>
+    public void SetWeatherLocation(WeatherLocation place)
+    {
+        WeatherLocation = place;
+        MetOfficeArea = MetOfficeAreaAuto;
+        if (WeatherPlaces.Any(p => SamePlace(p, place)))
+            WeatherPlaces = [.. WeatherPlaces.Where(p => !SamePlace(p, place))];
+    }
+
     /// <summary>Whether <paramref name="place"/> is the location or one of <see cref="WeatherPlaces"/> already, by where it is rather than its name.</summary>
     public bool HasWeatherPlace(WeatherLocation place) =>
         WeatherPlaces.Prepend(WeatherLocation).Any(p => p is not null && SamePlace(p, place));

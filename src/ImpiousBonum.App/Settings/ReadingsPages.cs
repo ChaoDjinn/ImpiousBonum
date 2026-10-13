@@ -1,10 +1,9 @@
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using ImpiousBonum.App.Controls;
 using ImpiousBonum.App.Shell;
+using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.App.Settings;
@@ -163,24 +162,7 @@ internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
     private DockPanel PlaceRow(WeatherLocation place)
     {
         var row = new DockPanel { Margin = new Thickness(0, 3, 0, 3) };
-        var handle = new Border
-        {
-            Child = SettingsWindow.Styled(new TextBlock { Text = "" }, "Glyph"),
-            // Transparent rather than none, so the whole grip catches the mouse and not just the glyph's lines.
-            Background = Brushes.Transparent,
-            Padding = new Thickness(0, 4, 12, 4),
-            Cursor = Cursors.SizeNS,
-            Focusable = true,
-            ToolTip = "Drag to reorder, or press Alt+Up/Alt+Down",
-        };
-        AutomationProperties.SetName(handle, $"Reorder {place.Name}");
-        DragReorder.SetIsHandle(handle, true);
-        handle.MouseLeftButtonDown += (_, e) =>
-        {
-            // Handled, or the page's scroll viewer takes focus for itself next. Dragging listens before this.
-            handle.Focus();
-            e.Handled = true;
-        };
+        var handle = DragReorder.Handle(place.Name, new Thickness(0, 4, 12, 4));
         DockPanel.SetDock(handle, Dock.Left);
         row.Children.Add(handle);
 
@@ -214,7 +196,7 @@ internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
             return;
         if (host.Settings.HasWeatherPlace(place))
         {
-            _placeProblem = $"{place.Name.Split(',')[0]} is one of your places already.";
+            _placeProblem = $"{WeatherWidget.ShortName(place.Name)} is one of your places already.";
             Load();
             return;
         }

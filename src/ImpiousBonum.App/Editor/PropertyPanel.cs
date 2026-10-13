@@ -61,6 +61,13 @@ public sealed partial class PropertyPanel : StackPanel
     /// </summary>
     public Func<string, IReadOnlyList<string>>? Options { get; set; }
 
+    /// <summary>
+    /// For a name picked from one of those lists (by its name, then the name picked) that isn't spelt as one of its names
+    /// now, the one it stands for, or null: a weather place picked as Paris before another Paris made it Paris
+    /// (Île-de-France), say. None if not set.
+    /// </summary>
+    public Func<string, string, string?>? PickedOption { get; set; }
+
     public void Rebuild()
     {
         // A font still being tried in a drop-down that's going away goes back.
@@ -688,7 +695,7 @@ public sealed partial class PropertyPanel : StackPanel
         PickList Current()
         {
             var value = PickList.Parse(CurrentString(target, setting), allowAll);
-            return value.All ? value : PickList.Of(value.Entries(OptionsOf(setting)).Where(e => e.Ticked).Select(e => e.Name));
+            return value.All ? value : PickList.Of(value.Entries(OptionsOf(setting), FindOf(setting)).Where(e => e.Ticked).Select(e => e.Name));
         }
 
         void Save(PickList value)
@@ -710,7 +717,7 @@ public sealed partial class PropertyPanel : StackPanel
             var focused = Keyboard.FocusedElement as FrameworkElement;
             var refocus = focused is { Tag: string name } && entries.IsAncestorOf(focused) ? (Name: name, Handle: DragReorder.GetIsHandle(focused), Index: IndexIn(entries, focused)) : default;
 
-            var list = value.Entries(options);
+            var list = value.Entries(options, FindOf(setting));
             ticked = value.All ? 0 : list.Count(e => e.Ticked);
             all.IsChecked = value.All;
             // With nothing that can be picked, unticking all would leave nothing ticked, which is all again.
@@ -778,6 +785,10 @@ public sealed partial class PropertyPanel : StackPanel
     private IReadOnlyList<string> OptionsOf(SettingDescriptor setting) =>
         setting.Choices ?? (setting.OptionsSource is { } source ? Options?.Invoke(source) : null) ?? [];
 
+    /// <summary>For a name picked from the app's list that's spelt another way now, the one it stands for (see <see cref="PickedOption"/>).</summary>
+    private Func<string, string?>? FindOf(SettingDescriptor setting) =>
+        setting.OptionsSource is { } source && PickedOption is { } find ? name => find(source, name) : null;
+
     /// <summary>Which of a panel's children an element is in, or -1.</summary>
     private static int IndexIn(Panel panel, DependencyObject element)
     {
@@ -829,32 +840,8 @@ public sealed partial class PropertyPanel : StackPanel
         parent.Children.Add(add);
     }
 
-    /// <summary>
-    /// The grip a list entry is dragged by, at the left of its card. It takes focus too (Tab, or a click), so Alt+Up and
-    /// Alt+Down can move the entry from the keyboard.
-    /// </summary>
-    private static Border DragHandle(string title)
-    {
-        var handle = new Border
-        {
-            Child = Secondary(Glyph("\uE76F")),
-            // Transparent rather than none, so the whole grip catches the mouse and not just the glyph's lines.
-            Background = Brushes.Transparent,
-            Padding = new Thickness(2, 4, 8, 4),
-            Cursor = Cursors.SizeNS,
-            Focusable = true,
-            ToolTip = "Drag to reorder, or press Alt+Up/Alt+Down",
-        };
-        AutomationProperties.SetName(handle, $"Reorder {title}");
-        DragReorder.SetIsHandle(handle, true);
-        handle.MouseLeftButtonDown += (_, e) =>
-        {
-            // Handled, or the scroll viewer around the panel takes focus for itself next. Dragging listens before this.
-            handle.Focus();
-            e.Handled = true;
-        };
-        return handle;
-    }
+    /// <summary>The grip a list entry is dragged by, at the left of its card.</summary>
+    private static Border DragHandle(string title) => DragReorder.Handle(title, new Thickness(2, 4, 8, 4));
 
     /// <summary>
     /// Moves a list entry (dragged, or Alt+Up/Alt+Down), then gives focus back to the same control in it once the panel
