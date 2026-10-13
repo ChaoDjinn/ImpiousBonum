@@ -79,6 +79,9 @@ public partial class LinkListPanel : UserControl
             return $"That {_what} is already in the list.";
         if (_links.Any(l => l.Name.Equals(ChosenName(), StringComparison.OrdinalIgnoreCase)))
             return $"Another {_what} has that name.";
+        // A widget lists the ones it shows by name, separated by commas (BBC, The Verge).
+        if (ChosenName().Contains(','))
+            return $"A {_what}'s name can't have a comma in it.";
         return null;
     }
 
