@@ -3,7 +3,9 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
-## Unreleased
+## 0.14.0
+
+Much more weather (more readings, air quality and pollen, severe weather warnings, more places and a choice of details), news tickers for each feed, fonts you can see before you pick, text that shrinks to fit, and dragging to reorder in the editor.
 
 **More weather readings and longer forecasts**
 - New weather readings for any widget: wind gusts and the wind direction in degrees, the UV index now and today's highest with its level (*Low* to *Extreme*), air pressure and whether it's rising, falling or steady over the last three hours, dew point, visibility, cloud cover, rain or snow in the last 15 minutes and today's total, the chance of rain this hour and tomorrow, and today's daylight (*10 h 49 min*). They come in the same request as the forecast Impious Bonum already fetches, so there are no extra requests and nothing more is sent.
