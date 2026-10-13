@@ -189,11 +189,14 @@ public sealed class LayoutSession
 
     // ---- Previews -------------------------------------------------------------------------------
 
-    /// <summary>A setting showing a value it hasn't been given yet: what it had, and the whole layout before.</summary>
-    private sealed record PreviewState(SettingTarget Target, string Key, JsonNode? Original, string Before);
+    /// <summary>
+    /// A setting showing a value it hasn't been given yet: what it had, its place among the other settings (-1 when it
+    /// had none), and the whole layout before.
+    /// </summary>
+    private sealed record PreviewState(SettingTarget Target, string Key, JsonNode? Original, int Place, string Before);
 
-    /// <summary>A <see cref="Preview"/> is showing.</summary>
-    public bool IsPreviewing => _preview is not null;
+    /// <summary>A <see cref="Preview"/> is showing. For tests.</summary>
+    internal bool IsPreviewing => _preview is not null;
 
     /// <summary>
     /// Shows <paramref name="value"/> for a setting without making it an edit yet, such as the font under the mouse in a
@@ -209,7 +212,7 @@ public sealed class LayoutSession
         if (JsonNode.DeepEquals(shown, value))
             return;
 
-        _preview ??= new PreviewState(target, key, shown?.DeepClone(), Serialize(Document));
+        _preview ??= new PreviewState(target, key, shown?.DeepClone(), SettingsOf(target)?.IndexOf(key) ?? -1, Serialize(Document));
         Put(target, key, value);
         Changed?.Invoke(this, new LayoutChange(KindOf(target, key), WidgetIndexOf(target), origin));
     }
@@ -226,16 +229,41 @@ public sealed class LayoutSession
 
         var (target, key) = (preview.Target, preview.Key);
         var shown = GetValue(target, key)?.DeepClone();
-        if (JsonNode.DeepEquals(shown, preview.Original))
-            return;
 
         // Back as it was. Kept, the value goes in again as an ordinary edit, so undo has the layout from before the preview.
-        Put(target, key, preview.Original);
+        PutBack(preview);
+        if (JsonNode.DeepEquals(shown, preview.Original))
+            return;
         if (keep)
             Edit(KindOf(target, key), WidgetIndexOf(target), null, MergeWindow, origin, _ => Put(target, key, shown));
         else
             Changed?.Invoke(this, new LayoutChange(KindOf(target, key), WidgetIndexOf(target), origin));
     }
+
+    /// <summary>
+    /// Puts a previewed setting back as it was and where it was. Previewing no value takes it out, and putting it back
+    /// would add it at the end, which counts as a change to save even though the values are the same.
+    /// </summary>
+    private void PutBack(PreviewState preview)
+    {
+        if (SettingsOf(preview.Target) is not { } settings)
+        {
+            Put(preview.Target, preview.Key, preview.Original);
+            return;
+        }
+        settings.Remove(preview.Key);
+        if (preview.Original is { } original)
+            settings.Insert(Math.Min(preview.Place, settings.Count), preview.Key, original.DeepClone());
+        _resolvedTheme = null;
+    }
+
+    /// <summary>The object a setting is stored in, whose order is kept in the file; null for the canvas's size.</summary>
+    private JsonObject? SettingsOf(SettingTarget target) => target.Kind switch
+    {
+        SettingTargetKind.Canvas => null,
+        SettingTargetKind.Theme => Document.Theme,
+        _ => Resolve(target),
+    };
 
     public void SetGeometry(int index, Rect rect, string mergeKey, object? origin)
     {

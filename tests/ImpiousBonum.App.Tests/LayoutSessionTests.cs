@@ -447,6 +447,61 @@ public sealed class LayoutSessionTests
         Assert.True(session.CanRedo);
     }
 
+    /// <summary>A widget with its own font among its other settings, not last.</summary>
+    private static LayoutSession SessionWithFont() => new(new LayoutDocument
+    {
+        Theme = new JsonObject { ["fontFamily"] = "Verdana", ["foreground"] = "#FFFFFF" },
+        Widgets =
+        [
+            new JsonObject { ["type"] = "text", ["fontFamily"] = "Arial", ["x"] = 0, ["y"] = 0, ["width"] = 100, ["height"] = 50, ["text"] = "A" },
+        ],
+    });
+
+    [Theory]
+    [InlineData("Georgia")]
+    [InlineData("Arial")]
+    public void A_preview_through_no_font_and_not_kept_leaves_the_setting_in_its_place(string last)
+    {
+        // Showing no font takes the setting out, and showing one again would add it at the end.
+        var session = SessionWithFont();
+        var before = Json(session);
+        Preview(session, 0, null);
+        Preview(session, 0, last);
+        session.EndPreview(keep: false, null);
+
+        Assert.Equal(before, Json(session));
+        Assert.False(session.IsDirty);
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void A_preview_of_the_themes_font_not_kept_leaves_it_in_its_place()
+    {
+        var session = SessionWithFont();
+        var before = Json(session);
+        session.Preview(SettingTarget.Theme, "fontFamily", null, null);
+        session.Preview(SettingTarget.Theme, "fontFamily", JsonValue.Create("Georgia"), null);
+        session.EndPreview(keep: false, null);
+
+        Assert.Equal(before, Json(session));
+        Assert.False(session.IsDirty);
+    }
+
+    [Fact]
+    public void Undoing_a_preview_kept_after_no_font_is_back_to_the_saved_layout()
+    {
+        var session = SessionWithFont();
+        var before = Json(session);
+        Preview(session, 0, null);
+        Preview(session, 0, "Georgia");
+        session.EndPreview(keep: true, null);
+        Assert.Equal("Georgia", Font(session, 0));
+
+        session.Undo();
+        Assert.Equal(before, Json(session));
+        Assert.False(session.IsDirty);
+    }
+
     [Fact]
     public void A_preview_kept_is_one_undo_step()
     {
