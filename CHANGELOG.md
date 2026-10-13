@@ -26,6 +26,19 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - *Feeds* in the editor is a list of your feeds to tick, rather than names to type: untick *All feeds*, which leaves each feed ticked, then untick the ones you don't want and drag the rest into order by their handles (or Alt+Up and Alt+Down). The tickers go in that order, or with *All feeds*, in the *News feeds* page's. The last feed ticked stays until you tick another, so swapping one for another doesn't go back to all of them. A feed you've since removed or renamed stays ticked, marked *not found*, so you can untick it. Layouts that already name their feeds keep working as they are.
 - Since commas separate the names a widget shows, and *all* means every one, a new feed or calendar can't have a comma in its name or be called *all*. A feed from before that does is greyed out in *Feeds* and only shows with *All feeds*; to choose it on its own, remove it and add it again with another name.
 
+**Air quality and pollen**
+- Turn on *Weather* → *Air quality and pollen* for readings of the air at your weather's location: an air quality index with its level, from *Good* to *Extremely poor* on the European index or *Good* to *Hazardous* on the US one, and fine particles (PM2.5), PM10, ozone and nitrogen dioxide. *Air quality index* chooses which; *Automatic* uses the European index in Europe and the US index elsewhere.
+- Grass, tree and weed pollen, each with its level (*None* to *Very high*), and the worst of them in a few words such as *Grass high*. Pollen is only counted in Europe, in season.
+- They're readings for any widget, like the weather's: `{weather.aqi.level}` or `{weather.pollen}` in a text widget, say, or a gauge of `weather.aqi`. The *Weather* page's location line shows them too.
+- It's off until you turn it on. Then the place's coordinates go to Open-Meteo once an hour, and nothing else is sent. Air quality data by CAMS (Copernicus), via Open-Meteo.com.
+
+**Fonts you can see before you pick**
+- The editor's font list shows each font's name in that font, as Word does. Symbol and icon fonts like *Wingdings* show their name as usual, with a few of their symbols beside it.
+- No more clicking through fonts one at a time: with the list open, the font under the mouse (or the one you move to with the arrow keys) shows on the widget straight away. Click it or press Enter to keep it; press Esc or click elsewhere and the font you had comes back. Looking through the list doesn't fill up undo or count as a change to save.
+- With the list closed, Up and Down change to the next font straight away, and a single undo goes back to the font you started with.
+- A widget's own *Font* has *Theme font* at the top of the list, to go back to the layout theme's font.
+- The list opens quickly however many fonts you have, as only the fonts in view are loaded.
+
 ## 0.13.0
 
 Impious Bonum has a window of its own, and the tray menu keeps to the basics.

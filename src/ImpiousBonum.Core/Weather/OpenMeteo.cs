@@ -4,12 +4,15 @@ using System.Text.Json;
 namespace ImpiousBonum.Core.Weather;
 
 /// <summary>
-/// The Open-Meteo forecast and place-search APIs (open-meteo.com): free for non-commercial use, no account or key, and
-/// the data is CC BY 4.0. Only the place name or coordinates you choose are sent.
+/// The Open-Meteo forecast, air quality and place-search APIs (open-meteo.com): free for non-commercial use, no account
+/// or key, and the data is CC BY 4.0. Only the place name or coordinates you choose are sent. The air quality is CAMS's
+/// (the Copernicus Atmosphere Monitoring Service), which asks to be credited.
 /// </summary>
 public static class OpenMeteo
 {
     public const string Attribution = "Weather data by Open-Meteo.com";
+
+    public const string AirQualityAttribution = "Air quality data by CAMS (Copernicus), via Open-Meteo.com";
 
     private static readonly HttpClient Http = CreateClient();
 
@@ -33,6 +36,21 @@ public static class OpenMeteo
         + "daylight_duration,uv_index_max,wind_speed_10m_max,wind_gusts_10m_max"
         + "&timezone=auto&forecast_days=16&past_hours=3&forecast_hours=49"
         + (request.Units == WeatherUnits.Imperial ? "&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch" : "&wind_speed_unit=kmh");
+
+    /// <summary>The air quality and pollen now at <paramref name="request"/>'s place. Throws <see cref="HttpRequestException"/> and the like on failure.</summary>
+    public static async Task<AirQualityReport> AirQualityAsync(AirQualityRequest request, CancellationToken cancellationToken)
+    {
+        var json = await Http.GetStringAsync(AirQualityUrl(request), cancellationToken).ConfigureAwait(false);
+        return AirQualityReport.Parse(json);
+    }
+
+    /// <summary>
+    /// Only the readings shown, and only for now: both indices, so changing the scale needs no new request, and the
+    /// pollen types the groups are made of. Pollen comes back null outside Europe.
+    /// </summary>
+    internal static string AirQualityUrl(AirQualityRequest request) =>
+        FormattableString.Invariant($"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={request.Latitude:0.####}&longitude={request.Longitude:0.####}")
+        + "&current=european_aqi,us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,alder_pollen,birch_pollen,olive_pollen,grass_pollen,mugwort_pollen,ragweed_pollen";
 
     /// <summary>
     /// Up to <paramref name="count"/> places called <paramref name="name"/>, best first, in the user's language where known.

@@ -78,6 +78,21 @@ public sealed class DemoReadingsTests
     }
 
     [Fact]
+    public void Every_air_quality_and_pollen_reading_has_a_made_up_value()
+    {
+        var store = new MetricStore();
+        DemoReadings.Fill(store, Evening);
+
+        var air = store.Definitions.Where(d => d.Category == "Air quality").ToList();
+        Assert.Contains(air, d => d.Id == AirQualityProvider.WeedLevel);
+        Assert.All(air, d => Assert.True(store.TryGet(d.Id, out var sample) && sample.HasValue, d.Id));
+        store.TryGet(AirQualityProvider.Level, out var level);
+        Assert.Equal("Fair", level.Text);
+        store.TryGet(AirQualityProvider.Pollen, out var pollen);
+        Assert.Equal("Grass low", pollen.Text);
+    }
+
+    [Fact]
     public void They_are_the_same_every_time()
     {
         var (first, second) = (new MetricStore(), new MetricStore());

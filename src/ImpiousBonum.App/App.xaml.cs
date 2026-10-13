@@ -137,7 +137,8 @@ public partial class App : Application
             ? DemoSampler()
             : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData, () => _settings.Calendars,
                 () => _settings.NewsFeeds,
-                () => _trackedGame, recap => Dispatcher.BeginInvoke(() => OnSessionEnded(recap))));
+                () => _trackedGame, recap => Dispatcher.BeginInvoke(() => OnSessionEnded(recap)),
+                airQuality: () => _settings.AirQualityRequest()));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -322,7 +323,8 @@ public partial class App : Application
         if (name is null)
             return false;
 
-        await using var sampler = demo ? null : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest, customData: () => settings.CustomData, calendars: () => settings.Calendars, news: () => settings.NewsFeeds));
+        await using var sampler = demo ? null : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest, customData: () => settings.CustomData, calendars: () => settings.Calendars, news: () => settings.NewsFeeds,
+            airQuality: settings.AirQualityRequest));
         var store = sampler?.Store ?? new MetricStore();
         var now = DateTime.Now;
         if (sampler is not null)

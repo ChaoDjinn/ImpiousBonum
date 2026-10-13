@@ -124,6 +124,11 @@ internal interface ISettingsHost
 
     void SetWeatherUnits(string units);
 
+    /// <summary>Air quality and pollen on or off; on, they're fetched for the weather's location once it has one.</summary>
+    void SetAirQuality(bool on);
+
+    void SetAirQualityScale(string scale);
+
     void SetCalendars(IReadOnlyList<CalendarLink> calendars);
 
     void SetNewsFeeds(IReadOnlyList<NewsFeed> feeds);

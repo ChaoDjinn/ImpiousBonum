@@ -248,6 +248,19 @@ public partial class App : ISettingsHost
         _settings.Save();
     }
 
+    void ISettingsHost.SetAirQuality(bool on)
+    {
+        _settings.AirQuality = on;
+        _settings.Save();
+        AppLog.Info($"Air quality and pollen {(on ? "on" : "off")}");
+    }
+
+    void ISettingsHost.SetAirQualityScale(string scale)
+    {
+        _settings.AirQualityScale = scale;
+        _settings.Save();
+    }
+
     void ISettingsHost.SetCalendars(IReadOnlyList<CalendarLink> calendars) => SetCalendars(calendars);
 
     void ISettingsHost.SetNewsFeeds(IReadOnlyList<NewsFeed> feeds) => SetNewsFeeds(feeds);
