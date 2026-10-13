@@ -133,6 +133,7 @@ public sealed class ShrinkToFitTests
     [InlineData("""{ "type": "processes", "fontSize": 40, "count": 6 }""", 400, 220)]
     [InlineData("""{ "type": "processes", "fontSize": 50, "count": 3 }""", 400, 220)]
     [InlineData("""{ "type": "weather", "fontSize": 200 }""", 900, 180)]
+    [InlineData("""{ "type": "weather", "forecastDetails": "chance of rain, rainfall, wind, gusts, UV", "rainFrom": 0, "details": "conditions, high and low, feels like, wind, gusts, humidity, pressure, UV, chance of rain, rainfall, sunrise, sunset, daylight, dew point, visibility, cloud cover, air quality, pollen" }""", 900, 180)]
     [InlineData("""{ "type": "media", "fontSize": 90 }""", 640, 160)]
     [InlineData("""{ "type": "news", "style": "ticker", "fontSize": 60 }""", 600, 60)]
     public void Text_too_big_for_its_widget_shrinks_to_fit_inside_it(string json, double width, double height)

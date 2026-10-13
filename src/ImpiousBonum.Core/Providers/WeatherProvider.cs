@@ -109,12 +109,11 @@ public sealed class WeatherProvider(
         if (_registeredUnits == units)
             return;
         _registeredUnits = units;
-        var imperial = units == WeatherUnits.Imperial;
-        var temperature = imperial ? MetricUnit.Fahrenheit : MetricUnit.Celsius;
-        var speed = imperial ? MetricUnit.MilesPerHour : MetricUnit.KilometresPerHour;
-        var pressure = imperial ? MetricUnit.InchesOfMercury : MetricUnit.Hectopascals;
-        var distance = imperial ? MetricUnit.Miles : MetricUnit.Kilometres;
-        var precipitation = imperial ? MetricUnit.Inches : MetricUnit.Millimetres;
+        var temperature = WeatherReadings.TemperatureUnit(units);
+        var speed = WeatherReadings.SpeedUnit(units);
+        var pressure = WeatherReadings.PressureUnit(units);
+        var distance = WeatherReadings.DistanceUnit(units);
+        var precipitation = WeatherReadings.PrecipitationUnit(units);
 
         store.Register(new MetricDefinition(Temperature, "Weather: temperature", "Weather", temperature, Format: "0"));
         store.Register(new MetricDefinition(FeelsLike, "Weather: feels like", "Weather", temperature, Format: "0"));

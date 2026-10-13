@@ -244,7 +244,7 @@ A sensor service from before 0.8 doesn't send these; *Sensors* → *Update…* b
 
 ### Weather
 
-The *Weather* widget shows an icon, the temperature and conditions now (with today's high and low and what it feels like), and a row of the days or hours ahead, every three hours if you like: up to 16 days, or 48 hours. Every `weather.*` metric works in other widgets too: `{weather.temp} · {weather.condition}` in a text widget, or a gauge of `weather.temp`.
+The *Weather* widget shows an icon, the temperature and conditions now (with today's high and low and what it feels like, or other details you choose), and a row of the days or hours ahead, every three hours if you like: up to 16 days, or 48 hours. Every `weather.*` metric works in other widgets too: `{weather.temp} · {weather.condition}` in a text widget, or a gauge of `weather.temp`.
 
 <p align="center"><img src="images/widgets/weather.png" width="600" alt="The weather widget with colour icons: 14° and partly cloudy now with the high, low and feels-like, four days ahead and a yellow wind warning under them, and below it a second weather widget of every three hours ahead with the chance of rain"></p>
 
@@ -255,7 +255,21 @@ For a suburb or village, or one of several places with the same name, add its to
 
 It's adjustable in the editor: turn off *Weather now* to leave just the forecast (say, one widget of the hours ahead beside another of the days), choose *colour* icons for a yellow sun, white clouds, grey rain clouds with blue rain and white lightning instead of outlines in one colour, and give the widget its own text and detail colours rather than the theme's. A day or hour shows its chance of rain from 30%; *Chance of rain from* changes that, and 0 always shows it.
 
-There's more in the forecast than the widget shows, for text, gauges and the rest:
+Choose what the widget shows beside the temperature under *Details to show* in the editor, ticking them and dragging them into order by their handles:
+
+- **Conditions**, such as *Partly cloudy*, and today's **high and low** (*H 16° · L 9°*).
+- **Feels like** (*Feels 13°*), **humidity** and **dew point**.
+- **Wind** speed and direction (*12 km/h SW*) and **gusts** (*Gusts 40 km/h*).
+- **Pressure**, with an arrow for whether it's rising (↑), falling (↓) or steady (→) over the last three hours (*1012 hPa ↓*).
+- **UV**, with its level (*UV 3 Moderate*).
+- Today's **chance of rain** (*Rain 60%*) and **rainfall** (*Rainfall 2.4 mm*).
+- **Sunrise**, **sunset** and today's **daylight** (*Daylight 10 h 49 min*).
+- **Visibility** and **cloud cover**.
+- **Air quality**, by its level (*Air quality Fair*), and **pollen** (*Pollen Grass high*), once [air quality and pollen](#air-quality-and-pollen) are on; until then they're left out.
+
+With the conditions first they have the larger line, as they always have, and the rest go a few to a line under them, with a short label where the number alone could be anything. A widget starts with the conditions, high and low and feels like, which is what it has always shown, and turning off *Details* leaves them all out. Under each day or hour, *Forecast details* chooses between its chance of rain (from *Chance of rain from*), rainfall (only when there's some, so dry days stay clear), wind, gusts and UV: for a day, its total rain, its strongest wind and gusts and its highest UV. Each has a row of its own, so they line up across the days or hours even where one is missing. Units are the forecast's, as for the readings below, and with *Shrink to fit* on (as it is unless you turn it off) a busy widget gets smaller as a whole to fit. On a [place](#more-places) other than your location, the details are that place's own, without air quality and pollen, which are only fetched for your location. They all come from the forecast already fetched, so choosing more sends nothing more.
+
+The same readings, and a few more, work in any widget, for text, gauges and the rest:
 
 - **Wind:** gusts (`weather.gusts`) as well as the speed, and the direction in degrees (`weather.wind.degrees`, 0 for a wind from the north) as well as `SW`.
 - **UV:** the index now (`weather.uv`), today's highest (`weather.uv.max`), and the level now in the WHO's words (`weather.uv.level`): *Low* (up to 2), *Moderate* (3 to 5), *High* (6 and 7), *Very high* (8 to 10) or *Extreme* (11 and up).
@@ -295,7 +309,7 @@ Turn on *Weather* → *Air quality and pollen* for readings of the air at the we
 
 Each type of pollen has its own bands, since some bring on hay fever at far smaller counts than others: [MeteoSwiss's](https://www.meteoswiss.admin.ch) for alder, birch, grass, mugwort and ragweed, and the Spanish Aerobiology Network's for olive, which stop at *High*. A group takes the level of its worst type: 20 grains of birch is moderate, but 20 of olive is low. The bands are meant for a day's average, so an hour's count is a guide rather than the official level.
 
-For example, `AQI {weather.aqi} ({weather.aqi.level}) · Pollen: {weather.pollen}` in a text widget reads *AQI 26 (Fair) · Pollen: Grass high*. While it's on, the *Weather* page's location line shows the air quality and pollen too.
+For example, `AQI {weather.aqi} ({weather.aqi.level}) · Pollen: {weather.pollen}` in a text widget reads *AQI 26 (Fair) · Pollen: Grass high*. While it's on, the *Weather* page's location line shows the air quality and pollen too, and the *Weather* widget can show them beside the temperature (tick them under *Details to show*).
 
 Once an hour, just after the hour (when that hour's readings come out), the place's coordinates go to Open-Meteo's air quality service; nothing else is sent, and nothing at all while it's off or there's no location. If it can't be reached it tries again five minutes later, and the last readings stay for up to three hours. Air quality data by CAMS (Copernicus), via Open-Meteo.com: the forecasts of the [Copernicus Atmosphere Monitoring Service](https://atmosphere.copernicus.eu).
 

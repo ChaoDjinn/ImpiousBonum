@@ -338,15 +338,46 @@ public sealed class PropertyPanelTests
             session.Select(0);
             Pump();
 
-            var picks = Picks(panel).Select(b => (string)b.Tag).ToList();
-            var found = Picks(panel).All(b => b.IsChecked == true && !Text(b).Contains("not found"));
+            var picks = Picks(panel, "Places").Select(b => (string)b.Tag).ToList();
+            var found = Picks(panel, "Places").All(b => b.IsChecked == true && !Text(b).Contains("not found"));
             // A change writes it as it's spelt now.
-            Toggle(Pick(panel, "Leeds"));
+            Toggle(Pick(panel, "Leeds", "Places"));
             window.Close();
 
             Assert.Equal(["Paris", "Leeds"], picks);
             Assert.True(found);
             Assert.Equal("Paris", (string?)session.Document.Widgets[0]["places"]);
+        });
+    }
+
+    [Fact]
+    public void The_weather_details_are_picked_in_order_from_their_own_list()
+    {
+        Sta.Run(() =>
+        {
+            var session = new LayoutSession(new LayoutDocument { Widgets = [Widget("weather")] });
+            var (panel, window) = Show(session);
+            session.Select(0);
+            Pump();
+
+            // What it always showed, ticked first, then the rest to tick; nothing to find in a list the app keeps.
+            var offered = Picks(panel, "Details to show").Select(b => (string)b.Tag).ToList();
+            var ticked = Picks(panel, "Details to show").Count(b => b.IsChecked == true);
+            var under = Picks(panel, "Forecast details").Where(b => b.IsChecked == true).Select(b => (string)b.Tag).ToList();
+            Toggle(Pick(panel, "wind", "Details to show"));
+            var withWind = (string?)session.Document.Widgets[0]["details"];
+            DragReorder.Move(Pick(panel, "wind", "Details to show"), -3);
+            Pump();
+            var windFirst = (string?)session.Document.Widgets[0]["details"];
+            Toggle(Pick(panel, "UV", "Forecast details"));
+            window.Close();
+
+            Assert.Equal([.. WeatherWidget.DetailNames], offered);
+            Assert.Equal(3, ticked);
+            Assert.Equal(["chance of rain"], under);
+            Assert.Equal("conditions, high and low, feels like, wind", withWind);
+            Assert.Equal("wind, conditions, high and low, feels like", windFirst);
+            Assert.Equal("chance of rain, UV", (string?)session.Document.Widgets[0]["forecastDetails"]);
         });
     }
 
@@ -409,10 +440,15 @@ public sealed class PropertyPanelTests
 
     private static CheckBox AllBox(PropertyPanel panel) => Descendants<CheckBox>(panel).Single(b => b.Content as string == "All feeds");
 
-    /// <summary>The boxes for each feed, top to bottom.</summary>
-    private static List<CheckBox> Picks(PropertyPanel panel) => [.. Descendants<CheckBox>(panel).Where(b => b.Tag is string)];
+    /// <summary>The boxes for each feed, top to bottom; for a widget with more than one list of names, those of the setting labelled <paramref name="label"/>.</summary>
+    private static List<CheckBox> Picks(PropertyPanel panel, string? label = null) =>
+        [.. Descendants<CheckBox>(label is null ? panel : SettingRow(panel, label)).Where(b => b.Tag is string)];
 
-    private static CheckBox Pick(PropertyPanel panel, string name) => Picks(panel).Single(b => (string)b.Tag == name);
+    private static CheckBox Pick(PropertyPanel panel, string name, string? label = null) => Picks(panel, label).Single(b => (string)b.Tag == name);
+
+    /// <summary>A setting's row, by the label at its left.</summary>
+    private static Grid SettingRow(PropertyPanel panel, string label) =>
+        Descendants<Grid>(panel).First(g => g.Children.Count > 0 && g.Children[0] is TextBlock { Text: var text } && text == label);
 
     private static string Text(CheckBox box) => string.Concat(((TextBlock)box.Content).Inlines.OfType<Run>().Select(r => r.Text));
 

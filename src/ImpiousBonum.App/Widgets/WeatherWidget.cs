@@ -11,8 +11,9 @@ using ImpiousBonum.Core.Weather;
 namespace ImpiousBonum.App.Widgets;
 
 /// <summary>
-/// The weather where you are: an icon, the temperature and conditions now, a row of days or hours ahead, and below them
-/// the most serious severe weather warning while there is one. The location is set once for the PC (the Weather page),
+/// The weather where you are: an icon and the temperature now with the details chosen beside it (the conditions, today's
+/// high and low and feels like unless others are chosen), a row of days or hours ahead, and below them the most serious
+/// severe weather warning while there is one. The location is set once for the PC (the Weather page),
 /// so every layout shows the same place. It can move between the location and other places saved there too, one at a
 /// time, moving on every few seconds or when tapped.
 /// </summary>
@@ -20,6 +21,21 @@ public sealed class WeatherWidget : Widget
 {
     /// <summary>The names the editor offers for <c>places</c>: the location's, then the Weather page's more places, in its order.</summary>
     public const string PlaceNames = "weatherPlaces";
+
+    /// <summary>What <c>details</c> starts with: what the widget always showed beside the temperature.</summary>
+    private const string DefaultDetails = DetailName.Conditions + ", " + DetailName.HighAndLow + ", " + DetailName.FeelsLike;
+
+    /// <summary>What can go beside the temperature (<c>details</c>), in the editor's order.</summary>
+    public static IReadOnlyList<string> DetailNames { get; } =
+    [
+        DetailName.Conditions, DetailName.HighAndLow, DetailName.FeelsLike, DetailName.Wind, DetailName.Gusts, DetailName.Humidity,
+        DetailName.Pressure, DetailName.Uv, DetailName.RainChance, DetailName.Rainfall, DetailName.Sunrise, DetailName.Sunset,
+        DetailName.Daylight, DetailName.DewPoint, DetailName.Visibility, DetailName.Clouds, DetailName.AirQuality, DetailName.Pollen,
+    ];
+
+    /// <summary>What can go under each day or hour (<c>forecastDetails</c>), in the editor's order.</summary>
+    public static IReadOnlyList<string> ForecastDetailNames { get; } =
+        [DetailName.RainChance, DetailName.Rainfall, DetailName.Wind, DetailName.Gusts, DetailName.Uv];
 
     public static WidgetDescriptor Descriptor { get; } = new(
         "weather", "Weather",
@@ -31,9 +47,17 @@ public sealed class WeatherWidget : Widget
             Setting.Choice("forecast", "Forecast", "days", ["days", "hours", "none"]),
             Setting.Number("count", "Days or hours", 5, 1, 48, group: Setting.Content, help: "Up to 16 days, or 48 hours."),
             Setting.Number("hourStep", "Hours apart", 1, 1, 12, group: Setting.Content, help: "For an hourly forecast, e.g. 3 for every three hours."),
+            Setting.Picks("forecastDetails", "Forecast details", DetailName.RainChance, choices: ForecastDetailNames,
+                help: "What each day or hour shows under its temperature, in order: the chance of rain (from Chance of rain from), rainfall (only when there's some), "
+                    + "wind, gusts (in the wind's units) and UV. A day's are its total rain, its strongest wind and gusts, and its highest UV."),
             Setting.Number("rainFrom", "Chance of rain from", 30, 0, 100, group: Setting.Content,
-                help: "Show the chance of rain from this percentage; 0 always shows it."),
-            Setting.Toggle("showDetails", "Details", true, group: Setting.Content, help: "Conditions, today's high and low, and feels like, beside the temperature."),
+                help: "With chance of rain in Forecast details, show it from this percentage; 0 always shows it."),
+            Setting.Toggle("showDetails", "Details", true, group: Setting.Content, help: "The ones chosen under Details to show, beside the temperature. Off leaves them all out."),
+            Setting.Picks("details", "Details to show", DefaultDetails, choices: DetailNames,
+                help: "Which details go beside the temperature, in order. Conditions, when they're first, have the larger line, as they always had; the rest go "
+                    + "a few to a line, with a short label where the number alone could be anything, such as Feels 12°, Gusts 40 km/h or UV 3 Moderate. "
+                    + "High and low, chance of rain, rainfall and daylight are today's, and pressure has an arrow for rising, falling or steady over the last three hours. "
+                    + "Air quality and pollen need them turned on (the Weather page) and are your location's, so they're left out for other places."),
             Setting.Toggle("showLocation", "Location", false, group: Setting.Content),
             Setting.Picks("places", "Places", null, source: PlaceNames, none: "No location yet: set one on the Weather page.",
                 help: "Which places to show, in order: your location and the more places on the Weather page, by their names up to the first comma, such as Leeds "
@@ -52,8 +76,8 @@ public sealed class WeatherWidget : Widget
             Setting.Choice("iconStyle", "Icons", "outline", ["outline", "colour"], group: Setting.Appearance,
                 help: "outline draws them in the icon colour below; colour in their own: a yellow sun, white clouds, blue rain, white lightning."),
             Setting.Color("iconColor", "Icon colour", "accent", help: "For outline icons."),
-            Setting.Color("textColor", "Text colour", "foreground", help: "The temperatures and conditions."),
-            Setting.Color("detailColor", "Detail colour", "secondary", help: "Highs and lows, feels like, times and days, and the chance of rain."),
+            Setting.Color("textColor", "Text colour", "foreground", help: "The temperatures, and the conditions when they have the larger line (first in Details to show)."),
+            Setting.Color("detailColor", "Detail colour", "secondary", help: "The smaller details beside the temperature, the forecast's lows, times and days, and what's under each day or hour."),
         ],
         (settings, theme) => new WeatherWidget(settings, theme));
 
@@ -69,6 +93,17 @@ public sealed class WeatherWidget : Widget
     private readonly Brush _text;
     private readonly Brush _detail;
     private readonly bool _showCurrent;
+    private readonly bool _showDetails;
+
+    /// <summary>The details chosen beside the temperature and under each day or hour, in order, as the editor spells them.</summary>
+    private readonly IReadOnlyList<string> _detailsChosen;
+    private readonly IReadOnlyList<string> _forecastDetailsChosen;
+
+    /// <summary>Whether details that can change between forecasts are shown, so they're only looked up then (see <see cref="Live"/>).</summary>
+    private readonly bool _airQualityShown;
+    private readonly bool _pollenShown;
+    private readonly bool _trendShown;
+
     private readonly ContentControl _icon;
     private readonly TextBlock _temperature;
     private readonly StackPanel? _details;
@@ -79,6 +114,7 @@ public sealed class WeatherWidget : Widget
     private readonly ShrinkToFit? _fitted;
     private WeatherReport? _shown;
     private bool _shownEmpty;
+    private LiveDetails _liveShown;
 
     /// <summary>What the warning strip shows (the most serious warning and how many there are), or null while it's empty.</summary>
     private string? _warningShown;
@@ -132,6 +168,14 @@ public sealed class WeatherWidget : Widget
         _text = theme.Resolve(settings.String("textColor"), theme.Foreground);
         _detail = theme.Resolve(settings.String("detailColor"), theme.Secondary);
         _showCurrent = settings.Bool("showCurrent");
+        _showDetails = settings.Bool("showDetails");
+        _detailsChosen = Offered(settings.Picks("details"), DetailNames);
+        _forecastDetailsChosen = Offered(settings.Picks("forecastDetails"), ForecastDetailNames);
+        // The details are only beside the weather now, so a forecast-only widget never looks these up.
+        var detailsShown = _showCurrent && _showDetails;
+        _airQualityShown = detailsShown && _detailsChosen.Contains(DetailName.AirQuality);
+        _pollenShown = detailsShown && _detailsChosen.Contains(DetailName.Pollen);
+        _trendShown = detailsShown && _detailsChosen.Contains(DetailName.Pressure);
 
         var now = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         _icon = new ContentControl { Focusable = false, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, _fontSize * 0.2, 0) };
@@ -140,7 +184,7 @@ public sealed class WeatherWidget : Widget
         now.Children.Add(_icon);
         now.Children.Add(_temperature);
         // The place's name goes with the details, so one with places chosen has them even without Details or Location.
-        if (settings.Bool("showDetails") || _showLocation || named)
+        if (_showDetails || _showLocation || named)
         {
             _details = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(_fontSize * 0.25, 0, 0, 0) };
             now.Children.Add(_details);
@@ -256,12 +300,25 @@ public sealed class WeatherWidget : Widget
                 ShowEmpty(name);
             return;
         }
-        if (ReferenceEquals(report, _shown) && name == _nameShown)
+        var live = Live(store, report, main, now);
+        if (ReferenceEquals(report, _shown) && name == _nameShown && live == _liveShown)
             return;
         _shown = report;
         _shownEmpty = false;
-        Show(report, name);
+        _liveShown = live;
+        Show(report, name, live);
     }
+
+    /// <summary>
+    /// The details shown that can change without a new forecast: the air quality and pollen, which have readings of their
+    /// own every hour (for the main place alone), and which way the pressure is going, which moves on with the hour.
+    /// </summary>
+    private LiveDetails Live(MetricStore store, WeatherReport report, bool main, DateTime now) => new(
+        main && _airQualityShown ? TextOf(store, AirQualityProvider.Level) : null,
+        main && _pollenShown ? TextOf(store, AirQualityProvider.Pollen) : null,
+        _trendShown ? WeatherReadings.Trend(report.Hours, report.LocalTime(new DateTimeOffset(now.ToUniversalTime()))) : null);
+
+    private static string? TextOf(MetricStore store, string id) => store.TryGet(id, out var sample) ? sample.Text : null;
 
     /// <summary>
     /// The place on show: its forecast, the name to show with it (null for none), and whether it's the main place. With no
@@ -394,7 +451,7 @@ public sealed class WeatherWidget : Widget
     }
 
     /// <param name="name">The place's name to show with it, or null for none.</param>
-    private void Show(WeatherReport report, string? name)
+    private void Show(WeatherReport report, string? name, LiveDetails live)
     {
         _nameShown = name;
         _icon.Content = Icon(WeatherCodes.Icon(report.Code, report.IsDay), _fontSize * 0.9, _iconBrush);
@@ -403,15 +460,21 @@ public sealed class WeatherWidget : Widget
         if (_details is not null)
         {
             _details.Children.Clear();
-            if (Settings.Bool("showDetails"))
+            if (_showDetails)
             {
-                _details.Children.Add(Line(WeatherCodes.Describe(report.Code), _fontSize * 0.3, _text));
-                var range = report.Today is { } today ? $"H {Degrees(today.Temperature)} · L {Degrees(today.Low)}" : null;
-                _details.Children.Add(Line(string.Join("  ·  ", new[] { range, $"Feels {Degrees(report.FeelsLike)}" }.OfType<string>()), _fontSize * 0.22, _detail));
+                // The conditions first have the larger line, as they always had; the rest go a few to a line under them.
+                var rest = _detailsChosen;
+                if (_detailsChosen is [DetailName.Conditions, ..])
+                {
+                    _details.Children.Add(Line(WeatherCodes.Describe(report.Code), _fontSize * 0.3, _text));
+                    rest = [.. _detailsChosen.Skip(1)];
+                }
+                foreach (var line in DetailLines(rest.Select(detail => DetailText(detail, report, live)).OfType<string>()))
+                    _details.Children.Add(Line(line, _fontSize * 0.22, _detail));
             }
             if (!string.IsNullOrEmpty(name))
                 _details.Children.Add(Line(name, _fontSize * 0.22, _detail));
-            // Without Details, and no name to show, it takes no room (nor its margin) beside the temperature.
+            // Without details, and no name to show, it takes no room (nor its margin) beside the temperature.
             _details.Visibility = _details.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
         ShowPlaceLine(name);
@@ -419,11 +482,17 @@ public sealed class WeatherWidget : Widget
         if (_ahead is null)
             return;
         _ahead.Children.Clear();
-        var periods = _forecast == "hours"
+        var periods = (_forecast == "hours"
             ? report.HoursAhead.Where((_, i) => i % _hourStep == _hourStep - 1).Take(_count)
-            : report.Days.Take(_count);
-        foreach (var period in periods)
-            _ahead.Children.Add(Column(period, report));
+            : report.Days.Take(_count)).ToList();
+        // Each forecast detail has its own row, so a day that hasn't got one (no rain, say) doesn't move the rest up out of
+        // line with the other days'. One that no day or hour has takes no room.
+        var rows = _forecastDetailsChosen
+            .Select(detail => periods.Select(period => ForecastText(detail, period, report.Units, _rainFrom)).ToList())
+            .Where(texts => texts.Any(text => text is not null))
+            .ToList();
+        for (var i = 0; i < periods.Count; i++)
+            _ahead.Children.Add(Column(periods[i], report, [.. rows.Select(texts => texts[i])]));
     }
 
     /// <summary>A forecast-only widget's place name above the forecast, taking no room without one.</summary>
@@ -489,8 +558,11 @@ public sealed class WeatherWidget : Widget
         return chosen => spellings.Select(list => list.FindIndex(n => chosen.Equals(n, StringComparison.OrdinalIgnoreCase))).FirstOrDefault(i => i >= 0, -1);
     }
 
-    /// <summary>One day or hour: when, an icon, the temperature (and low), and the chance of rain if it's at least <c>rainFrom</c>.</summary>
-    private StackPanel Column(WeatherPeriod period, WeatherReport report)
+    /// <summary>
+    /// One day or hour: when, an icon, the temperature (and low), and under them its forecast <paramref name="details"/>,
+    /// one to a row, null where it hasn't got one.
+    /// </summary>
+    private StackPanel Column(WeatherPeriod period, WeatherReport report, IReadOnlyList<string?> details)
     {
         var column = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
         var when = _forecast == "hours"
@@ -510,10 +582,117 @@ public sealed class WeatherWidget : Widget
         ApplyFont(temperature, _forecastSize);
         column.Children.Add(temperature);
 
-        if (period.RainChance is double chance && chance >= _rainFrom)
-            column.Children.Add(Line($"{chance:0}%", _forecastSize * 0.75, _detail, HorizontalAlignment.Center));
+        // A missing one keeps its row, hidden, while one comes after it; the last ones missing are just left out.
+        var last = details.Count;
+        while (last > 0 && details[last - 1] is null)
+            last--;
+        foreach (var text in details.Take(last))
+        {
+            var line = Line(text ?? " ", _forecastSize * 0.75, _detail, HorizontalAlignment.Center);
+            if (text is null)
+                line.Visibility = Visibility.Hidden;
+            column.Children.Add(line);
+        }
         return column;
     }
+
+    /// <summary>About how many characters a line of details beside the temperature runs to before the next detail starts another.</summary>
+    private const int LineLength = 40;
+
+    /// <summary>Between details on a line: wider than the dot between the high and low, so the two read as one.</summary>
+    private const string Between = "  ·  ";
+
+    /// <summary>
+    /// Details joined a few to a line: one starts a new line when it would take the line past <see cref="LineLength"/>,
+    /// so today's high and low and feels like share one, as they always have. A long one has a line to itself.
+    /// </summary>
+    internal static IReadOnlyList<string> DetailLines(IEnumerable<string> details)
+    {
+        var lines = new List<string>();
+        foreach (var detail in details)
+        {
+            if (lines.Count > 0 && lines[^1].Length + Between.Length + detail.Length <= LineLength)
+                lines[^1] += Between + detail;
+            else
+                lines.Add(detail);
+        }
+        return lines;
+    }
+
+    /// <summary>
+    /// A detail beside the temperature, with a short label where the value alone could be anything: "Feels 12°",
+    /// "12 km/h SW", "Gusts 40 km/h", "1012 hPa ↓", "UV 3 Moderate". In the forecast's units, as its metrics show them.
+    /// Null when the forecast hasn't got it, and for air quality and pollen without them in <paramref name="live"/>.
+    /// </summary>
+    internal static string? DetailText(string detail, WeatherReport report, LiveDetails live)
+    {
+        var units = report.Units;
+        return detail switch
+        {
+            DetailName.Conditions => WeatherCodes.Describe(report.Code),
+            DetailName.HighAndLow => report.Today is { } today ? $"H {Degrees(today.Temperature)} · L {Degrees(today.Low)}" : null,
+            DetailName.FeelsLike => $"Feels {Degrees(report.FeelsLike)}",
+            DetailName.Wind => Known(report.WindSpeed) is { } speed
+                ? $"{MetricFormatter.Format(speed, WeatherReadings.SpeedUnit(units))} {WeatherCodes.Compass(report.WindDirection)}".TrimEnd()
+                : null,
+            DetailName.Gusts => report.Gusts is { } gusts ? $"Gusts {MetricFormatter.Format(gusts, WeatherReadings.SpeedUnit(units))}" : null,
+            DetailName.Humidity => Known(report.Humidity) is { } humidity ? $"Humidity {humidity:0}%" : null,
+            DetailName.Pressure => report.Pressure is { } pressure
+                ? MetricFormatter.Format(WeatherReadings.Pressure(pressure, units), WeatherReadings.PressureUnit(units)) + Arrow(live.Trend)
+                : null,
+            DetailName.Uv => report.Uv is { } uv ? $"UV {uv:0} {WeatherReadings.UvLevel(uv)}" : null,
+            DetailName.RainChance => report.Today?.RainChance is { } chance ? $"Rain {chance:0}%" : null,
+            DetailName.Rainfall => report.Today?.Precipitation is { } amount ? $"Rainfall {MetricFormatter.Format(amount, WeatherReadings.PrecipitationUnit(units))}" : null,
+            DetailName.Sunrise => report.Sunrise is { } rise ? $"Sunrise {rise:t}" : null,
+            DetailName.Sunset => report.Sunset is { } set ? $"Sunset {set:t}" : null,
+            DetailName.Daylight => report.Today?.Daylight is { } daylight ? $"Daylight {WeatherReadings.Daylight(daylight)}" : null,
+            DetailName.DewPoint => report.DewPoint is { } dew ? $"Dew point {Degrees(dew)}" : null,
+            DetailName.Visibility => report.Visibility is { } metres
+                ? $"Visibility {MetricFormatter.Format(WeatherReadings.Distance(metres, units), WeatherReadings.DistanceUnit(units))}"
+                : null,
+            DetailName.Clouds => report.Clouds is { } clouds ? $"Cloud {clouds:0}%" : null,
+            DetailName.AirQuality => live.AirQuality is { } level ? $"Air quality {level}" : null,
+            DetailName.Pollen => live.Pollen is { } pollen ? $"Pollen {pollen}" : null,
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// A detail under a day or hour, short for its narrow column: "45%" from <paramref name="rainFrom"/>, "2.4 mm" only
+    /// when there's some, "12 km/h", "Gusts 40" (in the wind's units) and "UV 3". Null when there's nothing to show.
+    /// </summary>
+    internal static string? ForecastText(string detail, WeatherPeriod period, WeatherUnits units, double rainFrom)
+    {
+        var rain = WeatherReadings.PrecipitationUnit(units);
+        return detail switch
+        {
+            DetailName.RainChance => period.RainChance is { } chance && chance >= rainFrom ? $"{chance:0}%" : null,
+            // A dry day or hour shows nothing, rather than 0.0 mm.
+            DetailName.Rainfall => period.Precipitation is { } amount && MetricFormatter.Format(amount, rain) is var text && text != MetricFormatter.Format(0, rain) ? text : null,
+            DetailName.Wind => period.Wind is { } wind ? MetricFormatter.Format(wind, WeatherReadings.SpeedUnit(units)) : null,
+            DetailName.Gusts => period.Gusts is { } gusts ? $"Gusts {MetricFormatter.Format(gusts, WeatherReadings.SpeedUnit(units), NoUnit)}" : null,
+            DetailName.Uv => period.Uv is { } uv ? $"UV {uv:0}" : null,
+            _ => null,
+        };
+    }
+
+    private static readonly FormatSpec NoUnit = new(NoUnit: true);
+
+    /// <summary>Which way the pressure's going, after a space: ↑ rising, ↓ falling, → steady; nothing without a trend.</summary>
+    private static string Arrow(PressureTrend? trend) => trend switch
+    {
+        PressureTrend.Rising => " ↑",
+        PressureTrend.Falling => " ↓",
+        PressureTrend.Steady => " →",
+        _ => string.Empty,
+    };
+
+    /// <summary>Null for the NaN the forecast gives a reading it hasn't got.</summary>
+    private static double? Known(double value) => double.IsNaN(value) ? null : value;
+
+    /// <summary>The names chosen as <paramref name="options"/> spells them, in order; any that isn't one of them is left out.</summary>
+    private static IReadOnlyList<string> Offered(PickList chosen, IReadOnlyList<string> options) =>
+        [.. chosen.Names.Select(name => options.FirstOrDefault(o => o.Equals(name, StringComparison.OrdinalIgnoreCase))).OfType<string>()];
 
     /// <summary>
     /// The most serious warning: a warning sign and its headline in the theme's warning colour (critical for red, severe
@@ -586,4 +765,30 @@ public sealed class WeatherWidget : Widget
     internal static string Degrees(double? value) =>
         // Adding 0.0 turns the -0 that rounding -0.4 gives into 0, so it doesn't read "-0°".
         value is double v && !double.IsNaN(v) ? (Math.Round(v) + 0.0).ToString("0", CultureInfo.CurrentCulture) + "°" : "—";
+
+    /// <summary>The details the editor offers, by the names layout.json keeps them under.</summary>
+    internal static class DetailName
+    {
+        public const string Conditions = "conditions";
+        public const string HighAndLow = "high and low";
+        public const string FeelsLike = "feels like";
+        public const string Wind = "wind";
+        public const string Gusts = "gusts";
+        public const string Humidity = "humidity";
+        public const string Pressure = "pressure";
+        public const string Uv = "UV";
+        public const string RainChance = "chance of rain";
+        public const string Rainfall = "rainfall";
+        public const string Sunrise = "sunrise";
+        public const string Sunset = "sunset";
+        public const string Daylight = "daylight";
+        public const string DewPoint = "dew point";
+        public const string Visibility = "visibility";
+        public const string Clouds = "cloud cover";
+        public const string AirQuality = "air quality";
+        public const string Pollen = "pollen";
+    }
+
+    /// <summary>The details that can change between forecasts (see <see cref="Live"/>), null where they aren't shown.</summary>
+    internal readonly record struct LiveDetails(string? AirQuality, string? Pollen, PressureTrend? Trend);
 }

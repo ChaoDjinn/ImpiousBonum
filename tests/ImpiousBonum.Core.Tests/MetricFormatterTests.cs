@@ -62,6 +62,15 @@ public sealed class MetricFormatterTests : IDisposable
     }
 
     [Fact]
+    public void Readings_that_are_not_metrics_show_as_a_metric_would()
+    {
+        Assert.Equal("12 km/h", MetricFormatter.Format(11.6, MetricUnit.KilometresPerHour));
+        Assert.Equal("29.90 inHg", MetricFormatter.Format(29.896, MetricUnit.InchesOfMercury));
+        Assert.Equal("12", MetricFormatter.Format(11.6, MetricUnit.MilesPerHour, FormatSpec.Parse("nounit")));
+        Assert.Equal(MetricFormatter.Missing, MetricFormatter.Format(null, MetricUnit.Millimetres));
+    }
+
+    [Fact]
     public void Text_metrics_render_their_text() =>
         Assert.Equal("Radeon", MetricFormatter.Format(Sample(MetricUnit.Text, null, "Radeon")));
 }

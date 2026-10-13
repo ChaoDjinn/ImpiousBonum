@@ -69,6 +69,13 @@ public static class MetricFormatter
         }
     }
 
+    /// <summary>
+    /// A reading that isn't a metric's as a metric in <paramref name="unit"/> would show it, e.g. "12 km/h", so a widget
+    /// showing readings of its own (another place's weather, say) shows them just as the metrics do.
+    /// </summary>
+    public static string Format(double? value, MetricUnit unit, FormatSpec? spec = null) =>
+        Format(new MetricSample(new MetricDefinition(string.Empty, string.Empty, string.Empty, unit), value, null), spec);
+
     private static int AutoByteExponent(double value)
     {
         var exponent = 0;
