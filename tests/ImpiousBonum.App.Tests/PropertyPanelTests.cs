@@ -161,6 +161,11 @@ public sealed class PropertyPanelTests
             // Ticked ones come first; the rest have no handle to drag them by.
             Assert.Equal(["BBC", "Ars Technica", "The Verge"], Picks(panel).Select(b => (string)b.Tag));
             Assert.Equal(2, Handles(panel).Count(h => h.IsVisible));
+            // Moved below the last ticked one, among the unticked, it stays last of them: the list lets it go there, and
+            // the editor keeps it put.
+            Assert.True(DragReorder.Move(Pick(panel, "Ars Technica"), +1));
+            Assert.Equal("BBC, Ars Technica", FeedsValue(session));
+            Assert.Equal(["BBC", "Ars Technica", "The Verge"], Picks(panel).Select(b => (string)b.Tag));
             Toggle(Pick(panel, "The Verge"));
             Assert.Equal("BBC, Ars Technica, The Verge", FeedsValue(session));
 
@@ -170,9 +175,6 @@ public sealed class PropertyPanelTests
             Assert.True(DragReorder.Move(verge, -1));
             Assert.Equal("BBC, The Verge, Ars Technica", FeedsValue(session));
             var focusKept = Pick(panel, "The Verge").IsKeyboardFocused;
-            // Below the last ticked one, it stays last of them.
-            DragReorder.Move(Pick(panel, "Ars Technica"), +1);
-            Assert.Equal("BBC, The Verge, Ars Technica", FeedsValue(session));
             // A drag by its handle does the same, from the handle.
             var handle = Handles(panel).First(h => (string)h.Tag == "Ars Technica");
             handle.Focus();
@@ -210,16 +212,85 @@ public sealed class PropertyPanelTests
             Toggle(AllBox(panel));
             var greyed = Picks(panel).All(b => b.IsChecked == true && !b.IsEnabled);
             var handles = Handles(panel).Count(h => h.IsVisible);
-            // Unticking the last feed goes back to all of them, which is what nothing ticked shows.
-            session.Undo();
-            Toggle(Pick(panel, "Ars Technica"));
-            var allAgain = AllBox(panel).IsChecked;
             window.Close();
 
             Assert.True(greyed);
             Assert.Equal(0, handles);
             Assert.Equal("all", FeedsValue(session));
-            Assert.True(allAgain);
+        });
+    }
+
+    [Fact]
+    public void Swapping_one_feed_for_another_never_goes_through_all_of_them()
+    {
+        Sta.Run(() =>
+        {
+            var news = Widget("news");
+            news["feeds"] = "BBC";
+            var session = new LayoutSession(new LayoutDocument { Widgets = [news] });
+            var (panel, window) = Show(session, Feeds);
+            session.Select(0);
+            Pump();
+
+            // Unticking the only feed ticked would leave none, which is all of them, so it waits for another.
+            var only = Pick(panel, "BBC");
+            var waits = only.IsChecked == true && !only.IsEnabled;
+            var why = only.ToolTip as string;
+            var whyShows = ToolTipService.GetShowOnDisabled(only);
+            Toggle(Pick(panel, "The Verge"));
+            var free = Pick(panel, "BBC").IsEnabled && Pick(panel, "The Verge").IsEnabled;
+            Toggle(Pick(panel, "BBC"));
+            var vergeWaits = !Pick(panel, "The Verge").IsEnabled;
+            window.Close();
+
+            Assert.True(waits);
+            Assert.Equal("To untick it, first tick another or All feeds.", why);
+            Assert.True(whyShows);
+            Assert.True(free);
+            Assert.Equal("The Verge", FeedsValue(session));
+            Assert.True(vergeWaits);
+        });
+    }
+
+    [Fact]
+    public void Feeds_named_with_a_comma_or_all_only_show_with_all_of_them()
+    {
+        Sta.Run(() =>
+        {
+            // Feeds added before such names were turned away: a comma splits a name in two, and "all" means every feed.
+            var session = new LayoutSession(new LayoutDocument { Widgets = [Widget("news")] });
+            var (panel, window) = Show(session, ["BBC", "News, UK", "All", "The Verge"]);
+            session.Select(0);
+            Pump();
+
+            var allTicked = Picks(panel).All(b => b.IsChecked == true);
+            // Unticking all leaves them out, greyed out and saying why.
+            Toggle(AllBox(panel));
+            var value = FeedsValue(session);
+            var comma = Pick(panel, "News, UK");
+            var named = Pick(panel, "All");
+            var commaOut = comma.IsChecked == false && !comma.IsEnabled;
+            var namedOut = named.IsChecked == false && !named.IsEnabled;
+            var commaWhy = comma.ToolTip as string;
+            var namedWhy = named.ToolTip as string;
+            window.Close();
+
+            Assert.True(allTicked);
+            Assert.Equal("BBC, The Verge", value);
+            Assert.True(commaOut);
+            Assert.StartsWith("Its name has a comma in it, so it can't be chosen on its own.", commaWhy);
+            Assert.True(namedOut);
+            Assert.StartsWith("Its name means all of them, so it can't be chosen on its own.", namedWhy);
+
+            // With only those, there's nothing to tick in place of all.
+            var alone = new LayoutSession(new LayoutDocument { Widgets = [Widget("news")] });
+            var (alonePanel, aloneWindow) = Show(alone, ["News, UK", "all"]);
+            alone.Select(0);
+            Pump();
+            var allEnabled = AllBox(alonePanel).IsEnabled;
+            aloneWindow.Close();
+
+            Assert.False(allEnabled);
         });
     }
 

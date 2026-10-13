@@ -120,6 +120,9 @@ public sealed class NewsWidgetTests
             // A news widget's Feeds lists them by name, separated by commas.
             window.NameBox.Text = "The Verge, tech";
             Assert.Contains("comma", window.Problem());
+            // And "all" there means every feed.
+            window.NameBox.Text = " All ";
+            Assert.Equal("A feed can't be called all.", window.Problem());
             window.NameBox.Text = string.Empty;
             window.Add();
             Assert.Equal([new NamedLink("www.theverge.com", "https://www.theverge.com/rss/index.xml")], window.Links);

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
+using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Providers;
 
 namespace ImpiousBonum.App.Shell;
@@ -79,9 +80,11 @@ public partial class LinkListPanel : UserControl
             return $"That {_what} is already in the list.";
         if (_links.Any(l => l.Name.Equals(ChosenName(), StringComparison.OrdinalIgnoreCase)))
             return $"Another {_what} has that name.";
-        // A widget lists the ones it shows by name, separated by commas (BBC, The Verge).
+        // A widget lists the ones it shows by name, separated by commas (BBC, The Verge), or says all for every one.
         if (ChosenName().Contains(','))
             return $"A {_what}'s name can't have a comma in it.";
+        if (ChosenName().Equals(PickList.AllValue, StringComparison.OrdinalIgnoreCase))
+            return $"A {_what} can't be called {PickList.AllValue}.";
         return null;
     }
 

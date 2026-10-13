@@ -663,9 +663,11 @@ public sealed class PropertyPanel : StackPanel
 
     /// <summary>
     /// Some names from a list, in order: a box for each, the ticked ones first in their order, dragged into place by their
-    /// handles (or Alt+Up/Alt+Down). Where "all" is allowed, a box for it comes first and greys out the rest. A ticked
-    /// name that isn't an option any more (a feed since removed or renamed) still shows, marked, so it can be unticked.
-    /// Each change is an undo step of its own.
+    /// handles (or Alt+Up/Alt+Down). Where "all" is allowed, a box for it comes first and greys out the rest, and the last
+    /// name ticked stays until another (or all) is, so a swap never goes through all. A ticked name that isn't an option
+    /// any more (a feed since removed or renamed) still shows, marked, so it can be unticked. An option whose name can't
+    /// be stored on its own (<see cref="PickList.CanPick"/>) is greyed out, saying why. Each change is an undo step of
+    /// its own.
     /// </summary>
     private (FrameworkElement, Action) PicksEditor(SettingTarget target, SettingDescriptor setting)
     {
@@ -683,9 +685,9 @@ public sealed class PropertyPanel : StackPanel
         var ticked = 0;
 
         // Checked and Unchecked rather than Click, so Narrator ticking a box counts too. Unticking all starts from every
-        // option ticked, so nothing changes on screen until some are unticked.
+        // option ticked that can be, so little changes on screen until some are unticked.
         all.Checked += (_, _) => Save(PickList.Everything);
-        all.Unchecked += (_, _) => Save(PickList.Of(OptionsOf(setting)));
+        all.Unchecked += (_, _) => Save(PickList.Of(OptionsOf(setting).Where(o => PickList.CanPick(o, allowAll))));
         DragReorder.Attach(entries, (from, to) =>
         {
             // Only the ticked ones have an order, and they stay above the rest, so moving the last of them down leaves it be.
@@ -724,13 +726,13 @@ public sealed class PropertyPanel : StackPanel
             var list = value.Entries(options);
             ticked = value.All ? 0 : list.Count(e => e.Ticked);
             all.IsChecked = value.All;
-            // With no options, unticking all would leave nothing ticked, which is all again.
-            all.IsEnabled = !(value.All && options.Count == 0);
+            // With nothing that can be picked, unticking all would leave nothing ticked, which is all again.
+            all.IsEnabled = !(value.All && !options.Any(o => PickList.CanPick(o, allowAll)));
             entries.IsEnabled = !value.All;
             none.Visibility = options.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             entries.Children.Clear();
             foreach (var entry in list)
-                entries.Children.Add(PickRow(entry, reorderable: entry.Ticked && !value.All));
+                entries.Children.Add(PickRow(entry, reorderable: entry.Ticked && !value.All, last: allowAll && ticked == 1 && entry.Ticked));
 
             if (refocus.Name is null)
                 return;
@@ -743,7 +745,8 @@ public sealed class PropertyPanel : StackPanel
                 all.Focus();
         }
 
-        DockPanel PickRow(PickEntry entry, bool reorderable)
+        // last: the only one ticked, which stays until another is (where unticking it would go back to all).
+        DockPanel PickRow(PickEntry entry, bool reorderable, bool last)
         {
             var row = new DockPanel { Tag = entry.Name };
             var handle = DragHandle(entry.Name);
@@ -753,15 +756,28 @@ public sealed class PropertyPanel : StackPanel
             DockPanel.SetDock(handle, Dock.Left);
             // A text block rather than the name itself, so an underscore in it shows rather than marking a shortcut key.
             var label = new TextBlock { Text = entry.Name, TextTrimming = TextTrimming.CharacterEllipsis };
-            var box = new CheckBox { IsChecked = entry.Ticked, Tag = entry.Name, Content = label };
+            var canPick = PickList.CanPick(entry.Name, allowAll);
+            var box = new CheckBox { IsChecked = entry.Ticked, Tag = entry.Name, Content = label, IsEnabled = !last && (entry.Ticked || canPick) };
+            // A greyed-out box still says why.
+            ToolTipService.SetShowOnDisabled(box, true);
             AutomationProperties.SetName(box, entry.Name);
+            var untick = last ? $"To untick it, first tick another or {setting.AllLabel}." : "Untick it to take it off.";
             if (!entry.Found)
             {
                 var missing = new Run(" (not found)");
                 missing.SetResourceReference(TextElement.ForegroundProperty, CriticalBrush);
                 label.Inlines.Add(missing);
-                box.ToolTip = "This isn't one of the choices any more: it may have been removed or renamed. Untick it to take it off.";
+                box.ToolTip = $"This isn't one of the choices any more: it may have been removed or renamed. {untick}";
                 AutomationProperties.SetName(box, $"{entry.Name} (not found)");
+            }
+            else if (!canPick)
+            {
+                var why = entry.Name.Contains(',') ? "Its name has a comma in it" : "Its name means all of them";
+                box.ToolTip = $"{why}, so it can't be chosen on its own. To choose it, remove it and add it again with another name.";
+            }
+            else if (last)
+            {
+                box.ToolTip = untick;
             }
             box.Checked += (_, _) => Save(Current().Tick(entry.Name));
             box.Unchecked += (_, _) => Save(Current().Untick(entry.Name, allowAll));

@@ -79,6 +79,13 @@ public sealed class PickList
         return new PickList(false, names);
     }
 
+    /// <summary>
+    /// Whether a name can be picked on its own: a comma would split it in two, and where all is allowed, a name of
+    /// <c>all</c> means every one. New feeds and calendars can't be named like that, but ones from before can.
+    /// </summary>
+    public static bool CanPick(string name, bool allowAll) =>
+        !name.Contains(',') && !(allowAll && name.Trim().Equals(AllValue, StringComparison.OrdinalIgnoreCase));
+
     private static string? Option(IReadOnlyList<string> options, string name) =>
         options.FirstOrDefault(o => o.Equals(name, StringComparison.OrdinalIgnoreCase));
 

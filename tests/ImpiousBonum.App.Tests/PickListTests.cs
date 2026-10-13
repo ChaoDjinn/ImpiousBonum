@@ -72,6 +72,21 @@ public sealed class PickListTests
         Assert.Equal(string.Empty, PickList.Of(["BBC"]).Untick("BBC", allowAll: false).ToString());
     }
 
+    [Theory]
+    [InlineData("BBC", true, true)]
+    [InlineData("News, UK", true, false)] // read back as two names
+    [InlineData("News, UK", false, false)]
+    [InlineData(" All ", true, false)] // read back as every one
+    [InlineData("all", false, true)] // just a name where all isn't allowed
+    [InlineData("Allotments", true, true)]
+    public void Names_with_a_comma_or_that_mean_all_can_not_be_picked(string name, bool allowAll, bool canPick)
+    {
+        Assert.Equal(canPick, PickList.CanPick(name, allowAll));
+        // What can be picked reads back as itself.
+        if (canPick)
+            Assert.Equal([name.Trim()], PickList.Parse(PickList.Of([name]).ToString(), allowAll).Names);
+    }
+
     [Fact]
     public void Moving_reorders_the_ticked_ones()
     {

@@ -74,6 +74,10 @@ public sealed class AgendaTests
             Assert.Contains("already", window.Problem());
             window.LinkBox.Text = "webcal://p01-caldav.icloud.com/published/2/abc";
             Assert.Null(window.Problem());
+            // An agenda's Calendars names them separated by commas, or says all for every one.
+            window.NameBox.Text = "ALL";
+            Assert.Equal("A calendar can't be called all.", window.Problem());
+            window.NameBox.Text = string.Empty;
             window.Add();
             window.NameBox.Text = "Family";
             window.LinkBox.Text = "https://calendar.google.com/calendar/ical/x/private-y/basic.ics";
