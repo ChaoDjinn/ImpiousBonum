@@ -129,6 +129,17 @@ internal interface ISettingsHost
 
     void SetAirQualityScale(string scale);
 
+    /// <summary>Severe weather warnings on or off; on, they're fetched for the weather's location if it's in the UK or the US.</summary>
+    void SetWeatherWarnings(bool on);
+
+    void SetWeatherWarningsNotify(bool on);
+
+    /// <summary><see cref="AppSettings.MetOfficeAreaAuto"/>, or a Met Office area's code.</summary>
+    void SetMetOfficeArea(string area);
+
+    /// <summary>Whose warnings the location gets and what they are now, or why there are none, e.g. "From the Met Office for Wales: none now".</summary>
+    string WeatherWarningsStatus { get; }
+
     void SetCalendars(IReadOnlyList<CalendarLink> calendars);
 
     void SetNewsFeeds(IReadOnlyList<NewsFeed> feeds);

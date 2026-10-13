@@ -1,4 +1,5 @@
-// The weather now with the days ahead, and the hours ahead, for the README and the guide (build/screenshots.ps1).
+// The weather now with the days ahead, and the hours ahead, for the README and the guide (build/screenshots.ps1). The
+// hours leave the demo's weather warning to the widget above, so it shows once.
 {
   "width": 800,
   "height": 400,
@@ -6,6 +7,6 @@
   "widgets": [
     { "type": "weather", "x": 20, "y": 20, "width": 760, "height": 220, "fontSize": 88, "forecastSize": 24, "count": 4, "iconStyle": "colour" },
     { "type": "weather", "x": 20, "y": 260, "width": 760, "height": 120, "showCurrent": false, "forecast": "hours", "hourStep": 3,
-      "count": 7, "forecastSize": 22, "iconStyle": "colour" }
+      "count": 7, "forecastSize": 22, "iconStyle": "colour", "showWarnings": false }
   ]
 }

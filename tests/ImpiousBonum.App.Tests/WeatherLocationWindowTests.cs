@@ -33,7 +33,8 @@ public sealed class WeatherLocationWindowTests
             Assert.Equal("West Derby, Liverpool, England, United Kingdom", item.Content);
             Assert.Equal("53.433, -2.91", item.ToolTip);
             Assert.Equal(Visibility.Visible, window.Attribution.Visibility);
-            Assert.Equal(new WeatherLocation("West Derby, Liverpool, England, United Kingdom", 53.4325964, -2.9095592), window.Picked());
+            // With its country, which decides whose weather warnings it gets.
+            Assert.Equal(new WeatherLocation("West Derby, Liverpool, England, United Kingdom", 53.4325964, -2.9095592) { CountryCode = "GB" }, window.Picked());
 
             // Open-Meteo's own places need no credit to OpenStreetMap.
             fromOpenStreetMap = false;

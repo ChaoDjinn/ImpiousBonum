@@ -1,12 +1,15 @@
 using System.IO;
+using ImpiousBonum.App.Settings;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.Core.Alerts;
 using ImpiousBonum.Core.Logging;
+using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Sessions;
+using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.App;
 
-// What acts on readings and keys by itself: alerts, logging, session recaps and hotkeys.
+// What acts on readings and keys by itself: alerts, weather warnings, logging, session recaps and hotkeys.
 public partial class App
 {
     private readonly AlertMonitor _alerts = new();
@@ -23,6 +26,25 @@ public partial class App
                 _tray?.ShowAlert(alert.Text);
         }
         _window.ShowAlerts(_alerts.Active.Where(rule => rule.Flash).Select(rule => (rule.Describe(), rule.Text(_sampler.Store))).ToList());
+    }
+
+    private readonly WarningNotifications _warningNotices = new();
+    private object? _warningsSeen;
+
+    /// <summary>Each tick: a notification of any new weather warning, if they're wanted. Clicking it opens the warning.</summary>
+    private void UpdateWeatherWarnings()
+    {
+        if (_sampler is null || _demo || !_settings.WeatherWarnings || !_settings.WeatherWarningsNotify)
+            return;
+        var warnings = _sampler.Store.GetAttachment(WeatherWarningsProvider.Warnings) as IReadOnlyList<WeatherWarning>;
+        // The list is only replaced on the weather's samples, so most ticks have nothing new to look at.
+        if (ReferenceEquals(warnings, _warningsSeen))
+            return;
+        _warningsSeen = warnings;
+        if (_warningNotices.Next(warnings) is not { } notice)
+            return;
+        AppLog.Info($"Weather warning: {notice.Message.ReplaceLineEndings("; ")}");
+        _tray?.ShowWarning(notice.Title, notice.Message, notice.Link is { } link ? () => Ui.Open(link) : null);
     }
 
     /// <summary>Each tick: feeds the logger, writes a row when a period ends, and once a day removes old files.</summary>

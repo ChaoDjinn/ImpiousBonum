@@ -11,14 +11,15 @@ using ImpiousBonum.Core.Weather;
 namespace ImpiousBonum.App.Widgets;
 
 /// <summary>
-/// The weather where you are: an icon, the temperature and conditions now, and a row of days or hours ahead.
-/// The location is set once for the PC (the Weather page), so every layout shows the same place.
+/// The weather where you are: an icon, the temperature and conditions now, a row of days or hours ahead, and below them
+/// the most serious severe weather warning while there is one. The location is set once for the PC (the Weather page),
+/// so every layout shows the same place.
 /// </summary>
 public sealed class WeatherWidget : Widget
 {
     public static WidgetDescriptor Descriptor { get; } = new(
         "weather", "Weather",
-        "The weather now and the days or hours ahead, from Open-Meteo.com. Set your location in the editor (select the widget) or on the Weather page.",
+        "The weather now and the days or hours ahead, from Open-Meteo.com, and severe weather warnings if they're on. Set your location in the editor (select the widget) or on the Weather page.",
         900, 180,
         [
             Setting.Toggle("showCurrent", "Weather now", true, group: Setting.Content,
@@ -30,6 +31,8 @@ public sealed class WeatherWidget : Widget
                 help: "Show the chance of rain from this percentage; 0 always shows it."),
             Setting.Toggle("showDetails", "Details", true, group: Setting.Content, help: "Conditions, today's high and low, and feels like, beside the temperature."),
             Setting.Toggle("showLocation", "Location", false, group: Setting.Content),
+            Setting.Toggle("showWarnings", "Warnings", true, group: Setting.Content,
+                help: "With severe weather warnings on (the Weather page), the most serious one along the bottom while there are any: in the warning colour, or the critical colour for red, severe and extreme ones. Tap it to read the warning."),
             Setting.Number("fontSize", "Temperature size", 80, 6, 400),
             Setting.Number("forecastSize", "Forecast size", 22, 6, 200),
             Setting.Choice("iconStyle", "Icons", "outline", ["outline", "colour"], group: Setting.Appearance,
@@ -56,8 +59,13 @@ public sealed class WeatherWidget : Widget
     private readonly TextBlock _temperature;
     private readonly StackPanel? _details;
     private readonly UniformGrid? _ahead;
+    private readonly TapTarget? _warning;
     private WeatherReport? _shown;
     private bool _shownEmpty;
+
+    /// <summary>What the warning strip shows (the most serious warning and how many there are), or null while it's empty.</summary>
+    private string? _warningShown;
+    private string? _warningLink;
 
     public WeatherWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
@@ -100,11 +108,54 @@ public sealed class WeatherWidget : Widget
                 SetColumnSpan(_ahead, 2);
             Children.Add(_ahead);
         }
+
+        if (settings.Bool("showWarnings"))
+        {
+            // Under the rest, and only there while there's a warning (see PlaceWarning).
+            _warning = new TapTarget { Background = Brushes.Transparent, Visibility = Visibility.Collapsed, Margin = new Thickness(0, _forecastSize * 0.3, 0, 0) };
+            _warning.Tapped += (_, _) =>
+            {
+                if (_warningLink is { } link)
+                    RequestAction(new WidgetAction(WidgetAction.Open, link));
+            };
+            SetColumnSpan(_warning, 2);
+            Children.Add(_warning);
+        }
         ShowEmpty();
+    }
+
+    /// <summary>
+    /// With a warning, the weather and the warning under it are centred together; without one, the widget has no rows at
+    /// all, so it's laid out just as it always was.
+    /// </summary>
+    private void PlaceWarning(bool shown)
+    {
+        RowDefinitions.Clear();
+        if (shown)
+        {
+            RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        }
+        foreach (UIElement child in Children)
+            SetRow(child, !shown ? 0 : child == _warning ? 2 : 1);
     }
 
     public override void Refresh(MetricStore store, DateTime now)
     {
+        if (_warning is not null)
+        {
+            var warnings = store.GetAttachment(WeatherWarningsProvider.Warnings) as IReadOnlyList<WeatherWarning>;
+            // The list is replaced on every sample; rebuild only when what's shown changes.
+            var key = warnings is [var worst, ..] ? $"{worst.Id}|{worst.Level}|{worst.Headline}|{worst.Link}|{warnings.Count}" : null;
+            if (key != _warningShown)
+            {
+                _warningShown = key;
+                ShowWarnings(warnings);
+            }
+        }
+
         var report = store.GetAttachment(WeatherProvider.Forecast) as WeatherReport;
         if (report is null)
         {
@@ -186,6 +237,50 @@ public sealed class WeatherWidget : Widget
         if (period.RainChance is double chance && chance >= _rainFrom)
             column.Children.Add(Line($"{chance:0}%", _forecastSize * 0.75, _detail, HorizontalAlignment.Center));
         return column;
+    }
+
+    /// <summary>
+    /// The most serious warning: a warning sign and its headline in the theme's warning colour (critical for red, severe
+    /// and extreme ones), then "and 2 more" if there are others. Nothing at all while there are none.
+    /// </summary>
+    private void ShowWarnings(IReadOnlyList<WeatherWarning>? warnings)
+    {
+        if (_warning is null)
+            return;
+        if (warnings is not [var worst, ..])
+        {
+            _warning.Child = null;
+            _warning.Visibility = Visibility.Collapsed;
+            _warningLink = null;
+            PlaceWarning(false);
+            return;
+        }
+
+        var brush = worst.IsCritical ? Theme.Critical : Theme.Warning;
+        var size = _forecastSize * 0.9;
+        var row = new DockPanel();
+        var icon = Icons.Create("warning", brush, size * 1.2, 2);
+        icon.VerticalAlignment = VerticalAlignment.Center;
+        icon.Margin = new Thickness(0, 0, size * 0.35, 0);
+        DockPanel.SetDock(icon, Dock.Left);
+        row.Children.Add(icon);
+        if (warnings.Count > 1)
+        {
+            // Docked on the right so a long headline is cut short rather than the count.
+            var more = Line($"and {warnings.Count - 1} more", size, _detail);
+            more.VerticalAlignment = VerticalAlignment.Center;
+            more.Margin = new Thickness(size * 0.5, 0, 0, 0);
+            DockPanel.SetDock(more, Dock.Right);
+            row.Children.Add(more);
+        }
+        var headline = Line(worst.Headline, size, brush);
+        headline.VerticalAlignment = VerticalAlignment.Center;
+        row.Children.Add(headline);
+
+        _warning.Child = row;
+        _warning.Visibility = Visibility.Visible;
+        _warningLink = worst.Link;
+        PlaceWarning(true);
     }
 
     private FrameworkElement Icon(string name, double size, Brush brush) =>

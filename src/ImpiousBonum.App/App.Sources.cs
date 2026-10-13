@@ -4,6 +4,7 @@ using System.Windows;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
+using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.App;
 
@@ -15,7 +16,7 @@ public partial class App
             ? text
             : SensorHostProvider.NotRunning;
 
-    /// <summary>"Leeds: 12° Light rain", then the air quality and pollen when they're on, or what's missing.</summary>
+    /// <summary>"Leeds: 12° Light rain", then the air quality and pollen and any warnings when they're on, or what's missing.</summary>
     private string WeatherStatus()
     {
         if (_settings.WeatherLocation is not { } place)
@@ -25,7 +26,38 @@ public partial class App
             return $"{place.Name.Split(',')[0]}: waiting for the forecast";
         store.TryGet(WeatherProvider.Condition, out var condition);
         var weather = $"{place.Name.Split(',')[0]}: {MetricFormatter.Format(temperature)} {condition.Text}".TrimEnd();
-        return _settings.AirQuality ? weather + AirQualityStatus(store) : weather;
+        if (_settings.AirQuality)
+            weather += AirQualityStatus(store);
+        if (_settings.WeatherWarnings && store.TryGet(WeatherWarningsProvider.Count, out var warnings) && warnings.Value is double count && count > 0)
+            weather += count == 1 ? " · 1 warning" : $" · {count} warnings";
+        return weather;
+    }
+
+    /// <summary>
+    /// "From the Met Office for Wales: none now", or with the most serious warning instead of "none now"; or why there
+    /// are none, such as a place outside the UK and the US.
+    /// </summary>
+    private string WeatherWarningsStatus()
+    {
+        if (_settings.WeatherLocation is not { } location || _settings.WeatherWarningsPlace() is not { } place)
+            return "Set a location first.";
+        if (place.Source == WarningSource.None)
+        {
+            var only = $"Not available for {location.Name.Split(',')[0]} yet: only for places in the UK and the US.";
+            // Without a country, the name or the coordinates have to say: a US place given as coordinates can't.
+            return location.CountryCode is null ? only + " If it's in one of them, set the location again by searching for its name." : only;
+        }
+
+        var from = place.Source == WarningSource.MetOffice ? $"From the Met Office for {MetOfficeWarnings.Find(place.Area)?.Name}" : "From the National Weather Service";
+        var store = _sampler?.Store;
+        if (!_settings.WeatherWarnings)
+            return from;
+        if (store is null || !store.TryGet(WeatherWarningsProvider.Count, out var count) || count.Value is not double warnings)
+            return $"{from}: waiting for the warnings";
+        if (warnings == 0)
+            return $"{from}: none now";
+        store.TryGet(WeatherWarningsProvider.Headline, out var headline);
+        return warnings == 1 ? $"{from}: {headline.Text}" : $"{from}: {headline.Text}, and {warnings - 1} more";
     }
 
     /// <summary>" · Air quality: Good · Pollen: Grass low", as far as there are readings.</summary>
@@ -75,6 +107,8 @@ public partial class App
         if (WeatherLocationWindow.Ask(owner, _settings.WeatherLocation) is not { } place)
             return;
         _settings.WeatherLocation = place;
+        // An area chosen for the last place is unlikely to suit this one.
+        _settings.MetOfficeArea = AppSettings.MetOfficeAreaAuto;
         _settings.Save();
         AppLog.Info("Weather location set");
         _tray?.ShowInfo("Weather", $"Forecasts for {place.Name} will appear in a few seconds.");

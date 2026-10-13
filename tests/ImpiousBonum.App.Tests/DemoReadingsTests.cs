@@ -93,6 +93,21 @@ public sealed class DemoReadingsTests
     }
 
     [Fact]
+    public void There_is_a_made_up_yellow_warning()
+    {
+        var store = new MetricStore();
+        DemoReadings.Fill(store, Evening);
+
+        var readings = store.Definitions.Where(d => d.Category == "Weather warnings").ToList();
+        Assert.Equal(3, readings.Count);
+        Assert.All(readings, d => Assert.True(store.TryGet(d.Id, out var sample) && sample.HasValue, d.Id));
+        store.TryGet(WeatherWarningsProvider.Level, out var level);
+        Assert.Equal("Yellow", level.Text);
+        var warnings = (IReadOnlyList<WeatherWarning>)store.GetAttachment(WeatherWarningsProvider.Warnings)!;
+        Assert.Equal("Yellow warning of wind affecting South West England", Assert.Single(warnings).Headline);
+    }
+
+    [Fact]
     public void They_are_the_same_every_time()
     {
         var (first, second) = (new MetricStore(), new MetricStore());

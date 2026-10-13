@@ -104,6 +104,11 @@ public sealed class TrayIcon : IDisposable
     public void ShowAlert(string message) =>
         Notify(10000, "Impious Bonum alert", message, ToolTipIcon.Warning, null);
 
+    /// <summary>A weather warning: it stands out like an alert, and stays as long.</summary>
+    /// <param name="onClick">What clicking it does: open the warning's page.</param>
+    public void ShowWarning(string title, string message, Action? onClick) =>
+        Notify(10000, title, message, ToolTipIcon.Warning, onClick);
+
     /// <param name="onClick">What clicking the notification does, e.g. restart into a downloaded update.</param>
     public void ShowInfo(string title, string message, Action? onClick = null) =>
         Notify(5000, title, message, ToolTipIcon.Info, onClick);

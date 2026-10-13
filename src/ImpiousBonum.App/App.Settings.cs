@@ -260,6 +260,29 @@ public partial class App : ISettingsHost
         _settings.Save();
     }
 
+    void ISettingsHost.SetWeatherWarnings(bool on)
+    {
+        _settings.WeatherWarnings = on;
+        _settings.Save();
+        AppLog.Info($"Severe weather warnings {(on ? "on" : "off")}");
+    }
+
+    void ISettingsHost.SetWeatherWarningsNotify(bool on)
+    {
+        _settings.WeatherWarningsNotify = on;
+        _settings.Save();
+        AppLog.Info($"Notifications of weather warnings {(on ? "on" : "off")}");
+    }
+
+    void ISettingsHost.SetMetOfficeArea(string area)
+    {
+        _settings.MetOfficeArea = area;
+        _settings.Save();
+        AppLog.Info($"Met Office area: {area}");
+    }
+
+    string ISettingsHost.WeatherWarningsStatus => WeatherWarningsStatus();
+
     void ISettingsHost.SetCalendars(IReadOnlyList<CalendarLink> calendars) => SetCalendars(calendars);
 
     void ISettingsHost.SetNewsFeeds(IReadOnlyList<NewsFeed> feeds) => SetNewsFeeds(feeds);
