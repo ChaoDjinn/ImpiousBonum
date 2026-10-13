@@ -32,7 +32,7 @@
             <!-- Credits OpenStreetMap while its places are listed (filled in by the code). -->
             <TextBlock x:Name="Attribution" Style="{DynamicResource NoteText}" Margin="0,4,0,0" Visibility="Collapsed" />
             <TextBlock Style="{DynamicResource NoteText}" Margin="0,8,0,0"
-                       Text="What you search for goes to Open-Meteo.com, and to OpenStreetMap's place search only when Open-Meteo doesn't find it. For the forecast, the place's coordinates go to Open-Meteo.com every 15 minutes. Nothing else is sent." />
+                       Text="What you search for goes to Open-Meteo.com, and to OpenStreetMap's place search only when Open-Meteo doesn't find it. For the forecast, the place's coordinates go to Open-Meteo.com every 15 minutes, and once an hour for air quality and pollen if they're on. With severe weather warnings on, a US place's coordinates go to the National Weather Service every 10 minutes, and for a UK place only its area goes to the Met Office. Nothing else is sent." />
         </StackPanel>
     </DockPanel>
 </Window>

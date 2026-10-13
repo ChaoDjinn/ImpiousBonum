@@ -59,7 +59,7 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/widgets/weather.png" alt="The weather widget with colour icons: 14° and partly cloudy now with the high, low and feels-like, four days ahead, and every three hours ahead with the chance of rain"><br><b>Weather</b>: now, the days ahead and the hours ahead</td>
+    <td width="50%"><img src="docs/images/widgets/weather.png" alt="The weather widget with colour icons: 14° and partly cloudy now with the high, low and feels-like, four days ahead and a yellow wind warning under them, and every three hours ahead with the chance of rain"><br><b>Weather</b>: now, the days ahead and the hours ahead</td>
     <td width="50%"><img src="docs/images/widgets/agenda.png" alt="An agenda of today's and tomorrow's events with their times and places, and the next event, Call with Sam at 22:15"><br><b>Calendar</b>: today, tomorrow and what's next</td>
   </tr>
   <tr>

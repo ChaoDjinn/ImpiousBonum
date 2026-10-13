@@ -127,6 +127,10 @@ public partial class App
         };
     }
 
+    /// <summary>The names a widget setting can pick from that the app keeps: the news feeds, in the News feeds page's order.</summary>
+    internal IReadOnlyList<string> PickOptions(string source) =>
+        source == NewsWidget.FeedNames ? [.. _settings.NewsFeeds.Select(f => f.Name)] : [];
+
     /// <summary>
     /// Tray → Layout, the Screens page, pages, hotkeys and buttons: the main dashboard's layout. With the editor open, the editor moves to
     /// the main dashboard if it's on another and switches (asking about unsaved changes first).

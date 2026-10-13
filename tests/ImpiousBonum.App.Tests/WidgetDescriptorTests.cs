@@ -48,6 +48,11 @@ public sealed class WidgetDescriptorTests
                 case SettingKind.Items:
                     Assert.NotEmpty(setting.ItemSettings!);
                     break;
+                case SettingKind.Picks:
+                    Assert.True(setting.Default is null or string, $"{setting.Key}: text default expected");
+                    // Something to pick from: a list of its own, or one the app keeps.
+                    Assert.True(setting.Choices is not null || setting.OptionsSource is not null, $"{setting.Key}: choices or a source expected");
+                    break;
                 default:
                     Assert.True(setting.Default is null or string, $"{setting.Key}: text default expected");
                     break;
@@ -119,6 +124,14 @@ public sealed class WidgetDescriptorTests
         var path = Path.Combine(RepoRoot(), "docs", "widgets.md");
         Assert.True(File.Exists(path), "docs/widgets.md is missing. Run: ImpiousBonum.exe --widget-docs docs/widgets.md");
         Assert.Equal(Normalize(WidgetDocs.ToMarkdown()), Normalize(File.ReadAllText(path)));
+    }
+
+    [Fact]
+    public void The_reference_says_what_names_can_be_picked()
+    {
+        Assert.Equal("`all`, or names in order, separated by commas", WidgetDocs.Kind(NewsWidget.Descriptor.Find("feeds")!));
+        // From a fixed list, without all.
+        Assert.Equal("some of `wind` / `uv` in order, separated by commas", WidgetDocs.Kind(Setting.Picks("readings", "Readings", "wind", choices: ["wind", "uv"])));
     }
 
     private static IEnumerable<SettingDescriptor> Flatten(IEnumerable<SettingDescriptor> settings) =>

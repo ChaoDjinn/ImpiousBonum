@@ -76,6 +76,8 @@ public static class Icons
         ["storm"] = Parse(RainCloud + " M13,15.5 L10.5,19 H13.5 L11,22.5"),
         ["drop"] = Parse("M12,3 C12,3 5.5,10.5 5.5,14.5 A6.5,6.5 0 0 0 18.5,14.5 C18.5,10.5 12,3 12,3 Z"),
         ["wind"] = Parse("M3,9 H14.5 A2.75,2.75 0 1 0 11.75,6.25 M3,13 H18.5 A2.75,2.75 0 1 1 15.75,15.75 M3,17 H10"),
+        // A warning sign, for weather warnings.
+        ["warning"] = Parse("M10.3,4.1 L2.1,18.2 A2,2 0 0 0 3.8,21 H20.2 A2,2 0 0 0 21.9,18.2 L13.7,4.1 A2,2 0 0 0 10.3,4.1 Z M12,9 V13.5 M12,17 H12.01"),
     };
 
     /// <summary>A cloud in the lower right, in front of a sun or moon.</summary>

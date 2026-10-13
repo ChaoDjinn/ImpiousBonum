@@ -108,6 +108,43 @@ public sealed class NewsTests
         Assert.Equal(2, Assert.IsAssignableFrom<IReadOnlyList<Headline>>(store.GetAttachment(NewsProvider.Headlines)).Count);
     }
 
+    [Fact]
+    public async Task Each_feeds_own_headlines_come_in_the_order_the_feeds_are_set_and_keep_shared_stories()
+    {
+        // The RSS feed's first story is in the Atom feed too.
+        var shared = Atom.Replace("https://blog.example/post", "https://example.com/1");
+        using var provider = new NewsProvider(
+            () => [new NewsFeed("Example", "https://example.com/rss"), new NewsFeed("Broken", "https://broken.example/feed"), new NewsFeed("Blog", "https://blog.example/feed")],
+            (url, _) => Task.FromResult(url.Contains("broken") ? "<html/>" : url.Contains("blog") ? shared : Rss),
+            new FakeTime(new DateTimeOffset(2026, 10, 11, 10, 12, 0, TimeSpan.Zero)));
+        var store = new MetricStore();
+        provider.Initialize(store);
+        await provider.SampleAsync(store, CancellationToken.None);
+
+        var byFeed = Assert.IsAssignableFrom<IReadOnlyList<FeedHeadlines>>(store.GetAttachment(NewsProvider.ByFeed));
+        Assert.Equal(["Example", "Broken", "Blog"], byFeed.Select(f => f.Feed));
+        Assert.Equal(["Big & bold story", "Second story", "Sneaky"], byFeed[0].Headlines.Select(h => h.Title));
+        Assert.Empty(byFeed[1].Headlines);
+        Assert.Equal(["Atom post", "Older"], byFeed[2].Headlines.Select(h => h.Title));
+        // Both feeds have the shared story, though the merged list has it once.
+        Assert.Contains(byFeed[0].Headlines, h => h.Link == "https://example.com/1");
+        Assert.Contains(byFeed[2].Headlines, h => h.Link == "https://example.com/1");
+        var merged = Assert.IsAssignableFrom<IReadOnlyList<Headline>>(store.GetAttachment(NewsProvider.Headlines));
+        Assert.Single(merged, h => h.Link == "https://example.com/1");
+    }
+
+    [Fact]
+    public async Task Without_feeds_there_is_nothing_to_attach()
+    {
+        using var provider = new NewsProvider(() => [], (_, _) => throw new InvalidOperationException("Nothing should be fetched."));
+        var store = new MetricStore();
+        provider.Initialize(store);
+        await provider.SampleAsync(store, CancellationToken.None);
+
+        Assert.Null(store.GetAttachment(NewsProvider.Headlines));
+        Assert.Null(store.GetAttachment(NewsProvider.ByFeed));
+    }
+
     [Theory]
     [InlineData(0.5, "just now")]
     [InlineData(12, "12 min ago")]

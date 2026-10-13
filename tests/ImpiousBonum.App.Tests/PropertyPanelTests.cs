@@ -1,6 +1,9 @@
 using System.Text.Json.Nodes;
 using System.Windows;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Threading;
 using ImpiousBonum.App.Controls;
 using ImpiousBonum.App.Editor;
@@ -134,6 +137,218 @@ public sealed class PropertyPanelTests
     }
 
     [Fact]
+    public void Feeds_are_ticked_unticked_and_put_in_order_an_undo_step_each()
+    {
+        Sta.Run(() =>
+        {
+            var session = new LayoutSession(new LayoutDocument { Widgets = [Widget("news")] });
+            var (panel, window) = Show(session, Feeds);
+            session.Select(0);
+            Pump();
+
+            // All feeds to start with: every feed ticked, in the News feeds page's order, and greyed out.
+            var all = AllBox(panel);
+            Assert.True(all.IsChecked);
+            Assert.Equal(Feeds, Picks(panel).Select(b => (string)b.Tag));
+            Assert.All(Picks(panel), b => Assert.True(b.IsChecked == true && !b.IsEnabled));
+            Assert.False(session.IsDirty);
+
+            // Unticking all starts from every feed ticked, so what shows doesn't change.
+            Toggle(all);
+            Assert.Equal("BBC, The Verge, Ars Technica", FeedsValue(session));
+            Toggle(Pick(panel, "The Verge"));
+            Assert.Equal("BBC, Ars Technica", FeedsValue(session));
+            // Ticked ones come first; the rest have no handle to drag them by.
+            Assert.Equal(["BBC", "Ars Technica", "The Verge"], Picks(panel).Select(b => (string)b.Tag));
+            Assert.Equal(2, Handles(panel).Count(h => h.IsVisible));
+            // Moved below the last ticked one, among the unticked, it stays last of them: the list lets it go there, and
+            // the editor keeps it put.
+            Assert.True(DragReorder.Move(Pick(panel, "Ars Technica"), +1));
+            Assert.Equal("BBC, Ars Technica", FeedsValue(session));
+            Assert.Equal(["BBC", "Ars Technica", "The Verge"], Picks(panel).Select(b => (string)b.Tag));
+            Toggle(Pick(panel, "The Verge"));
+            Assert.Equal("BBC, Ars Technica, The Verge", FeedsValue(session));
+
+            // Alt+Up with focus on a feed's box moves it up, and focus stays with it.
+            var verge = Pick(panel, "The Verge");
+            verge.Focus();
+            Assert.True(DragReorder.Move(verge, -1));
+            Assert.Equal("BBC, The Verge, Ars Technica", FeedsValue(session));
+            var focusKept = Pick(panel, "The Verge").IsKeyboardFocused;
+            // A drag by its handle does the same, from the handle.
+            var handle = Handles(panel).First(h => (string)h.Tag == "Ars Technica");
+            handle.Focus();
+            Assert.True(DragReorder.Move(handle, -1));
+            Assert.Equal("BBC, Ars Technica, The Verge", FeedsValue(session));
+            var handleFocused = Handles(panel).First(h => (string)h.Tag == "Ars Technica").IsKeyboardFocused;
+            window.Close();
+
+            Assert.True(focusKept);
+            Assert.True(handleFocused);
+            // However quickly they came, each change is an undo step of its own.
+            foreach (var before in new[] { "BBC, The Verge, Ars Technica", "BBC, Ars Technica, The Verge", "BBC, Ars Technica", "BBC, The Verge, Ars Technica", null })
+            {
+                session.Undo();
+                Assert.Equal(before, FeedsValue(session));
+            }
+            Assert.False(session.CanUndo);
+        });
+    }
+
+    [Fact]
+    public void Ticking_all_feeds_greys_out_the_list()
+    {
+        Sta.Run(() =>
+        {
+            var news = Widget("news");
+            news["feeds"] = "Ars Technica";
+            var session = new LayoutSession(new LayoutDocument { Widgets = [news] });
+            var (panel, window) = Show(session, Feeds);
+            session.Select(0);
+            Pump();
+
+            Assert.False(AllBox(panel).IsChecked);
+            Assert.True(Pick(panel, "BBC").IsEnabled);
+            Toggle(AllBox(panel));
+            var greyed = Picks(panel).All(b => b.IsChecked == true && !b.IsEnabled);
+            var handles = Handles(panel).Count(h => h.IsVisible);
+            window.Close();
+
+            Assert.True(greyed);
+            Assert.Equal(0, handles);
+            Assert.Equal("all", FeedsValue(session));
+        });
+    }
+
+    [Fact]
+    public void Swapping_one_feed_for_another_never_goes_through_all_of_them()
+    {
+        Sta.Run(() =>
+        {
+            var news = Widget("news");
+            news["feeds"] = "BBC";
+            var session = new LayoutSession(new LayoutDocument { Widgets = [news] });
+            var (panel, window) = Show(session, Feeds);
+            session.Select(0);
+            Pump();
+
+            // Unticking the only feed ticked would leave none, which is all of them, so it waits for another.
+            var only = Pick(panel, "BBC");
+            var waits = only.IsChecked == true && !only.IsEnabled;
+            var why = only.ToolTip as string;
+            var whyShows = ToolTipService.GetShowOnDisabled(only);
+            Toggle(Pick(panel, "The Verge"));
+            var free = Pick(panel, "BBC").IsEnabled && Pick(panel, "The Verge").IsEnabled;
+            Toggle(Pick(panel, "BBC"));
+            var vergeWaits = !Pick(panel, "The Verge").IsEnabled;
+            window.Close();
+
+            Assert.True(waits);
+            Assert.Equal("To untick it, first tick another or All feeds.", why);
+            Assert.True(whyShows);
+            Assert.True(free);
+            Assert.Equal("The Verge", FeedsValue(session));
+            Assert.True(vergeWaits);
+        });
+    }
+
+    [Fact]
+    public void Feeds_named_with_a_comma_or_all_only_show_with_all_of_them()
+    {
+        Sta.Run(() =>
+        {
+            // Feeds added before such names were turned away: a comma splits a name in two, and "all" means every feed.
+            var session = new LayoutSession(new LayoutDocument { Widgets = [Widget("news")] });
+            var (panel, window) = Show(session, ["BBC", "News, UK", "All", "The Verge"]);
+            session.Select(0);
+            Pump();
+
+            var allTicked = Picks(panel).All(b => b.IsChecked == true);
+            // Unticking all leaves them out, greyed out and saying why.
+            Toggle(AllBox(panel));
+            var value = FeedsValue(session);
+            var comma = Pick(panel, "News, UK");
+            var named = Pick(panel, "All");
+            var commaOut = comma.IsChecked == false && !comma.IsEnabled;
+            var namedOut = named.IsChecked == false && !named.IsEnabled;
+            var commaWhy = comma.ToolTip as string;
+            var namedWhy = named.ToolTip as string;
+            window.Close();
+
+            Assert.True(allTicked);
+            Assert.Equal("BBC, The Verge", value);
+            Assert.True(commaOut);
+            Assert.StartsWith("Its name has a comma in it, so it can't be chosen on its own.", commaWhy);
+            Assert.True(namedOut);
+            Assert.StartsWith("Its name means all of them, so it can't be chosen on its own.", namedWhy);
+
+            // With only those, there's nothing to tick in place of all.
+            var alone = new LayoutSession(new LayoutDocument { Widgets = [Widget("news")] });
+            var (alonePanel, aloneWindow) = Show(alone, ["News, UK", "all"]);
+            alone.Select(0);
+            Pump();
+            var allEnabled = AllBox(alonePanel).IsEnabled;
+            aloneWindow.Close();
+
+            Assert.False(allEnabled);
+        });
+    }
+
+    [Fact]
+    public void Feeds_that_have_gone_still_show_ticked_so_they_can_be_unticked()
+    {
+        Sta.Run(() =>
+        {
+            var news = Widget("news");
+            news["feeds"] = "Old blog, bbc";
+            var session = new LayoutSession(new LayoutDocument { Widgets = [news] });
+            var (panel, window) = Show(session, Feeds);
+            session.Select(0);
+            Pump();
+
+            Assert.Equal(["Old blog", "BBC", "The Verge", "Ars Technica"], Picks(panel).Select(b => (string)b.Tag));
+            var gone = Pick(panel, "Old blog");
+            Assert.True(gone.IsChecked);
+            Assert.Contains("not found", Text(gone));
+            Assert.DoesNotContain("not found", Text(Pick(panel, "BBC")));
+            // Alt+Down on the last ticked one has nowhere to go, so the value isn't touched, not even to tidy "bbc".
+            DragReorder.Move(Pick(panel, "BBC"), +1);
+            Assert.False(session.IsDirty);
+
+            Toggle(gone);
+            var left = Picks(panel).Select(b => (string)b.Tag).ToList();
+            window.Close();
+
+            Assert.Equal("BBC", FeedsValue(session));
+            Assert.Equal(Feeds, left);
+        });
+    }
+
+    [Fact]
+    public void Without_any_feeds_the_list_says_where_to_add_them()
+    {
+        Sta.Run(() =>
+        {
+            var session = new LayoutSession(new LayoutDocument { Widgets = [Widget("news")] });
+            var (panel, window) = Show(session, []);
+            session.Select(0);
+            Pump();
+
+            var message = Descendants<TextBlock>(panel).Single(t => t.Text.StartsWith("No news feeds yet", StringComparison.Ordinal));
+            var shown = message.IsVisible;
+            var picks = Picks(panel).Count;
+            // Unticking all would only leave all again.
+            var allEnabled = AllBox(panel).IsEnabled;
+            window.Close();
+
+            Assert.True(shown);
+            Assert.Equal("No news feeds yet: add them on the News feeds page.", message.Text);
+            Assert.Equal(0, picks);
+            Assert.False(allEnabled);
+        });
+    }
+
+    [Fact]
     public void The_editor_opens_centred_on_the_main_screen_and_fits_it()
     {
         // A 4K main screen at 150% scaling, less the taskbar.
@@ -161,10 +376,32 @@ public sealed class PropertyPanelTests
 
     private static TextBox LabelBox(PropertyPanel panel, string label) => Descendants<TextBox>(panel).Single(b => b.Text == label);
 
-    /// <summary>The panel in a window off screen, as in the editor: some controls only fill in their text once shown.</summary>
-    private static (PropertyPanel Panel, Window Window) Show(LayoutSession session)
+    /// <summary>The news feeds, in the News feeds page's order.</summary>
+    private static readonly string[] Feeds = ["BBC", "The Verge", "Ars Technica"];
+
+    private static string? FeedsValue(LayoutSession session) => (string?)session.Document.Widgets[0]["feeds"];
+
+    private static CheckBox AllBox(PropertyPanel panel) => Descendants<CheckBox>(panel).Single(b => b.Content as string == "All feeds");
+
+    /// <summary>The boxes for each feed, top to bottom.</summary>
+    private static List<CheckBox> Picks(PropertyPanel panel) => [.. Descendants<CheckBox>(panel).Where(b => b.Tag is string)];
+
+    private static CheckBox Pick(PropertyPanel panel, string name) => Picks(panel).Single(b => (string)b.Tag == name);
+
+    private static string Text(CheckBox box) => string.Concat(((TextBlock)box.Content).Inlines.OfType<Run>().Select(r => r.Text));
+
+    /// <summary>Ticks or unticks a box as a click (or Narrator) does.</summary>
+    private static void Toggle(CheckBox box)
     {
-        var panel = new PropertyPanel(session, () => (1920, 480), () => new MetricStore());
+        ((IToggleProvider)UIElementAutomationPeer.CreatePeerForElement(box)).Toggle();
+        Pump();
+    }
+
+    /// <summary>The panel in a window off screen, as in the editor: some controls only fill in their text once shown.</summary>
+    /// <param name="options">The names a setting picking from a list the app keeps (the news feeds) is offered.</param>
+    private static (PropertyPanel Panel, Window Window) Show(LayoutSession session, IReadOnlyList<string>? options = null)
+    {
+        var panel = new PropertyPanel(session, () => (1920, 480), () => new MetricStore()) { Options = _ => options ?? [] };
         var window = new Window
         {
             Content = panel, Width = 440, Height = 3000, Left = -30000, Top = -30000,

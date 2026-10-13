@@ -145,6 +145,17 @@ public partial class LayoutEditor : UserControl
         }
     }
 
+    /// <summary>The names in a list the app keeps, such as the news feeds, for settings that pick from it.</summary>
+    public Func<string, IReadOnlyList<string>>? Options
+    {
+        get => _properties.Options;
+        set
+        {
+            _properties.Options = value;
+            _properties.Rebuild();
+        }
+    }
+
     /// <summary>A widget was added from the Add menu.</summary>
     public event EventHandler<WidgetDescriptor>? WidgetAdded;
 

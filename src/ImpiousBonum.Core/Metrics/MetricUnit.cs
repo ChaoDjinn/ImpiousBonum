@@ -26,4 +26,10 @@ public enum MetricUnit
 
     /// <summary>An angle, such as a wind direction or how high the sun is.</summary>
     Degrees,
+
+    /// <summary>µg/m³: how much of a gas or particles is in the air.</summary>
+    MicrogramsPerCubicMetre,
+
+    /// <summary>Pollen grains in a cubic metre of air.</summary>
+    GrainsPerCubicMetre,
 }

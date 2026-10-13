@@ -29,7 +29,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
 
@@ -46,7 +46,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | *Pages and schedule* | Swiping and turning between layouts, and what shows when (see [Pages](#pages) and [Schedule](#schedule)) |
 | *Game layouts* | Games linked to a layout or theme, and session recaps (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
 | *Sensors* | Whether the sensor service is running, installing, updating or removing it, and which app the FPS reading follows (see [the sensor service](#sensor-service-temperatures-fans-power-fps)) |
-| *Weather* | The location, the units, and turning the weather off (see [Weather](#weather)) |
+| *Weather* | The location, the units, air quality and pollen, severe weather warnings, and turning the weather off (see [Weather](#weather)) |
 | *Calendars*, *News feeds* | The links the agenda and news widgets read (see [Calendar](#calendar) and [News](#news)) |
 | *Claude usage* | Whether Claude Code is reporting, and connecting it (see [Claude usage](#claude-usage)) |
 | *Custom data* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
@@ -56,7 +56,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 
 The tray menu keeps to the basics: *Open Impious Bonum*, *Edit layout…* (the window on the main dashboard's layout), *Layout* to switch the main dashboard's layout quickly, *Restart to update to x.y.z* when an update is waiting, and *Exit*. Its first line shows the installed version, and it's dark or light with the taskbar (Settings → Personalisation → Colours → *Choose your mode*).
 
-Notifications that can do something say so: clicking one about an error opens the settings folder with `dashboard.log` selected, and clicking *Impious Bonum x.y.z is ready* restarts into the update.
+Notifications that can do something say so: clicking one about an error opens the settings folder with `dashboard.log` selected, clicking *Impious Bonum x.y.z is ready* restarts into the update, and clicking a [weather warning](#severe-weather-warnings) opens it on the Met Office's or the National Weather Service's site.
 
 ### Windowed mode
 
@@ -92,7 +92,8 @@ The editor is the *Layouts* page of the window, which opens on your main screen:
 
 - **Preview:** click a widget to select it, drag to move, drag the handles to resize. Moves snap to a grid (toolbar); hold Alt to place freely. Arrow keys nudge, Shift+arrows by 10.
 - **Metrics:** template and metric fields have a `{…}` button that opens a searchable list of every metric (about 280 on a typical PC, including every raw sensor) with live values. Pick one and choose how to show it (e.g. `18.7 GB`, `19,138 MB` or just `18.7`) and it's inserted at the cursor. Under each field a live preview shows what it renders now and flags unknown metric ids.
-- **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme. To reorder a list (a rows widget's rows, a clock's other places, buttons, warning colours…), drag an entry by the handle at its left, or move it a place at a time with Alt+Up and Alt+Down from its handle or one of its text or number boxes (in a drop-down, they open its list instead).
+- **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists, boxes to tick such as a news widget's feeds) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme. To reorder a list (a rows widget's rows, a clock's other places, buttons, warning colours, the feeds ticked…), drag an entry by the handle at its left, or move it a place at a time with Alt+Up and Alt+Down from its handle or one of its text or number boxes (in a drop-down, they open its list instead).
+- **Fonts:** the font list shows each font's name in that font, so you can see what you're picking. Symbol and icon fonts, such as *Wingdings* and *Segoe MDL2 Assets*, show their name as usual with a few of their symbols beside it. While the list is open, the font under the mouse (or the one you move to with the arrow keys) shows on the widget straight away: click it or press Enter to keep it, or press Esc or click elsewhere to go back to the font you had. With the list closed, Up and Down change to the next font straight away, and one undo goes back to where you started. You can still type a font's name. A widget's own *Font* has *Theme font* at the top of the list, to follow the layout's theme again.
 - **Setting a widget up:** the weather, agenda, news and Claude usage widgets need something set up outside the layout. Select one and *Set up*, at the top of its properties, says what's set up now and has a button for it: *Set location…*, *Calendars…*, *News feeds…* or *Connect Claude Code…*. They do the same as the window's own pages.
 - **Widgets:** add, duplicate (Ctrl+D) and delete. The *Widgets* list is the drawing order, and lower in the list draws on top: drag a widget up or down it to change the order, or press Ctrl+] to bring the selected widget forward and Ctrl+[ to send it back. Right-click a widget in the list for *Bring forward*, *Send back*, *Duplicate* and *Delete*.
 - **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
@@ -191,6 +192,9 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set on the *Weather* page, every 15 minutes |
 | `weather.gusts`, `weather.wind.degrees`, `weather.pressure`, `weather.pressure.trend` (*Rising*, *Falling* or *Steady* over the last 3 hours), `weather.dewpoint`, `weather.visibility`, `weather.clouds`, `weather.precipitation` (the last 15 minutes), `weather.precipitation.today`, `weather.rain.hour`, `weather.tomorrow.rain`, `weather.uv`, `weather.uv.max` (today's highest), `weather.uv.level` (*Low* to *Extreme*), `weather.daylight` | The same forecast (see [Weather](#weather)) |
 | `weather.sun.elevation` | How high the sun is, in degrees, worked out on your PC from the place and the time, every 30 seconds |
+| `weather.aqi`, `weather.aqi.level`, `weather.aqi.european`, `weather.aqi.us`, `weather.pm25`, `weather.pm10`, `weather.ozone`, `weather.no2` | Open-Meteo's air quality (from CAMS) for the same place, every hour, once *Weather* → *Air quality and pollen* is on (see [Air quality and pollen](#air-quality-and-pollen)) |
+| `weather.pollen` (e.g. *Grass high*), `weather.pollen.grass`, `weather.pollen.tree`, `weather.pollen.weed`, and `weather.pollen.grass.level`, `weather.pollen.tree.level`, `weather.pollen.weed.level` (*None* to *Very high*) | The same, for places in Europe in season |
+| `weather.warnings` (how many), `weather.warning` (the most serious one's headline), `weather.warning.level` (e.g. *Yellow* or *Severe*) | Warnings of severe weather for the same place, from the Met Office in the UK or the National Weather Service in the US, every 10 minutes, once *Weather* → *Severe weather warnings* is on (see [Severe weather warnings](#severe-weather-warnings)) |
 | `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set on the *Calendars* page, every 15 minutes (see [Calendar](#calendar)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
@@ -242,14 +246,14 @@ A sensor service from before 0.8 doesn't send these; *Sensors* → *Update…* b
 
 The *Weather* widget shows an icon, the temperature and conditions now (with today's high and low and what it feels like), and a row of the days or hours ahead, every three hours if you like: up to 16 days, or 48 hours. Every `weather.*` metric works in other widgets too: `{weather.temp} · {weather.condition}` in a text widget, or a gauge of `weather.temp`.
 
-<p align="center"><img src="images/widgets/weather.png" width="600" alt="The weather widget with colour icons: 14° and partly cloudy now with the high, low and feels-like, four days ahead, and below it a second weather widget of every three hours ahead with the chance of rain"></p>
+<p align="center"><img src="images/widgets/weather.png" width="600" alt="The weather widget with colour icons: 14° and partly cloudy now with the high, low and feels-like, four days ahead and a yellow wind warning under them, and below it a second weather widget of every three hours ahead with the chance of rain"></p>
 
 1. *Weather* → *Set location…*, or in the editor select the widget and *Set location…* under *Set up* (adding the widget offers it too). Search for your town, area or postcode, or type latitude and longitude, e.g. `51.5, -0.12`.
 2. Add the widget: *Add widget* → *Weather* in the editor.
 
 For a suburb or village, or one of several places with the same name, add its town, county or country after a comma: `West Derby, Liverpool` finds the one in Liverpool rather than the one in South Africa. The start of a name is enough (`West Derby, Liv`), and `UK` and `USA` work as countries. Each place in the list says where it is, and hovering over it shows its coordinates.
 
-It's adjustable in the editor: turn off *Weather now* to leave just the forecast (say, one widget of the hours ahead beside another of the days), choose *colour* icons for a yellow sun, white clouds, grey rain clouds with blue rain and white lightning instead of outlines in one colour, and give the widget its own text and detail colours rather than the theme's.
+It's adjustable in the editor: turn off *Weather now* to leave just the forecast (say, one widget of the hours ahead beside another of the days), choose *colour* icons for a yellow sun, white clouds, grey rain clouds with blue rain and white lightning instead of outlines in one colour, and give the widget its own text and detail colours rather than the theme's. A day or hour shows its chance of rain from 30%; *Chance of rain from* changes that, and 0 always shows it.
 
 There's more in the forecast than the widget shows, for text, gauges and the rest:
 
@@ -264,7 +268,35 @@ For example, `UV {weather.uv} ({weather.uv.level}) · {weather.pressure} {weathe
 
 The location is set once for the PC, so every layout shows the same place. Units follow your Windows region (°C, km/h, mm, km and hPa, or °F, mph, inches, miles and inches of mercury); *Weather* → *Units* changes them.
 
-Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-commercial use and needs no account. When you search, what you type goes to Open-Meteo, and to [OpenStreetMap](https://www.openstreetmap.org)'s place search only when Open-Meteo doesn't find it (it knows more suburbs, parks and postcodes). After that only the place's coordinates are used: they go to Open-Meteo every 15 minutes for the forecast. Nothing else is sent, and nothing at all until you search or set a location. *Turn off weather* forgets the place and stops it. If the internet is down the last forecast stays for up to three hours. Weather data by Open-Meteo.com, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Place search by OpenStreetMap ([© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)).
+Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-commercial use and needs no account. When you search, what you type goes to Open-Meteo, and to [OpenStreetMap](https://www.openstreetmap.org)'s place search only when Open-Meteo doesn't find it (it knows more suburbs, parks and postcodes). After that only the place's coordinates are used: they go to Open-Meteo every 15 minutes for the forecast (and every hour for [air quality and pollen](#air-quality-and-pollen), if you turn them on), and with [severe weather warnings](#severe-weather-warnings) on, a US place's go to the National Weather Service every 10 minutes. Nothing else is sent, and nothing at all until you search or set a location. *Turn off weather* forgets the place and stops it. If the internet is down the last forecast stays for up to three hours. Weather data by Open-Meteo.com, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Place search by OpenStreetMap ([© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)).
+
+#### Air quality and pollen
+
+Turn on *Weather* → *Air quality and pollen* for readings of the air at the weather's location. It's off until you turn it on, and needs a location.
+
+- **Air quality index:** `weather.aqi`, on the index chosen under *Air quality index*, and its level in that index's own words (`weather.aqi.level`). The European index (`weather.aqi.european`) is *Good* up to 20, *Fair* to 40, *Moderate* to 60, *Poor* to 80, *Very poor* to 100 and *Extremely poor* above that. The US index (`weather.aqi.us`) is *Good* up to 50, *Moderate* to 100, *Unhealthy for sensitive groups* to 150, *Unhealthy* to 200, *Very unhealthy* to 300 and *Hazardous* above that.
+- **What's in the air:** fine particles (`weather.pm25`, PM2.5), particles (`weather.pm10`, PM10), ozone (`weather.ozone`) and nitrogen dioxide (`weather.no2`), in µg/m³.
+- **Pollen:** grass (`weather.pollen.grass`), trees (`weather.pollen.tree`: alder, birch and olive) and weeds (`weather.pollen.weed`: mugwort and ragweed), in grains/m³, each with its level (`weather.pollen.grass.level` and so on): *None*, *Low*, *Moderate*, *High* or *Very high*. `weather.pollen` sums them up as the group at the highest level, e.g. *Grass high* (or *Grass and tree high* when they're level), or *None*. Pollen is only counted in Europe, and only in season; elsewhere these readings show a dash.
+
+*Automatic* uses the European index for places in CAMS's European forecast area (latitude 30° to 72° N and longitude 25° W to 45° E: Europe, Iceland, Turkey, North Africa's coast and the eastern Mediterranean) and the US index everywhere else. The Canary Islands and the Azores are just outside it, so choose *European* there if you'd rather.
+
+Each type of pollen has its own bands, since some bring on hay fever at far smaller counts than others: [MeteoSwiss's](https://www.meteoswiss.admin.ch) for alder, birch, grass, mugwort and ragweed, and the Spanish Aerobiology Network's for olive, which stop at *High*. A group takes the level of its worst type: 20 grains of birch is moderate, but 20 of olive is low. The bands are meant for a day's average, so an hour's count is a guide rather than the official level.
+
+For example, `AQI {weather.aqi} ({weather.aqi.level}) · Pollen: {weather.pollen}` in a text widget reads *AQI 26 (Fair) · Pollen: Grass high*. While it's on, the *Weather* page's location line shows the air quality and pollen too.
+
+Once an hour, just after the hour (when that hour's readings come out), the place's coordinates go to Open-Meteo's air quality service; nothing else is sent, and nothing at all while it's off or there's no location. If it can't be reached it tries again five minutes later, and the last readings stay for up to three hours. Air quality data by CAMS (Copernicus), via Open-Meteo.com: the forecasts of the [Copernicus Atmosphere Monitoring Service](https://atmosphere.copernicus.eu).
+
+#### Severe weather warnings
+
+Turn on *Weather* → *Severe weather warnings* for warnings of storms, floods, snow, ice, heat and the like at the weather's location: from the [Met Office](https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings) for places in the UK, and the [National Weather Service](https://www.weather.gov) (NWS) for places in the US. It's off until you turn it on, and needs a location in one of them; anywhere else, the *Weather* page says warnings aren't available there yet.
+
+- **On the weather widget:** the most serious warning along the bottom with a warning sign, and *and 2 more* when there are others. Yellow and amber warnings (and the NWS's minor and moderate ones) are in the theme's warning colour, red ones (and the NWS's severe and extreme ones) in its critical colour. Tap it to read the warning on the Met Office's or the NWS's site (not in the tablet view). Its size follows *Forecast size*, or *Temperature size* on a widget without a forecast, and in a widget too short for both, the weather gives way to it. Nothing shows while there are none, so the widget looks as it always has. It only shows on a widget with *Weather now*, so a forecast-only widget beside it doesn't repeat it; turn off *Warnings* in the editor to leave it out altogether.
+- **Notifications:** with *Notify me* on (it is, once warnings are), a Windows notification when a warning comes out or gets more serious, with its headline; click it to read the warning. Each comes up once while Impious Bonum runs, and several at once share one notification that lists the most serious few.
+- **Readings for any widget:** `weather.warnings` (how many there are now, 0 when there are none), `weather.warning` (the most serious one's headline, e.g. *Yellow warning of rain affecting Wales*) and `weather.warning.level` (its level in the agency's own words: *Yellow*, *Amber* or *Red* from the Met Office, *Minor*, *Moderate*, *Severe* or *Extreme* from the NWS).
+
+The Met Office gives warnings for 16 areas of the UK, such as *North West England* or *Strathclyde*, and *Automatic* picks the one your location is in. Near the edge of one, the next may suit you better: *Met Office area* chooses it. Places picked from a search know which country they're in. A location typed in as coordinates gets the Met Office's warnings if it's in Great Britain, but to get the NWS's, set it by searching for its name: coordinates alone are never sent to the NWS, in case they're in Canada or Mexico.
+
+Every 10 minutes while they're on, for a UK place only its Met Office area is sent to the Met Office (`metoffice.gov.uk`), never the place itself; for a US place its coordinates go to the National Weather Service (`api.weather.gov`). A place anywhere else isn't sent anywhere, and nothing at all is fetched while warnings are off. If they can't be reached it tries again three minutes later, and the last warnings stay for up to an hour (each still goes when it ends). Warnings from the Met Office (© Crown copyright) and from the US National Weather Service.
 
 ### Calendar
 
@@ -281,19 +313,30 @@ Add calendars on the *Calendars* page (or select the widget in the editor → *C
 
 Each is checked every 15 minutes. Repeating events, moved and cancelled occurrences, all-day events and time zones
 are all handled; events show in this PC's time. If a calendar can't be fetched, its last events stay for a day and
-`calendar.status` says what's wrong. An agenda can show some calendars and not others (*Calendars*: `Work, Family`).
+`calendar.status` says what's wrong. An agenda can show some calendars and not others (*Calendars*: `Work, Family`),
+so a calendar's name can't have a comma in it or be `all`.
 The metrics put the next event anywhere: `{calendar.next.title}` at `{calendar.next.time}`, or a `stat` of
 `calendar.next.minutes`. A private link lets anyone who has it read the calendar, so it's kept only in this PC's
 `settings.json`, never in layouts you export.
 
 ### News
 
-The `news` widget shows headlines from news feeds (RSS or Atom), newest first: a list of the latest few, or a
-*ticker* that shows one at a time and moves on every few seconds. Each shows where it's from and how old it is, and
-tapping one opens the article in your browser. Add feeds on the *News feeds* page (or select the widget in the editor → *News feeds…*): most news sites and blogs have
+The `news` widget shows headlines from news feeds (RSS or Atom), newest first: a list of the latest few, a
+*ticker* that shows one at a time and moves on every few seconds, or *tickers*: a ticker for each feed, a line each,
+taking turns to move on so they don't all change at once (*Headlines* is how many each goes through). Each headline
+shows where it's from and how old it is, and tapping one opens the article in your browser. Add feeds on the *News feeds* page (or select the widget in the editor → *News feeds…*): most news sites and blogs have
 one (look for an RSS link, or try the site's address with `/feed` or `/rss` on the end), and so do YouTube channels
-and subreddits. Each feed is checked every 15 minutes, and the same story in two feeds shows once. A widget can show
-some feeds and not others (*Feeds*: `BBC, The Verge`), and `{news.title}` puts the newest headline anywhere.
+and subreddits. Each feed is checked every 15 minutes. In the list and the ticker the same story in two feeds shows
+once; with tickers, it's in each feed's.
+
+A widget can show some feeds and not others. In the editor, *Feeds* lists your feeds: untick *All feeds*, which
+leaves each feed ticked, then untick the ones you don't want and drag the rest into order by the handles at their left
+(or Alt+Up and Alt+Down). That's the order the tickers go in; with *All feeds*, they follow the *News feeds* page's
+order. The last feed ticked stays until you tick another (or *All feeds*), so swapping one for another doesn't go back
+to all of them. A feed you've since removed or renamed stays ticked, marked *not found*, until you untick it. In a
+layout file, `feeds` is `all` or the names separated by commas (`BBC, The Verge`), so a feed's name can't have a comma
+in it or be `all`; one added before that was checked is greyed out in *Feeds*, and only shows with *All feeds*, until
+you remove it and add it again with another name. `{news.title}` puts the newest headline anywhere.
 
 <p align="center"><img src="images/widgets/news.png" width="600" alt="Four headlines, newest first, each with where it's from and how long ago"></p>
 

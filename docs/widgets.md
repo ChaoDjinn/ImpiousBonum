@@ -196,7 +196,7 @@ An accent-coloured line icon followed by a live value, e.g. a chip and the CPU t
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` | `cpu` | Icon |
+| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` | `cpu` | Icon |
 | `text` | template | `{cpu.temp:nounit} °C` | Text |
 | `fontSize` | number (6–400) | `64` | Font size |
 | `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
@@ -448,14 +448,14 @@ Each entry in `buttons`:
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `label` | text | `Play/pause` | Label. Empty shows just the icon. |
-| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` | `play-pause` | Icon |
+| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` | `play-pause` | Icon |
 | `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `open` / `keys` / `layout` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys and layout use the target below. |
 | `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name. |
 | `arguments` | text | — | Arguments. open: command-line arguments for a program. |
 
 ## Weather (`weather`)
 
-The weather now and the days or hours ahead, from Open-Meteo.com. Set your location in the editor (select the widget) or on the Weather page.
+The weather now and the days or hours ahead, from Open-Meteo.com, and severe weather warnings if they're on. Set your location in the editor (select the widget) or on the Weather page.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
@@ -466,6 +466,7 @@ The weather now and the days or hours ahead, from Open-Meteo.com. Set your locat
 | `rainFrom` | number (0–100) | `30` | Chance of rain from. Show the chance of rain from this percentage; 0 always shows it. |
 | `showDetails` | true/false | `true` | Details. Conditions, today's high and low, and feels like, beside the temperature. |
 | `showLocation` | true/false | `false` | Location |
+| `showWarnings` | true/false | `true` | Warnings. With severe weather warnings on (the Weather page), the most serious one along the bottom while there are any: in the warning colour, or the critical colour for red, severe and extreme ones. Only with Weather now, so a forecast-only widget beside it doesn't show it again. Its size follows Forecast size, or Temperature size without a forecast. Tap it to read the warning (not in the tablet view). |
 | `fontSize` | number (6–400) | `80` | Temperature size |
 | `forecastSize` | number (6–200) | `22` | Forecast size |
 | `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
@@ -476,14 +477,14 @@ The weather now and the days or hours ahead, from Open-Meteo.com. Set your locat
 
 ## News (`news`)
 
-Headlines from your news feeds (set them in the editor, or on the News feeds page), newest first, as a list or one at a time. Tap a headline to open it in your browser.
+Headlines from your news feeds (set them in the editor, or on the News feeds page), newest first, as a list, one at a time, or one at a time from each feed. Tap a headline to open it in your browser.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `style` | `list` / `ticker` | `list` | Style. list shows the newest few; ticker shows one at a time, moving on every few seconds. |
-| `count` | number (1–30) | `5` | Headlines. How many the list shows, or the ticker goes through. |
-| `seconds` | number (2–120) | `8` | Ticker seconds. How long the ticker shows each headline. |
-| `feeds` | text | `all` | Feeds. "all", or feed names separated by commas, e.g. "BBC, The Verge". |
+| `style` | `list` / `ticker` / `tickers` | `list` | Style. list shows the newest few; ticker shows one at a time, moving on every few seconds; tickers gives each feed a ticker of its own, a line each. |
+| `count` | number (1–30) | `5` | Headlines. How many the list shows, or each ticker goes through. |
+| `seconds` | number (2–120) | `8` | Ticker seconds. How long a ticker shows each headline. |
+| `feeds` | `all`, or names in order, separated by commas | `all` | Feeds. All feeds, or just the ones chosen. With tickers, each gets a line of its own, in the order they're listed. |
 | `source` | true/false | `true` | Show where from |
 | `age` | true/false | `true` | Show how old |
 | `tapToOpen` | true/false | `true` | Tap to open. Opens the article in your browser. Not in the tablet view. |

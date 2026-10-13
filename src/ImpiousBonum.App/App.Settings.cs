@@ -76,6 +76,7 @@ public partial class App : ISettingsHost
             EditedWindow()?.BeginEdit(session);
         };
         editor.Setups = WidgetSetups;
+        editor.Options = PickOptions;
         editor.WidgetAdded += (_, descriptor) =>
         {
             if (_settingsWindow is not { } owner)
@@ -246,6 +247,43 @@ public partial class App : ISettingsHost
         _settings.WeatherUnits = units;
         _settings.Save();
     }
+
+    void ISettingsHost.SetAirQuality(bool on)
+    {
+        _settings.AirQuality = on;
+        _settings.Save();
+        AppLog.Info($"Air quality and pollen {(on ? "on" : "off")}");
+    }
+
+    void ISettingsHost.SetAirQualityScale(string scale)
+    {
+        _settings.AirQualityScale = scale;
+        _settings.Save();
+    }
+
+    void ISettingsHost.SetWeatherWarnings(bool on)
+    {
+        _settings.WeatherWarnings = on;
+        _settings.Save();
+        AppLog.Info($"Severe weather warnings {(on ? "on" : "off")}");
+    }
+
+    void ISettingsHost.SetWeatherWarningsNotify(bool on)
+    {
+        _settings.WeatherWarningsNotify = on;
+        _settings.Save();
+        AppLog.Info($"Notifications of weather warnings {(on ? "on" : "off")}");
+    }
+
+    void ISettingsHost.SetMetOfficeArea(string area)
+    {
+        _settings.MetOfficeArea = area;
+        _settings.Save();
+        // Not which area: it says where you are, and the log goes with bug reports.
+        AppLog.Info(area == AppSettings.MetOfficeAreaAuto ? "Met Office area set to automatic" : "Met Office area chosen");
+    }
+
+    string ISettingsHost.WeatherWarningsStatus => WeatherWarningsStatus();
 
     void ISettingsHost.SetCalendars(IReadOnlyList<CalendarLink> calendars) => SetCalendars(calendars);
 

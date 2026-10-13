@@ -67,6 +67,13 @@ public enum SettingKind
 
     /// <summary>A path to a PNG/JPG image.</summary>
     ImageFile,
+
+    /// <summary>
+    /// Some names from a list, in the order chosen, or <c>all</c> if <see cref="SettingDescriptor.AllLabel"/> is set (see
+    /// <see cref="PickList"/>). The names are <see cref="SettingDescriptor.Choices"/>, or a list the app keeps
+    /// (<see cref="SettingDescriptor.OptionsSource"/>).
+    /// </summary>
+    Picks,
 }
 
 /// <summary>One setting of a widget type. Create these with the <see cref="Setting"/> helpers.</summary>
@@ -80,7 +87,17 @@ public sealed record SettingDescriptor(
     IReadOnlyList<string>? Choices = null,
     double? Min = null,
     double? Max = null,
-    IReadOnlyList<SettingDescriptor>? ItemSettings = null);
+    IReadOnlyList<SettingDescriptor>? ItemSettings = null)
+{
+    /// <summary>For <see cref="SettingKind.Picks"/>: the name of a list the app keeps to pick from, e.g. the news feeds.</summary>
+    public string? OptionsSource { get; init; }
+
+    /// <summary>For <see cref="SettingKind.Picks"/>: the editor's box for all of them ("All feeds"), or null if they must be picked.</summary>
+    public string? AllLabel { get; init; }
+
+    /// <summary>For <see cref="SettingKind.Picks"/>: what the editor says when there's nothing to pick yet.</summary>
+    public string? NoOptions { get; init; }
+}
 
 /// <summary>Terse constructors for <see cref="SettingDescriptor"/>, so widget declarations read like a table.</summary>
 public static class Setting
@@ -125,6 +142,16 @@ public static class Setting
     public static SettingDescriptor Items(
         string key, string label, IReadOnlyList<SettingDescriptor> itemSettings, string group = Content, string? help = null, IReadOnlyList<JsonObject>? defaults = null) =>
         new(key, label, SettingKind.Items, defaults is null ? null : new JsonArray([.. defaults]), group, help, ItemSettings: itemSettings);
+
+    /// <summary>
+    /// Some names, in order: from <paramref name="choices"/>, or from the list the app keeps named <paramref name="source"/>.
+    /// With <paramref name="all"/> (the label of its box in the editor), it can pick all of them too.
+    /// </summary>
+    /// <param name="none">What the editor says when there's nothing to pick yet.</param>
+    public static SettingDescriptor Picks(
+        string key, string label, string? @default, IReadOnlyList<string>? choices = null, string? source = null, string? all = null, string? none = null,
+        string group = Content, string? help = null) =>
+        new(key, label, SettingKind.Picks, @default, group, help, choices) { OptionsSource = source, AllLabel = all, NoOptions = none };
 
     public static readonly IReadOnlyList<string> HorizontalAlignments = ["left", "center", "right"];
 

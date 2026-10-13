@@ -226,6 +226,63 @@ public sealed class AppSettings
         _ => RegionInfo.CurrentRegion.IsMetric ? Core.Weather.WeatherUnits.Metric : Core.Weather.WeatherUnits.Imperial,
     };
 
+    /// <summary>Air quality and pollen for the weather's location (the Weather page). Off by default: nothing is fetched until it's on.</summary>
+    public bool AirQuality { get; set; }
+
+    /// <summary>
+    /// Which air quality index: <c>auto</c> is the European one in Europe and the US one elsewhere (see
+    /// <see cref="AirQualityReadings.ScaleFor"/>); <c>european</c> and <c>us</c> are always that one.
+    /// </summary>
+    public string AirQualityScale { get; set; } = AirQualityScaleAuto;
+
+    public const string AirQualityScaleAuto = "auto";
+    public const string AirQualityScaleEuropean = "european";
+    public const string AirQualityScaleUs = "us";
+
+    /// <summary>What the air quality provider should fetch, or null when it's off or no location is set.</summary>
+    public AirQualityRequest? AirQualityRequest() =>
+        AirQuality && WeatherLocation is { } place ? new AirQualityRequest(place.Latitude, place.Longitude, ResolveAirQualityScale(AirQualityScale)) : null;
+
+    public static AqiScale ResolveAirQualityScale(string? setting) => setting?.ToLowerInvariant() switch
+    {
+        AirQualityScaleEuropean => AqiScale.European,
+        AirQualityScaleUs => AqiScale.Us,
+        _ => AqiScale.Automatic,
+    };
+
+    /// <summary>
+    /// Severe weather warnings for the weather's location (the Weather page), from the Met Office or the National Weather
+    /// Service. Off by default: nothing is fetched until it's on.
+    /// </summary>
+    public bool WeatherWarnings { get; set; }
+
+    /// <summary>A Windows notification for each new warning, once warnings are on.</summary>
+    public bool WeatherWarningsNotify { get; set; } = true;
+
+    /// <summary>Whose warnings to show for a UK place: <c>auto</c> for the area it's in, or an area's code (see <see cref="MetOfficeWarnings.Areas"/>).</summary>
+    public string MetOfficeArea { get; set; } = MetOfficeAreaAuto;
+
+    public const string MetOfficeAreaAuto = "auto";
+
+    /// <summary>
+    /// Where warnings for the location would come from, whether or not they're on: null with no location, and
+    /// <see cref="WarningSource.None"/> for a place outside the UK and the US. Only a US place goes to the NWS.
+    /// </summary>
+    public WarningsRequest? WeatherWarningsPlace()
+    {
+        if (WeatherLocation is not { } place)
+            return null;
+        var source = Core.Weather.WeatherWarnings.SourceFor(place.CountryCode, place.Name, place.Latitude, place.Longitude);
+        var area = source == WarningSource.MetOffice
+            ? (MetOfficeWarnings.Find(MetOfficeArea) ?? MetOfficeWarnings.AreaFor(place.Latitude, place.Longitude)).Code
+            : null;
+        return new WarningsRequest(source, place.Latitude, place.Longitude, area);
+    }
+
+    /// <summary>What the warnings provider should fetch, or null when they're off, there's no location or nobody warns the place.</summary>
+    public WarningsRequest? WeatherWarningsRequest() =>
+        WeatherWarnings && WeatherWarningsPlace() is { Source: not WarningSource.None } place ? place : null;
+
     public static AppSettings Load()
     {
         try
@@ -281,7 +338,14 @@ public sealed class AppSettings
 public sealed record PixelRect(int X, int Y, int Width, int Height);
 
 /// <param name="Name">The place as you picked it, e.g. "Leeds, England, United Kingdom".</param>
-public sealed record WeatherLocation(string Name, double Latitude, double Longitude);
+public sealed record WeatherLocation(string Name, double Latitude, double Longitude)
+{
+    /// <summary>
+    /// The country's two-letter code, e.g. GB, which decides whose warnings it gets. Null for coordinates typed in, and
+    /// for places saved before it was kept: then the name and coordinates decide (see <see cref="Core.Weather.WeatherWarnings.SourceFor"/>).
+    /// </summary>
+    public string? CountryCode { get; init; }
+}
 
 /// <summary>What the Logging page logs: these metrics, a row every so many seconds, files kept for so many days (0 = always).</summary>
 public sealed record LogSettings(bool Enabled, IReadOnlyList<string> Metrics, int EverySeconds, int KeepDays)

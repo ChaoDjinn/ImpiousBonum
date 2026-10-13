@@ -52,8 +52,9 @@ public partial class WeatherLocationWindow : Window
 
     internal WeatherLocation? Picked()
     {
+        // The country is kept for warnings, which only some countries' weather services give.
         if (Results.SelectedItem is ListBoxItem { Tag: WeatherPlace place })
-            return new WeatherLocation(place.Description, place.Latitude, place.Longitude);
+            return new WeatherLocation(place.Description, place.Latitude, place.Longitude) { CountryCode = place.CountryCode };
         if (OpenMeteo.ParseCoordinates(QueryBox.Text) is var (latitude, longitude))
             return new WeatherLocation(QueryBox.Text.Trim(), latitude, longitude);
         return null;
