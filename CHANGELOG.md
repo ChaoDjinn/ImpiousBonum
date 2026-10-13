@@ -21,6 +21,13 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - Drag a widget up or down the editor's *Widgets* list to change which draws on top, in place of the arrow buttons in the toolbar. From the keyboard, Ctrl+] brings the selected widget forward and Ctrl+[ sends it back, and right-clicking a widget in the list has *Bring forward*, *Send back*, *Duplicate* and *Delete*.
 - Entries in a widget's lists (a rows widget's rows, buttons, other places, warning colours and so on) have a handle at their left to drag them into place, instead of up and down arrows. From the keyboard, Alt+Up and Alt+Down move the entry from its handle or its text boxes.
 
+**Fonts you can see before you pick**
+- The editor's font list shows each font's name in that font, as Word does. Symbol and icon fonts like *Wingdings* show their name as usual, with a few of their symbols beside it.
+- No more clicking through fonts one at a time: with the list open, the font under the mouse (or the one you move to with the arrow keys) shows on the widget straight away. Click it or press Enter to keep it; press Esc or click elsewhere and the font you had comes back. Looking through the list doesn't fill up undo or count as a change to save.
+- With the list closed, Up and Down change to the next font straight away, and a single undo goes back to the font you started with.
+- A widget's own *Font* has *Theme font* at the top of the list, to go back to the layout theme's font.
+- The list opens quickly however many fonts you have, as only the fonts in view are loaded.
+
 ## 0.13.0
 
 Impious Bonum has a window of its own, and the tray menu keeps to the basics.
