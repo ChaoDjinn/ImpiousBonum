@@ -234,6 +234,27 @@ public sealed class WeatherTests
     public void Daylight_reads_in_hours_and_minutes(double seconds, string expected) =>
         Assert.Equal(expected, WeatherReadings.Daylight(TimeSpan.FromSeconds(seconds)));
 
+    [Theory]
+    [InlineData(WeatherUnits.Metric, MetricUnit.Celsius, MetricUnit.KilometresPerHour, MetricUnit.Hectopascals, MetricUnit.Kilometres, MetricUnit.Millimetres)]
+    [InlineData(WeatherUnits.Imperial, MetricUnit.Fahrenheit, MetricUnit.MilesPerHour, MetricUnit.InchesOfMercury, MetricUnit.Miles, MetricUnit.Inches)]
+    public void Readings_are_in_the_forecasts_units(WeatherUnits units, MetricUnit temperature, MetricUnit speed, MetricUnit pressure, MetricUnit distance, MetricUnit precipitation)
+    {
+        Assert.Equal(temperature, WeatherReadings.TemperatureUnit(units));
+        Assert.Equal(speed, WeatherReadings.SpeedUnit(units));
+        Assert.Equal(pressure, WeatherReadings.PressureUnit(units));
+        Assert.Equal(distance, WeatherReadings.DistanceUnit(units));
+        Assert.Equal(precipitation, WeatherReadings.PrecipitationUnit(units));
+
+        // The metrics are registered in the same.
+        var store = new MetricStore();
+        var report = WeatherReport.Parse(Forecast, units);
+        new WeatherProvider(() => null).Publish(store, report, London with { Units = units }, FullForecastTime);
+        Assert.True(store.TryGet(WeatherProvider.Wind, out var wind));
+        Assert.Equal(speed, wind.Definition.Unit);
+        Assert.True(store.TryGet(WeatherProvider.PrecipitationToday, out var rain));
+        Assert.Equal(precipitation, rain.Definition.Unit);
+    }
+
     [Fact]
     public async Task Every_new_reading_is_published_in_the_chosen_units()
     {

@@ -463,8 +463,10 @@ The weather now and the days or hours ahead, from Open-Meteo.com, and severe wea
 | `forecast` | `days` / `hours` / `none` | `days` | Forecast |
 | `count` | number (1–48) | `5` | Days or hours. Up to 16 days, or 48 hours. |
 | `hourStep` | number (1–12) | `1` | Hours apart. For an hourly forecast, e.g. 3 for every three hours. |
-| `rainFrom` | number (0–100) | `30` | Chance of rain from. Show the chance of rain from this percentage; 0 always shows it. |
-| `showDetails` | true/false | `true` | Details. Conditions, today's high and low, and feels like, beside the temperature. |
+| `forecastDetails` | some of `chance of rain` / `rainfall` / `wind` / `gusts` / `UV` in order, separated by commas | `chance of rain` | Forecast details. What each day or hour shows under its temperature, in order: the chance of rain (from Chance of rain from), rainfall (only when there's some), wind, gusts (in the wind's units) and UV. A day's are its total rain, its strongest wind and gusts, and its highest UV. |
+| `rainFrom` | number (0–100) | `30` | Chance of rain from. With chance of rain in Forecast details, show it from this percentage; 0 always shows it. |
+| `showDetails` | true/false | `true` | Details. The ones chosen under Details to show, beside the temperature. Off leaves them all out. |
+| `details` | some of `conditions` / `high and low` / `feels like` / `wind` / `gusts` / `humidity` / `pressure` / `UV` / `chance of rain` / `rainfall` / `sunrise` / `sunset` / `daylight` / `dew point` / `visibility` / `cloud cover` / `air quality` / `pollen` in order, separated by commas | `conditions, high and low, feels like` | Details to show. Which details go beside the temperature, in order. Conditions, when they're first, have the larger line, as they always had; the rest go a few to a line, with a short label where the number alone could be anything, such as Feels 12°, Gusts 40 km/h or UV 3 Moderate. High and low, chance of rain, rainfall and daylight are today's, and pressure has an arrow for rising, falling or steady over the last three hours. Air quality and pollen need them turned on (the Weather page) and are your location's, so they're left out for other places. |
 | `showLocation` | true/false | `false` | Location |
 | `places` | names in order, separated by commas | — | Places. Which places to show, in order: your location and the more places on the Weather page, by their names up to the first comma, such as Leeds (or Paris (Texas) where two places would share one). None shows just your location. With more than one, the widget shows one at a time with its name, moving on every Seconds per place, and a tap moves it (and any other weather widget showing the same places) on straight away; the tablet view moves on by itself. A place other than your location always shows its name. Warnings are your location's, so they only show while it's on show. |
 | `placeSeconds` | number (3–600) | `10` | Seconds per place. With more than one place, how long each one shows. |
@@ -475,7 +477,7 @@ The weather now and the days or hours ahead, from Open-Meteo.com, and severe wea
 | `iconStyle` | `outline` / `colour` | `outline` | Icons. outline draws them in the icon colour below; colour in their own: a yellow sun, white clouds, blue rain, white lightning. |
 | `iconColor` | color | `accent` | Icon colour. For outline icons. |
 | `textColor` | color | `foreground` | Text colour. The temperatures and conditions. |
-| `detailColor` | color | `secondary` | Detail colour. Highs and lows, feels like, times and days, and the chance of rain. |
+| `detailColor` | color | `secondary` | Detail colour. The smaller details beside the temperature, the forecast's lows, times and days, and what's under each day or hour. |
 
 ## News (`news`)
 

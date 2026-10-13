@@ -1,3 +1,5 @@
+using ImpiousBonum.Core.Metrics;
+
 namespace ImpiousBonum.Core.Weather;
 
 /// <summary>Which way the air pressure has gone over the last three hours.</summary>
@@ -59,4 +61,19 @@ public static class WeatherReadings
     /// <summary>A distance in km, or miles for imperial units.</summary>
     public static double Distance(double metres, WeatherUnits units) =>
         units == WeatherUnits.Imperial ? metres / MetresPerMile : metres / 1000;
+
+    // The units the readings are shown in: the weather metrics', and the weather widget's for any place.
+
+    public static MetricUnit TemperatureUnit(WeatherUnits units) => units == WeatherUnits.Imperial ? MetricUnit.Fahrenheit : MetricUnit.Celsius;
+
+    public static MetricUnit SpeedUnit(WeatherUnits units) => units == WeatherUnits.Imperial ? MetricUnit.MilesPerHour : MetricUnit.KilometresPerHour;
+
+    /// <summary>What <see cref="Pressure"/> gives.</summary>
+    public static MetricUnit PressureUnit(WeatherUnits units) => units == WeatherUnits.Imperial ? MetricUnit.InchesOfMercury : MetricUnit.Hectopascals;
+
+    /// <summary>What <see cref="Distance"/> gives.</summary>
+    public static MetricUnit DistanceUnit(WeatherUnits units) => units == WeatherUnits.Imperial ? MetricUnit.Miles : MetricUnit.Kilometres;
+
+    /// <summary>Rain, showers and snow, as the forecast gives them.</summary>
+    public static MetricUnit PrecipitationUnit(WeatherUnits units) => units == WeatherUnits.Imperial ? MetricUnit.Inches : MetricUnit.Millimetres;
 }

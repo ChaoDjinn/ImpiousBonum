@@ -60,6 +60,12 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - On the *Weather* page each place shows its weather now. Drag them into order, remove them, or *Make main* to swap one with your location, say when you get there (changing your location to one of them takes it off the list instead). Your location keeps the weather readings, air quality and warnings, so a warning only shows while it's on show.
 - Each place's coordinates go to Open-Meteo every 15 minutes for its forecast, like your location's, and nothing else is sent for them. Without more places nothing more is fetched, and a weather widget with no places ticked looks just as it did.
 
+**Choose the weather widget's details**
+- *Details to show* on the *Weather* widget chooses what goes beside the temperature, in the order you drag them into: the conditions, today's high and low, feels like, wind (*12 km/h SW*), gusts, humidity, pressure with an arrow for rising, falling or steady (*1012 hPa ↓*), UV with its level (*UV 3 Moderate*), today's chance of rain and rainfall, sunrise, sunset, daylight, dew point, visibility and cloud cover, and with air quality and pollen on, those too. They go a few to a line, each with a short label where it needs one, and a busy widget gets smaller as a whole to fit.
+- *Forecast details* chooses what each day or hour shows under its temperature: its chance of rain (as before), rainfall, wind, gusts and UV.
+- On another of your places, the details are that place's own. Your weather widgets look just as they did until you choose others, and *Details* still turns them all off.
+- They're all from the forecast already fetched, so nothing more is sent.
+
 ## 0.13.0
 
 Impious Bonum has a window of its own, and the tray menu keeps to the basics.
