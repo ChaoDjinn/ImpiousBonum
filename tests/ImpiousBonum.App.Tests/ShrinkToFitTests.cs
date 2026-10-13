@@ -142,9 +142,9 @@ public sealed class ShrinkToFitTests
             var definition = JsonNode.Parse(json)!.AsObject();
             var widget = Laid((string)definition["type"]!, definition, width, height);
             Assert.Contains(Descendants<ShrinkToFit>(widget), f => f.Scale < 1);
-            // Text's boxes fit the width; a letter can reach a pixel or so past its box.
+            // Text's boxes fit the widget; a letter can reach a pixel or so past its box.
             var ink = ShrinkToFit.Ink(widget);
-            Assert.True(new Rect(-2, -0.5, width + 4, height + 1).Contains(ink), $"{ink} is outside {width}×{height}");
+            Assert.True(new Rect(-2, -1, width + 4, height + 2).Contains(ink), $"{ink} is outside {width}×{height}");
             Assert.Empty(CutOff(widget));
 
             definition[Setting.ShrinkToFitKey] = false;

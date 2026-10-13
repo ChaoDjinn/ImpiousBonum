@@ -91,19 +91,19 @@ public sealed class NewsWidgetTests
             {
                 var widget = WidgetFactory.Create(new JsonObject { ["type"] = "news", ["style"] = style, ["lines"] = 2 }, Theme.From(new ThemeSettings()));
                 widget.Refresh(store, Ten.UtcDateTime);
-                var first = ((StackPanel)widget.Children[0]).Children[0];
+                var first = ((Panel)widget.Children[0]).Children[0];
                 widget.Refresh(store, Ten.UtcDateTime.AddSeconds(1));
-                Assert.Equal(rows, ((StackPanel)widget.Children[0]).Children.Count);
+                Assert.Equal(rows, ((Panel)widget.Children[0]).Children.Count);
                 // Nothing on show changed, so nothing was built afresh.
-                Assert.Same(first, ((StackPanel)widget.Children[0]).Children[0]);
+                Assert.Same(first, ((Panel)widget.Children[0]).Children[0]);
                 widget.Refresh(new MetricStore(), Ten.UtcDateTime);
-                Assert.Empty(((StackPanel)widget.Children[0]).Children);
+                Assert.Empty(((Panel)widget.Children[0]).Children);
             }
 
             // Tickers for the feeds chosen, in that order.
             var chosen = WidgetFactory.Create(new JsonObject { ["type"] = "news", ["style"] = "tickers", ["feeds"] = "B, C" }, Theme.From(new ThemeSettings()));
             chosen.Refresh(store, Ten.UtcDateTime);
-            Assert.Single(((StackPanel)chosen.Children[0]).Children);
+            Assert.Single(((Panel)chosen.Children[0]).Children);
         });
     }
 
