@@ -35,6 +35,8 @@ public sealed class WidgetSettings(JsonObject json, IReadOnlyList<SettingDescrip
         return json[key] is JsonValue value && value.TryGetValue<bool>(out var b) ? b : setting.Default is true;
     }
 
+    public PickList Picks(string key) => PickList.Parse(OptionalString(key), Declared(key).AllLabel is not null);
+
     public IReadOnlyList<WidgetSettings> Items(string key)
     {
         var setting = Declared(key);

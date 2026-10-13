@@ -216,6 +216,7 @@ public static class DemoReadings
             new("Heatwave expected to break by the weekend", null, now.AddHours(-3), "Local News"),
         ];
         store.SetAttachment(NewsProvider.Headlines, headlines);
+        store.SetAttachment(NewsProvider.ByFeed, headlines.GroupBy(h => h.Source).Select(g => new FeedHeadlines(g.Key, [.. g])).ToList());
         store.SetText(NewsProvider.Title, headlines[0].Title);
         store.SetText(NewsProvider.Source, headlines[0].Source);
 

@@ -58,7 +58,7 @@ public static class LayoutValidator
         return issues;
     }
 
-    private static void CheckSettings(JsonObject obj, IReadOnlyList<SettingDescriptor> settings, string where, List<string> issues, IReadOnlyList<string> skip)
+    internal static void CheckSettings(JsonObject obj, IReadOnlyList<SettingDescriptor> settings, string where, List<string> issues, IReadOnlyList<string> skip)
     {
         foreach (var (key, value) in obj)
         {
@@ -83,9 +83,12 @@ public static class LayoutValidator
                 SettingKind.Toggle when value.GetValueKind() is not (JsonValueKind.True or JsonValueKind.False) => "should be true or false",
                 SettingKind.Items when value is not JsonArray => "should be a list",
                 SettingKind.Text or SettingKind.Template or SettingKind.DriveTemplate or SettingKind.Metric or SettingKind.Color or SettingKind.Choice or SettingKind.Icon or SettingKind.Font or SettingKind.FontFile or SettingKind.ImageFile
-                    when value.GetValueKind() != JsonValueKind.String => "should be text",
+                    or SettingKind.Picks when value.GetValueKind() != JsonValueKind.String => "should be text",
                 SettingKind.Choice or SettingKind.Icon when !setting.Choices!.Contains(value.GetValue<string>()) =>
                     $"should be one of {string.Join(", ", setting.Choices!)}",
+                // Names from a list the app keeps (news feeds, say) can't be known here, and the editor shows ones that have gone.
+                SettingKind.Picks when setting.Choices is { } options && UnknownPick(value.GetValue<string>(), setting, options) is { } unknown =>
+                    $"has '{unknown}', but should be {(setting.AllLabel is null ? "" : "all, or ")}some of {string.Join(", ", options)}, separated by commas",
                 // Empty is what clearing a colour in the editor leaves: the default.
                 SettingKind.Color when value.GetValue<string>() is { Length: > 0 } color && !IsColor(color) =>
                     "should be foreground, secondary, accent, warning, critical, track, background or a colour like #FF9800",
@@ -179,6 +182,10 @@ public static class LayoutValidator
     /// </summary>
     private static bool IsMetricId(string value) =>
         !value.Any(c => char.IsWhiteSpace(c) || c is '{' or '}' or ':');
+
+    /// <summary>The first name picked that isn't one of the options, if any.</summary>
+    private static string? UnknownPick(string value, SettingDescriptor setting, IReadOnlyList<string> options) =>
+        PickList.Parse(value, setting.AllLabel is not null).Names.FirstOrDefault(n => !options.Contains(n, StringComparer.OrdinalIgnoreCase));
 
     private static bool IsNumber(JsonNode? node) => JsonDefaults.TryGetNumber(node, out _);
 
