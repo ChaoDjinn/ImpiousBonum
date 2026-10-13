@@ -89,7 +89,8 @@ public static class WidgetDocs
         }
     }
 
-    private static string Kind(SettingDescriptor s) => s.Kind switch
+    /// <summary>What a setting's value can be, for the reference's Type column.</summary>
+    internal static string Kind(SettingDescriptor s) => s.Kind switch
     {
         SettingKind.Number when s.Min is > double.MinValue && s.Max is < double.MaxValue => $"number ({Number(s.Min.Value)}–{Number(s.Max.Value)})",
         SettingKind.Number => "number",
@@ -97,6 +98,9 @@ public static class WidgetDocs
         SettingKind.Choice or SettingKind.Icon => string.Join(" / ", s.Choices!.Select(c => $"`{c}`")),
         SettingKind.Items => "list",
         SettingKind.DriveTemplate => "template (per drive)",
+        SettingKind.Picks => (s.AllLabel is null ? "" : "`all`, or ")
+            + (s.Choices is { } choices ? $"some of {string.Join(" / ", choices.Select(c => $"`{c}`"))}" : "names")
+            + " in order, separated by commas",
         _ => s.Kind.ToString().ToLowerInvariant(),
     };
 

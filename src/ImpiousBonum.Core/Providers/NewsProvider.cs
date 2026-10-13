@@ -7,10 +7,13 @@ namespace ImpiousBonum.Core.Providers;
 /// <summary>A news feed's address (RSS or Atom) and the name to show with its headlines.</summary>
 public sealed record NewsFeed(string Name, string Url);
 
+/// <summary>One feed's own headlines, in the feed's order (newest first), by the feed's name.</summary>
+public sealed record FeedHeadlines(string Feed, IReadOnlyList<Headline> Headlines);
+
 /// <summary>
 /// Headlines from your news feeds: each fetched every 15 minutes, the newest as metrics, and all of them (an
-/// <c>IReadOnlyList&lt;Headline&gt;</c>, newest first) as an attachment for the news widget. Nothing is fetched until a
-/// feed is added.
+/// <c>IReadOnlyList&lt;Headline&gt;</c>, newest first) as an attachment for the news widget, with each feed's own as
+/// another. Nothing is fetched until a feed is added.
 /// </summary>
 /// <param name="feeds">The feeds; read on every sample, so changes apply quickly.</param>
 /// <param name="fetch">Gets a feed's XML; HTTP unless a test swaps it.</param>
@@ -26,6 +29,12 @@ public sealed class NewsProvider(
 
     /// <summary>The headlines, newest first, as a <see cref="MetricStore"/> attachment.</summary>
     public const string Headlines = "news.headlines";
+
+    /// <summary>
+    /// Each feed's own headlines (an <c>IReadOnlyList&lt;FeedHeadlines&gt;</c>, in the News feeds page's order) as an
+    /// attachment, for a ticker per feed. A story two feeds share is in both.
+    /// </summary>
+    public const string ByFeed = "news.feeds";
 
     /// <summary>Most headlines kept from each feed.</summary>
     public const int PerFeed = 30;
@@ -87,13 +96,15 @@ public sealed class NewsProvider(
             }
         }
 
-        var headlines = Merge(wanted.Select(f => _feeds.TryGetValue(Key(f), out var fetched) ? fetched.Items : []).ToList());
+        var byFeed = wanted.Select(f => new FeedHeadlines(f.Name, _feeds.TryGetValue(Key(f), out var fetched) ? fetched.Items : [])).ToList();
+        var headlines = Merge(byFeed.Select(f => f.Headlines).ToList());
         var newest = headlines.FirstOrDefault();
         store.SetText(Title, newest?.Title);
         store.SetText(Source, newest?.Source);
         store.SetText(Age, newest?.Published is { } published ? Ago(now - published) : null);
         store.SetText(Status, Describe(wanted, headlines.Count));
         store.SetAttachment(Headlines, headlines.Count > 0 ? headlines : null);
+        store.SetAttachment(ByFeed, headlines.Count > 0 ? byFeed : null);
     }
 
     /// <summary>

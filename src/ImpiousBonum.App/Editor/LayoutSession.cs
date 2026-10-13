@@ -138,14 +138,20 @@ public sealed class LayoutSession
     /// long the pauses: stepping through fonts with the arrow keys, stopping to look at each. Without one, only a quick
     /// burst of edits to the setting does, such as typing.
     /// </param>
-    public void SetValue(SettingTarget target, string key, JsonNode? value, object? origin, string? run = null)
+    /// <param name="merge">
+    /// Whether it can share an undo step with the edits just before it to the same setting, as a burst of typing does.
+    /// False for a change made in one go, such as ticking a box, which is a step of its own however quickly the next comes.
+    /// </param>
+    public void SetValue(SettingTarget target, string key, JsonNode? value, object? origin, string? run = null, bool merge = true)
     {
         // Controls often write back the value they were just given (e.g. a drop-down finishing loading).
         // Ignoring no-op writes keeps them out of the undo history and avoids pointless rebuilds.
         if (JsonNode.DeepEquals(GetValue(target, key), value))
             return;
 
-        var (mergeKey, window) = run is null ? ($"set:{target}:{key}", MergeWindow) : ($"run:{run}:{target}:{key}", TimeSpan.MaxValue);
+        var (mergeKey, window) = !merge ? (null, MergeWindow)
+            : run is null ? ($"set:{target}:{key}", MergeWindow)
+            : ($"run:{run}:{target}:{key}", TimeSpan.MaxValue);
         Edit(KindOf(target, key), WidgetIndexOf(target), mergeKey, window, origin, _ => Put(target, key, value));
     }
 

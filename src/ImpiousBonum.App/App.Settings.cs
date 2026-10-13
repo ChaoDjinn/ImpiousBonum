@@ -76,6 +76,7 @@ public partial class App : ISettingsHost
             EditedWindow()?.BeginEdit(session);
         };
         editor.Setups = WidgetSetups;
+        editor.Options = PickOptions;
         editor.WidgetAdded += (_, descriptor) =>
         {
             if (_settingsWindow is not { } owner)

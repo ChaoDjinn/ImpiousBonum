@@ -92,7 +92,7 @@ The editor is the *Layouts* page of the window, which opens on your main screen:
 
 - **Preview:** click a widget to select it, drag to move, drag the handles to resize. Moves snap to a grid (toolbar); hold Alt to place freely. Arrow keys nudge, Shift+arrows by 10.
 - **Metrics:** template and metric fields have a `{…}` button that opens a searchable list of every metric (about 280 on a typical PC, including every raw sensor) with live values. Pick one and choose how to show it (e.g. `18.7 GB`, `19,138 MB` or just `18.7`) and it's inserted at the cursor. Under each field a live preview shows what it renders now and flags unknown metric ids.
-- **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme. To reorder a list (a rows widget's rows, a clock's other places, buttons, warning colours…), drag an entry by the handle at its left, or move it a place at a time with Alt+Up and Alt+Down from its handle or one of its text or number boxes (in a drop-down, they open its list instead).
+- **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists, boxes to tick such as a news widget's feeds) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme. To reorder a list (a rows widget's rows, a clock's other places, buttons, warning colours, the feeds ticked…), drag an entry by the handle at its left, or move it a place at a time with Alt+Up and Alt+Down from its handle or one of its text or number boxes (in a drop-down, they open its list instead).
 - **Fonts:** the font list shows each font's name in that font, so you can see what you're picking. Symbol and icon fonts, such as *Wingdings* and *Segoe MDL2 Assets*, show their name as usual with a few of their symbols beside it. While the list is open, the font under the mouse (or the one you move to with the arrow keys) shows on the widget straight away: click it or press Enter to keep it, or press Esc or click elsewhere to go back to the font you had. With the list closed, Up and Down change to the next font straight away, and one undo goes back to where you started. You can still type a font's name. A widget's own *Font* has *Theme font* at the top of the list, to follow the layout's theme again.
 - **Setting a widget up:** the weather, agenda, news and Claude usage widgets need something set up outside the layout. Select one and *Set up*, at the top of its properties, says what's set up now and has a button for it: *Set location…*, *Calendars…*, *News feeds…* or *Connect Claude Code…*. They do the same as the window's own pages.
 - **Widgets:** add, duplicate (Ctrl+D) and delete. The *Widgets* list is the drawing order, and lower in the list draws on top: drag a widget up or down it to change the order, or press Ctrl+] to bring the selected widget forward and Ctrl+[ to send it back. Right-click a widget in the list for *Bring forward*, *Send back*, *Duplicate* and *Delete*.
@@ -299,19 +299,30 @@ Add calendars on the *Calendars* page (or select the widget in the editor → *C
 
 Each is checked every 15 minutes. Repeating events, moved and cancelled occurrences, all-day events and time zones
 are all handled; events show in this PC's time. If a calendar can't be fetched, its last events stay for a day and
-`calendar.status` says what's wrong. An agenda can show some calendars and not others (*Calendars*: `Work, Family`).
+`calendar.status` says what's wrong. An agenda can show some calendars and not others (*Calendars*: `Work, Family`),
+so a calendar's name can't have a comma in it or be `all`.
 The metrics put the next event anywhere: `{calendar.next.title}` at `{calendar.next.time}`, or a `stat` of
 `calendar.next.minutes`. A private link lets anyone who has it read the calendar, so it's kept only in this PC's
 `settings.json`, never in layouts you export.
 
 ### News
 
-The `news` widget shows headlines from news feeds (RSS or Atom), newest first: a list of the latest few, or a
-*ticker* that shows one at a time and moves on every few seconds. Each shows where it's from and how old it is, and
-tapping one opens the article in your browser. Add feeds on the *News feeds* page (or select the widget in the editor → *News feeds…*): most news sites and blogs have
+The `news` widget shows headlines from news feeds (RSS or Atom), newest first: a list of the latest few, a
+*ticker* that shows one at a time and moves on every few seconds, or *tickers*: a ticker for each feed, a line each,
+taking turns to move on so they don't all change at once (*Headlines* is how many each goes through). Each headline
+shows where it's from and how old it is, and tapping one opens the article in your browser. Add feeds on the *News feeds* page (or select the widget in the editor → *News feeds…*): most news sites and blogs have
 one (look for an RSS link, or try the site's address with `/feed` or `/rss` on the end), and so do YouTube channels
-and subreddits. Each feed is checked every 15 minutes, and the same story in two feeds shows once. A widget can show
-some feeds and not others (*Feeds*: `BBC, The Verge`), and `{news.title}` puts the newest headline anywhere.
+and subreddits. Each feed is checked every 15 minutes. In the list and the ticker the same story in two feeds shows
+once; with tickers, it's in each feed's.
+
+A widget can show some feeds and not others. In the editor, *Feeds* lists your feeds: untick *All feeds*, which
+leaves each feed ticked, then untick the ones you don't want and drag the rest into order by the handles at their left
+(or Alt+Up and Alt+Down). That's the order the tickers go in; with *All feeds*, they follow the *News feeds* page's
+order. The last feed ticked stays until you tick another (or *All feeds*), so swapping one for another doesn't go back
+to all of them. A feed you've since removed or renamed stays ticked, marked *not found*, until you untick it. In a
+layout file, `feeds` is `all` or the names separated by commas (`BBC, The Verge`), so a feed's name can't have a comma
+in it or be `all`; one added before that was checked is greyed out in *Feeds*, and only shows with *All feeds*, until
+you remove it and add it again with another name. `{news.title}` puts the newest headline anywhere.
 
 <p align="center"><img src="images/widgets/news.png" width="600" alt="Four headlines, newest first, each with where it's from and how long ago"></p>
 

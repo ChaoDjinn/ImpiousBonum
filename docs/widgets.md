@@ -462,14 +462,14 @@ The weather now and the days or hours ahead, from Open-Meteo.com. Set your locat
 
 ## News (`news`)
 
-Headlines from your news feeds (set them in the editor, or on the News feeds page), newest first, as a list or one at a time. Tap a headline to open it in your browser.
+Headlines from your news feeds (set them in the editor, or on the News feeds page), newest first, as a list, one at a time, or one at a time from each feed. Tap a headline to open it in your browser.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `style` | `list` / `ticker` | `list` | Style. list shows the newest few; ticker shows one at a time, moving on every few seconds. |
-| `count` | number (1–30) | `5` | Headlines. How many the list shows, or the ticker goes through. |
-| `seconds` | number (2–120) | `8` | Ticker seconds. How long the ticker shows each headline. |
-| `feeds` | text | `all` | Feeds. "all", or feed names separated by commas, e.g. "BBC, The Verge". |
+| `style` | `list` / `ticker` / `tickers` | `list` | Style. list shows the newest few; ticker shows one at a time, moving on every few seconds; tickers gives each feed a ticker of its own, a line each. |
+| `count` | number (1–30) | `5` | Headlines. How many the list shows, or each ticker goes through. |
+| `seconds` | number (2–120) | `8` | Ticker seconds. How long a ticker shows each headline. |
+| `feeds` | `all`, or names in order, separated by commas | `all` | Feeds. All feeds, or just the ones chosen. With tickers, each gets a line of its own, in the order they're listed. |
 | `source` | true/false | `true` | Show where from |
 | `age` | true/false | `true` | Show how old |
 | `tapToOpen` | true/false | `true` | Tap to open. Opens the article in your browser. Not in the tablet view. |
