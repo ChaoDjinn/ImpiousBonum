@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using ImpiousBonum.App.Shell;
+using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Weather;
@@ -67,6 +68,15 @@ public partial class App
             return $"{from}: none now";
         store.TryGet(WeatherWarningsProvider.Headline, out var headline);
         return warnings == 1 ? $"{from}: {headline.Text}" : $"{from}: {headline.Text}, and {warnings - 1} more";
+    }
+
+    /// <summary>"18° Partly cloudy" for one of the more places, or what's missing.</summary>
+    private string WeatherPlaceStatus(WeatherLocation place)
+    {
+        // By name rather than place in the list: the forecasts only catch up with a change on the weather's next sample.
+        var forecasts = _sampler?.Store.GetAttachment(WeatherProvider.Places) as IReadOnlyList<PlaceForecast>;
+        var report = forecasts?.Skip(1).FirstOrDefault(f => f.Name == place.Name)?.Report;
+        return report is null ? "Waiting for the forecast" : $"{WeatherWidget.Degrees(report.Temperature)} {WeatherCodes.Describe(report.Code)}";
     }
 
     /// <summary>" · Air quality: Good · Pollen: Grass low", as far as there are readings.</summary>

@@ -55,6 +55,11 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - A widget's own *Font* has *Theme font* at the top of the list, to go back to the layout theme's font.
 - The list opens quickly however many fonts you have, as only the fonts in view are loaded.
 
+**Weather for more places**
+- Save other places under *Weather* → *More places*, such as a holiday destination or family abroad, and the *Weather* widget can move between them and your location: tick them under *Places* in the editor, in the order you like. It shows one at a time with its name, moving on every 10 seconds (*Seconds per place* changes that), and a tap on the widget moves on straight away. The tablet view moves on by itself.
+- On the *Weather* page each place shows its weather now. Drag them into order, remove them, or *Make main* to swap one with your location, say when you get there. Your location keeps the weather readings, air quality and warnings, so a warning only shows while it's on show.
+- Each place's coordinates go to Open-Meteo every 15 minutes for its forecast, like your location's, and nothing else is sent for them. Without more places nothing more is fetched, and a weather widget with no places ticked looks just as it did.
+
 ## 0.13.0
 
 Impious Bonum has a window of its own, and the tray menu keeps to the basics.

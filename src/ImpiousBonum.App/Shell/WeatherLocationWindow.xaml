@@ -16,7 +16,7 @@
             </StackPanel>
         </Border>
         <StackPanel Margin="{DynamicResource DialogPadding}">
-            <TextBlock Text="Where should the forecast be for?" Style="{DynamicResource SectionHeading}" />
+            <TextBlock x:Name="Question" Text="Where should the forecast be for?" Style="{DynamicResource SectionHeading}" />
             <DockPanel>
                 <Button x:Name="SearchButton" DockPanel.Dock="Right" Margin="{DynamicResource ButtonGap}" MinWidth="{DynamicResource DialogButtonWidth}" Click="OnSearch">
                     <StackPanel Orientation="Horizontal">
@@ -31,7 +31,7 @@
             <TextBlock x:Name="StatusText" Style="{DynamicResource SecondaryText}" Margin="0,8,0,0" MinHeight="18" />
             <!-- Credits OpenStreetMap while its places are listed (filled in by the code). -->
             <TextBlock x:Name="Attribution" Style="{DynamicResource NoteText}" Margin="0,4,0,0" Visibility="Collapsed" />
-            <TextBlock Style="{DynamicResource NoteText}" Margin="0,8,0,0"
+            <TextBlock x:Name="PrivacyNote" Style="{DynamicResource NoteText}" Margin="0,8,0,0"
                        Text="What you search for goes to Open-Meteo.com, and to OpenStreetMap's place search only when Open-Meteo doesn't find it. For the forecast, the place's coordinates go to Open-Meteo.com every 15 minutes, and once an hour for air quality and pollen if they're on. With severe weather warnings on, a US place's coordinates go to the National Weather Service every 10 minutes, and for a UK place only its area goes to the Met Office. Nothing else is sent." />
         </StackPanel>
     </DockPanel>

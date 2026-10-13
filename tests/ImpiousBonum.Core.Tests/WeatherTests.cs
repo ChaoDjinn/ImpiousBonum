@@ -412,6 +412,238 @@ public sealed class WeatherTests
         Assert.Equal(MetricUnit.Fahrenheit, temperature.Definition.Unit);
     }
 
+    private static readonly WeatherRequest Paris = new("Paris, Île-de-France, France", 48.85, 2.35, WeatherUnits.Metric);
+
+    private static readonly WeatherRequest Sydney = new("Sydney, New South Wales, Australia", -33.87, 151.21, WeatherUnits.Metric);
+
+    /// <summary>A provider whose forecasts are all <see cref="Forecast"/>, noting which places were asked for, and failing for those in <paramref name="failing"/>.</summary>
+    private static WeatherProvider Provider(
+        List<string> asked, Func<IReadOnlyList<WeatherRequest>>? places, TimeProvider time, Func<WeatherRequest?>? main = null, HashSet<string>? failing = null) =>
+        new(main ?? (() => London), (request, _) =>
+        {
+            asked.Add(request.Name.Split(',')[0]);
+            return failing?.Contains(request.Name.Split(',')[0]) == true
+                ? Task.FromException<WeatherReport>(new HttpRequestException("offline"))
+                : Task.FromResult(WeatherReport.Parse(Forecast, request.Units));
+        }, time, places: places);
+
+    private static IReadOnlyList<PlaceForecast>? Places(MetricStore store) => store.GetAttachment(WeatherProvider.Places) as IReadOnlyList<PlaceForecast>;
+
+    [Fact]
+    public async Task Without_more_places_nothing_more_is_fetched_or_published()
+    {
+        var time = new FakeTime(new DateTimeOffset(2026, 10, 11, 9, 0, 0, TimeSpan.Zero));
+        foreach (var places in new Func<IReadOnlyList<WeatherRequest>>?[] { null, () => [] })
+        {
+            var asked = new List<string>();
+            var provider = Provider(asked, places, time);
+            var store = new MetricStore();
+            provider.Initialize(store);
+            for (var i = 0; i < 4; i++)
+            {
+                await provider.SampleAsync(store, CancellationToken.None);
+                time.Advance(provider.Interval);
+            }
+            Assert.Equal(["London"], asked);
+            Assert.Null(Places(store));
+        }
+
+        // Nor with more places but no location: the weather is off.
+        var none = new List<string>();
+        var off = Provider(none, () => [Paris], time, main: () => null);
+        var offStore = new MetricStore();
+        off.Initialize(offStore);
+        await off.SampleAsync(offStore, CancellationToken.None);
+        time.Advance(off.Interval);
+        await off.SampleAsync(offStore, CancellationToken.None);
+        Assert.Empty(none);
+        Assert.Null(Places(offStore));
+    }
+
+    [Fact]
+    public async Task More_places_are_fetched_a_sample_apart_after_the_main_place_and_on_its_schedule()
+    {
+        var time = new FakeTime(new DateTimeOffset(2026, 10, 11, 9, 0, 0, TimeSpan.Zero));
+        var asked = new List<string>();
+        var provider = Provider(asked, () => [Paris, Sydney], time);
+        var store = new MetricStore();
+        provider.Initialize(store);
+
+        // The main place first, on its own; the others wait, named, with no forecast yet.
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["London"], asked);
+        var places = Places(store)!;
+        Assert.Equal(["London", "Paris, Île-de-France, France", "Sydney, New South Wales, Australia"], places.Select(p => p.Name));
+        Assert.Same(store.GetAttachment(WeatherProvider.Forecast), places[0].Report);
+        Assert.Null(places[1].Report);
+
+        // Then one a sample, in their order.
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["London", "Paris"], asked);
+        Assert.NotNull(Places(store)![1].Report);
+        Assert.Null(Places(store)![2].Report);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["London", "Paris", "Sydney"], asked);
+        Assert.All(Places(store)!, p => Assert.NotNull(p.Report));
+
+        // Nothing changed: the same list stays, so the widget can tell.
+        var unchanged = Places(store);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(3, asked.Count);
+        Assert.Same(unchanged, Places(store));
+
+        // Every 15 minutes like the main place, and still a sample apart.
+        time.Advance(WeatherProvider.RefreshEvery - provider.Interval * 3);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["London", "Paris", "Sydney", "London"], asked);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["London", "Paris", "Sydney", "London", "Paris", "Sydney"], asked);
+    }
+
+    [Fact]
+    public async Task A_place_that_fails_tries_again_later_and_its_forecast_goes_once_too_old()
+    {
+        var time = new FakeTime(new DateTimeOffset(2026, 10, 11, 9, 0, 0, TimeSpan.Zero));
+        var asked = new List<string>();
+        var failing = new HashSet<string>();
+        var provider = Provider(asked, () => [Paris], time, failing: failing);
+        var store = new MetricStore();
+        provider.Initialize(store);
+        await provider.SampleAsync(store, CancellationToken.None);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.NotNull(Places(store)![1].Report);
+
+        // Offline when it's due: the last forecast stays, and it tries again a couple of minutes later.
+        failing.Add("Paris");
+        time.Advance(WeatherProvider.RefreshEvery);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["London", "Paris", "London"], asked);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["London", "Paris", "London", "Paris"], asked);
+        Assert.NotNull(Places(store)![1].Report);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(4, asked.Count);
+        time.Advance(WeatherProvider.RetryAfter);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal("Paris", asked[^1]);
+        Assert.Equal(5, asked.Count);
+
+        // Still offline hours later: an old forecast is worse than none, though the main place's is fine.
+        time.Advance(WeatherProvider.KeepFor);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Null(Places(store)![1].Report);
+        Assert.NotNull(Places(store)![0].Report);
+    }
+
+    [Fact]
+    public async Task Places_keep_their_forecasts_when_reordered_and_a_removed_one_is_never_fetched_again()
+    {
+        var time = new FakeTime(new DateTimeOffset(2026, 10, 11, 9, 0, 0, TimeSpan.Zero));
+        var asked = new List<string>();
+        IReadOnlyList<WeatherRequest> places = [Paris, Sydney];
+        var provider = Provider(asked, () => places, time);
+        var store = new MetricStore();
+        provider.Initialize(store);
+        for (var i = 0; i < 3; i++)
+        {
+            await provider.SampleAsync(store, CancellationToken.None);
+            time.Advance(provider.Interval);
+        }
+        var paris = Places(store)![1].Report;
+
+        // In their new order, with the forecasts they had: nothing's fetched again.
+        places = [Sydney, Paris];
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(3, asked.Count);
+        Assert.Equal(["London", "Sydney, New South Wales, Australia", "Paris, Île-de-France, France"], Places(store)!.Select(p => p.Name));
+        Assert.Same(paris, Places(store)![2].Report);
+
+        // Removed, Paris is forgotten, and when the others are due again it isn't among them.
+        places = [Sydney];
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["London", "Sydney, New South Wales, Australia"], Places(store)!.Select(p => p.Name));
+        for (var i = 0; i < 5; i++)
+        {
+            time.Advance(WeatherProvider.RefreshEvery / 4);
+            await provider.SampleAsync(store, CancellationToken.None);
+        }
+        Assert.Equal(["London", "Paris", "Sydney", "London", "Sydney"], asked);
+
+        // None left: the list goes, and nothing more is asked for.
+        places = [];
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Null(Places(store));
+
+        // Added back, it's new again: due straight away.
+        places = [Paris];
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal("Paris", asked[^1]);
+    }
+
+    [Fact]
+    public async Task More_places_leave_the_main_place_as_it_was()
+    {
+        var time = new FakeTime(FullForecastTime);
+        var alone = new List<string>();
+        var withPlaces = new List<string>();
+        var plain = Provider(alone, null, time);
+        var more = Provider(withPlaces, () => [Paris, Sydney], time);
+        var (plainStore, moreStore) = (new MetricStore(), new MetricStore());
+        plain.Initialize(plainStore);
+        more.Initialize(moreStore);
+
+        // Sampled side by side for half an hour: the main place is asked for at the same times, and reads the same.
+        for (var i = 0; i < 60; i++)
+        {
+            await plain.SampleAsync(plainStore, CancellationToken.None);
+            await more.SampleAsync(moreStore, CancellationToken.None);
+            Assert.Equal(alone.Count, withPlaces.Count(p => p == "London"));
+            foreach (var id in new[] { WeatherProvider.Temperature, WeatherProvider.Location, WeatherProvider.Condition, WeatherProvider.SunElevation })
+                Assert.Equal(Format(plainStore, id), Format(moreStore, id));
+            time.Advance(plain.Interval);
+        }
+        // At the start and 15 minutes in.
+        Assert.Equal(2, alone.Count);
+        Assert.Equal("London", Format(moreStore, WeatherProvider.Location));
+    }
+
+    [Fact]
+    public async Task New_units_fetch_every_place_again_still_a_sample_apart()
+    {
+        var time = new FakeTime(new DateTimeOffset(2026, 10, 11, 9, 0, 0, TimeSpan.Zero));
+        var asked = new List<string>();
+        var units = WeatherUnits.Metric;
+        var provider = Provider(asked, () => [Paris with { Units = units }, Sydney with { Units = units }], time, main: () => London with { Units = units });
+        var store = new MetricStore();
+        provider.Initialize(store);
+        for (var i = 0; i < 3; i++)
+        {
+            await provider.SampleAsync(store, CancellationToken.None);
+            time.Advance(provider.Interval);
+        }
+
+        units = WeatherUnits.Imperial;
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["London", "Paris", "Sydney", "London"], asked);
+        Assert.Null(Places(store)![1].Report);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["London", "Paris", "Sydney", "London", "Paris", "Sydney"], asked);
+        Assert.All(Places(store)!, p => Assert.Equal(WeatherUnits.Imperial, p.Report?.Units));
+    }
+
     [Fact]
     public void A_metric_can_bring_its_own_number_format()
     {

@@ -120,7 +120,17 @@ internal interface ISettingsHost
 
     void SetWeatherLocation(Window owner);
 
+    /// <summary>Forgets the location and the more places, so no forecast is fetched.</summary>
     void TurnOffWeather();
+
+    /// <summary>The more places, replaced as a whole; <paramref name="log"/> says how they changed (without saying where they are).</summary>
+    void SetWeatherPlaces(IReadOnlyList<WeatherLocation> places, string log);
+
+    /// <summary>Makes one of the more places the location, and the location one of the more places in its stead.</summary>
+    void MakeMainWeatherPlace(WeatherLocation place);
+
+    /// <summary>"18° Partly cloudy" for one of the more places, or why there's nothing yet.</summary>
+    string WeatherPlaceStatus(WeatherLocation place);
 
     void SetWeatherUnits(string units);
 

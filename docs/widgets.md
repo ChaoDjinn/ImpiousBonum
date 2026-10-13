@@ -455,7 +455,7 @@ Each entry in `buttons`:
 
 ## Weather (`weather`)
 
-The weather now and the days or hours ahead, from Open-Meteo.com, and severe weather warnings if they're on. Set your location in the editor (select the widget) or on the Weather page.
+The weather now and the days or hours ahead, from Open-Meteo.com, and severe weather warnings if they're on. Set your location in the editor (select the widget) or on the Weather page, and add more places there to move between.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
@@ -466,6 +466,8 @@ The weather now and the days or hours ahead, from Open-Meteo.com, and severe wea
 | `rainFrom` | number (0–100) | `30` | Chance of rain from. Show the chance of rain from this percentage; 0 always shows it. |
 | `showDetails` | true/false | `true` | Details. Conditions, today's high and low, and feels like, beside the temperature. |
 | `showLocation` | true/false | `false` | Location |
+| `places` | names in order, separated by commas | — | Places. Which places to show, in order: your location and the more places on the Weather page, by their names up to the first comma, such as Leeds (or Paris (Texas) where two places would share one). None shows just your location. With more than one, the widget shows one at a time with its name, moving on every Seconds per place, and a tap moves on straight away (the tablet view moves on by itself). Warnings are your location's, so they only show while it's on show. |
+| `placeSeconds` | number (3–600) | `10` | Seconds per place. With more than one place, how long each one shows. |
 | `showWarnings` | true/false | `true` | Warnings. With severe weather warnings on (the Weather page), the most serious one along the bottom while there are any: in the warning colour, or the critical colour for red, severe and extreme ones. Only with Weather now, so a forecast-only widget beside it doesn't show it again. Its size follows Forecast size, or Temperature size without a forecast. Tap it to read the warning (not in the tablet view). |
 | `fontSize` | number (6–400) | `80` | Temperature size |
 | `forecastSize` | number (6–200) | `22` | Forecast size |
