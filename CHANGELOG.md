@@ -22,9 +22,11 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - Entries in a widget's lists (a rows widget's rows, buttons, other places, warning colours and so on) have a handle at their left to drag them into place, instead of up and down arrows. From the keyboard, Alt+Up and Alt+Down move the entry from its handle or its text boxes.
 
 **Text that fits, whatever the font**
-- Changing a widget's font no longer cuts its text off. The clock, timer, stat tile, gauge, graphs, bars, rows, drives, *Top apps*, *Now playing*, buttons, weather and *Claude usage* now have *Shrink to fit* too, on by default as on the text and *Icon and value* widgets. Text that doesn't fit gets smaller evenly until it does, and text that fits keeps its size.
+- Changing a widget's font no longer cuts its text off. The clock (other places too), timer, stat tile, gauge (its label too), graph, multi-line graph, bars, rows, drives, *Top apps*, *Now playing*, buttons, weather, *Claude usage*, *Agenda* and *News* now have *Shrink to fit*, on by default as on the text and *Icon and value* widgets. Text that doesn't fit gets smaller evenly until it does, and text that fits keeps its size.
 - *Shrink to fit* minds the height too, so a big font, or one with tall letters, shrinks instead of losing the top or bottom of its text. A line that's only a little taller than its widget, with nothing actually cut off, is left as it is.
 - A label and its value on one line, as in graphs, bars, rows and drives, get smaller together rather than run into each other.
+- *Top apps* names still end with … to make room for the CPU and memory, down to their first few letters; past that the rows get smaller.
+- *Agenda* and *News* leave out the rows at the bottom that would be cut off, rather than shrink the whole list, and a first row too tall for the widget on its own, such as a ticker's headline, gets smaller. Their headings and the news's source and age end with … when they're too long, like the titles.
 - The weather gets smaller as a whole, so a wide font no longer squeezes the forecast into a jumble.
 
 ## 0.13.0

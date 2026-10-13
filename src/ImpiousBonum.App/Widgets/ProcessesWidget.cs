@@ -71,14 +71,15 @@ public sealed class ProcessesWidget : Widget
             cpu.Visibility = _showCpu ? Visibility.Visible : Visibility.Collapsed;
             memory.Visibility = _showMemory ? Visibility.Visible : Visibility.Collapsed;
 
-            grid.Children.Add(name);
+            // A name makes do with what the numbers leave, down to a few letters.
+            grid.Children.Add(Squeezed(name, fontSize * 3));
             grid.Children.Add(cpu);
             grid.Children.Add(memory);
             panel.Children.Add(grid);
             _rows.Add(new Row(grid, name, cpu, memory));
         }
-        // Names end with … when they're too long; the rows get smaller when they don't all fit.
-        Children.Add(Fit(panel, FitDirection.Height));
+        // Names end with … when they're too long; the rows get smaller when they don't all fit, or the numbers don't.
+        Children.Add(Fit(panel, FitDirection.Both));
     }
 
     public override void Refresh(MetricStore store, DateTime now)

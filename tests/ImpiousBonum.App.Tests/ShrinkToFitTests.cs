@@ -7,6 +7,7 @@ using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Demo;
 using ImpiousBonum.Core.Metrics;
+using ImpiousBonum.Core.Providers;
 
 namespace ImpiousBonum.App.Tests;
 
@@ -75,6 +76,32 @@ public sealed class ShrinkToFitTests
     }
 
     [Fact]
+    public void Ink_counts_only_what_is_shown()
+    {
+        Sta.Run(() =>
+        {
+            var top = new TextBlock { Text = "Top", FontSize = 40 };
+            var bottom = new TextBlock { Text = "Bottom", FontSize = 40 };
+            var stack = new StackPanel { Children = { top, bottom } };
+            var host = new Grid { Children = { stack } };
+            Lay(host, 400, 400);
+            Assert.True(ShrinkToFit.Ink(host).Bottom > top.ActualHeight);
+
+            // A collapsed element keeps its last drawing, but it isn't on screen.
+            bottom.Visibility = Visibility.Collapsed;
+            Lay(host, 400, 400);
+            Assert.True(ShrinkToFit.Ink(host).Bottom <= top.ActualHeight + 0.5);
+            Assert.True(VisualTreeHelper.GetDescendantBounds(host).Bottom > top.ActualHeight);
+
+            // Nor is what a clip cuts off.
+            bottom.Visibility = Visibility.Visible;
+            stack.Clip = new RectangleGeometry(new Rect(0, 0, 400, 20));
+            Lay(host, 400, 400);
+            Assert.True(ShrinkToFit.Ink(host).Bottom <= 20.5);
+        });
+    }
+
+    [Fact]
     public void Text_that_fits_is_laid_out_exactly_as_without_shrink_to_fit()
     {
         Sta.Run(() =>
@@ -91,15 +118,23 @@ public sealed class ShrinkToFitTests
     [Theory]
     [InlineData("""{ "type": "clock", "timeSize": 300 }""", 420, 200)]
     [InlineData("""{ "type": "clock", "dateSize": 90 }""", 420, 200)]
+    [InlineData("""{ "type": "clock", "zoneSize": 60, "zones": [{ "label": "New York", "zone": "America/New_York" }, { "label": "Tokyo", "zone": "Asia/Tokyo" }, { "label": "Sydney", "zone": "Australia/Sydney" }] }""", 420, 300)]
+    [InlineData("""{ "type": "clock", "fontFamily": "Courier New", "zones": [{ "label": "New York", "zone": "America/New_York" }, { "label": "Tokyo", "zone": "Asia/Tokyo" }, { "label": "Sydney", "zone": "Australia/Sydney" }, { "label": "LA", "zone": "America/Los_Angeles" }] }""", 420, 260)]
+    [InlineData("""{ "type": "clock", "zoneSize": 40, "zoneLayout": "rows", "zones": [{ "label": "Los Angeles office", "zone": "America/Los_Angeles" }] }""", 300, 260)]
     [InlineData("""{ "type": "timer", "fontSize": 200, "label": "Pizza" }""", 360, 170)]
     [InlineData("""{ "type": "text", "text": "{cpu.load}", "fontSize": 200 }""", 400, 80)]
     [InlineData("""{ "type": "stat", "fontSize": 160 }""", 300, 160)]
+    [InlineData("""{ "type": "graph", "fontSize": 80 }""", 427, 60)]
+    [InlineData("""{ "type": "graph", "fontSize": 120 }""", 900, 100)]
+    [InlineData("""{ "type": "lines", "fontSize": 50 }""", 400, 100)]
     [InlineData("""{ "type": "rows", "fontSize": 60, "rows": [{ "label": "Download", "text": "{net.down}" }, { "label": "Upload", "text": "{net.up}" }] }""", 300, 110)]
     [InlineData("""{ "type": "bars", "fontSize": 50 }""", 300, 130)]
     [InlineData("""{ "type": "drives", "fontSize": 60 }""", 300, 230)]
     [InlineData("""{ "type": "processes", "fontSize": 40, "count": 6 }""", 400, 220)]
+    [InlineData("""{ "type": "processes", "fontSize": 50, "count": 3 }""", 400, 220)]
     [InlineData("""{ "type": "weather", "fontSize": 200 }""", 900, 180)]
     [InlineData("""{ "type": "media", "fontSize": 90 }""", 640, 160)]
+    [InlineData("""{ "type": "news", "style": "ticker", "fontSize": 60 }""", 600, 60)]
     public void Text_too_big_for_its_widget_shrinks_to_fit_inside_it(string json, double width, double height)
     {
         Sta.Run(() =>
@@ -107,12 +142,85 @@ public sealed class ShrinkToFitTests
             var definition = JsonNode.Parse(json)!.AsObject();
             var widget = Laid((string)definition["type"]!, definition, width, height);
             Assert.Contains(Descendants<ShrinkToFit>(widget), f => f.Scale < 1);
-            var ink = VisualTreeHelper.GetDescendantBounds(widget);
-            Assert.True(new Rect(-0.5, -0.5, width + 1, height + 1).Contains(ink), $"{ink} is outside {width}×{height}");
+            // Text's boxes fit the width; a letter can reach a pixel or so past its box.
+            var ink = ShrinkToFit.Ink(widget);
+            Assert.True(new Rect(-2, -0.5, width + 4, height + 1).Contains(ink), $"{ink} is outside {width}×{height}");
+            Assert.Empty(CutOff(widget));
 
             definition[Setting.ShrinkToFitKey] = false;
             var off = Laid((string)definition["type"]!, definition, width, height);
             Assert.Empty(Descendants<ShrinkToFit>(off));
+        });
+    }
+
+    [Fact]
+    public void Lines_that_fit_their_own_width_inside_a_height_fit_shrink_only_as_much_as_they_need()
+    {
+        Sta.Run(() =>
+        {
+            // A time too wide and too tall: it shrinks once, until it touches the clock's edge, not twice over.
+            var widget = Laid("clock", new JsonObject { ["timeSize"] = 300 }, 420, 200);
+            var time = Descendants<TextBlock>(widget).First();
+            var ink = ShrinkToFit.Ink(widget);
+            Assert.True(ink.Top < 1 || ink.Bottom > 199 || Bounds(time, widget).Width > 419, $"{ink}, {Bounds(time, widget)} leave room in 420×200");
+        });
+    }
+
+    [Fact]
+    public void A_row_that_hides_no_longer_counts()
+    {
+        Sta.Run(() =>
+        {
+            JsonObject Bars() => new()
+            {
+                ["fontSize"] = 40,
+                ["bars"] = new JsonArray(
+                    new JsonObject { ["label"] = "CPU", ["metric"] = CpuProvider.Load },
+                    new JsonObject { ["label"] = "Session", ["metric"] = ClaudeUsageProvider.Session },
+                    new JsonObject { ["label"] = "RAM", ["metric"] = MemoryProvider.Load },
+                    new JsonObject { ["label"] = "Week", ["metric"] = ClaudeUsageProvider.Week }),
+            };
+            var store = Demo();
+            var widget = Laid("bars", Bars(), 300, 150, store);
+            var fit = Descendants<ShrinkToFit>(widget).First();
+            var four = fit.Scale;
+            Assert.True(four < 1);
+
+            // The bar hides without a reading; the other three get the room.
+            store.Set(ClaudeUsageProvider.Week, null);
+            widget.Refresh(store, Evening);
+            Lay(widget, 300, 150);
+            Assert.True(fit.Scale > four);
+            Assert.Equal(Descendants<ShrinkToFit>(Laid("bars", Bars(), 300, 150, store)).First().Scale, fit.Scale, 3);
+        });
+    }
+
+    [Fact]
+    public void Text_that_changes_without_changing_size_is_fitted_again()
+    {
+        Sta.Run(() =>
+        {
+            // In a monospaced font these are the same size, but the second draws above and below the first.
+            var store = Demo();
+            store.SetText(MediaProvider.Title, "aaaa");
+            var definition = new JsonObject { ["text"] = $"{{{MediaProvider.Title}}}", ["fontSize"] = 100, ["fontFamily"] = "Consolas" };
+            var widget = Laid("text", definition, 400, 90, store);
+            var fit = Descendants<ShrinkToFit>(widget).Single();
+            var size = fit.Child.DesiredSize;
+            Assert.Equal(1, fit.Scale);
+
+            store.SetText(MediaProvider.Title, "gÅgÅ");
+            widget.Refresh(store, Evening);
+            Lay(widget, 400, 90);
+            Assert.Equal(size, fit.Child.DesiredSize);
+            Assert.True(fit.Scale < 0.95);
+            Assert.Equal(Descendants<ShrinkToFit>(Laid("text", definition, 400, 90, store)).Single().Scale, fit.Scale, 3);
+            Assert.True(new Rect(-0.5, -0.5, 401, 91).Contains(ShrinkToFit.Ink(widget)));
+
+            store.SetText(MediaProvider.Title, "aaaa");
+            widget.Refresh(store, Evening);
+            Lay(widget, 400, 90);
+            Assert.Equal(1, fit.Scale);
         });
     }
 
@@ -130,17 +238,86 @@ public sealed class ShrinkToFitTests
         });
     }
 
+    [Theory]
+    [InlineData("agenda")]
+    [InlineData("news")]
+    public void A_list_leaves_out_rows_that_would_be_cut_off(string type)
+    {
+        Sta.Run(() =>
+        {
+            var definition = new JsonObject { ["fontSize"] = 40, ["headerSize"] = 30 };
+            var wasCut = false;
+            for (var height = 150; height <= 400; height += 10)
+            {
+                var widget = Laid(type, definition, 300, height);
+                var list = Descendants<WholeRows>(widget).Single();
+                Assert.InRange(list.Shown, 1, list.Children.Count);
+                Assert.Empty(CutOff(widget));
+                Assert.True(new Rect(-0.5, -0.5, 301, height + 1).Contains(ShrinkToFit.Ink(widget)), $"{ShrinkToFit.Ink(widget)} is outside 300×{height}");
+
+                // Without shrink to fit, the last row is often cut in half, as before.
+                var off = definition.DeepClone().AsObject();
+                off[Setting.ShrinkToFitKey] = false;
+                wasCut |= CutOff(Laid(type, off, 300, height)).Count > 0;
+            }
+            Assert.True(wasCut);
+        });
+    }
+
+    [Theory]
+    // Rows 30 high with 10 under each.
+    [InlineData(100, 2)]
+    // The space under the last row doesn't have to fit.
+    [InlineData(110, 3)]
+    [InlineData(1000, 4)]
+    // The first row always shows.
+    [InlineData(20, 1)]
+    public void A_list_shows_the_rows_that_fit_whole_and_always_the_first(double height, int shown)
+    {
+        Sta.Run(() =>
+        {
+            var list = new WholeRows();
+            for (var i = 0; i < 4; i++)
+                list.Children.Add(new Border { Height = 30, Margin = new Thickness(0, 0, 0, 10), Background = Brushes.White });
+            var host = new Grid { Children = { list } };
+            Lay(host, 200, height);
+            Assert.Equal(shown, list.Shown);
+            // The rest are clipped off; a first row too tall for the list is cut at its bottom.
+            Assert.Equal(Math.Min((shown - 1) * 40 + 30, height), ShrinkToFit.Ink(host).Bottom, 1);
+        });
+    }
+
     [Fact]
     public void A_gauges_value_shrinks_to_fit_inside_the_dial_unless_told_not_to()
     {
         Sta.Run(() =>
         {
-            var gauge = Assert.IsType<GaugeElement>(Assert.Single(Laid("gauge", new JsonObject { ["fontSize"] = 300 }, 260, 240).Children.Cast<object>()));
+            var gauge = Gauge(new JsonObject { ["fontSize"] = 300 }, 260, 240);
             Assert.InRange(gauge.ShownValueSize, 6, 299);
-            var unshrunk = Assert.IsType<GaugeElement>(Assert.Single(Laid("gauge", new JsonObject { ["fontSize"] = 300, [Setting.ShrinkToFitKey] = false }, 260, 240).Children.Cast<object>()));
+            var unshrunk = Gauge(new JsonObject { ["fontSize"] = 300, [Setting.ShrinkToFitKey] = false }, 260, 240);
             Assert.Equal(300, unshrunk.ShownValueSize);
-            var normal = Assert.IsType<GaugeElement>(Assert.Single(Laid("gauge", new JsonObject(), 260, 240).Children.Cast<object>()));
+            var normal = Gauge(new JsonObject(), 260, 240);
             Assert.Equal(56, normal.ShownValueSize);
+            Assert.Equal(24, normal.ShownLabelSize);
+        });
+    }
+
+    [Theory]
+    [InlineData("arc")]
+    [InlineData("half")]
+    [InlineData("ring")]
+    public void A_gauges_label_shrinks_to_fit_its_width_unless_told_not_to(string style)
+    {
+        Sta.Run(() =>
+        {
+            var definition = new JsonObject { ["style"] = style, ["label"] = "Graphics card", ["labelSize"] = 60 };
+            var gauge = Gauge(definition, 260, 240);
+            Assert.InRange(gauge.ShownLabelSize, 6, 59);
+            var ink = VisualTreeHelper.GetContentBounds(gauge);
+            Assert.True(ink.Left >= -0.5 && ink.Right <= 260.5, $"{ink} is wider than 260");
+
+            definition[Setting.ShrinkToFitKey] = false;
+            Assert.Equal(60, Gauge(definition, 260, 240).ShownLabelSize);
         });
     }
 
@@ -158,9 +335,7 @@ public sealed class ShrinkToFitTests
     {
         var block = new TextBlock { Text = text, FontSize = fontSize, FontFamily = new FontFamily("Segoe UI"), VerticalAlignment = VerticalAlignment.Center };
         var fit = new ShrinkToFit { Direction = direction, Child = block };
-        fit.Measure(space);
-        fit.Arrange(new Rect(space));
-        fit.UpdateLayout();
+        Lay(fit, space.Width, space.Height);
         return fit;
     }
 
@@ -171,20 +346,85 @@ public sealed class ShrinkToFitTests
         Assert.True(new Rect(-0.5, -0.5, space.Width + 1, space.Height + 1).Contains(ink), $"{ink} is outside {space}");
     }
 
-    /// <summary>A widget with the demo readings, laid out as on the dashboard.</summary>
-    private static Widget Laid(string type, JsonObject definition, double width, double height)
+    private static GaugeElement Gauge(JsonObject definition, double width, double height) =>
+        Assert.IsType<GaugeElement>(Assert.Single(Laid("gauge", definition, width, height).Children.Cast<object>()));
+
+    private static MetricStore Demo()
     {
-        definition["type"] = type;
         var store = new MetricStore();
         DemoReadings.Fill(store, Evening, DemoArtwork.Png(64));
+        return store;
+    }
+
+    /// <summary>A widget with the demo readings, or <paramref name="store"/>'s, laid out as on the dashboard.</summary>
+    private static Widget Laid(string type, JsonObject definition, double width, double height, MetricStore? store = null)
+    {
+        definition["type"] = type;
         var widget = WidgetFactory.Create(definition, Theme.From(new ThemeSettings()));
         widget.Width = width;
         widget.Height = height;
-        widget.Refresh(store, Evening);
-        widget.Measure(new Size(width, height));
-        widget.Arrange(new Rect(0, 0, width, height));
-        widget.UpdateLayout();
+        widget.Refresh(store ?? Demo(), Evening);
+        Lay(widget, width, height);
         return widget;
+    }
+
+    private static void Lay(UIElement element, double width, double height)
+    {
+        element.Measure(new Size(width, height));
+        element.Arrange(new Rect(0, 0, width, height));
+        element.UpdateLayout();
+        // Settled, rather than fitting going round in circles.
+        Assert.All(LaidOut(element), e => Assert.True(e.IsMeasureValid && e.IsArrangeValid, $"{e} isn't laid out"));
+    }
+
+    /// <summary>The element and everything in it that isn't collapsed: all that's laid out.</summary>
+    private static IEnumerable<UIElement> LaidOut(UIElement element)
+    {
+        if (element.Visibility == Visibility.Collapsed)
+            yield break;
+        yield return element;
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++)
+        {
+            if (VisualTreeHelper.GetChild(element, i) is UIElement child)
+            {
+                foreach (var inner in LaidOut(child))
+                    yield return inner;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Text that's partly cut off, by a clip on its way up to the widget or by the widget's edge. Text a list leaves out
+    /// altogether doesn't count.
+    /// </summary>
+    private static List<string> CutOff(Widget widget)
+    {
+        var cut = new List<string>();
+        foreach (var text in Descendants<TextBlock>(widget))
+        {
+            var ink = VisualTreeHelper.GetContentBounds(text);
+            if (ink.IsEmpty)
+                continue;
+            var shown = ink;
+            var hidden = false;
+            for (Visual visual = text; !ReferenceEquals(visual, widget); visual = (Visual)VisualTreeHelper.GetParent(visual))
+            {
+                if (visual is UIElement { Visibility: not Visibility.Visible })
+                    hidden = true;
+                if (VisualTreeHelper.GetClip(visual) is { } clip)
+                    shown.Intersect(clip.Bounds);
+                var up = visual.TransformToAncestor((Visual)VisualTreeHelper.GetParent(visual));
+                ink = up.TransformBounds(ink);
+                shown = shown.IsEmpty ? shown : up.TransformBounds(shown);
+            }
+            if (!shown.IsEmpty)
+                shown.Intersect(new Rect(-0.5, -0.5, widget.Width + 1, widget.Height + 1));
+            if (hidden || shown.IsEmpty)
+                continue;
+            if (shown.Width < ink.Width - 0.5 || shown.Height < ink.Height - 0.5)
+                cut.Add($"{text.Text}: {ink} shows as {shown}");
+        }
+        return cut;
     }
 
     private static List<string> Positions(Widget widget) =>

@@ -382,6 +382,7 @@ What's coming up in your calendars (set them in the editor, or on the Calendars 
 | `timeFormat` | text | `HH:mm` | Time format. .NET time format, e.g. HH:mm or h:mm tt. |
 | `fontSize` | number (6–200) | `20` | Font size |
 | `headerSize` | number (6–200) | `15` | Heading size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Rows that would be cut off at the bottom, say in a bigger font, are left out, and a first row too tall for the widget gets smaller to fit. |
 | `spacing` | number (0–100) | `6` | Event spacing |
 | `nowColor` | color | `accent` | What's on now. The colour of events that are happening now. |
 
@@ -487,6 +488,7 @@ Headlines from your news feeds (set them in the editor, or on the News feeds pag
 | `age` | true/false | `true` | Show how old |
 | `tapToOpen` | true/false | `true` | Tap to open. Opens the article in your browser. Not in the tablet view. |
 | `fontSize` | number (6–200) | `22` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Rows that would be cut off at the bottom, say in a bigger font, are left out, and a first row too tall for the widget gets smaller to fit. |
 | `spacing` | number (0–100) | `8` | Spacing |
 | `lines` | number (1–4) | `1` | Lines per headline. Long headlines wrap onto this many lines, then end with … |
 

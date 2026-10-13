@@ -26,12 +26,13 @@ public sealed class AgendaWidget : Widget
             Setting.PlainText("timeFormat", "Time format", "HH:mm", help: ".NET time format, e.g. HH:mm or h:mm tt."),
             Setting.Number("fontSize", "Font size", 20, 6, 200),
             Setting.Number("headerSize", "Heading size", 15, 6, 200),
+            Setting.ShrinkListToFit(),
             Setting.Number("spacing", "Event spacing", 6, 0, 100, group: Setting.Appearance),
             Setting.Color("nowColor", "What's on now", "accent", help: "The colour of events that are happening now."),
         ],
         (settings, theme) => new AgendaWidget(settings, theme));
 
-    private readonly StackPanel _rows = new();
+    private readonly Panel _rows;
     private readonly int _days;
     private readonly int _count;
     private readonly HashSet<string>? _only;
@@ -61,6 +62,7 @@ public sealed class AgendaWidget : Widget
         _headerSize = settings.Number("headerSize");
         _spacing = settings.Number("spacing");
         _nowColor = theme.Resolve(settings.String("nowColor"), theme.Accent);
+        _rows = CreateList();
         Children.Add(_rows);
     }
 
@@ -125,7 +127,8 @@ public sealed class AgendaWidget : Widget
             {
                 var empty = CreateText(_fontSize, Theme.Secondary);
                 empty.Text = _emptyText;
-                _rows.Children.Add(empty);
+                empty.TextTrimming = TextTrimming.CharacterEllipsis;
+                AddRow(_rows, empty);
             }
             return;
         }
@@ -133,19 +136,8 @@ public sealed class AgendaWidget : Widget
         DateTime? day = null;
         foreach (var e in events)
         {
-            // Something that started before today is listed under today.
-            var listedOn = e.Start.Date < now.Date ? now.Date : e.Start.Date;
-            if (_dayHeaders && listedOn != day)
-            {
-                var heading = CreateText(_headerSize, Theme.Secondary);
-                heading.Text = DayHeading(listedOn, now).ToUpper(CultureInfo.CurrentCulture);
-                heading.Margin = new Thickness(0, day is null ? 0 : _spacing * 1.5, 0, _spacing / 2);
-                _rows.Children.Add(heading);
-            }
-            day = listedOn;
-
             var on = IsOn(e, now);
-            var row = new Grid { Margin = new Thickness(0, 0, 0, _spacing) };
+            var row = new Grid();
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
@@ -169,7 +161,25 @@ public sealed class AgendaWidget : Widget
             Grid.SetColumn(details, 1);
             row.Children.Add(time);
             row.Children.Add(details);
-            _rows.Children.Add(row);
+
+            // Something that started before today is listed under today. A day's heading goes with its first event, so
+            // a list too short for both leaves out the two together.
+            var listedOn = e.Start.Date < now.Date ? now.Date : e.Start.Date;
+            FrameworkElement item = row;
+            if (_dayHeaders && listedOn != day)
+            {
+                var heading = CreateText(_headerSize, Theme.Secondary);
+                heading.Text = DayHeading(listedOn, now).ToUpper(CultureInfo.CurrentCulture);
+                heading.TextTrimming = TextTrimming.CharacterEllipsis;
+                heading.Margin = new Thickness(0, day is null ? 0 : _spacing * 1.5, 0, _spacing / 2);
+                var group = new StackPanel();
+                group.Children.Add(heading);
+                group.Children.Add(row);
+                item = group;
+            }
+            day = listedOn;
+            item.Margin = new Thickness(0, 0, 0, _spacing);
+            AddRow(_rows, item);
         }
     }
 }

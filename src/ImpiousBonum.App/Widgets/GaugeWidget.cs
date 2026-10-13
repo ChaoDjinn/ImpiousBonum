@@ -62,7 +62,7 @@ public sealed class GaugeWidget : Widget
             LabelSize = settings.Number("labelSize"),
             LabelBrush = theme.Secondary,
             ValueSize = settings.Number("fontSize"),
-            ShrinkValue = settings.Bool(Setting.ShrinkToFitKey),
+            ShrinkText = settings.Bool(Setting.ShrinkToFitKey),
         };
         Children.Add(_gauge);
     }

@@ -68,6 +68,8 @@ public sealed class GraphWidget : Widget
         };
         SetRow(_graph, 1);
         Children.Add(_graph);
+        // The graph takes what's left, and everything shrinks when the header alone is too tall.
+        FitContent(FitDirection.Height);
     }
 
     public override void Refresh(MetricStore store, DateTime now)

@@ -142,6 +142,23 @@ public abstract class Widget : Grid
         return Fit(line, FitDirection.Width);
     }
 
+    /// <summary>
+    /// With shrink to fit on, lets text that ends with … ask for only <paramref name="room"/> of its line's width, so in
+    /// a <see cref="FitDirection.Both"/> fit it's shortened rather than the whole widget getting smaller for it.
+    /// </summary>
+    protected FrameworkElement Squeezed(TextBlock text, double room) =>
+        Settings.Bool(Setting.ShrinkToFitKey) ? new Squeeze { Child = text, MinWidth = room } : text;
+
+    /// <summary>
+    /// The panel for a list of rows. With shrink to fit it's a <see cref="WholeRows"/>, which leaves out rows that would be
+    /// cut off at the bottom; without, a plain stack. Add rows with <see cref="AddRow"/>.
+    /// </summary>
+    protected Panel CreateList() => Settings.Bool(Setting.ShrinkToFitKey) ? new WholeRows() : new StackPanel();
+
+    /// <summary>Adds a row to a list from <see cref="CreateList"/>: the first, which always shows, shrinks if it's too tall on its own.</summary>
+    protected void AddRow(Panel list, FrameworkElement row) =>
+        list.Children.Add(list.Children.Count == 0 ? Fit(row, FitDirection.Height) : row);
+
     protected static HorizontalAlignment ParseAlignment(string? value) => value?.ToLowerInvariant() switch
     {
         "right" => HorizontalAlignment.Right,

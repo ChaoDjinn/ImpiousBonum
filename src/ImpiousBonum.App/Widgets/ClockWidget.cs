@@ -92,17 +92,15 @@ public sealed class ClockWidget : Widget
             var time = CreateText(size, zone is null ? Theme.Critical : null, rows ? HorizontalAlignment.Right : alignment);
             if (rows)
             {
-                var row = new Grid();
                 label.VerticalAlignment = VerticalAlignment.Center;
-                row.Children.Add(label);
-                row.Children.Add(time);
-                grid.Children.Add(row);
+                grid.Children.Add(LabelAndValue(label, time));
             }
             else
             {
+                // A label ends with … in its column; a time, which can't, gets smaller.
                 var column = new StackPanel();
                 column.Children.Add(label);
-                column.Children.Add(time);
+                column.Children.Add(Fit(time, FitDirection.Width));
                 grid.Children.Add(column);
             }
             _places.Add((zone, time));

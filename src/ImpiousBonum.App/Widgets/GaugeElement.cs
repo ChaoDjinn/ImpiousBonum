@@ -38,11 +38,17 @@ public sealed class GaugeElement : FrameworkElement
 
     public double ValueSize { get; init; } = 48;
 
-    /// <summary>Draws the value smaller when it's too wide or too tall for the inside of the dial.</summary>
-    public bool ShrinkValue { get; init; } = true;
+    /// <summary>
+    /// Draws the value smaller when it's too wide or too tall for the inside of the dial, and the label when it's wider
+    /// than the gauge (or, in a ring, than the inside).
+    /// </summary>
+    public bool ShrinkText { get; init; } = true;
 
     /// <summary>The size the value was last drawn at: <see cref="ValueSize"/>, or smaller to fit; for tests.</summary>
     internal double ShownValueSize { get; private set; }
+
+    /// <summary>The size the label was last drawn at: <see cref="LabelSize"/>, or smaller to fit; for tests.</summary>
+    internal double ShownLabelSize { get; private set; }
 
     /// <summary>0–1, how much of the dial is filled.</summary>
     public double Fraction { get; private set; }
@@ -84,6 +90,10 @@ public sealed class GaugeElement : FrameworkElement
 
         var dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
         var label = Label.Length > 0 ? Text(Label, LabelSize, LabelBrush, dpi) : null;
+        ShownLabelSize = LabelSize;
+        // An arc's or a half dial's label is under the dial, with the gauge's width to itself.
+        if (label is not null && Shape != GaugeShape.Ring)
+            label = FitLabel(label, width, dpi);
         var labelHeight = label?.Height ?? 0;
 
         // The dial's radius (to the middle of the stroke) and centre, fitted to the box.
@@ -120,9 +130,9 @@ public sealed class GaugeElement : FrameworkElement
         // The value, shrunk if it doesn't fit inside the dial.
         var value = Text(Value, ValueSize, ValueBrush, dpi);
         ShownValueSize = ValueSize;
-        if (ShrinkValue)
+        var (roomWidth, roomHeight) = ValueRoom(Shape, radius - t / 2);
+        if (ShrinkText)
         {
-            var (roomWidth, roomHeight) = ValueRoom(Shape, radius - t / 2);
             var scale = Math.Min(ShrinkToFit.ScaleFor(value.Width, roomWidth), ShrinkToFit.ScaleFor(value.Extent, roomHeight));
             if (scale < 1)
             {
@@ -135,6 +145,10 @@ public sealed class GaugeElement : FrameworkElement
         {
             case GaugeShape.Ring:
             {
+                // A ring's label is inside it, under the value.
+                if (label is not null)
+                    label = FitLabel(label, roomWidth, dpi);
+                labelHeight = label?.Height ?? 0;
                 var total = value.Height + labelHeight * 0.9;
                 var top = cy - total / 2;
                 dc.DrawText(value, new Point(cx - value.Width / 2, top));
@@ -166,6 +180,16 @@ public sealed class GaugeElement : FrameworkElement
     /// </summary>
     internal static (double Width, double Height) ValueRoom(GaugeShape shape, double room) =>
         shape == GaugeShape.Half ? (2 * room * 0.8, room * 0.6) : (2 * room * 0.78, 2 * room * 0.62);
+
+    /// <summary>The label again, smaller, when it's wider than <paramref name="room"/> and text shrinks to fit.</summary>
+    private FormattedText FitLabel(FormattedText label, double room, double pixelsPerDip)
+    {
+        var scale = ShrinkToFit.ScaleFor(label.Width, room);
+        if (!ShrinkText || scale >= 1)
+            return label;
+        ShownLabelSize = Math.Max(6, LabelSize * scale);
+        return Text(Label, ShownLabelSize, LabelBrush, pixelsPerDip);
+    }
 
     private FormattedText Text(string text, double size, Brush brush, double pixelsPerDip) =>
         new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface, size, brush, pixelsPerDip);

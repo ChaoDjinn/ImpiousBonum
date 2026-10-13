@@ -104,6 +104,9 @@ public sealed class LinesWidget : Widget
         if (legend)
             Children.Add(header);
         Children.Add(plot);
+        // The graph takes what's left, and everything shrinks when the legend alone is too tall.
+        if (legend)
+            FitContent(FitDirection.Height);
     }
 
     public override void Refresh(MetricStore store, DateTime now)
