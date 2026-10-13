@@ -8,7 +8,7 @@
   "widgets": [
     { "type": "clock", "x": 40, "y": 40, "width": 1000, "height": 320, "timeSize": 200, "dateSize": 36 },
     { "type": "weather", "x": 40, "y": 390, "width": 1000, "height": 170, "fontSize": 100, "forecast": "none" },
-    { "type": "weather", "x": 40, "y": 580, "width": 1000, "height": 190, "showCurrent": false, "count": 5, "forecastSize": 30 },
+    { "type": "weather", "x": 40, "y": 580, "width": 1000, "height": 190, "showCurrent": false, "count": 5, "forecastSize": 30, "showWarnings": false },
     { "type": "lines", "x": 40, "y": 800, "width": 1000, "height": 270, "fontSize": 28, "lineThickness": 3,
       "lines": [
         { "label": "CPU", "metric": "cpu.load", "color": "accent" },

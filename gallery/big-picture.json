@@ -12,7 +12,7 @@
         { "label": "Tokyo", "zone": "Asia/Tokyo" }
       ] },
     { "type": "weather", "x": 1005, "y": 60, "width": 885, "height": 300, "fontSize": 130, "forecast": "none", "iconStyle": "colour" },
-    { "type": "weather", "x": 1005, "y": 400, "width": 885, "height": 300, "showCurrent": false, "count": 5, "forecastSize": 40, "iconStyle": "colour" },
+    { "type": "weather", "x": 1005, "y": 400, "width": 885, "height": 300, "showCurrent": false, "count": 5, "forecastSize": 40, "iconStyle": "colour", "showWarnings": false },
     { "type": "lines", "x": 1950, "y": 60, "width": 885, "height": 640, "fontSize": 40, "lineThickness": 4,
       "lines": [
         { "label": "CPU", "metric": "cpu.load", "color": "accent" },

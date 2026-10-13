@@ -32,7 +32,8 @@ public sealed class WeatherWidget : Widget
             Setting.Toggle("showDetails", "Details", true, group: Setting.Content, help: "Conditions, today's high and low, and feels like, beside the temperature."),
             Setting.Toggle("showLocation", "Location", false, group: Setting.Content),
             Setting.Toggle("showWarnings", "Warnings", true, group: Setting.Content,
-                help: "With severe weather warnings on (the Weather page), the most serious one along the bottom while there are any: in the warning colour, or the critical colour for red, severe and extreme ones. Tap it to read the warning."),
+                help: "With severe weather warnings on (the Weather page), the most serious one along the bottom while there are any: in the warning colour, or the critical colour for red, severe and extreme ones. "
+                    + "Its size follows Forecast size, or Temperature size without a forecast. Tap it to read the warning (not in the tablet view)."),
             Setting.Number("fontSize", "Temperature size", 80, 6, 400),
             Setting.Number("forecastSize", "Forecast size", 22, 6, 200),
             Setting.Choice("iconStyle", "Icons", "outline", ["outline", "colour"], group: Setting.Appearance,
@@ -112,7 +113,7 @@ public sealed class WeatherWidget : Widget
         if (settings.Bool("showWarnings"))
         {
             // Under the rest, and only there while there's a warning (see PlaceWarning).
-            _warning = new TapTarget { Background = Brushes.Transparent, Visibility = Visibility.Collapsed, Margin = new Thickness(0, _forecastSize * 0.3, 0, 0) };
+            _warning = new TapTarget { Background = Brushes.Transparent, Visibility = Visibility.Collapsed, Margin = new Thickness(0, WarningSize / 3, 0, 0) };
             _warning.Tapped += (_, _) =>
             {
                 if (_warningLink is { } link)
@@ -140,6 +141,20 @@ public sealed class WeatherWidget : Widget
         }
         foreach (UIElement child in Children)
             SetRow(child, !shown ? 0 : child == _warning ? 2 : 1);
+    }
+
+    /// <summary>
+    /// When the weather and the warning are taller than the widget, the weather gives way (its top and bottom are cut
+    /// off) rather than the warning going off the bottom, where it couldn't be seen at all.
+    /// </summary>
+    protected override Size MeasureOverride(Size constraint)
+    {
+        if (_warning is { Visibility: Visibility.Visible } && RowDefinitions.Count == 4)
+        {
+            _warning.Measure(new Size(constraint.Width, double.PositiveInfinity));
+            RowDefinitions[1].MaxHeight = Math.Max(0, constraint.Height - _warning.DesiredSize.Height);
+        }
+        return base.MeasureOverride(constraint);
     }
 
     public override void Refresh(MetricStore store, DateTime now)
@@ -257,7 +272,7 @@ public sealed class WeatherWidget : Widget
         }
 
         var brush = worst.IsCritical ? Theme.Critical : Theme.Warning;
-        var size = _forecastSize * 0.9;
+        var size = WarningSize;
         var row = new DockPanel();
         var icon = Icons.Create("warning", brush, size * 1.2, 2);
         icon.VerticalAlignment = VerticalAlignment.Center;
@@ -282,6 +297,9 @@ public sealed class WeatherWidget : Widget
         _warningLink = worst.Link;
         PlaceWarning(true);
     }
+
+    /// <summary>The warning's text size: a little smaller than the forecast's, or without one, the size of the details beside the temperature.</summary>
+    private double WarningSize => _ahead is null ? _fontSize * 0.22 : _forecastSize * 0.9;
 
     private FrameworkElement Icon(string name, double size, Brush brush) =>
         _colourIcons ? Icons.CreateColour(name, size, 1.6, brush) : Icons.Create(name, brush, size, 1.6);

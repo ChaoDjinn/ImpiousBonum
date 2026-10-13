@@ -308,6 +308,62 @@ public sealed class WeatherWidgetTests
     }
 
     [Fact]
+    public void A_warning_keeps_its_room_when_the_weather_fills_the_widget()
+    {
+        Sta.Run(() =>
+        {
+            var store = new MetricStore();
+            store.SetAttachment(WeatherProvider.Forecast, Report());
+            store.SetAttachment(WeatherWarningsProvider.Warnings, (IReadOnlyList<WeatherWarning>)[Yellow]);
+            (Rect Strip, Rect Hours) Arranged(double height)
+            {
+                // The hours ahead, as in the README's picture: by themselves they fill a widget 120 high.
+                var widget = WidgetFactory.Create(new JsonObject
+                {
+                    ["type"] = "weather", ["showCurrent"] = false, ["forecast"] = "hours", ["forecastSize"] = 22, ["rainFrom"] = 0,
+                }, Theme.From(new ThemeSettings()));
+                widget.Refresh(store, DateTime.Now);
+                widget.Measure(new Size(760, height));
+                widget.Arrange(new Rect(0, 0, 760, height));
+                var strip = Descendants<TapTarget>(widget).Single();
+                var hours = Descendants<UniformGrid>(widget).Single();
+                return (strip.TransformToAncestor(widget).TransformBounds(new Rect(strip.RenderSize)),
+                    hours.TransformToAncestor(widget).TransformBounds(new Rect(hours.RenderSize)));
+            }
+
+            // Too short for both: the hours give way, and the warning is all there at the bottom.
+            var (strip, hours) = Arranged(120);
+            Assert.True(hours.Height > 100, $"{hours}");
+            Assert.True(strip.Top > 0 && Math.Abs(strip.Bottom - 120) < 0.5, $"{strip}");
+
+            // With room to spare, the warning is just under the hours, and the two are centred together.
+            (strip, hours) = Arranged(300);
+            Assert.True(strip.Top > hours.Bottom && strip.Top - hours.Bottom < 10, $"{hours} {strip}");
+            Assert.True(Math.Abs(hours.Top - (300 - strip.Bottom)) < 0.5, $"{hours} {strip}");
+        });
+    }
+
+    [Fact]
+    public void A_warning_is_the_size_of_the_forecast_or_without_one_of_the_details()
+    {
+        Sta.Run(() =>
+        {
+            var store = new MetricStore();
+            store.SetAttachment(WeatherWarningsProvider.Warnings, (IReadOnlyList<WeatherWarning>)[Yellow]);
+            double TextSize(JsonObject settings)
+            {
+                var widget = WidgetFactory.Create(settings, Theme.From(new ThemeSettings()));
+                widget.Refresh(store, DateTime.Now);
+                return Descendants<TextBlock>(Descendants<TapTarget>(widget).Single()).Single().FontSize;
+            }
+
+            Assert.Equal(27, TextSize(new JsonObject { ["type"] = "weather", ["forecastSize"] = 30, ["fontSize"] = 100 }), 6);
+            // Forecast size does nothing else on a widget without a forecast, so there it follows the temperature's.
+            Assert.Equal(22, TextSize(new JsonObject { ["type"] = "weather", ["forecast"] = "none", ["forecastSize"] = 30, ["fontSize"] = 100 }), 6);
+        });
+    }
+
+    [Fact]
     public void The_worst_warning_shows_with_how_many_more_and_a_tap_opens_it()
     {
         Sta.Run(() =>

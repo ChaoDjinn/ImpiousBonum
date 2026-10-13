@@ -453,7 +453,7 @@ The weather now and the days or hours ahead, from Open-Meteo.com, and severe wea
 | `rainFrom` | number (0–100) | `30` | Chance of rain from. Show the chance of rain from this percentage; 0 always shows it. |
 | `showDetails` | true/false | `true` | Details. Conditions, today's high and low, and feels like, beside the temperature. |
 | `showLocation` | true/false | `false` | Location |
-| `showWarnings` | true/false | `true` | Warnings. With severe weather warnings on (the Weather page), the most serious one along the bottom while there are any: in the warning colour, or the critical colour for red, severe and extreme ones. Tap it to read the warning. |
+| `showWarnings` | true/false | `true` | Warnings. With severe weather warnings on (the Weather page), the most serious one along the bottom while there are any: in the warning colour, or the critical colour for red, severe and extreme ones. Its size follows Forecast size, or Temperature size without a forecast. Tap it to read the warning (not in the tablet view). |
 | `fontSize` | number (6–400) | `80` | Temperature size |
 | `forecastSize` | number (6–200) | `22` | Forecast size |
 | `iconStyle` | `outline` / `colour` | `outline` | Icons. outline draws them in the icon colour below; colour in their own: a yellow sun, white clouds, blue rain, white lightning. |
