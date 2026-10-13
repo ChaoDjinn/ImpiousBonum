@@ -2,11 +2,13 @@ using System.Globalization;
 using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using ImpiousBonum.App.Controls;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
@@ -27,6 +29,8 @@ public sealed partial class PropertyPanel : StackPanel
     private readonly Func<MetricStore?> _store;
     private readonly List<Action> _refreshers = [];
     private readonly List<Action> _liveRefreshers = [];
+    /// <summary>Each list entry's card, by its list and place, for giving focus back to one that moved.</summary>
+    private readonly Dictionary<(string Key, int Index), Border> _itemCards = [];
     private bool _updating;
 
     public PropertyPanel(LayoutSession session, Func<(int Width, int Height)?> dashboardSize, Func<MetricStore?> store)
@@ -57,6 +61,7 @@ public sealed partial class PropertyPanel : StackPanel
         Children.Clear();
         _refreshers.Clear();
         _liveRefreshers.Clear();
+        _itemCards.Clear();
 
         if (_session.SelectedWidget is not { } widget)
         {
@@ -622,18 +627,21 @@ public sealed partial class PropertyPanel : StackPanel
     private void AddItems(Panel parent, SettingTarget target, SettingDescriptor setting)
     {
         var items = _session.GetValue(target, setting.Key) as JsonArray ?? [];
+        // The entries in a stack of their own, which they're dragged around in by their handles.
+        var entries = new StackPanel();
         for (var i = 0; i < items.Count; i++)
         {
             var index = i;
+            var title = $"{setting.Label} {index + 1}";
             var card = new StackPanel();
             var header = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
-            var buttons = new StackPanel { Orientation = Orientation.Horizontal };
-            DockPanel.SetDock(buttons, Dock.Right);
-            buttons.Children.Add(ItemButton("\uE74A", "Move up", index > 0, () => _session.EditItems(target.WidgetIndex, setting.Key, a => Swap(a, index, index - 1))));
-            buttons.Children.Add(ItemButton("\uE74B", "Move down", index < items.Count - 1, () => _session.EditItems(target.WidgetIndex, setting.Key, a => Swap(a, index, index + 1))));
-            buttons.Children.Add(ItemButton("\uE74D", "Remove", true, () => _session.EditItems(target.WidgetIndex, setting.Key, a => a.RemoveAt(index))));
-            header.Children.Add(buttons);
-            header.Children.Add(new TextBlock { Text = $"{setting.Label} {index + 1}", FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center });
+            var handle = DragHandle(title);
+            DockPanel.SetDock(handle, Dock.Left);
+            var remove = ItemButton("\uE74D", "Remove", () => _session.EditItems(target.WidgetIndex, setting.Key, a => a.RemoveAt(index)));
+            DockPanel.SetDock(remove, Dock.Right);
+            header.Children.Add(handle);
+            header.Children.Add(remove);
+            header.Children.Add(new TextBlock { Text = title, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center });
             card.Children.Add(header);
 
             foreach (var itemSetting in setting.ItemSettings ?? [])
@@ -641,8 +649,11 @@ public sealed partial class PropertyPanel : StackPanel
 
             var border = new Border { Child = card, Margin = new Thickness(0, 0, 0, 8) };
             border.SetResourceReference(StyleProperty, "Card");
-            parent.Children.Add(border);
+            entries.Children.Add(border);
+            _itemCards[(setting.Key, index)] = border;
         }
+        DragReorder.Attach(entries, (from, to) => MoveItem(target, setting.Key, from, to), byHandle: true);
+        parent.Children.Add(entries);
 
         var add = new Button { Content = WithGlyph("\uE710", $"Add {setting.Label.ToLowerInvariant().TrimEnd('s')}"), HorizontalAlignment = HorizontalAlignment.Left };
         add.Click += (_, _) =>
@@ -653,9 +664,69 @@ public sealed partial class PropertyPanel : StackPanel
         parent.Children.Add(add);
     }
 
-    private Button ItemButton(string symbol, string tip, bool enabled, Action action)
+    /// <summary>
+    /// The grip a list entry is dragged by, at the left of its card. It takes focus too (Tab, or a click), so Alt+Up and
+    /// Alt+Down can move the entry from the keyboard.
+    /// </summary>
+    private static Border DragHandle(string title)
     {
-        var button = new Button { Content = Glyph(symbol), ToolTip = tip, IsEnabled = enabled, Padding = new Thickness(8, 4, 8, 4), Margin = new Thickness(4, 0, 0, 0) };
+        var handle = new Border
+        {
+            Child = Secondary(Glyph("\uE76F")),
+            // Transparent rather than none, so the whole grip catches the mouse and not just the glyph's lines.
+            Background = Brushes.Transparent,
+            Padding = new Thickness(2, 4, 8, 4),
+            Cursor = Cursors.SizeNS,
+            Focusable = true,
+            ToolTip = "Drag to reorder, or press Alt+Up/Alt+Down",
+        };
+        AutomationProperties.SetName(handle, $"Reorder {title}");
+        DragReorder.SetIsHandle(handle, true);
+        handle.MouseLeftButtonDown += (_, e) =>
+        {
+            // Handled, or the scroll viewer around the panel takes focus for itself next. Dragging listens before this.
+            handle.Focus();
+            e.Handled = true;
+        };
+        return handle;
+    }
+
+    /// <summary>
+    /// Moves a list entry (dragged, or Alt+Up/Alt+Down), then gives focus back to the same control in it once the panel
+    /// is rebuilt: its handle, or the field that was being typed in.
+    /// </summary>
+    private void MoveItem(SettingTarget target, string key, int from, int to)
+    {
+        var focused = _itemCards.TryGetValue((key, from), out var card) ? Focusables(card).IndexOf(Keyboard.FocusedElement) : -1;
+        _session.MoveItem(target.WidgetIndex, key, from, to);
+        // The cards are numbered by place, so they're drawn afresh.
+        Rebuild();
+        if (!_itemCards.TryGetValue((key, to), out card))
+            return;
+        // Laid out first, so its controls are all there and the scroll viewer brings the right place into view.
+        UpdateLayout();
+        var focusables = Focusables(card);
+        if (focusables.Count > 0)
+            focusables[Math.Clamp(focused, 0, focusables.Count - 1)].Focus();
+    }
+
+    /// <summary>The elements inside a card that can take focus, in order. Every card of a list has the same ones.</summary>
+    private static List<IInputElement> Focusables(DependencyObject root)
+    {
+        var found = new List<IInputElement>();
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is UIElement { Focusable: true } element)
+                found.Add(element);
+            found.AddRange(Focusables(child));
+        }
+        return found;
+    }
+
+    private Button ItemButton(string symbol, string tip, Action action)
+    {
+        var button = new Button { Content = Glyph(symbol), ToolTip = tip, Padding = new Thickness(8, 4, 8, 4), Margin = new Thickness(4, 0, 0, 0) };
         button.Click += (_, _) =>
         {
             action();
@@ -663,14 +734,6 @@ public sealed partial class PropertyPanel : StackPanel
             Rebuild();
         };
         return button;
-    }
-
-    private static void Swap(JsonArray array, int a, int b)
-    {
-        var first = array[a]!.DeepClone();
-        var second = array[b]!.DeepClone();
-        array[a] = second;
-        array[b] = first;
     }
 
     // ---- Helpers --------------------------------------------------------------------------------

@@ -22,7 +22,33 @@ public sealed class WeatherTests
         }
         """;
 
+    // The same with every reading the app asks for now, from three hours back (for the pressure trend).
+    private const string FullForecast = """
+        {
+          "latitude": 51.51, "longitude": -0.13, "timezone": "Europe/London", "utc_offset_seconds": 3600,
+          "current_units": { "time": "iso8601", "visibility": "m", "precipitation": "mm" },
+          "current": { "time": "2026-10-12T09:45", "interval": 900, "temperature_2m": 12.4, "apparent_temperature": 10.1,
+                       "relative_humidity_2m": 81, "is_day": 1, "weather_code": 61, "wind_speed_10m": 14.4, "wind_direction_10m": 225,
+                       "wind_gusts_10m": 31.7, "uv_index": 2.35, "pressure_msl": 1009.6, "dew_point_2m": 9.2, "visibility": 20500.00,
+                       "cloud_cover": 88, "precipitation": 0.30 },
+          "hourly": { "time": ["2026-10-12T06:00", "2026-10-12T07:00", "2026-10-12T08:00", "2026-10-12T09:00", "2026-10-12T10:00", "2026-10-12T11:00"],
+                      "temperature_2m": [9.8, 10.2, 11.0, 12.1, 12.9, 13.6], "weather_code": [3, 3, 61, 61, 63, 61], "is_day": [0, 1, 1, 1, 1, 1],
+                      "precipitation_probability": [10, 20, 35, 60, 75, 40], "precipitation": [0.00, 0.00, 0.10, 0.40, 0.80, 0.20],
+                      "pressure_msl": [1012.1, 1011.4, 1010.6, 1009.8, 1009.1, 1008.7], "wind_speed_10m": [9.4, 10.8, 12.6, 14.0, 15.1, 16.2],
+                      "wind_gusts_10m": [20.5, 24.1, 28.8, 31.3, 34.6, 36.0], "uv_index": [0.00, 0.10, 0.60, 1.40, 2.30, 2.90] },
+          "daily": { "time": ["2026-10-12", "2026-10-13"], "weather_code": [61, 3],
+                     "temperature_2m_max": [14.2, 15.8], "temperature_2m_min": [8.9, 9.6],
+                     "precipitation_probability_max": [80, 25], "precipitation_sum": [6.40, 0.20],
+                     "sunrise": ["2026-10-12T07:19", "2026-10-13T07:21"], "sunset": ["2026-10-12T18:13", "2026-10-13T18:11"],
+                     "daylight_duration": [39293.31, 39061.58], "uv_index_max": [3.10, 2.60],
+                     "wind_speed_10m_max": [24.1, 18.0], "wind_gusts_10m_max": [52.9, 38.2] }
+        }
+        """;
+
     private static readonly WeatherRequest London = new("London", 51.51, -0.13, WeatherUnits.Metric);
+
+    /// <summary>A quarter to ten in London on 12 October 2026, when <see cref="FullForecast"/> is for.</summary>
+    private static readonly DateTimeOffset FullForecastTime = new(2026, 10, 12, 8, 45, 0, TimeSpan.Zero);
 
     [Fact]
     public void A_forecast_reads_now_hours_and_days()
@@ -49,6 +75,227 @@ public sealed class WeatherTests
     {
         Assert.ThrowsAny<Exception>(() => WeatherReport.Parse("""{ "error": true, "reason": "Latitude must be in range" }""", WeatherUnits.Metric));
         Assert.ThrowsAny<Exception>(() => WeatherReport.Parse("not json", WeatherUnits.Metric));
+    }
+
+    [Fact]
+    public void A_forecast_reads_wind_gusts_uv_pressure_and_the_rest()
+    {
+        var report = WeatherReport.Parse(FullForecast, WeatherUnits.Metric);
+
+        Assert.Equal(TimeSpan.FromHours(1), report.UtcOffset);
+        Assert.Equal(31.7, report.Gusts);
+        Assert.Equal(2.35, report.Uv);
+        Assert.Equal(1009.6, report.Pressure);
+        Assert.Equal(9.2, report.DewPoint);
+        Assert.Equal(20500, report.Visibility);
+        Assert.Equal(88, report.Clouds);
+        Assert.Equal(0.3, report.Precipitation);
+
+        // Three hours back are there for the pressure trend, but the hours ahead still start after this one.
+        Assert.Equal(6, report.Hours.Count);
+        Assert.Equal(new[] { 10, 11 }, report.HoursAhead.Select(h => h.Time.Hour));
+        Assert.Equal(1012.1, report.Hours[0].Pressure);
+        Assert.Equal(31.3, report.Hours[3].Gusts);
+        Assert.Equal(0.4, report.Hours[3].Precipitation);
+        Assert.Equal(1.4, report.Hours[3].Uv);
+        Assert.Equal(14.0, report.Hours[3].Wind);
+
+        Assert.Equal(6.4, report.Today!.Precipitation);
+        Assert.Equal(3.1, report.Today.Uv);
+        Assert.Equal(52.9, report.Today.Gusts);
+        Assert.Equal(24.1, report.Today.Wind);
+        Assert.Equal(TimeSpan.FromSeconds(39293.31), report.Today.Daylight);
+    }
+
+    [Fact]
+    public void Readings_a_forecast_leaves_out_are_unknown()
+    {
+        // From before these readings were asked for.
+        var report = WeatherReport.Parse(Forecast, WeatherUnits.Metric);
+        Assert.Null(report.Gusts);
+        Assert.Null(report.Uv);
+        Assert.Null(report.Pressure);
+        Assert.Null(report.DewPoint);
+        Assert.Null(report.Visibility);
+        Assert.Null(report.Clouds);
+        Assert.Null(report.Precipitation);
+        Assert.Null(report.Hours[0].Pressure);
+        Assert.Null(report.Today!.Daylight);
+        Assert.Null(report.Today.Uv);
+
+        // Open-Meteo sends null for values it hasn't got, and can leave a list short.
+        var gaps = WeatherReport.Parse("""
+            {
+              "current": { "time": "2026-10-12T09:45", "temperature_2m": 12.4, "uv_index": null, "pressure_msl": null, "visibility": null },
+              "hourly": { "time": ["2026-10-12T08:00", "2026-10-12T09:00"], "pressure_msl": [null, 1009.8], "uv_index": [1.2] },
+              "daily": { "time": ["2026-10-12"], "daylight_duration": [null], "uv_index_max": null, "sunrise": null }
+            }
+            """, WeatherUnits.Metric);
+        Assert.Null(gaps.Uv);
+        Assert.Null(gaps.Pressure);
+        Assert.Null(gaps.Visibility);
+        Assert.Null(gaps.UtcOffset);
+        Assert.Null(gaps.Hours[0].Pressure);
+        Assert.Equal(1009.8, gaps.Hours[1].Pressure);
+        Assert.Null(gaps.Hours[1].Uv);
+        Assert.Null(gaps.Today!.Daylight);
+        Assert.Null(gaps.Today.Uv);
+        Assert.Null(gaps.Sunrise);
+    }
+
+    [Fact]
+    public void Visibility_in_feet_is_read_as_metres()
+    {
+        // Asking for precipitation in inches, as imperial units do, turns Open-Meteo's visibility into feet.
+        const string json = """
+            { "current_units": { "visibility": "ft" }, "current": { "time": "2026-10-12T09:45", "temperature_2m": 54.3, "visibility": 67257.216 } }
+            """;
+        Assert.Equal(20500, WeatherReport.Parse(json, WeatherUnits.Imperial).Visibility!.Value, 0.01);
+        Assert.Equal(20500, WeatherReport.Parse(json.Replace("\"ft\"", "\"m\"").Replace("67257.216", "20500"), WeatherUnits.Imperial).Visibility!.Value, 0.01);
+    }
+
+    [Fact]
+    public void One_request_asks_for_everything_in_the_chosen_units()
+    {
+        var metric = OpenMeteo.ForecastUrl(London);
+        Assert.StartsWith("https://api.open-meteo.com/v1/forecast?latitude=51.51&longitude=-0.13&", metric);
+        Assert.Contains("wind_gusts_10m,uv_index,pressure_msl,dew_point_2m,visibility,cloud_cover,precipitation&", metric);
+        Assert.Contains("uv_index_max", metric);
+        Assert.Contains("daylight_duration", metric);
+        // The current hour and 48 after it, so the widget has 48 hours ahead.
+        Assert.Contains("&forecast_days=16&past_hours=3&forecast_hours=49", metric);
+        Assert.DoesNotContain("inch", metric);
+
+        var imperial = OpenMeteo.ForecastUrl(London with { Units = WeatherUnits.Imperial });
+        Assert.EndsWith("&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch", imperial);
+    }
+
+    [Theory]
+    [InlineData(1012.1, 1009.8, PressureTrend.Falling)]
+    [InlineData(1013.1, 1014.1, PressureTrend.Rising)]
+    [InlineData(1013.0, 1013.9, PressureTrend.Steady)]
+    [InlineData(1013.0, 1012.1, PressureTrend.Steady)]
+    public void The_pressure_trend_is_over_the_last_three_hours(double before, double now, PressureTrend expected)
+    {
+        var hours = new[] { before, 1020, 1000, now }
+            .Select((pressure, i) => new WeatherPeriod(new DateTime(2026, 10, 12, 6 + i, 0, 0), 12, null, 3, true, null) { Pressure = pressure })
+            .ToList();
+
+        // Any time in the hour compares that hour with three before; the hours between don't matter.
+        Assert.Equal(expected, WeatherReadings.Trend(hours, new DateTime(2026, 10, 12, 9, 45, 0)));
+        Assert.Equal(expected, WeatherReadings.Trend(hours, new DateTime(2026, 10, 12, 9, 0, 0)));
+    }
+
+    [Fact]
+    public void Without_both_pressures_there_is_no_trend()
+    {
+        var hours = WeatherReport.Parse(FullForecast, WeatherUnits.Metric).Hours;
+        Assert.Equal(PressureTrend.Falling, WeatherReadings.Trend(hours, new DateTime(2026, 10, 12, 9, 45, 0)));
+        // At 8:00 the forecast doesn't go back to 5:00.
+        Assert.Null(WeatherReadings.Trend(hours, new DateTime(2026, 10, 12, 8, 30, 0)));
+        Assert.Null(WeatherReadings.Trend(hours, new DateTime(2026, 10, 12, 5, 0, 0)));
+        Assert.Null(WeatherReadings.Trend(hours.Select(h => h with { Pressure = null }).ToList(), new DateTime(2026, 10, 12, 9, 45, 0)));
+    }
+
+    [Fact]
+    public void The_chance_of_rain_this_hour_is_from_the_hour_that_ends_next()
+    {
+        // Open-Meteo's 10:00 hour has the rain and its chance from 9:00 to 10:00.
+        var report = WeatherReport.Parse(FullForecast, WeatherUnits.Metric);
+        Assert.Equal(75, report.HourEndingAfter(new DateTime(2026, 10, 12, 9, 45, 0))!.RainChance);
+        Assert.Equal(75, report.HourEndingAfter(new DateTime(2026, 10, 12, 9, 0, 0))!.RainChance);
+        Assert.Equal(40, report.HourEndingAfter(new DateTime(2026, 10, 12, 10, 0, 0))!.RainChance);
+        Assert.Equal(10, report.HourEndingAfter(new DateTime(2026, 10, 12, 5, 30, 0))!.RainChance);
+        // Past the forecast's last hour, or more than an hour before its first, it isn't known.
+        Assert.Null(report.HourEndingAfter(new DateTime(2026, 10, 12, 11, 0, 0)));
+        Assert.Null(report.HourEndingAfter(new DateTime(2026, 10, 12, 4, 30, 0)));
+    }
+
+    [Theory]
+    [InlineData(0.0, "Low")]
+    [InlineData(2.4, "Low")]
+    [InlineData(2.5, "Moderate")]
+    [InlineData(5.0, "Moderate")]
+    [InlineData(6.0, "High")]
+    [InlineData(7.4, "High")]
+    [InlineData(8.0, "Very high")]
+    [InlineData(10.4, "Very high")]
+    [InlineData(10.5, "Extreme")]
+    [InlineData(14.0, "Extreme")]
+    [InlineData(null, null)]
+    public void Uv_levels_follow_the_who_bands(double? index, string? level) =>
+        Assert.Equal(level, WeatherReadings.UvLevel(index));
+
+    [Theory]
+    [InlineData(39293.31, "10 h 55 min")]
+    [InlineData(38940, "10 h 49 min")]
+    [InlineData(86400, "24 h 0 min")]
+    [InlineData(0, "0 h 0 min")]
+    public void Daylight_reads_in_hours_and_minutes(double seconds, string expected) =>
+        Assert.Equal(expected, WeatherReadings.Daylight(TimeSpan.FromSeconds(seconds)));
+
+    [Fact]
+    public async Task Every_new_reading_is_published_in_the_chosen_units()
+    {
+        var time = new FakeTime(FullForecastTime);
+        var wanted = London;
+        var provider = new WeatherProvider(() => wanted, (request, _) => Task.FromResult(WeatherReport.Parse(FullForecast, request.Units)), time);
+        var store = new MetricStore();
+        provider.Initialize(store);
+        await provider.SampleAsync(store, CancellationToken.None);
+
+        Assert.Equal("32 km/h", Format(store, WeatherProvider.Gusts));
+        Assert.Equal("225°", Format(store, WeatherProvider.WindDegrees));
+        Assert.Equal("SW", Format(store, WeatherProvider.WindDirection));
+        Assert.Equal("1010 hPa", Format(store, WeatherProvider.Pressure));
+        Assert.Equal("Falling", Format(store, WeatherProvider.PressureTrend));
+        Assert.Equal("9 °C", Format(store, WeatherProvider.DewPoint));
+        Assert.Equal("20.5 km", Format(store, WeatherProvider.Visibility));
+        Assert.Equal("88 %", Format(store, WeatherProvider.Clouds));
+        Assert.Equal("0.3 mm", Format(store, WeatherProvider.Precipitation));
+        Assert.Equal("6.4 mm", Format(store, WeatherProvider.PrecipitationToday));
+        Assert.Equal("80 %", Format(store, WeatherProvider.RainChance));
+        Assert.Equal("75 %", Format(store, WeatherProvider.RainChanceHour));
+        Assert.Equal("25 %", Format(store, WeatherProvider.TomorrowRainChance));
+        Assert.Equal("2", Format(store, WeatherProvider.Uv));
+        Assert.Equal("3", Format(store, WeatherProvider.UvMax));
+        Assert.Equal("Low", Format(store, WeatherProvider.UvLevel));
+        Assert.Equal("10 h 55 min", Format(store, WeatherProvider.Daylight));
+        Assert.Equal("19°", Format(store, WeatherProvider.SunElevation));
+
+        // The sun is worked out on every sample, so it climbs between forecasts, and the hour moves on too.
+        time.Advance(TimeSpan.FromMinutes(30));
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal("23°", Format(store, WeatherProvider.SunElevation));
+        Assert.Equal("40 %", Format(store, WeatherProvider.RainChanceHour));
+
+        wanted = London with { Units = WeatherUnits.Imperial };
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal("29.81 inHg", Format(store, WeatherProvider.Pressure));
+        Assert.Equal("12.7 mi", Format(store, WeatherProvider.Visibility));
+        Assert.Equal("0.30 in", Format(store, WeatherProvider.Precipitation));
+        Assert.Equal("32 mph", Format(store, WeatherProvider.Gusts));
+    }
+
+    [Fact]
+    public void Readings_a_forecast_leaves_out_have_no_value_but_the_sun_still_does()
+    {
+        var provider = new WeatherProvider(() => null);
+        var store = new MetricStore();
+        provider.Initialize(store);
+        provider.Publish(store, WeatherReport.Parse(Forecast, WeatherUnits.Metric), London, FullForecastTime);
+
+        Assert.Equal("11 °C", Format(store, WeatherProvider.Temperature));
+        Assert.Equal(MetricFormatter.Missing, Format(store, WeatherProvider.Gusts));
+        Assert.Equal(MetricFormatter.Missing, Format(store, WeatherProvider.Pressure));
+        Assert.Equal(MetricFormatter.Missing, Format(store, WeatherProvider.PressureTrend));
+        Assert.Equal(MetricFormatter.Missing, Format(store, WeatherProvider.UvLevel));
+        Assert.Equal(MetricFormatter.Missing, Format(store, WeatherProvider.Daylight));
+        Assert.Equal("19°", Format(store, WeatherProvider.SunElevation));
+
+        // Without a forecast, nothing.
+        provider.Publish(store, null, null, FullForecastTime);
+        Assert.Equal(MetricFormatter.Missing, Format(store, WeatherProvider.SunElevation));
     }
 
     [Theory]

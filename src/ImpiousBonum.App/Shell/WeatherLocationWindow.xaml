@@ -25,12 +25,14 @@
                     </StackPanel>
                 </Button>
                 <TextBox x:Name="QueryBox" TextChanged="OnQueryChanged" KeyDown="OnQueryKeyDown"
-                         c:Placeholder.Text="A town or city, or latitude, longitude" />
+                         c:Placeholder.Text="A town, area or postcode, or latitude, longitude" />
             </DockPanel>
             <ListBox x:Name="Results" Height="190" Margin="0,10,0,0" SelectionChanged="OnSelectionChanged" MouseDoubleClick="OnOk" />
             <TextBlock x:Name="StatusText" Style="{DynamicResource SecondaryText}" Margin="0,8,0,0" MinHeight="18" />
+            <!-- Credits OpenStreetMap while its places are listed (filled in by the code). -->
+            <TextBlock x:Name="Attribution" Style="{DynamicResource NoteText}" Margin="0,4,0,0" Visibility="Collapsed" />
             <TextBlock Style="{DynamicResource NoteText}" Margin="0,8,0,0"
-                       Text="The place you pick is sent to Open-Meteo.com to get the forecast, every 15 minutes. Nothing else is sent." />
+                       Text="What you search for goes to Open-Meteo.com, and to OpenStreetMap's place search only when Open-Meteo doesn't find it. For the forecast, the place's coordinates go to Open-Meteo.com every 15 minutes. Nothing else is sent." />
         </StackPanel>
     </DockPanel>
 </Window>

@@ -354,18 +354,45 @@ public sealed class LayoutSession
     /// <summary>Moves the selected widget up (+1, drawn later, so on top) or down (-1) the stacking order.</summary>
     public void MoveSelected(int delta)
     {
-        var from = SelectedIndex;
-        var to = from + delta;
-        if (from < 0 || to < 0 || to >= Document.Widgets.Count)
+        if (SelectedIndex >= 0)
+            MoveWidget(SelectedIndex, SelectedIndex + delta);
+    }
+
+    /// <summary>
+    /// Moves a widget to another place in the drawing order (later draws on top), as one undo step, and selects it:
+    /// dragging it in the editor's list, or bringing it forward or sending it back.
+    /// </summary>
+    public void MoveWidget(int from, int to)
+    {
+        var count = Document.Widgets.Count;
+        if (from == to || from < 0 || from >= count || to < 0 || to >= count)
             return;
+        // Selected before the change, so views rebuilding for it already see the moved widget as the selected one.
+        SelectedIndex = to;
         Edit(ChangeKind.Structure, null, null, null, document =>
         {
             var widget = document.Widgets[from];
             document.Widgets.RemoveAt(from);
             document.Widgets.Insert(to, widget);
         });
-        SelectedIndex = to;
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Moves an entry of a list setting (e.g. a rows widget's rows) to another place, as one undo step: take it out at
+    /// <paramref name="from"/>, then insert it at <paramref name="to"/>.
+    /// </summary>
+    public void MoveItem(int widgetIndex, string key, int from, int to)
+    {
+        if (widgetIndex < 0 || widgetIndex >= Document.Widgets.Count || Document.Widgets[widgetIndex][key] is not JsonArray items
+            || from == to || from < 0 || from >= items.Count || to < 0 || to >= items.Count)
+            return;
+        EditItems(widgetIndex, key, entries =>
+        {
+            var entry = entries[from];
+            entries.RemoveAt(from);
+            entries.Insert(to, entry);
+        });
     }
 
     /// <summary>Adds, removes or reorders entries of a list setting (e.g. a rows widget's rows).</summary>

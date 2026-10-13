@@ -116,6 +116,150 @@ public sealed class LayoutSessionTests
         Assert.Equal(3, session.Document.Widgets.Count);
     }
 
+    /// <summary>Text widgets A, B, C and D, drawn in that order.</summary>
+    private static LayoutSession FourWidgets() => new(new LayoutDocument
+    {
+        Widgets = [.. "ABCD".Select(c => new JsonObject { ["type"] = "text", ["x"] = 0, ["y"] = 0, ["width"] = 10, ["height"] = 10, ["text"] = c.ToString() })],
+    });
+
+    private static string Order(LayoutSession session) => string.Concat(session.Document.Widgets.Select(w => w.GetString("text")));
+
+    [Fact]
+    public void Moving_a_widget_changes_the_drawing_order_and_selects_it()
+    {
+        var session = FourWidgets();
+        session.Select(3);
+
+        // Dragged from the top of the list to below the third: drawn after B and C, so on top of them.
+        session.MoveWidget(0, 2);
+        Assert.Equal("BCAD", Order(session));
+        Assert.Equal(2, session.SelectedIndex);
+
+        // And back up to the top.
+        session.MoveWidget(3, 0);
+        Assert.Equal("DBCA", Order(session));
+        Assert.Equal("D", session.SelectedWidget!.GetString("text"));
+    }
+
+    [Fact]
+    public void Moving_a_widget_tells_views_what_is_selected_once_it_has_moved()
+    {
+        var session = FourWidgets();
+        string? selectedWhenChanged = null;
+        var selectionChanges = 0;
+        session.Changed += (_, change) =>
+        {
+            Assert.Equal(ChangeKind.Structure, change.Kind);
+            selectedWhenChanged = session.SelectedWidget?.GetString("text");
+        };
+        session.SelectionChanged += (_, _) => selectionChanges++;
+
+        session.MoveWidget(1, 3);
+
+        Assert.Equal("B", selectedWhenChanged);
+        Assert.Equal(1, selectionChanges);
+    }
+
+    [Fact]
+    public void Moving_a_widget_is_one_undo_step()
+    {
+        var session = FourWidgets();
+        session.MoveWidget(0, 3);
+
+        session.Undo();
+        Assert.Equal("ABCD", Order(session));
+        Assert.False(session.CanUndo);
+        Assert.False(session.IsDirty);
+
+        session.Redo();
+        Assert.Equal("BCDA", Order(session));
+    }
+
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(-1, 0)]
+    [InlineData(0, -1)]
+    [InlineData(4, 0)]
+    [InlineData(0, 4)]
+    public void Moving_a_widget_nowhere_or_off_the_list_does_nothing(int from, int to)
+    {
+        var session = FourWidgets();
+        session.Select(2);
+        var changes = 0;
+        session.Changed += (_, _) => changes++;
+
+        session.MoveWidget(from, to);
+
+        Assert.Equal("ABCD", Order(session));
+        Assert.Equal(0, changes);
+        Assert.False(session.CanUndo);
+        Assert.Equal(2, session.SelectedIndex);
+    }
+
+    [Fact]
+    public void Bringing_forward_and_sending_back_stop_at_the_ends()
+    {
+        var session = FourWidgets();
+        session.Select(3);
+        session.MoveSelected(+1);
+        Assert.Equal("ABCD", Order(session));
+        Assert.False(session.CanUndo);
+
+        session.MoveSelected(-1);
+        Assert.Equal("ABDC", Order(session));
+        Assert.Equal(2, session.SelectedIndex);
+    }
+
+    private static LayoutSession RowsSession(params string[] labels) => new(new LayoutDocument
+    {
+        Widgets =
+        [
+            new JsonObject
+            {
+                ["type"] = "rows", ["x"] = 0, ["y"] = 0, ["width"] = 10, ["height"] = 10,
+                ["rows"] = new JsonArray([.. labels.Select(l => (JsonNode)new JsonObject { ["label"] = l })]),
+            },
+        ],
+    });
+
+    private static string Rows(LayoutSession session) =>
+        string.Concat(((JsonArray)session.Document.Widgets[0]["rows"]!).Select(r => r!["label"]!.GetValue<string>()));
+
+    [Fact]
+    public void Moving_a_list_entry_reorders_the_list_as_one_undo_step()
+    {
+        var session = RowsSession("A", "B", "C");
+
+        session.MoveItem(0, "rows", 0, 2);
+        Assert.Equal("BCA", Rows(session));
+        session.MoveItem(0, "rows", 2, 1);
+        Assert.Equal("BAC", Rows(session));
+
+        session.Undo();
+        Assert.Equal("BCA", Rows(session));
+        session.Undo();
+        Assert.Equal("ABC", Rows(session));
+        Assert.False(session.CanUndo);
+
+        session.Redo();
+        Assert.Equal("BCA", Rows(session));
+    }
+
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(0, 3)]
+    [InlineData(-1, 0)]
+    public void Moving_a_list_entry_nowhere_does_nothing(int from, int to)
+    {
+        var session = RowsSession("A", "B", "C");
+        session.MoveItem(0, "rows", from, to);
+        session.MoveItem(0, "missing", 0, 1);
+        session.MoveItem(5, "rows", 0, 1);
+
+        Assert.Equal("ABC", Rows(session));
+        Assert.False(session.CanUndo);
+    }
+
     [Fact]
     public void Undo_past_a_delete_clears_a_selection_that_no_longer_exists()
     {

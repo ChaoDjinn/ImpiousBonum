@@ -137,6 +137,47 @@ public sealed class WeatherWidgetTests
         });
     }
 
+    [Fact]
+    public void The_chance_of_rain_shows_from_the_percentage_chosen()
+    {
+        Sta.Run(() =>
+        {
+            List<string> Chances(JsonObject settings)
+            {
+                var widget = WidgetFactory.Create(settings, Theme.From(new ThemeSettings()));
+                var store = new MetricStore();
+                store.SetAttachment(WeatherProvider.Forecast, Report());
+                widget.Refresh(store, DateTime.Now);
+                return Texts(widget).Where(t => t.EndsWith('%')).ToList();
+            }
+
+            // From 30% unless the widget says otherwise, as it always was.
+            Assert.Equal(new[] { "45%" }, Chances(new JsonObject { ["type"] = "weather", ["count"] = 2 }));
+            Assert.Equal(new[] { "0%", "45%" }, Chances(new JsonObject { ["type"] = "weather", ["count"] = 2, ["rainFrom"] = 0 }));
+            Assert.Empty(Chances(new JsonObject { ["type"] = "weather", ["count"] = 2, ["rainFrom"] = 50 }));
+            Assert.Equal(new[] { "40%", "0%" }, Chances(new JsonObject { ["type"] = "weather", ["forecast"] = "hours", ["rainFrom"] = 0 }));
+        });
+    }
+
+    [Fact]
+    public void A_forecast_can_run_to_16_days()
+    {
+        Sta.Run(() =>
+        {
+            var days = Enumerable.Range(0, 16).Select(d => new WeatherPeriod(new DateTime(2026, 10, 11).AddDays(d), 15, 9, 3, true, 0)).ToList();
+            var store = new MetricStore();
+            store.SetAttachment(WeatherProvider.Forecast, Report() with { Days = days });
+
+            foreach (var (count, shown) in new[] { (16, 16), (48, 16), (5, 5) })
+            {
+                var widget = WidgetFactory.Create(new JsonObject { ["type"] = "weather", ["count"] = count }, Theme.From(new ThemeSettings()));
+                widget.Refresh(store, DateTime.Now);
+                Assert.Equal(shown, Descendants<UniformGrid>(widget).Single().Children.Count);
+            }
+            Assert.Equal(48, WeatherWidget.Descriptor.Find("count")!.Max);
+        });
+    }
+
     [Theory]
     [InlineData(10.4, "10°")]
     [InlineData(-0.4, "0°")]

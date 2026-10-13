@@ -5,6 +5,22 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 
 ## Unreleased
 
+**More weather readings and longer forecasts**
+- New weather readings for any widget: wind gusts and the wind direction in degrees, the UV index now and today's highest with its level (*Low* to *Extreme*), air pressure and whether it's rising, falling or steady over the last three hours, dew point, visibility, cloud cover, rain or snow in the last 15 minutes and today's total, the chance of rain this hour and tomorrow, and today's daylight (*10 h 49 min*). They come in the same request as the forecast Impious Bonum already fetches, so there are no extra requests and nothing more is sent.
+- How high the sun is, in degrees, worked out on your PC from your location and the time, so it keeps moving between forecasts.
+- The *Weather* widget's forecast goes up to 16 days, or 48 hours, ahead.
+- *Chance of rain from* on the *Weather* widget chooses when a day or hour shows its chance of rain: from 30% as before, or 0 to always show it.
+- With imperial units, pressure is in inches of mercury, visibility in miles and rain in inches.
+
+**More precise weather places**
+- *Set location…* finds suburbs, villages and postcodes, and you can say which place you mean by adding its town, county or country after a comma: `West Derby, Liverpool` finds the one in Liverpool rather than the one in South Africa. The start of a name is enough, and `UK` and `USA` work as countries.
+- Places in the list say which town or county they're in, such as *West Derby, Liverpool, England, United Kingdom*, so places with the same name are easy to tell apart.
+- When Open-Meteo doesn't know a place, the search asks OpenStreetMap instead, which knows more suburbs, parks and postcodes (`L12 5HJ`, say). It's only asked when you press *Search* or Enter, never as you type, and the forecast still comes from Open-Meteo using the place's coordinates.
+
+**Drag to reorder in the editor**
+- Drag a widget up or down the editor's *Widgets* list to change which draws on top, in place of the arrow buttons in the toolbar. From the keyboard, Ctrl+] brings the selected widget forward and Ctrl+[ sends it back, and right-clicking a widget in the list has *Bring forward*, *Send back*, *Duplicate* and *Delete*.
+- Entries in a widget's lists (a rows widget's rows, buttons, other places, warning colours and so on) have a handle at their left to drag them into place, instead of up and down arrows. From the keyboard, Alt+Up and Alt+Down move the entry from its handle or its text boxes.
+
 **Fonts you can see before you pick**
 - The editor's font list shows each font's name in that font, as Word does. Symbol and icon fonts like *Wingdings* show their name as usual, with a few of their symbols beside it.
 - No more clicking through fonts one at a time: with the list open, the font under the mouse (or the one you move to with the arrow keys) shows on the widget straight away. Click it or press Enter to keep it; press Esc or click elsewhere and the font you had comes back. Looking through the list doesn't fill up undo or count as a change to save.
