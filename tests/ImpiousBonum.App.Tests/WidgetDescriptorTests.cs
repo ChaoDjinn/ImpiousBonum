@@ -126,6 +126,14 @@ public sealed class WidgetDescriptorTests
         Assert.Equal(Normalize(WidgetDocs.ToMarkdown()), Normalize(File.ReadAllText(path)));
     }
 
+    [Fact]
+    public void The_reference_says_what_names_can_be_picked()
+    {
+        Assert.Equal("`all`, or names in order, separated by commas", WidgetDocs.Kind(NewsWidget.Descriptor.Find("feeds")!));
+        // From a fixed list, without all.
+        Assert.Equal("some of `wind` / `uv` in order, separated by commas", WidgetDocs.Kind(Setting.Picks("readings", "Readings", "wind", choices: ["wind", "uv"])));
+    }
+
     private static IEnumerable<SettingDescriptor> Flatten(IEnumerable<SettingDescriptor> settings) =>
         settings.SelectMany(s => s.ItemSettings is null ? [s] : Flatten(s.ItemSettings).Prepend(s));
 
