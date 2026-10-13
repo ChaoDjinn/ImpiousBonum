@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using System.Windows;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -209,6 +210,122 @@ public sealed class FontPickerTests
     }
 
     [Fact]
+    public void Looking_at_the_theme_font_on_the_way_and_pressing_Esc_is_not_a_change()
+    {
+        Sta.Run(() =>
+        {
+            // The font among the widget's other settings, not last, which must stay where it is.
+            var widget = new JsonObject { ["type"] = "text", ["fontFamily"] = "Arial", ["x"] = 10, ["y"] = 10, ["width"] = 400, ["height"] = 200, ["text"] = "Hi" };
+            var (session, window, combo) = ShowFontOf(widget);
+            var before = session.Document.Widgets[0].ToJsonString();
+            combo.IsDropDownOpen = true;
+            Pump();
+
+            Hover(combo, 0);
+            Assert.Null(Font(session));
+            Hover(combo, 1);
+            Press(combo, Key.Escape);
+            Pump();
+            window.Close();
+
+            Assert.Equal(before, session.Document.Widgets[0].ToJsonString());
+            Assert.False(session.IsDirty);
+            Assert.False(session.CanUndo);
+        });
+    }
+
+    [Fact]
+    public void Picking_the_theme_font_empties_the_box_and_screen_readers_name_its_row()
+    {
+        Sta.Run(() =>
+        {
+            var (session, window, combo) = ShowFontOf(TextWidget("Arial"));
+            combo.IsDropDownOpen = true;
+            Pump();
+            var rows = ((ComboBoxAutomationPeer)UIElementAutomationPeer.CreatePeerForElement(combo)).GetChildren().Select(c => c.GetName());
+            Assert.Contains("Theme font", rows);
+
+            Click(combo, 0);
+            Pump();
+            window.Close();
+
+            Assert.Null(Font(session));
+            Assert.Equal(string.Empty, combo.Text);
+            Assert.True(session.IsDirty);
+        });
+    }
+
+    [Theory]
+    [InlineData(Key.Enter)]
+    [InlineData(Key.F4)]
+    [InlineData(Key.Tab)]
+    public void Closing_the_themes_font_list_on_the_font_it_follows_is_not_a_change(Key key)
+    {
+        Sta.Run(() =>
+        {
+            // The layout has no font of its own: it shows its theme's.
+            var (session, window, combo) = ShowThemeFont();
+            combo.IsDropDownOpen = true;
+            Pump();
+
+            Press(combo, key);
+            // Tab moves on to the next box, which closes the list.
+            combo.IsDropDownOpen = false;
+            Pump();
+            window.Close();
+
+            Assert.Null(session.Document.Theme["fontFamily"]);
+            Assert.False(session.IsDirty);
+            Assert.False(session.CanUndo);
+            Assert.Equal(session.ResolvedTheme.FontFamily, combo.Text);
+        });
+    }
+
+    [Fact]
+    public void Clicking_the_font_the_theme_shows_already_is_not_a_change()
+    {
+        Sta.Run(() =>
+        {
+            var (session, window, combo) = ShowThemeFont();
+            combo.IsDropDownOpen = true;
+            Pump();
+            var shown = combo.SelectedIndex;
+            Assert.Equal(session.ResolvedTheme.FontFamily, Name(combo, shown));
+
+            // Over the next font (the list opens scrolled to the one it has), off the list onto the box, then back.
+            Hover(combo, shown + 1 < combo.Items.Count ? shown + 1 : shown - 1);
+            Assert.NotNull(session.Document.Theme["fontFamily"]);
+            combo.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = Mouse.MouseMoveEvent });
+            Assert.Null(session.Document.Theme["fontFamily"]);
+            Hover(combo, shown);
+            Click(combo, shown);
+            Pump();
+            window.Close();
+
+            Assert.Null(session.Document.Theme["fontFamily"]);
+            Assert.False(session.IsDirty);
+            Assert.False(session.CanUndo);
+        });
+    }
+
+    [Fact]
+    public void Stepping_back_to_the_font_the_theme_shows_stores_none()
+    {
+        Sta.Run(() =>
+        {
+            var (session, window, combo) = ShowThemeFont();
+            Press(combo, Key.Down);
+            Assert.NotNull(session.Document.Theme["fontFamily"]);
+            Press(combo, Key.Up);
+            Pump();
+            window.Close();
+
+            Assert.Null(session.Document.Theme["fontFamily"]);
+            Assert.False(session.IsDirty);
+        });
+    }
+
+    [Fact]
     public void Up_and_Down_with_the_list_closed_step_through_fonts_as_one_undo_step()
     {
         Sta.Run(() =>
@@ -262,9 +379,7 @@ public sealed class FontPickerTests
     {
         Sta.Run(() =>
         {
-            var session = new LayoutSession(new LayoutDocument());
-            var (panel, window) = Show(session);
-            var combo = FontBox(panel);
+            var (session, window, combo) = ShowThemeFont();
             window.Close();
 
             Assert.NotSame(FontChoice.ThemeFont, combo.Items[0]);
@@ -293,6 +408,14 @@ public sealed class FontPickerTests
         var (panel, window) = Show(session);
         session.Select(0);
         Pump();
+        return (session, window, FontBox(panel));
+    }
+
+    /// <summary>The settings of a new layout's canvas and theme, with the theme's font drop-down.</summary>
+    private static (LayoutSession Session, Window Window, ComboBox Combo) ShowThemeFont()
+    {
+        var session = new LayoutSession(new LayoutDocument());
+        var (panel, window) = Show(session);
         return (session, window, FontBox(panel));
     }
 

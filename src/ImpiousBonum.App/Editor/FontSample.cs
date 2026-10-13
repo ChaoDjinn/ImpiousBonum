@@ -50,8 +50,11 @@ public sealed class FontChoice
         }
     }
 
-    /// <summary>The editable drop-down shows and searches this.</summary>
-    public override string ToString() => Name;
+    /// <summary>
+    /// What screen readers call its row. The drop-down's text and search use <see cref="Name"/>, which is empty for the
+    /// theme's font.
+    /// </summary>
+    public override string ToString() => Family is null ? "Theme font" : Name;
 
     private static string? Inspect(FontFamily? family, string name)
     {

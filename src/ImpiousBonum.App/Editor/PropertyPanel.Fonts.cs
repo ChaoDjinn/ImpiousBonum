@@ -49,9 +49,19 @@ public sealed partial class PropertyPanel
         var trying = false;
         var keep = false;
         var run = string.Empty;
+        string? unset = null;
+
+        // The font the box shows while nothing's stored (the theme's, or the setting's default), once seen this visit.
+        // Choosing it stores nothing again, as WriteIfChanged does: looking through the list or stepping back to the font
+        // you started on mustn't copy it into the layout.
+        void Look()
+        {
+            if (_session.GetValue(target, setting.Key) is null)
+                unset = CurrentString(target, setting);
+        }
 
         // Empty is the theme's font, stored as nothing (like ↺) rather than as an empty name.
-        JsonNode? ValueOf(string name) => themeFont && name.Length == 0 ? null : JsonValue.Create(name);
+        JsonNode? ValueOf(string name) => name == unset || (themeFont && name.Length == 0) ? null : JsonValue.Create(name);
         void Try(string name)
         {
             // Not from a drop-down left open when the panel was rebuilt (undo while it's open), whose setting may be gone.
@@ -71,7 +81,11 @@ public sealed partial class PropertyPanel
         }));
 
         // While it's open, what it points at is only a preview, until it closes.
-        combo.DropDownOpened += (_, _) => (trying, keep) = (true, false);
+        combo.DropDownOpened += (_, _) =>
+        {
+            Look();
+            (trying, keep) = (true, false);
+        };
         combo.AddHandler(MouseMoveEvent, new MouseEventHandler((_, e) =>
         {
             // The font under the mouse; off the list, the one in the box.
@@ -118,11 +132,15 @@ public sealed partial class PropertyPanel
             }
         });
 
-        // Each visit to the box is a new run of steps, so coming back to it later is a new undo step.
+        // Each visit to the box is a new run of steps, so coming back to it later is a new undo step. The theme may have
+        // changed since the last, and with it the font that shows when nothing's stored.
         combo.IsKeyboardFocusWithinChanged += (_, _) =>
         {
-            if (combo.IsKeyboardFocusWithin)
-                run = $"font{++_fontRuns}";
+            if (!combo.IsKeyboardFocusWithin)
+                return;
+            run = $"font{++_fontRuns}";
+            unset = null;
+            Look();
         };
 
         return (host, Refresh);
@@ -130,6 +148,7 @@ public sealed partial class PropertyPanel
         // Up and Down with it closed: the next font goes straight on, and the steps are one undo step.
         void Step(int by)
         {
+            Look();
             var choice = fonts[Math.Clamp(IndexOf(fonts, combo.Text) + by, 0, fonts.Count - 1)];
             _session.SetValue(target, setting.Key, ValueOf(choice.Name), this, run);
             ShowCurrent();
