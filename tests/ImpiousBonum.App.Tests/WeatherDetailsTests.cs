@@ -263,6 +263,13 @@ public sealed class WeatherDetailsTests
             Assert.Equal("1012 hPa ↓  ·  Air quality Fair", line.Text);
             widget.Refresh(store, Morning.AddSeconds(30));
             Assert.Same(line, Details(widget)[1]);
+
+            // A forecast-only widget has no details to show, so a new air quality reading leaves its forecast as it is.
+            var forecast = Weather(new JsonObject { ["showCurrent"] = false, ["details"] = "conditions, pressure, air quality" }, store);
+            var today = Descendants<UniformGrid>(forecast).Single().Children[0];
+            store.SetText(AirQualityProvider.Level, "Moderate");
+            forecast.Refresh(store, Morning.AddSeconds(60));
+            Assert.Same(today, Descendants<UniformGrid>(forecast).Single().Children[0]);
         });
     }
 
@@ -293,24 +300,49 @@ public sealed class WeatherDetailsTests
     {
         InBritain(() =>
         {
-            List<string> Under(JsonObject settings, WeatherUnits units = WeatherUnits.Metric) =>
-                [.. Descendants<UniformGrid>(Weather(settings, Store(Report(units)))).Single().Children.Cast<StackPanel>()
-                    .SelectMany(column => column.Children.OfType<TextBlock>().Skip(2)).Select(t => t.Text)];
+            List<List<string>> Under(JsonObject settings, WeatherUnits units = WeatherUnits.Metric) =>
+                [.. ForecastDetails(Weather(settings, Store(Report(units)))).Select(column => column.Select(Shown).ToList())];
 
-            // As before: the chance of rain from 30%.
-            Assert.Equal(["45%"], Under(new JsonObject { ["count"] = 2 }));
+            // As before: the chance of rain from 30%, so today has none.
+            Assert.Equal([[], ["45%"]], Under(new JsonObject { ["count"] = 2 }));
 
             var all = new JsonObject { ["count"] = 2, ["forecastDetails"] = "chance of rain, rainfall, wind, gusts, uv", ["rainFrom"] = 0 };
-            // A dry day has no rainfall.
-            Assert.Equal(["0%", "20 km/h", "Gusts 41", "UV 3", "45%", "6.2 mm", "30 km/h", "Gusts 55", "UV 7"], Under(all));
-            Assert.Equal(["0%", "12 mph", "Gusts 26", "UV 3", "45%", "0.24 in", "19 mph", "Gusts 34", "UV 7"], Under(all.DeepClone().AsObject(), WeatherUnits.Imperial));
+            // A dry day has no rainfall, but keeps its row.
+            Assert.Equal([["0%", "", "20 km/h", "Gusts 41", "UV 3"], ["45%", "6.2 mm", "30 km/h", "Gusts 55", "UV 7"]], Under(all));
+            Assert.Equal([["0%", "", "12 mph", "Gusts 26", "UV 3"], ["45%", "0.24 in", "19 mph", "Gusts 34", "UV 7"]], Under(all.DeepClone().AsObject(), WeatherUnits.Imperial));
 
-            Assert.Equal(["Gusts 41", "20 km/h", "Gusts 55", "30 km/h"], Under(new JsonObject { ["count"] = 2, ["forecastDetails"] = "gusts, wind" }));
-            Assert.Empty(Under(new JsonObject { ["count"] = 2, ["forecastDetails"] = "" }));
+            Assert.Equal([["Gusts 41", "20 km/h"], ["Gusts 55", "30 km/h"]], Under(new JsonObject { ["count"] = 2, ["forecastDetails"] = "gusts, wind" }));
+            Assert.Equal([[], []], Under(new JsonObject { ["count"] = 2, ["forecastDetails"] = "" }));
+
+            // One that no day has takes no room.
+            Assert.Equal([["20 km/h"]], Under(new JsonObject { ["count"] = 1, ["forecastDetails"] = "chance of rain, rainfall, wind" }));
 
             // The hours have their own.
-            Assert.Equal(["40%", "0.6 mm", "UV 2", "0%", "UV 3"],
+            Assert.Equal([["40%", "0.6 mm", "UV 2"], ["0%", "", "UV 3"]],
                 Under(new JsonObject { ["forecast"] = "hours", ["forecastDetails"] = "chance of rain, rainfall, UV", ["rainFrom"] = 0 }));
+        });
+    }
+
+    [Fact]
+    public void Forecast_details_line_up_across_the_days()
+    {
+        InBritain(() =>
+        {
+            // Today is dry and under Chance of rain from, and tomorrow isn't: today's wind and UV still go beside tomorrow's.
+            var widget = Weather(new JsonObject { ["count"] = 2, ["forecastDetails"] = "chance of rain, rainfall, wind, UV" });
+            widget.Width = 900;
+            widget.Height = 180;
+            widget.Measure(new Size(900, 180));
+            widget.Arrange(new Rect(0, 0, 900, 180));
+            widget.UpdateLayout();
+
+            var columns = ForecastDetails(widget);
+            Assert.Equal(["", "", "20 km/h", "UV 3"], columns[0].Select(Shown));
+            Assert.Equal(["45%", "6.2 mm", "30 km/h", "UV 7"], columns[1].Select(Shown));
+            var grid = Descendants<UniformGrid>(widget).Single();
+            double Top(TextBlock line) => line.TranslatePoint(default, grid).Y;
+            Assert.All(Enumerable.Range(0, 4), row => Assert.Equal(Top(columns[0][row]), Top(columns[1][row]), 3));
+            Assert.True(Top(columns[0][2]) > Top(columns[0][1]));
         });
     }
 
@@ -345,6 +377,13 @@ public sealed class WeatherDetailsTests
     }
 
     private static Color Colour(Brush brush) => ((SolidColorBrush)brush).Color;
+
+    /// <summary>The lines under each day or hour's temperature, column by column, top to bottom.</summary>
+    private static List<List<TextBlock>> ForecastDetails(Widget widget) =>
+        [.. Descendants<UniformGrid>(widget).Single().Children.Cast<StackPanel>().Select(column => column.Children.OfType<TextBlock>().Skip(2).ToList())];
+
+    /// <summary>A line's text, or nothing for one hidden to keep its row.</summary>
+    private static string Shown(TextBlock line) => line.Visibility == Visibility.Visible ? line.Text : "";
 
     /// <summary>The text beside the temperature, top to bottom; none while it's collapsed, or without anything to show there.</summary>
     private static List<TextBlock> Details(Widget widget) =>

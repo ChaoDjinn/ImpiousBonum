@@ -476,7 +476,7 @@ The weather now and the days or hours ahead, from Open-Meteo.com, and severe wea
 | `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `iconStyle` | `outline` / `colour` | `outline` | Icons. outline draws them in the icon colour below; colour in their own: a yellow sun, white clouds, blue rain, white lightning. |
 | `iconColor` | color | `accent` | Icon colour. For outline icons. |
-| `textColor` | color | `foreground` | Text colour. The temperatures and conditions. |
+| `textColor` | color | `foreground` | Text colour. The temperatures, and the conditions when they have the larger line (first in Details to show). |
 | `detailColor` | color | `secondary` | Detail colour. The smaller details beside the temperature, the forecast's lows, times and days, and what's under each day or hour. |
 
 ## News (`news`)

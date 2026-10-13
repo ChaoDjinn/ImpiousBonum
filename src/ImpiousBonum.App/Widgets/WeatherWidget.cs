@@ -76,7 +76,7 @@ public sealed class WeatherWidget : Widget
             Setting.Choice("iconStyle", "Icons", "outline", ["outline", "colour"], group: Setting.Appearance,
                 help: "outline draws them in the icon colour below; colour in their own: a yellow sun, white clouds, blue rain, white lightning."),
             Setting.Color("iconColor", "Icon colour", "accent", help: "For outline icons."),
-            Setting.Color("textColor", "Text colour", "foreground", help: "The temperatures and conditions."),
+            Setting.Color("textColor", "Text colour", "foreground", help: "The temperatures, and the conditions when they have the larger line (first in Details to show)."),
             Setting.Color("detailColor", "Detail colour", "secondary", help: "The smaller details beside the temperature, the forecast's lows, times and days, and what's under each day or hour."),
         ],
         (settings, theme) => new WeatherWidget(settings, theme));
@@ -171,9 +171,11 @@ public sealed class WeatherWidget : Widget
         _showDetails = settings.Bool("showDetails");
         _detailsChosen = Offered(settings.Picks("details"), DetailNames);
         _forecastDetailsChosen = Offered(settings.Picks("forecastDetails"), ForecastDetailNames);
-        _airQualityShown = _showDetails && _detailsChosen.Contains(DetailName.AirQuality);
-        _pollenShown = _showDetails && _detailsChosen.Contains(DetailName.Pollen);
-        _trendShown = _showDetails && _detailsChosen.Contains(DetailName.Pressure);
+        // The details are only beside the weather now, so a forecast-only widget never looks these up.
+        var detailsShown = _showCurrent && _showDetails;
+        _airQualityShown = detailsShown && _detailsChosen.Contains(DetailName.AirQuality);
+        _pollenShown = detailsShown && _detailsChosen.Contains(DetailName.Pollen);
+        _trendShown = detailsShown && _detailsChosen.Contains(DetailName.Pressure);
 
         var now = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         _icon = new ContentControl { Focusable = false, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, _fontSize * 0.2, 0) };
@@ -480,11 +482,17 @@ public sealed class WeatherWidget : Widget
         if (_ahead is null)
             return;
         _ahead.Children.Clear();
-        var periods = _forecast == "hours"
+        var periods = (_forecast == "hours"
             ? report.HoursAhead.Where((_, i) => i % _hourStep == _hourStep - 1).Take(_count)
-            : report.Days.Take(_count);
-        foreach (var period in periods)
-            _ahead.Children.Add(Column(period, report));
+            : report.Days.Take(_count)).ToList();
+        // Each forecast detail has its own row, so a day that hasn't got one (no rain, say) doesn't move the rest up out of
+        // line with the other days'. One that no day or hour has takes no room.
+        var rows = _forecastDetailsChosen
+            .Select(detail => periods.Select(period => ForecastText(detail, period, report.Units, _rainFrom)).ToList())
+            .Where(texts => texts.Any(text => text is not null))
+            .ToList();
+        for (var i = 0; i < periods.Count; i++)
+            _ahead.Children.Add(Column(periods[i], report, [.. rows.Select(texts => texts[i])]));
     }
 
     /// <summary>A forecast-only widget's place name above the forecast, taking no room without one.</summary>
@@ -550,8 +558,11 @@ public sealed class WeatherWidget : Widget
         return chosen => spellings.Select(list => list.FindIndex(n => chosen.Equals(n, StringComparison.OrdinalIgnoreCase))).FirstOrDefault(i => i >= 0, -1);
     }
 
-    /// <summary>One day or hour: when, an icon, the temperature (and low), and the forecast details chosen under them.</summary>
-    private StackPanel Column(WeatherPeriod period, WeatherReport report)
+    /// <summary>
+    /// One day or hour: when, an icon, the temperature (and low), and under them its forecast <paramref name="details"/>,
+    /// one to a row, null where it hasn't got one.
+    /// </summary>
+    private StackPanel Column(WeatherPeriod period, WeatherReport report, IReadOnlyList<string?> details)
     {
         var column = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
         var when = _forecast == "hours"
@@ -571,10 +582,16 @@ public sealed class WeatherWidget : Widget
         ApplyFont(temperature, _forecastSize);
         column.Children.Add(temperature);
 
-        foreach (var detail in _forecastDetailsChosen)
+        // A missing one keeps its row, hidden, while one comes after it; the last ones missing are just left out.
+        var last = details.Count;
+        while (last > 0 && details[last - 1] is null)
+            last--;
+        foreach (var text in details.Take(last))
         {
-            if (ForecastText(detail, period, report.Units, _rainFrom) is { } text)
-                column.Children.Add(Line(text, _forecastSize * 0.75, _detail, HorizontalAlignment.Center));
+            var line = Line(text ?? " ", _forecastSize * 0.75, _detail, HorizontalAlignment.Center);
+            if (text is null)
+                line.Visibility = Visibility.Hidden;
+            column.Children.Add(line);
         }
         return column;
     }
