@@ -469,7 +469,7 @@ Headlines from your news feeds (set them in the editor, or on the News feeds pag
 | `style` | `list` / `ticker` / `tickers` | `list` | Style. list shows the newest few; ticker shows one at a time, moving on every few seconds; tickers gives each feed a ticker of its own, a line each. |
 | `count` | number (1–30) | `5` | Headlines. How many the list shows, or each ticker goes through. |
 | `seconds` | number (2–120) | `8` | Ticker seconds. How long a ticker shows each headline. |
-| `feeds` | `all`, or names in order, separated by commas | `all` | Feeds. Untick All feeds to choose which to show. With tickers, they're in the order shown here: drag them into place. |
+| `feeds` | `all`, or names in order, separated by commas | `all` | Feeds. All feeds, or just the ones chosen. With tickers, each gets a line of its own, in the order they're listed. |
 | `source` | true/false | `true` | Show where from |
 | `age` | true/false | `true` | Show how old |
 | `tapToOpen` | true/false | `true` | Tap to open. Opens the article in your browser. Not in the tablet view. |

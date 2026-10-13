@@ -27,7 +27,7 @@ public sealed class NewsWidget : Widget
             Setting.Number("count", "Headlines", 5, 1, 30, group: Setting.Content, help: "How many the list shows, or each ticker goes through."),
             Setting.Number("seconds", "Ticker seconds", 8, 2, 120, group: Setting.Content, help: "How long a ticker shows each headline."),
             Setting.Picks("feeds", "Feeds", PickList.AllValue, source: FeedNames, all: "All feeds", none: "No news feeds yet: add them on the News feeds page.",
-                help: "Untick All feeds to choose which to show. With tickers, they're in the order shown here: drag them into place."),
+                help: "All feeds, or just the ones chosen. With tickers, each gets a line of its own, in the order they're listed."),
             Setting.Toggle("source", "Show where from", true, group: Setting.Content),
             Setting.Toggle("age", "Show how old", true, group: Setting.Content),
             Setting.Toggle("tapToOpen", "Tap to open", true, group: Setting.Content, help: "Opens the article in your browser. Not in the tablet view."),

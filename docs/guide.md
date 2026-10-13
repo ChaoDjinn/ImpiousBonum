@@ -280,7 +280,8 @@ Add calendars on the *Calendars* page (or select the widget in the editor → *C
 
 Each is checked every 15 minutes. Repeating events, moved and cancelled occurrences, all-day events and time zones
 are all handled; events show in this PC's time. If a calendar can't be fetched, its last events stay for a day and
-`calendar.status` says what's wrong. An agenda can show some calendars and not others (*Calendars*: `Work, Family`).
+`calendar.status` says what's wrong. An agenda can show some calendars and not others (*Calendars*: `Work, Family`),
+so a calendar's name can't have a comma in it or be `all`.
 The metrics put the next event anywhere: `{calendar.next.title}` at `{calendar.next.time}`, or a `stat` of
 `calendar.next.minutes`. A private link lets anyone who has it read the calendar, so it's kept only in this PC's
 `settings.json`, never in layouts you export.
@@ -295,11 +296,14 @@ one (look for an RSS link, or try the site's address with `/feed` or `/rss` on t
 and subreddits. Each feed is checked every 15 minutes. In the list and the ticker the same story in two feeds shows
 once; with tickers, it's in each feed's.
 
-A widget can show some feeds and not others. In the editor, *Feeds* lists your feeds: untick *All feeds*, tick the
-ones to show, and drag them into order by the handles at their left (or Alt+Up and Alt+Down). That's the order the
-tickers go in; with *All feeds*, they follow the *News feeds* page's order. A feed you've since removed or renamed
-stays ticked, marked *not found*, until you untick it. In a layout file, `feeds` is `all` or the names separated by
-commas (`BBC, The Verge`). `{news.title}` puts the newest headline anywhere.
+A widget can show some feeds and not others. In the editor, *Feeds* lists your feeds: untick *All feeds*, which
+leaves each feed ticked, then untick the ones you don't want and drag the rest into order by the handles at their left
+(or Alt+Up and Alt+Down). That's the order the tickers go in; with *All feeds*, they follow the *News feeds* page's
+order. The last feed ticked stays until you tick another (or *All feeds*), so swapping one for another doesn't go back
+to all of them. A feed you've since removed or renamed stays ticked, marked *not found*, until you untick it. In a
+layout file, `feeds` is `all` or the names separated by commas (`BBC, The Verge`), so a feed's name can't have a comma
+in it or be `all`; one added before that was checked is greyed out in *Feeds*, and only shows with *All feeds*, until
+you remove it and add it again with another name. `{news.title}` puts the newest headline anywhere.
 
 <p align="center"><img src="images/widgets/news.png" width="600" alt="Four headlines, newest first, each with where it's from and how long ago"></p>
 

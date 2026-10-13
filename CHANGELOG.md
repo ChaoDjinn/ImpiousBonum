@@ -23,8 +23,8 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 
 **A news ticker for each feed, and feeds in the order you choose**
 - The *News* widget's new *tickers* style gives each feed a ticker of its own, a line each, taking turns to move on so they don't all change at once. *Headlines* is how many each one goes through, and a story two feeds share shows in both. It uses the headlines already fetched, so there are no extra requests.
-- *Feeds* in the editor is a list of your feeds to tick, rather than names to type: untick *All feeds*, tick the ones to show and drag them into order by their handles (or Alt+Up and Alt+Down). The tickers go in that order, or with *All feeds*, in the *News feeds* page's. A feed you've since removed or renamed stays ticked, marked *not found*, so you can untick it. Layouts that already name their feeds keep working as they are.
-- Since commas separate the names a widget shows, a new feed or calendar can't have a comma in its name.
+- *Feeds* in the editor is a list of your feeds to tick, rather than names to type: untick *All feeds*, which leaves each feed ticked, then untick the ones you don't want and drag the rest into order by their handles (or Alt+Up and Alt+Down). The tickers go in that order, or with *All feeds*, in the *News feeds* page's. The last feed ticked stays until you tick another, so swapping one for another doesn't go back to all of them. A feed you've since removed or renamed stays ticked, marked *not found*, so you can untick it. Layouts that already name their feeds keep working as they are.
+- Since commas separate the names a widget shows, and *all* means every one, a new feed or calendar can't have a comma in its name or be called *all*. A feed from before that does is greyed out in *Feeds* and only shows with *All feeds*; to choose it on its own, remove it and add it again with another name.
 
 ## 0.13.0
 
