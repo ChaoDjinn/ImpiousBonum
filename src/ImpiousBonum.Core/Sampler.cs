@@ -30,7 +30,10 @@ public sealed class Sampler : IAsyncDisposable
     /// <param name="news">News feeds to show headlines from; null for none.</param>
     /// <param name="gameInFront">The tracked game in front, for session recaps; null tracks none.</param>
     /// <param name="sessionEnded">Hears each game session's recap as it ends, on the sampler's thread.</param>
-    /// <param name="airQuality">Where to get the air quality and pollen for; null, or returning null (off, or no location), fetches none.</param>
+    /// <param name="airQuality">
+    /// Where to get the air quality and pollen for; null, or returning null (off, or no location), fetches none. They're
+    /// sampled on the weather's loop, so they add no loop of their own.
+    /// </param>
     public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(
         string pingHost = "1.1.1.1", Func<(int ProcessId, string? Name)>? frameRateTarget = null, string? claudeUsagePath = null,
         Func<WeatherRequest?>? weather = null, Func<IReadOnlyList<CustomSource>>? customData = null,
@@ -48,8 +51,7 @@ public sealed class Sampler : IAsyncDisposable
         new SystemProvider(),
         new ProcessProvider(),
         new MediaProvider(),
-        new WeatherProvider(weather ?? (() => null)),
-        new AirQualityProvider(airQuality ?? (() => null)),
+        new WeatherProvider(weather ?? (() => null), airQuality: new AirQualityProvider(airQuality ?? (() => null))),
         new CustomDataProvider(customData ?? (() => [])),
         new CalendarProvider(calendars ?? (() => [])),
         new NewsProvider(news ?? (() => [])),

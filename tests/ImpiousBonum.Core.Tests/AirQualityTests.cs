@@ -351,13 +351,93 @@ public sealed class AirQualityTests
         Assert.Equal(MetricFormatter.Missing, Format(store, AirQualityProvider.Index));
         Assert.Equal(MetricFormatter.Missing, Format(store, AirQualityProvider.Level));
 
-        // A new place fetches straight away; the old place's readings don't show meanwhile.
+        // A new place fetches straight away.
         fail = false;
         var before = requests.Count;
         wanted = NewYorkPlace;
         await provider.SampleAsync(store, CancellationToken.None);
         Assert.Equal(before + 1, requests.Count);
         Assert.Equal(NewYorkPlace, requests[^1]);
+    }
+
+    [Fact]
+    public async Task Refreshes_come_just_after_the_hour_when_the_new_readings_are_there()
+    {
+        // Turned on at two minutes to the hour: it fetches then, and again just after the hour rather than an hour later.
+        var time = new FakeTime(new DateTimeOffset(2026, 10, 12, 10, 58, 0, TimeSpan.Zero));
+        var fetches = new List<DateTimeOffset>();
+        var provider = new AirQualityProvider(() => LiverpoolPlace, (_, _) =>
+        {
+            fetches.Add(time.GetUtcNow());
+            return Task.FromResult(AirQualityReport.Parse(Liverpool));
+        }, time);
+        var store = new MetricStore();
+        provider.Initialize(store);
+
+        for (var i = 0; i < 4 * 60 * 2; i++)
+        {
+            await provider.SampleAsync(store, CancellationToken.None);
+            time.Advance(TimeSpan.FromSeconds(30));
+        }
+
+        DateTimeOffset[] expected =
+        [
+            new(2026, 10, 12, 10, 58, 0, TimeSpan.Zero), new(2026, 10, 12, 11, 5, 0, TimeSpan.Zero), new(2026, 10, 12, 12, 5, 0, TimeSpan.Zero),
+            new(2026, 10, 12, 13, 5, 0, TimeSpan.Zero), new(2026, 10, 12, 14, 5, 0, TimeSpan.Zero),
+        ];
+        Assert.Equal(expected, fetches);
+        // Open-Meteo's hours are UTC's, whatever the PC's own time zone.
+        Assert.Equal(new DateTimeOffset(2026, 10, 12, 11, 5, 0, TimeSpan.Zero), AirQualityProvider.NextHour(new DateTimeOffset(2026, 10, 12, 16, 28, 0, TimeSpan.FromHours(5.5))));
+    }
+
+    [Fact]
+    public async Task A_new_place_never_shows_the_old_places_readings()
+    {
+        var time = new FakeTime(Evening);
+        var fail = false;
+        var wanted = LiverpoolPlace;
+        var provider = new AirQualityProvider(() => wanted, (_, _) =>
+            fail ? Task.FromException<AirQualityReport>(new HttpRequestException("offline")) : Task.FromResult(AirQualityReport.Parse(Liverpool)), time);
+        var store = new MetricStore();
+        provider.Initialize(store);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal("26", Format(store, AirQualityProvider.Index));
+
+        // Moved to New York minutes later, while offline: Liverpool's fresh readings would be wrong there.
+        fail = true;
+        wanted = NewYorkPlace;
+        time.Advance(TimeSpan.FromMinutes(1));
+        await provider.SampleAsync(store, CancellationToken.None);
+        foreach (var id in new[] { AirQualityProvider.Index, AirQualityProvider.Level, AirQualityProvider.European, AirQualityProvider.Pm25, AirQualityProvider.Pollen,
+            AirQualityProvider.GrassLevel })
+        {
+            Assert.Equal(MetricFormatter.Missing, Format(store, id));
+        }
+    }
+
+    [Fact]
+    public async Task It_runs_on_the_weathers_loop_rather_than_one_of_its_own()
+    {
+        var fetches = 0;
+        AirQualityRequest? wanted = null;
+        var airQuality = new AirQualityProvider(() => wanted, (_, _) =>
+        {
+            fetches++;
+            return Task.FromResult(AirQualityReport.Parse(Liverpool));
+        }, new FakeTime(Evening));
+        var weather = new WeatherProvider(() => null, airQuality: airQuality);
+        var store = new MetricStore();
+        weather.Initialize(store);
+
+        // Its readings are there to pick in the editor, but nothing is fetched while it's off.
+        Assert.Contains(store.Definitions, d => d.Id == AirQualityProvider.Pollen);
+        await weather.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(0, fetches);
+
+        wanted = LiverpoolPlace;
+        await weather.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(1, fetches);
+        Assert.Equal("Fair", Format(store, AirQualityProvider.Level));
     }
 
     [Fact]

@@ -7,14 +7,15 @@ namespace ImpiousBonum.Core.Providers;
 /// The air quality and pollen at the weather's place, from Open-Meteo (CAMS's forecast), every hour: an index on the
 /// chosen scale with its level, particles and gases, and grass, tree and weed pollen with theirs. Off unless turned on,
 /// and nothing is fetched while it's off or no location is set. Pollen is only counted in Europe, in season; elsewhere
-/// those readings have no value.
+/// those readings have no value. It's sampled on the <see cref="WeatherProvider"/>'s loop rather than a loop of its
+/// own, so while it's off it costs nothing but its metric definitions.
 /// </summary>
 /// <param name="request">Where and on which index, or null when it's off or there's no location. Read on every sample, so changes apply quickly.</param>
 /// <param name="fetch">Gets the readings; Open-Meteo unless a test swaps it.</param>
 public sealed class AirQualityProvider(
     Func<AirQualityRequest?> request,
     Func<AirQualityRequest, CancellationToken, Task<AirQualityReport>>? fetch = null,
-    TimeProvider? time = null) : IMetricProvider
+    TimeProvider? time = null)
 {
     public const string Index = "weather.aqi";
     public const string Level = "weather.aqi.level";
@@ -37,6 +38,12 @@ public sealed class AirQualityProvider(
     /// <summary>The readings are for the hour, so there's nothing newer to fetch any sooner.</summary>
     public static readonly TimeSpan RefreshEvery = TimeSpan.FromHours(1);
 
+    /// <summary>
+    /// How long after the hour to fetch its readings, so a PC clock that's a little fast still gets the new hour's
+    /// rather than the last one's again.
+    /// </summary>
+    public static readonly TimeSpan PastTheHour = TimeSpan.FromMinutes(5);
+
     /// <summary>After a failed fetch (offline, say), how long until trying again.</summary>
     public static readonly TimeSpan RetryAfter = TimeSpan.FromMinutes(5);
 
@@ -58,8 +65,7 @@ public sealed class AirQualityProvider(
     private DateTimeOffset _nextTry;
     private AqiScale? _registeredScale;
 
-    public TimeSpan Interval => TimeSpan.FromSeconds(30);
-
+    /// <summary>Registers the readings, so they can be picked in the editor before it's turned on.</summary>
     public void Initialize(MetricStore store)
     {
         RegisterIndex(store, AqiScale.European);
@@ -88,6 +94,7 @@ public sealed class AirQualityProvider(
         store.Register(new MetricDefinition(Index, "Air quality: index on the chosen scale", Category, MetricUnit.None, scale == AqiScale.Us ? 500 : 100, Format: "0"));
     }
 
+    /// <summary>Fetches the readings when they're due, and publishes them. Called on every one of the weather's samples.</summary>
     public async ValueTask SampleAsync(MetricStore store, CancellationToken cancellationToken)
     {
         var wanted = request();
@@ -118,7 +125,7 @@ public sealed class AirQualityProvider(
             {
                 _report = await _fetch(wanted, cancellationToken).ConfigureAwait(false);
                 _fetched = now;
-                _nextTry = now + RefreshEvery;
+                _nextTry = NextHour(now);
             }
             catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or FormatException or KeyNotFoundException or InvalidOperationException)
             {
@@ -157,7 +164,14 @@ public sealed class AirQualityProvider(
         store.SetText(Pollen, report is null ? null : AirQualityReadings.PollenSummary(report));
     }
 
-    public void Dispose()
+    /// <summary>
+    /// When the next hour's readings are there to fetch: just after the hour, rather than an hour after the last fetch,
+    /// which could leave the last hour's showing for most of this one. Open-Meteo's hours are UTC's, as nothing asks it
+    /// for a time zone.
+    /// </summary>
+    internal static DateTimeOffset NextHour(DateTimeOffset now)
     {
+        var utc = now.UtcDateTime;
+        return new DateTimeOffset(utc.Date.AddHours(utc.Hour), TimeSpan.Zero) + RefreshEvery + PastTheHour;
     }
 }
