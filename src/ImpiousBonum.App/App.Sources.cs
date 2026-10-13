@@ -28,14 +28,23 @@ public partial class App
         var weather = $"{place.Name.Split(',')[0]}: {MetricFormatter.Format(temperature)} {condition.Text}".TrimEnd();
         if (_settings.AirQuality)
             weather += AirQualityStatus(store);
-        if (_settings.WeatherWarnings && store.TryGet(WeatherWarningsProvider.Count, out var warnings) && warnings.Value is double count && count > 0)
+        if (WarningCount(store) is > 0 and var count)
             weather += count == 1 ? " · 1 warning" : $" · {count} warnings";
         return weather;
     }
 
     /// <summary>
-    /// "From the Met Office for Wales: none now", or with the most serious warning instead of "none now"; or why there
-    /// are none, such as a place outside the UK and the US.
+    /// How many warnings there are for the location now, or null while they're off or haven't been fetched for it yet:
+    /// just after the location or the Met Office area changes, the readings are still the last one's for a few seconds.
+    /// </summary>
+    private double? WarningCount(MetricStore store) =>
+        _settings.WeatherWarningsRequest() is { } request && WeatherWarningsProvider.IsFor(store, request) && store.TryGet(WeatherWarningsProvider.Count, out var count)
+            ? count.Value
+            : null;
+
+    /// <summary>
+    /// While warnings are on: "From the Met Office for Wales: none now", or with the most serious warning instead of
+    /// "none now"; or why there are none, such as a place outside the UK and the US.
     /// </summary>
     private string WeatherWarningsStatus()
     {
@@ -43,16 +52,16 @@ public partial class App
             return "Set a location first.";
         if (place.Source == WarningSource.None)
         {
-            var only = $"Not available for {location.Name.Split(',')[0]} yet: only for places in the UK and the US.";
+            // Coordinates typed in have no name to give.
+            var name = OpenMeteo.ParseCoordinates(location.Name) is null ? location.Name.Split(',')[0] : "this location";
+            var only = $"Not available for {name} yet: only for places in the UK and the US.";
             // Without a country, the name or the coordinates have to say: a US place given as coordinates can't.
             return location.CountryCode is null ? only + " If it's in one of them, set the location again by searching for its name." : only;
         }
 
         var from = place.Source == WarningSource.MetOffice ? $"From the Met Office for {MetOfficeWarnings.Find(place.Area)?.Name}" : "From the National Weather Service";
         var store = _sampler?.Store;
-        if (!_settings.WeatherWarnings)
-            return from;
-        if (store is null || !store.TryGet(WeatherWarningsProvider.Count, out var count) || count.Value is not double warnings)
+        if (store is null || WarningCount(store) is not { } warnings)
             return $"{from}: waiting for the warnings";
         if (warnings == 0)
             return $"{from}: none now";

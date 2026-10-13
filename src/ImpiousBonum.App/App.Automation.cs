@@ -43,7 +43,8 @@ public partial class App
         _warningsSeen = warnings;
         if (_warningNotices.Next(warnings) is not { } notice)
             return;
-        AppLog.Info($"Weather warning: {notice.Message.ReplaceLineEndings("; ")}");
+        // Not the headline: it says where you are, and the log goes with bug reports.
+        AppLog.Info("Weather warning notified");
         _tray?.ShowWarning(notice.Title, notice.Message, notice.Link is { } link ? () => Ui.Open(link) : null);
     }
 

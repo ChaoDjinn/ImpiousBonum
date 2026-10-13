@@ -278,7 +278,8 @@ public partial class App : ISettingsHost
     {
         _settings.MetOfficeArea = area;
         _settings.Save();
-        AppLog.Info($"Met Office area: {area}");
+        // Not which area: it says where you are, and the log goes with bug reports.
+        AppLog.Info(area == AppSettings.MetOfficeAreaAuto ? "Met Office area set to automatic" : "Met Office area chosen");
     }
 
     string ISettingsHost.WeatherWarningsStatus => WeatherWarningsStatus();

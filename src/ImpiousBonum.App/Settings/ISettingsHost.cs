@@ -137,7 +137,7 @@ internal interface ISettingsHost
     /// <summary><see cref="AppSettings.MetOfficeAreaAuto"/>, or a Met Office area's code.</summary>
     void SetMetOfficeArea(string area);
 
-    /// <summary>Whose warnings the location gets and what they are now, or why there are none, e.g. "From the Met Office for Wales: none now".</summary>
+    /// <summary>While warnings are on: whose the location gets and what they are now, or why there are none, e.g. "From the Met Office for Wales: none now".</summary>
     string WeatherWarningsStatus { get; }
 
     void SetCalendars(IReadOnlyList<CalendarLink> calendars);

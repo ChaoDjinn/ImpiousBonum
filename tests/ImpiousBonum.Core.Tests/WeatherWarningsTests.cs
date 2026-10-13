@@ -726,6 +726,34 @@ public sealed class WeatherWarningsTests
     }
 
     [Fact]
+    public async Task The_readings_say_which_place_or_area_they_are_for()
+    {
+        WarningsRequest? wanted = Liverpool;
+        var provider = new WeatherWarningsProvider(() => wanted, (_, _) => Task.FromResult(MetOfficeWarnings.Parse(NorthWest, Morning)), new FakeTime(Morning));
+        var store = new MetricStore();
+        provider.Initialize(store);
+        Assert.False(WeatherWarningsProvider.IsFor(store, Liverpool));
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.True(WeatherWarningsProvider.IsFor(store, Liverpool));
+        // Elsewhere in the same area, they're the same warnings.
+        Assert.True(WeatherWarningsProvider.IsFor(store, Liverpool with { Latitude = 53.48, Longitude = -2.24 }));
+
+        // Another area chosen: until the next sample, they're still North West England's, not Wales's.
+        wanted = Liverpool with { Area = "wl" };
+        Assert.False(WeatherWarningsProvider.IsFor(store, wanted));
+        Assert.Equal("2", Format(store, WeatherWarningsProvider.Count));
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.True(WeatherWarningsProvider.IsFor(store, wanted));
+
+        // Off: they're for nowhere.
+        var area = wanted;
+        wanted = null;
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.False(WeatherWarningsProvider.IsFor(store, area));
+        Assert.Null(store.GetAttachment(WeatherWarningsProvider.For));
+    }
+
+    [Fact]
     public async Task It_runs_on_the_weathers_loop_rather_than_one_of_its_own()
     {
         var fetches = 0;

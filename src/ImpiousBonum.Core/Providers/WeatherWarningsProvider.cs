@@ -28,6 +28,12 @@ public sealed class WeatherWarningsProvider(
     /// </summary>
     public const string Warnings = "weather.warnings";
 
+    /// <summary>
+    /// The <see cref="WarningsRequest.Key"/> the readings are for, as an attachment: after the place or area changes,
+    /// they're still the last one's until the next sample (see <see cref="IsFor"/>).
+    /// </summary>
+    public const string For = "weather.warnings.for";
+
     private const string Category = "Weather warnings";
 
     public static readonly TimeSpan RefreshEvery = TimeSpan.FromMinutes(10);
@@ -96,12 +102,13 @@ public sealed class WeatherWarningsProvider(
 
         if (_warnings is not null && now - _fetched > KeepFor)
             _warnings = null;
-        Publish(store, _warnings, now);
+        Publish(store, _warnings, now, wanted);
     }
 
     /// <param name="warnings">The last ones fetched, or null when there are none to go on (off, or nothing fetched yet).</param>
     /// <param name="now">Warnings that have ended by then are left out.</param>
-    internal static void Publish(MetricStore store, IReadOnlyList<WeatherWarning>? warnings, DateTimeOffset now)
+    /// <param name="request">What they were fetched for, if anything.</param>
+    internal static void Publish(MetricStore store, IReadOnlyList<WeatherWarning>? warnings, DateTimeOffset now, WarningsRequest? request = null)
     {
         var current = warnings is null ? null : WeatherWarnings.Current(warnings, now);
         var worst = current?.FirstOrDefault();
@@ -109,5 +116,9 @@ public sealed class WeatherWarningsProvider(
         store.SetText(Headline, worst?.Headline);
         store.SetText(Level, worst?.LevelText);
         store.SetAttachment(Warnings, current is { Count: > 0 } ? current : null);
+        store.SetAttachment(For, request?.Key);
     }
+
+    /// <summary>Whether the readings in the store are for <paramref name="request"/>, rather than for a place or area from before.</summary>
+    public static bool IsFor(MetricStore store, WarningsRequest request) => store.GetAttachment(For) as string == request.Key;
 }
