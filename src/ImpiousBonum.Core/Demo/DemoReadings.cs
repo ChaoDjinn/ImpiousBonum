@@ -175,6 +175,15 @@ public static class DemoReadings
             Alder = 0, Birch = 0, Olive = 0, Grass = 6.4, Mugwort = 0.3, Ragweed = 0,
         }, new AirQualityRequest(50.6, -2.0, AqiScale.Automatic));
 
+        // Harbourton is on the south coast, where the Met Office has a yellow warning out for tomorrow's wind.
+        new WeatherWarningsProvider(() => null).Initialize(store);
+        var tomorrowMorning = new DateTimeOffset(now.Date.AddDays(1).AddHours(6));
+        WeatherWarningsProvider.Publish(store,
+        [
+            new WeatherWarning("demo-wind", "Yellow warning of wind affecting South West England", WarningLevel.Minor, "Yellow",
+                tomorrowMorning, tomorrowMorning.AddHours(15), MetOfficeWarnings.WarningsPage, WarningSource.MetOffice),
+        ], new DateTimeOffset(now));
+
         // Today's calendar.
         new CalendarProvider(() => []).Initialize(store);
         // An evening's worth: something later on, then tomorrow's. Times are from the start of the day, so the

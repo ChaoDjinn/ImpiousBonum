@@ -16,11 +16,13 @@ namespace ImpiousBonum.Core.Providers;
 /// Air quality and pollen for the same place, sampled after the weather on this loop: they're off by default, and a
 /// loop of their own would wake every 30 seconds whether they're on or not.
 /// </param>
+/// <param name="warnings">Severe weather warnings for the same place, sampled on this loop too, for the same reason.</param>
 public sealed class WeatherProvider(
     Func<WeatherRequest?> request,
     Func<WeatherRequest, CancellationToken, Task<WeatherReport>>? fetch = null,
     TimeProvider? time = null,
-    AirQualityProvider? airQuality = null) : IMetricProvider
+    AirQualityProvider? airQuality = null,
+    WeatherWarningsProvider? warnings = null) : IMetricProvider
 {
     public const string Temperature = "weather.temp";
     public const string FeelsLike = "weather.feels";
@@ -79,6 +81,7 @@ public sealed class WeatherProvider(
     {
         Register(store, WeatherUnits.Metric);
         airQuality?.Initialize(store);
+        warnings?.Initialize(store);
     }
 
     private void Register(MetricStore store, WeatherUnits units)
@@ -131,6 +134,8 @@ public sealed class WeatherProvider(
         await SampleWeatherAsync(store, cancellationToken).ConfigureAwait(false);
         if (airQuality is not null)
             await airQuality.SampleAsync(store, cancellationToken).ConfigureAwait(false);
+        if (warnings is not null)
+            await warnings.SampleAsync(store, cancellationToken).ConfigureAwait(false);
     }
 
     private async ValueTask SampleWeatherAsync(MetricStore store, CancellationToken cancellationToken)

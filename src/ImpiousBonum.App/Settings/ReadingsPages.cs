@@ -52,11 +52,12 @@ internal sealed class SensorsPage(ISettingsHost host) : CardPage("Sensors",
     }
 }
 
-/// <summary>Weather: where the forecast is for, in which units, and air quality and pollen if wanted.</summary>
+/// <summary>Weather: where the forecast is for, in which units, and air quality and pollen and severe weather warnings if wanted.</summary>
 internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
-    "The weather widget's forecast, and air quality and pollen if you like, from Open-Meteo. Nothing is fetched until you set a location.")
+    "The weather widget's forecast from Open-Meteo, with air quality and pollen and severe weather warnings if you like. Nothing is fetched until you set a location.")
 {
     private SettingsCard? _location;
+    private SettingsCard? _warnings;
 
     protected override void Build()
     {
@@ -90,6 +91,8 @@ internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
             // CAMS asks to be credited where its data is used, so only while it is.
             Add(Ui.Note(OpenMeteo.AirQualityAttribution + "."));
         }
+
+        AddWarnings();
         if (hasLocation)
         {
             Add(Ui.Card("", "Turn off weather", "Forget the location and stop fetching forecasts",
@@ -101,10 +104,52 @@ internal sealed class WeatherPage(ISettingsHost host) : CardPage("Weather",
         }
     }
 
+    /// <summary>
+    /// Severe weather warnings: on or off, then what they are now, the Met Office area for a UK place, notifications, and
+    /// the agency's credit.
+    /// </summary>
+    private void AddWarnings()
+    {
+        var on = host.Settings.WeatherWarnings;
+        Add(Ui.Card("", "Severe weather warnings",
+            "Warnings of storms, floods, snow, ice, heat and the like where you are: from the Met Office in the UK and the National Weather Service in the US. "
+            + "Every 10 minutes, the Met Office's warnings for your area are fetched (only the area is sent), or a US location's coordinates go to the National Weather Service.",
+            Ui.Switch(on, "Severe weather warnings", turnedOn =>
+            {
+                host.SetWeatherWarnings(turnedOn);
+                Load();
+            })));
+        _warnings = null;
+        if (!on)
+            return;
+
+        var place = host.Settings.WeatherWarningsPlace();
+        _warnings = Add(Ui.Card("", "Warnings now", host.WeatherWarningsStatus));
+        if (place is null || place.Source == WarningSource.None)
+            return;
+        if (place.Source == WarningSource.MetOffice)
+        {
+            var nearest = MetOfficeWarnings.AreaFor(place.Latitude, place.Longitude);
+            var areas = MetOfficeWarnings.Areas.Select(a => (a.Code, a.Name)).Prepend((AppSettings.MetOfficeAreaAuto, $"Automatic ({nearest.Name})"));
+            Add(Ui.Card("", "Met Office area", "Whose warnings to show. Automatic is the area your location is in; near the edge of one, you might want the next.",
+                Ui.Choice(areas, MetOfficeWarnings.Find(host.Settings.MetOfficeArea)?.Code ?? AppSettings.MetOfficeAreaAuto, "Met Office area", area =>
+                {
+                    host.SetMetOfficeArea(area);
+                    Refresh();
+                }, width: 320)));
+        }
+        Add(Ui.Card("", "Notify me", "A Windows notification when a warning comes out, or one gets more serious. Click it to read the warning.",
+            Ui.Switch(host.Settings.WeatherWarningsNotify, "Notify me", host.SetWeatherWarningsNotify)));
+        // The Met Office and the NWS ask to be credited where their warnings are shown, so only while they are.
+        Add(Ui.Note((place.Source == WarningSource.MetOffice ? MetOfficeWarnings.Attribution : NationalWeatherService.Attribution) + "."));
+    }
+
     public override void Refresh()
     {
         if (_location is not null)
             _location.Description = host.WeatherStatus;
+        if (_warnings is not null)
+            _warnings.Description = host.WeatherWarningsStatus;
     }
 }
 

@@ -138,7 +138,7 @@ public partial class App : Application
             : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData, () => _settings.Calendars,
                 () => _settings.NewsFeeds,
                 () => _trackedGame, recap => Dispatcher.BeginInvoke(() => OnSessionEnded(recap)),
-                airQuality: () => _settings.AirQualityRequest()));
+                airQuality: () => _settings.AirQualityRequest(), warnings: () => _settings.WeatherWarningsRequest()));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -234,6 +234,7 @@ public partial class App : Application
         UpdateGameLayout();
         RotatePages();
         UpdateAlerts();
+        UpdateWeatherWarnings();
         UpdateLogging();
         UpdateDimming();
         UpdateFullscreenHide();
@@ -324,7 +325,7 @@ public partial class App : Application
             return false;
 
         await using var sampler = demo ? null : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest, customData: () => settings.CustomData, calendars: () => settings.Calendars, news: () => settings.NewsFeeds,
-            airQuality: settings.AirQualityRequest));
+            airQuality: settings.AirQualityRequest, warnings: settings.WeatherWarningsRequest));
         var store = sampler?.Store ?? new MetricStore();
         var now = DateTime.Now;
         if (sampler is not null)
