@@ -96,8 +96,9 @@ public static class AirQualityReadings
     public static string Describe(PollenLevel level) => level == PollenLevel.VeryHigh ? "Very high" : level.ToString();
 
     /// <summary>
-    /// The group with the most pollen, as "Grass high"; groups at the same level share it ("Grass and tree low"). "None"
-    /// when no group has any, and null where there are no counts at all (outside Europe).
+    /// The group at the highest level, as "Grass high"; groups at the same level share it ("Grass and tree low"). It's
+    /// the level that counts rather than the grains, since each type has its own bands. "None" when no group has any,
+    /// and null where there are no counts at all (outside Europe).
     /// </summary>
     public static string? PollenSummary(AirQualityReport report)
     {

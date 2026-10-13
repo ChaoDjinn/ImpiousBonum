@@ -269,11 +269,11 @@ Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-
 
 #### Air quality and pollen
 
-Turn on *Weather* → *Air quality and pollen* for readings of the air where the weather is for. It's off until you turn it on, and needs a location.
+Turn on *Weather* → *Air quality and pollen* for readings of the air at the weather's location. It's off until you turn it on, and needs a location.
 
 - **Air quality index:** `weather.aqi`, on the index chosen under *Air quality index*, and its level in that index's own words (`weather.aqi.level`). The European index (`weather.aqi.european`) is *Good* up to 20, *Fair* to 40, *Moderate* to 60, *Poor* to 80, *Very poor* to 100 and *Extremely poor* above that. The US index (`weather.aqi.us`) is *Good* up to 50, *Moderate* to 100, *Unhealthy for sensitive groups* to 150, *Unhealthy* to 200, *Very unhealthy* to 300 and *Hazardous* above that.
 - **What's in the air:** fine particles (`weather.pm25`, PM2.5), particles (`weather.pm10`, PM10), ozone (`weather.ozone`) and nitrogen dioxide (`weather.no2`), in µg/m³.
-- **Pollen:** grass (`weather.pollen.grass`), trees (`weather.pollen.tree`: alder, birch and olive) and weeds (`weather.pollen.weed`: mugwort and ragweed), in grains/m³, each with its level (`weather.pollen.grass.level` and so on): *None*, *Low*, *Moderate*, *High* or *Very high*. `weather.pollen` sums them up as the group with the most, e.g. *Grass high*, or *None*. Pollen is only counted in Europe, and only in season; elsewhere these readings show a dash.
+- **Pollen:** grass (`weather.pollen.grass`), trees (`weather.pollen.tree`: alder, birch and olive) and weeds (`weather.pollen.weed`: mugwort and ragweed), in grains/m³, each with its level (`weather.pollen.grass.level` and so on): *None*, *Low*, *Moderate*, *High* or *Very high*. `weather.pollen` sums them up as the group at the highest level, e.g. *Grass high* (or *Grass and tree high* when they're level), or *None*. Pollen is only counted in Europe, and only in season; elsewhere these readings show a dash.
 
 *Automatic* uses the European index for places in CAMS's European forecast area (latitude 30° to 72° N and longitude 25° W to 45° E: Europe, Iceland, Turkey, North Africa's coast and the eastern Mediterranean) and the US index everywhere else. The Canary Islands and the Azores are just outside it, so choose *European* there if you'd rather.
 
@@ -281,7 +281,7 @@ Each type of pollen has its own bands, since some bring on hay fever at far smal
 
 For example, `AQI {weather.aqi} ({weather.aqi.level}) · Pollen: {weather.pollen}` in a text widget reads *AQI 26 (Fair) · Pollen: Grass high*. While it's on, the *Weather* page's location line shows the air quality and pollen too.
 
-Once an hour (the readings are hourly), the place's coordinates go to Open-Meteo's air quality service; nothing else is sent, and nothing at all while it's off or there's no location. If it can't be reached it tries again five minutes later, and the last readings stay for up to three hours. Air quality data by CAMS (Copernicus), via Open-Meteo.com: the forecasts of the [Copernicus Atmosphere Monitoring Service](https://atmosphere.copernicus.eu).
+Once an hour, just after the hour (when that hour's readings come out), the place's coordinates go to Open-Meteo's air quality service; nothing else is sent, and nothing at all while it's off or there's no location. If it can't be reached it tries again five minutes later, and the last readings stay for up to three hours. Air quality data by CAMS (Copernicus), via Open-Meteo.com: the forecasts of the [Copernicus Atmosphere Monitoring Service](https://atmosphere.copernicus.eu).
 
 ### Calendar
 

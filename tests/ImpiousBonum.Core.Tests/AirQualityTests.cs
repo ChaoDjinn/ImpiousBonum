@@ -177,11 +177,13 @@ public sealed class AirQualityTests
     }
 
     [Fact]
-    public void The_summary_names_the_group_with_the_most()
+    public void The_summary_names_the_group_at_the_highest_level()
     {
         Assert.Equal("Grass and tree high", AirQualityReadings.PollenSummary(AirQualityReport.Parse(Spring)));
         Assert.Equal("Grass very high", AirQualityReadings.PollenSummary(new AirQualityReport { Grass = 160, Birch = 12, Mugwort = 1 }));
         Assert.Equal("Weed low", AirQualityReadings.PollenSummary(new AirQualityReport { Grass = 0, Birch = 0, Mugwort = 2 }));
+        // The level counts, not the number of grains: 19 of grass is low, but 7 of ragweed is moderate.
+        Assert.Equal("Weed moderate", AirQualityReadings.PollenSummary(new AirQualityReport { Grass = 19, Ragweed = 7 }));
         Assert.Equal("Grass, tree and weed moderate", AirQualityReadings.PollenSummary(new AirQualityReport { Grass = 25, Alder = 30, Ragweed = 8 }));
         Assert.Equal("None", AirQualityReadings.PollenSummary(AirQualityReport.Parse(Liverpool)));
         Assert.Null(AirQualityReadings.PollenSummary(new AirQualityReport { EuropeanAqi = 20 }));

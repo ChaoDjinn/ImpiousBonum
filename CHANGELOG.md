@@ -22,7 +22,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 - Entries in a widget's lists (a rows widget's rows, buttons, other places, warning colours and so on) have a handle at their left to drag them into place, instead of up and down arrows. From the keyboard, Alt+Up and Alt+Down move the entry from its handle or its text boxes.
 
 **Air quality and pollen**
-- Turn on *Weather* → *Air quality and pollen* for the air where your weather is for: an air quality index with its level, from *Good* to *Extremely poor* on the European index or *Good* to *Hazardous* on the US one, and fine particles (PM2.5), PM10, ozone and nitrogen dioxide. *Air quality index* chooses which; *Automatic* uses the European index in Europe and the US index elsewhere.
+- Turn on *Weather* → *Air quality and pollen* for readings of the air at your weather's location: an air quality index with its level, from *Good* to *Extremely poor* on the European index or *Good* to *Hazardous* on the US one, and fine particles (PM2.5), PM10, ozone and nitrogen dioxide. *Air quality index* chooses which; *Automatic* uses the European index in Europe and the US index elsewhere.
 - Grass, tree and weed pollen, each with its level (*None* to *Very high*), and the worst of them in a few words such as *Grass high*. Pollen is only counted in Europe, in season.
 - They're readings for any widget, like the weather's: `{weather.aqi.level}` or `{weather.pollen}` in a text widget, say, or a gauge of `weather.aqi`. The *Weather* page's location line shows them too.
 - It's off until you turn it on. Then the place's coordinates go to Open-Meteo once an hour, and nothing else is sent. Air quality data by CAMS (Copernicus), via Open-Meteo.com.
