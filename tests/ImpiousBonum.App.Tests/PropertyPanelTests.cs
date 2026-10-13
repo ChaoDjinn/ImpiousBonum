@@ -240,6 +240,9 @@ public sealed class PropertyPanelTests
             Assert.True(gone.IsChecked);
             Assert.Contains("not found", Text(gone));
             Assert.DoesNotContain("not found", Text(Pick(panel, "BBC")));
+            // Alt+Down on the last ticked one has nowhere to go, so the value isn't touched, not even to tidy "bbc".
+            DragReorder.Move(Pick(panel, "BBC"), +1);
+            Assert.False(session.IsDirty);
 
             Toggle(gone);
             var left = Picks(panel).Select(b => (string)b.Tag).ToList();

@@ -688,9 +688,10 @@ public sealed class PropertyPanel : StackPanel
         all.Unchecked += (_, _) => Save(PickList.Of(OptionsOf(setting)));
         DragReorder.Attach(entries, (from, to) =>
         {
-            // Only the ticked ones have an order, and they stay above the rest.
-            if (from < ticked)
-                Save(Current().Move(from, Math.Min(to, ticked - 1)));
+            // Only the ticked ones have an order, and they stay above the rest, so moving the last of them down leaves it be.
+            to = Math.Min(to, ticked - 1);
+            if (from < ticked && to != from)
+                Save(Current().Move(from, to));
         }, byHandle: true);
         return (panel, Refresh);
 
