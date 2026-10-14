@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using ImpiousBonum.Core.Calendar;
 using ImpiousBonum.Core.Metrics;
 
@@ -133,25 +132,11 @@ public sealed class CalendarProvider(
     /// Null for a name with no letters or digits.
     /// </summary>
     public static string? IdFor(string calendarName, string metric) =>
-        Slug(calendarName) is { Length: > 0 } slug ? $"calendar.{slug}.{metric}" : null;
-
-    /// <summary>Lower case, with each run of anything but letters and digits a single hyphen.</summary>
-    private static string Slug(string name)
-    {
-        var builder = new StringBuilder();
-        foreach (var c in name.Trim().ToLowerInvariant())
-        {
-            if (char.IsLetterOrDigit(c))
-                builder.Append(c);
-            else if (builder.Length > 0 && builder[^1] != '-')
-                builder.Append('-');
-        }
-        return builder.ToString().TrimEnd('-');
-    }
+        MetricIdPart.From(calendarName) is { Length: > 0 } part ? $"calendar.{part}.{metric}" : null;
 
     /// <summary>The calendars with metrics of their own; of two whose names give the same id, only the first.</summary>
     private static List<CalendarLink> WithOwnMetrics(IReadOnlyList<CalendarLink> wanted) =>
-        wanted.Where(l => Slug(l.Name).Length > 0).DistinctBy(l => Slug(l.Name)).ToList();
+        wanted.Where(l => MetricIdPart.From(l.Name).Length > 0).DistinctBy(l => MetricIdPart.From(l.Name)).ToList();
 
     /// <summary>Registers each calendar's own metrics, and removes those of calendars that are gone or renamed.</summary>
     private void Sync(MetricStore store, IReadOnlyList<CalendarLink> own)

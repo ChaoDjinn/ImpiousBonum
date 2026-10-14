@@ -54,6 +54,7 @@ public sealed class Sampler : IAsyncDisposable
         new DriveProvider(),
         new DiskActivityProvider(),
         new NetworkProvider(),
+        new WifiProvider(),
         new PingProvider(pingHost),
         new SensorHostProvider(frameRateTarget),
         new SystemProvider(),

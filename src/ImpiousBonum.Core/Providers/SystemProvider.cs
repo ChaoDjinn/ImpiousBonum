@@ -3,13 +3,17 @@ using ImpiousBonum.Core.Native;
 
 namespace ImpiousBonum.Core.Providers;
 
-/// <summary>Uptime and the computer's name, and on laptops the battery level and whether it's charging.</summary>
+/// <summary>
+/// Uptime and the computer's name, and where there's a battery (a laptop's, or a UPS that Windows sees as one) its
+/// level, whether it's charging, and the time left.
+/// </summary>
 public sealed class SystemProvider : IMetricProvider
 {
     public const string Uptime = "sys.uptime";
     public const string ComputerName = "sys.name";
     public const string Battery = "sys.battery";
     public const string BatteryStatus = "sys.battery.status";
+    public const string BatteryTime = "sys.battery.time";
 
     private bool _hasBattery;
 
@@ -27,6 +31,7 @@ public sealed class SystemProvider : IMetricProvider
         {
             store.Register(new MetricDefinition(Battery, "Battery", "System", MetricUnit.Percent, 100));
             store.Register(new MetricDefinition(BatteryStatus, "Battery status", "System", MetricUnit.Text));
+            store.Register(new MetricDefinition(BatteryTime, "Battery time left, e.g. 2h 14m (on battery only)", "System", MetricUnit.Text));
         }
     }
 
@@ -38,10 +43,14 @@ public sealed class SystemProvider : IMetricProvider
         {
             store.Set(Battery, power.BatteryLifePercent <= 100 ? power.BatteryLifePercent : null);
             store.SetText(BatteryStatus, Describe(power.AcLineStatus, power.BatteryFlag));
+            store.SetText(BatteryTime, TimeLeft(power.BatteryLifeTime));
         }
 
         return ValueTask.CompletedTask;
     }
+
+    /// <summary>Windows' estimate of the time left on battery; null while plugged in or not worked out yet (0xFFFFFFFF).</summary>
+    internal static string? TimeLeft(uint seconds) => seconds == uint.MaxValue ? null : DurationText.Format(TimeSpan.FromSeconds(seconds));
 
     internal static bool HasBattery(byte batteryFlag) => batteryFlag is not (128 or 255);
 
