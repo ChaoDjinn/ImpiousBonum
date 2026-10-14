@@ -75,7 +75,7 @@ internal sealed class CustomDataPage(ISettingsHost host) : CardPage("Custom data
 
 /// <summary>Alerts: rules for being told when a reading stays out of bounds, each a card.</summary>
 internal sealed class AlertsPage(ISettingsHost host) : CardPage("Alerts",
-    "Be told when a reading stays out of bounds, such as the GPU hot spot above 95 °C for 10 seconds: a Windows notification, a banner flashing on the dashboard, or both.")
+    "Be told when a reading stays out of bounds, such as the GPU hot spot above 95 °C for 10 seconds: a Windows notification, a banner flashing on the dashboard, a sound, a switch to another layout, a command, or a message to Home Assistant, ntfy and the like.")
 {
     private AppSettings Settings => host.Settings;
 
@@ -85,7 +85,7 @@ internal sealed class AlertsPage(ISettingsHost host) : CardPage("Alerts",
             Add(Ui.Note("No alerts yet. Add one to be told when a reading is out of bounds."));
         foreach (var rule in Settings.Alerts)
         {
-            var does = string.Join(" and ", new[] { rule.Notify ? "notify" : null, rule.Flash ? "flash on the dashboard" : null }.OfType<string>());
+            var does = rule.Does() is { Count: > 1 } several ? $"{string.Join(", ", several.SkipLast(1))} and {several[^1]}" : string.Concat(rule.Does());
             Add(Ui.Card("", rule.Describe(), string.IsNullOrWhiteSpace(rule.Message) ? $"Will {does}" : $"Will {does}: {rule.Message}",
                 Ui.Row(Ui.Button("Edit…", () => Edit(rule)), Ui.Button("Remove", () => Change(Settings.Alerts.Where(r => !ReferenceEquals(r, rule)).ToList(), $"Removed alert: {rule.Describe()}")))));
         }
@@ -95,7 +95,7 @@ internal sealed class AlertsPage(ISettingsHost host) : CardPage("Alerts",
 
     private void Edit(Core.Alerts.AlertRule? current)
     {
-        if (AlertRuleWindow.Ask(Window.GetWindow(this), current, host.Store) is not { } edited)
+        if (AlertRuleWindow.Ask(Window.GetWindow(this), current, host.Store, host.Layouts.List()) is not { } edited)
             return;
         Change(current is null ? [.. Settings.Alerts, edited] : Settings.Alerts.Select(r => ReferenceEquals(r, current) ? edited : r).ToList(),
             current is null ? $"Added alert: {edited.Describe()}" : $"Changed alert: {edited.Describe()}");

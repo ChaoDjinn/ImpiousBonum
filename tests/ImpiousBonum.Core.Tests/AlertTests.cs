@@ -98,6 +98,75 @@ public sealed class AlertTests
     }
 
     [Fact]
+    public void An_action_alone_is_enough_to_do()
+    {
+        var quiet = HotSpot with { Notify = false };
+        Assert.False(quiet.IsUsable);
+        Assert.True((quiet with { Sound = "Exclamation" }).IsUsable);
+        Assert.True((quiet with { Webhook = "https://ntfy.sh/my-pc" }).IsUsable);
+        Assert.False((quiet with { Webhook = "ntfy.sh/my-pc" }).IsUsable);
+        Assert.False((quiet with { Command = "  " }).IsUsable);
+
+        var all = HotSpot with { Flash = true, Sound = "Beep", Layout = " Gaming ", Command = @"C:\Scripts\fans.bat", Webhook = "http://homeassistant.local:8123/api/webhook/pc" };
+        Assert.Equal(["notify", "flash on the dashboard", "play a sound", "switch to Gaming", "run fans.bat", "send to homeassistant.local"], all.Does());
+    }
+
+    [Fact]
+    public void A_command_gets_the_alert_in_its_environment()
+    {
+        var store = Store();
+        store.Set("gpu.hotspot", 97.25);
+        var environment = HotSpot.Environment("Hot & bothered", store);
+        Assert.Equal("gpu.hotspot above 95 for 10 s", environment[AlertRule.AlertVariable]);
+        Assert.Equal("Hot & bothered", environment[AlertRule.MessageVariable]);
+        Assert.Equal("gpu.hotspot", environment[AlertRule.MetricVariable]);
+        Assert.Equal("97.25", environment[AlertRule.ValueVariable]);
+    }
+
+    [Fact]
+    public async Task A_webhook_posts_json_or_just_the_text()
+    {
+        var store = Store();
+        store.Set("gpu.hotspot", 97.2);
+        var time = new DateTimeOffset(2026, 10, 14, 22, 30, 0, TimeSpan.FromHours(1));
+        var rule = HotSpot with { Webhook = "https://example.com/hook" };
+        HttpRequestMessage? sent = null;
+        string? body = null;
+        async Task<HttpResponseMessage> Send(HttpRequestMessage request, CancellationToken token)
+        {
+            sent = request;
+            body = await request.Content!.ReadAsStringAsync(token);
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+        }
+
+        Assert.Null(await AlertWebhook.SendAsync(rule, "GPU is cooking", store, time, Send));
+        Assert.Equal(HttpMethod.Post, sent!.Method);
+        Assert.Equal("https://example.com/hook", sent.RequestUri!.ToString());
+        Assert.Equal("application/json", sent.Content!.Headers.ContentType!.MediaType);
+        Assert.Equal("""{"alert":"gpu.hotspot above 95 for 10 s","message":"GPU is cooking","metric":"gpu.hotspot","value":97.2,"time":"2026-10-14T21:30:00Z"}""", body);
+
+        Assert.Null(await AlertWebhook.SendAsync(rule with { WebhookText = true }, "GPU is cooking", store, time, Send));
+        Assert.Equal("text/plain", sent.Content!.Headers.ContentType!.MediaType);
+        Assert.Equal("GPU is cooking", body);
+    }
+
+    [Fact]
+    public async Task A_webhook_that_fails_says_why()
+    {
+        var store = Store();
+        var rule = HotSpot with { Webhook = "https://example.com/hook" };
+        var time = DateTimeOffset.UtcNow;
+
+        Assert.Equal("example.com answered 404 Not Found", await AlertWebhook.SendAsync(rule, "", store, time,
+            (_, _) => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.NotFound) { ReasonPhrase = "Not Found" })));
+        Assert.Equal("couldn't reach example.com: No such host", await AlertWebhook.SendAsync(rule, "", store, time,
+            (_, _) => throw new HttpRequestException("No such host")));
+        Assert.Equal("example.com took too long to answer", await AlertWebhook.SendAsync(rule, "", store, time,
+            (_, _) => throw new TaskCanceledException()));
+        Assert.Equal("\"example.com\" isn't a web address", await AlertWebhook.SendAsync(rule with { Webhook = "example.com" }, "", store, time));
+    }
+
+    [Fact]
     public void Removed_rules_stop_counting()
     {
         var monitor = new AlertMonitor();
