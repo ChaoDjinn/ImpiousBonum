@@ -196,6 +196,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `weather.pollen` (e.g. *Grass high*), `weather.pollen.grass`, `weather.pollen.tree`, `weather.pollen.weed`, and `weather.pollen.grass.level`, `weather.pollen.tree.level`, `weather.pollen.weed.level` (*None* to *Very high*) | The same, for places in Europe in season |
 | `weather.warnings` (how many), `weather.warning` (the most serious one's headline), `weather.warning.level` (e.g. *Yellow* or *Severe*) | Warnings of severe weather for the same place, from the Met Office in the UK or the National Weather Service in the US, every 10 minutes, once *Weather* → *Severe weather warnings* is on (see [Severe weather warnings](#severe-weather-warnings)) |
 | `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set on the *Calendars* page, every 15 minutes (see [Calendar](#calendar)) |
+| `calendar.<name>.next.title`, `calendar.<name>.next.time`, `calendar.<name>.next.location`, `calendar.<name>.next.minutes`, `calendar.<name>.now.title`, `calendar.<name>.today` | The same for one calendar, e.g. `calendar.work.next.title` for a calendar called *Work* |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
@@ -343,7 +344,10 @@ are all handled; events show in this PC's time. If a calendar can't be fetched, 
 `calendar.status` says what's wrong. An agenda can show some calendars and not others (*Calendars*: `Work, Family`),
 so a calendar's name can't have a comma in it or be `all`.
 The metrics put the next event anywhere: `{calendar.next.title}` at `{calendar.next.time}`, or a `stat` of
-`calendar.next.minutes`. A private link lets anyone who has it read the calendar, so it's kept only in this PC's
+`calendar.next.minutes`. Those look at all your calendars; each calendar has its own as well, listed in the metric
+picker under *Calendar: Work* and so on, so `{calendar.work.next.title}` is the next event in *Work* only. The name in
+the id is the calendar's, in lower case with a hyphen for spaces and punctuation (*Family Birthdays* is
+`calendar.family-birthdays.…`), so renaming a calendar changes its metrics. A private link lets anyone who has it read the calendar, so it's kept only in this PC's
 `settings.json`, never in layouts you export.
 
 ### News

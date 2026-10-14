@@ -3,6 +3,10 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+- Each calendar has its own next-event metrics as well as the ones for all your calendars, so a text widget can show the next event in just one: `{calendar.work.next.title}` at `{calendar.work.next.time}`. The metric picker lists them under *Calendar: Work* and so on.
+
 ## 0.14.0
 
 Much more weather (more readings, air quality and pollen, severe weather warnings, more places and a choice of details), news tickers for each feed, fonts you can see before you pick, text that shrinks to fit, and dragging to reorder in the editor.

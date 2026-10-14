@@ -76,6 +76,49 @@ public sealed class CalendarProviderTests
     }
 
     [Fact]
+    public async Task Each_calendar_has_its_own_next_event_too()
+    {
+        // 09:45 on the 12th: the family's call at 10:00 is next overall, but Work's own next event is lunch.
+        const string family =
+            "BEGIN:VCALENDAR\r\n"
+            + "BEGIN:VEVENT\r\nUID:9\r\nSUMMARY:Call Mum\r\nDTSTART;TZID=Europe/London:20261012T100000\r\nDTEND;TZID=Europe/London:20261012T103000\r\nEND:VEVENT\r\n"
+            + "END:VCALENDAR\r\n";
+        var time = new FakeTime(new DateTimeOffset(2026, 10, 12, 8, 45, 0, TimeSpan.Zero));
+        List<CalendarLink> links = [new("Work", "https://example.com/work.ics"), new("Family Birthdays!", "https://example.com/family.ics")];
+        using var provider = new CalendarProvider(() => links, (url, _) => Task.FromResult(url.Contains("work") ? Ics : family), time, London);
+        var store = new MetricStore();
+        provider.Initialize(store);
+
+        await provider.SampleAsync(store, CancellationToken.None);
+
+        Assert.Equal("Call Mum", Text(store, CalendarProvider.NextTitle));
+        Assert.Equal("Lunch", Text(store, "calendar.work.next.title"));
+        Assert.Equal("Café", Text(store, "calendar.work.next.location"));
+        Assert.Equal(165, Value(store, "calendar.work.next.minutes"));
+        Assert.Equal("Stand-up", Text(store, "calendar.work.now.title"));
+        Assert.Equal(3, Value(store, "calendar.work.today"));
+        Assert.Equal("Call Mum", Text(store, "calendar.family-birthdays.next.title"));
+        Assert.Equal(15, Value(store, "calendar.family-birthdays.next.minutes"));
+        Assert.Null(Text(store, "calendar.family-birthdays.now.title"));
+        var definition = store.Definitions.Single(d => d.Id == "calendar.work.next.title");
+        Assert.Equal("Calendar: Work", definition.Category);
+
+        // A calendar that's removed takes its metrics with it.
+        links = [links[0]];
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.DoesNotContain(store.Definitions, d => d.Id.StartsWith("calendar.family-birthdays.", StringComparison.Ordinal));
+        Assert.Equal("Lunch", Text(store, CalendarProvider.NextTitle));
+    }
+
+    [Fact]
+    public void Calendar_names_become_metric_ids()
+    {
+        Assert.Equal("calendar.work.next.title", CalendarProvider.IdFor("Work", "next.title"));
+        Assert.Equal("calendar.mum-s-birthdays.today", CalendarProvider.IdFor("  Mum's  Birthdays ", "today"));
+        Assert.Null(CalendarProvider.IdFor("!!", "today"));
+    }
+
+    [Fact]
     public async Task No_links_means_no_readings()
     {
         using var provider = new CalendarProvider(() => [], (_, _) => throw new InvalidOperationException("shouldn't fetch"));

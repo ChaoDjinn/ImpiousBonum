@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using ImpiousBonum.Core.Calendar;
 using ImpiousBonum.Core.Metrics;
 
@@ -10,7 +11,8 @@ public sealed record CalendarLink(string Name, string Url);
 /// <summary>
 /// What's coming up in your calendars: each link fetched every 15 minutes, the next event and what's on now as metrics,
 /// and every event from today to two weeks ahead (an <c>IReadOnlyList&lt;CalendarEvent&gt;</c>) as an attachment for
-/// the agenda widget. Nothing is fetched until a link is added.
+/// the agenda widget. The metrics cover all the calendars, and each calendar has its own as well (see <see cref="IdFor"/>).
+/// Nothing is fetched until a link is added.
 /// </summary>
 /// <param name="links">The calendars; read on every sample, so changes apply quickly.</param>
 /// <param name="fetch">Gets a link's .ics text; HTTP unless a test swaps it.</param>
@@ -48,6 +50,8 @@ public sealed class CalendarProvider(
     private readonly TimeProvider _time = time ?? TimeProvider.System;
     private readonly TimeZoneInfo _local = local ?? TimeZoneInfo.Local;
     private readonly Dictionary<string, Fetched> _calendars = new();
+    private readonly HashSet<string> _registered = new(StringComparer.OrdinalIgnoreCase);
+    private string _registeredFor = string.Empty;
     private IReadOnlyList<CalendarEvent> _events = [];
     private DateTime _expandedFor;
     private bool _changed;
@@ -123,6 +127,63 @@ public sealed class CalendarProvider(
         Publish(store, wanted, now);
     }
 
+    /// <summary>
+    /// The id of one calendar's own metric: <c>calendar.work.next.title</c> for <paramref name="metric"/>
+    /// <c>next.title</c> of a calendar named "Work", or <c>calendar.family-birthdays.today</c> for "Family Birthdays".
+    /// Null for a name with no letters or digits.
+    /// </summary>
+    public static string? IdFor(string calendarName, string metric) =>
+        Slug(calendarName) is { Length: > 0 } slug ? $"calendar.{slug}.{metric}" : null;
+
+    /// <summary>Lower case, with each run of anything but letters and digits a single hyphen.</summary>
+    private static string Slug(string name)
+    {
+        var builder = new StringBuilder();
+        foreach (var c in name.Trim().ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(c))
+                builder.Append(c);
+            else if (builder.Length > 0 && builder[^1] != '-')
+                builder.Append('-');
+        }
+        return builder.ToString().TrimEnd('-');
+    }
+
+    /// <summary>The calendars with metrics of their own; of two whose names give the same id, only the first.</summary>
+    private static List<CalendarLink> WithOwnMetrics(IReadOnlyList<CalendarLink> wanted) =>
+        wanted.Where(l => Slug(l.Name).Length > 0).DistinctBy(l => Slug(l.Name)).ToList();
+
+    /// <summary>Registers each calendar's own metrics, and removes those of calendars that are gone or renamed.</summary>
+    private void Sync(MetricStore store, IReadOnlyList<CalendarLink> own)
+    {
+        var names = string.Join('\n', own.Select(l => l.Name));
+        if (names == _registeredFor)
+            return;
+        _registeredFor = names;
+        var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var link in own)
+        {
+            var category = $"Calendar: {link.Name}";
+            Register(NextTitle, "next event");
+            Register(NextTime, "when the next event starts");
+            Register(NextLocation, "where the next event is");
+            Register(NextMinutes, "minutes until the next event", "0");
+            Register(NowTitle, "what's on now");
+            Register(Today, "events left today", "0");
+
+            void Register(string all, string what, string? format = null)
+            {
+                var id = IdFor(link.Name, all["calendar.".Length..])!;
+                ids.Add(id);
+                store.Register(new MetricDefinition(id, $"{link.Name}: {what}", category, format is null ? MetricUnit.Text : MetricUnit.None, Format: format));
+            }
+        }
+        foreach (var gone in _registered.Except(ids, StringComparer.OrdinalIgnoreCase).ToList())
+            store.Unregister(gone);
+        _registered.Clear();
+        _registered.UnionWith(ids);
+    }
+
     private IReadOnlyList<CalendarEvent> Expand(IReadOnlyList<CalendarLink> wanted, DateTime today)
     {
         var events = new List<CalendarEvent>();
@@ -137,17 +198,31 @@ public sealed class CalendarProvider(
     private void Publish(MetricStore store, IReadOnlyList<CalendarLink> wanted, DateTime now)
     {
         var any = wanted.Count > 0 && _calendars.Values.Any(c => c.Text is not null);
-        var next = any ? _events.FirstOrDefault(e => !e.AllDay && e.Start >= now) : null;
-        var current = any ? _events.Where(e => !e.AllDay && e.Start <= now && e.End > now).OrderByDescending(e => e.Start).FirstOrDefault() : null;
-
-        store.SetText(NextTitle, next?.Title);
-        store.SetText(NextTime, next is null ? null : When(next.Start, now));
-        store.SetText(NextLocation, next?.Location);
-        store.Set(NextMinutes, next is null ? null : Math.Floor((next.Start - now).TotalMinutes));
-        store.SetText(NowTitle, current?.Title);
-        store.Set(Today, any ? _events.Count(e => e.End > now && e.Start < now.Date.AddDays(1)) : null);
+        Publish(store, id => $"calendar.{id}", any ? _events : null, now);
         store.SetText(Status, Describe(wanted));
         store.SetAttachment(Events, any ? _events : null);
+
+        var own = WithOwnMetrics(wanted);
+        Sync(store, own);
+        foreach (var link in own)
+        {
+            var read = _calendars.TryGetValue(Key(link), out var calendar) && calendar.Text is not null;
+            Publish(store, id => IdFor(link.Name, id)!, read ? _events.Where(e => e.Calendar == link.Name).ToList() : null, now);
+        }
+    }
+
+    /// <summary>The next event, what's on now and how many are left today from <paramref name="events"/>; null clears them.</summary>
+    private static void Publish(MetricStore store, Func<string, string> id, IReadOnlyList<CalendarEvent>? events, DateTime now)
+    {
+        var next = events?.FirstOrDefault(e => !e.AllDay && e.Start >= now);
+        var current = events?.Where(e => !e.AllDay && e.Start <= now && e.End > now).OrderByDescending(e => e.Start).FirstOrDefault();
+
+        store.SetText(id("next.title"), next?.Title);
+        store.SetText(id("next.time"), next is null ? null : When(next.Start, now));
+        store.SetText(id("next.location"), next?.Location);
+        store.Set(id("next.minutes"), next is null ? null : Math.Floor((next.Start - now).TotalMinutes));
+        store.SetText(id("now.title"), current?.Title);
+        store.Set(id("today"), events?.Count(e => e.End > now && e.Start < now.Date.AddDays(1)));
     }
 
     private string? Describe(IReadOnlyList<CalendarLink> wanted)
