@@ -52,8 +52,48 @@
                          ToolTip="Optional. Can show readings, e.g. GPU is cooking: {gpu.hotspot}. Empty describes the alert." />
             </Grid>
 
-            <CheckBox x:Name="NotifyCheck" Content="Show a Windows notification" IsChecked="True" Margin="0,16,0,0" Checked="OnChanged" Unchecked="OnChanged" />
+            <TextBlock Text="When it goes off" Style="{DynamicResource SectionHeading}" Margin="0,18,0,0" />
+            <CheckBox x:Name="NotifyCheck" Content="Show a Windows notification" IsChecked="True" Margin="0,8,0,0" Checked="OnChanged" Unchecked="OnChanged" />
             <CheckBox x:Name="FlashCheck" Content="Flash a banner on the dashboard (tap it to dismiss)" Margin="0,6,0,0" Checked="OnChanged" Unchecked="OnChanged" />
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <CheckBox x:Name="SoundCheck" Content="Play a sound" Margin="0,6,12,0" VerticalAlignment="Center" Checked="OnChanged" Unchecked="OnChanged" />
+                <DockPanel Grid.Column="1" Margin="0,6,0,0">
+                    <Button x:Name="PlayButton" DockPanel.Dock="Right" Content="Play" Click="OnPlay" Margin="{DynamicResource ButtonGap}" />
+                    <Button x:Name="SoundBrowseButton" DockPanel.Dock="Right" Content="Browse…" Click="OnBrowseSound" Margin="{DynamicResource ButtonGap}" />
+                    <ComboBox x:Name="SoundBox" IsEditable="True" ToolTip="A Windows sound, or a .wav file" />
+                </DockPanel>
+
+                <CheckBox x:Name="LayoutCheck" Grid.Row="1" Content="Switch to the layout" Margin="0,6,12,0" VerticalAlignment="Center" Checked="OnChanged" Unchecked="OnChanged" />
+                <ComboBox x:Name="LayoutBox" Grid.Row="1" Grid.Column="1" Margin="0,6,0,0" SelectionChanged="OnChanged" />
+
+                <CheckBox x:Name="CommandCheck" Grid.Row="2" Content="Run" Margin="0,6,12,0" VerticalAlignment="Center" Checked="OnChanged" Unchecked="OnChanged" />
+                <DockPanel Grid.Row="2" Grid.Column="1" Margin="0,6,0,0">
+                    <Button x:Name="CommandBrowseButton" DockPanel.Dock="Right" Content="Browse…" Click="OnBrowseCommand" Margin="{DynamicResource ButtonGap}" />
+                    <TextBox x:Name="CommandBox" TextChanged="OnChanged" c:Placeholder.Text="A program or .bat file, e.g. powershell.exe"
+                             ToolTip="Runs hidden. It gets the alert in the variables IB_ALERT_MESSAGE, IB_ALERT_METRIC, IB_ALERT_VALUE and IB_ALERT." />
+                </DockPanel>
+                <TextBox x:Name="ArgumentsBox" Grid.Row="3" Grid.Column="1" Margin="0,6,0,0" TextChanged="OnChanged"
+                         c:Placeholder.Text="Arguments, e.g. -File C:\Scripts\alert.ps1" />
+
+                <CheckBox x:Name="WebhookCheck" Grid.Row="4" Content="Send it to" Margin="0,6,12,0" VerticalAlignment="Center" Checked="OnChanged" Unchecked="OnChanged" />
+                <TextBox x:Name="WebhookBox" Grid.Row="4" Grid.Column="1" Margin="0,6,0,0" TextChanged="OnChanged"
+                         c:Placeholder.Text="A web address, e.g. https://ntfy.sh/my-pc"
+                         ToolTip="Sent as a POST: JSON with the alert, message, metric, value and time, or just the message." />
+                <CheckBox x:Name="WebhookTextCheck" Grid.Row="5" Grid.Column="1" Content="Just the message, not JSON (for ntfy)" Margin="0,6,0,0" Checked="OnChanged" Unchecked="OnChanged" />
+            </Grid>
 
             <TextBlock x:Name="ProblemText" Style="{DynamicResource ProblemText}" c:Dialog.ShowAfterInput="True" Margin="0,12,0,0" />
         </StackPanel>

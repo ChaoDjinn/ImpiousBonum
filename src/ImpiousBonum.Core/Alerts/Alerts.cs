@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Text;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using ImpiousBonum.Core.Metrics;
 
@@ -6,13 +8,20 @@ namespace ImpiousBonum.Core.Alerts;
 
 /// <summary>
 /// Tells you when a reading has been out of bounds for a while, e.g. GPU hot spot above 95 °C for 10 seconds:
-/// a Windows notification, and optionally a banner flashing on the dashboard.
+/// a Windows notification, and optionally a banner flashing on the dashboard, a sound, a switch to another layout,
+/// a command run, or a web request (see <see cref="AlertWebhook"/>). All but the banner happen once, when it goes off.
 /// </summary>
 /// <param name="Metric">The metric to watch, e.g. <c>gpu.hotspot</c>.</param>
 /// <param name="For">Seconds the condition must hold before the alert goes off, so a brief spike doesn't count.</param>
 /// <param name="Message">What the alert says; a template, so <c>{gpu.hotspot}</c> shows the reading. Empty describes the rule.</param>
 /// <param name="Notify">Show a Windows notification.</param>
 /// <param name="Flash">Flash a banner on the dashboard until the reading is back to normal or it's tapped.</param>
+/// <param name="Sound">A sound to play: one of <see cref="SystemSounds"/>, or a .wav file.</param>
+/// <param name="Layout">The layout to switch the dashboard to.</param>
+/// <param name="Command">A program or script to run, with the alert in its environment (see <see cref="Environment"/>).</param>
+/// <param name="Arguments">What to pass to <paramref name="Command"/>.</param>
+/// <param name="Webhook">An http(s) address to send the alert to (see <see cref="AlertWebhook"/>).</param>
+/// <param name="WebhookText">Send just the alert's text rather than JSON, as ntfy wants.</param>
 public sealed record AlertRule(
     string Metric,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? Above = null,
@@ -20,11 +29,48 @@ public sealed record AlertRule(
     int For = 10,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Message = null,
     bool Notify = true,
-    bool Flash = false)
+    bool Flash = false,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Sound = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Layout = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Command = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Arguments = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Webhook = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] bool WebhookText = false)
 {
+    /// <summary>The Windows sounds an alert can play by name; anything else in <see cref="Sound"/> is a file.</summary>
+    public static readonly IReadOnlyList<string> SystemSounds = ["Exclamation", "Asterisk", "Hand", "Question", "Beep"];
+
+    /// <summary>The environment variables a <see cref="Command"/> gets: the alert, its text, the metric and its reading.</summary>
+    public const string AlertVariable = "IB_ALERT", MessageVariable = "IB_ALERT_MESSAGE", MetricVariable = "IB_ALERT_METRIC", ValueVariable = "IB_ALERT_VALUE";
+
     /// <summary>Watches a metric, has a limit, and does something.</summary>
     [JsonIgnore]
-    public bool IsUsable => !string.IsNullOrWhiteSpace(Metric) && (Above is not null || Below is not null) && (Notify || Flash) && For >= 0;
+    public bool IsUsable => !string.IsNullOrWhiteSpace(Metric) && (Above is not null || Below is not null) && Does().Count > 0 && For >= 0;
+
+    /// <summary>What it does when it goes off, for the Alerts page: "notify", "play a sound", "switch to Gaming"….</summary>
+    public IReadOnlyList<string> Does() => new[]
+    {
+        Notify ? "notify" : null,
+        Flash ? "flash on the dashboard" : null,
+        Has(Sound) ? "play a sound" : null,
+        Has(Layout) ? $"switch to {Layout!.Trim()}" : null,
+        Has(Command) ? $"run {Path.GetFileName(Command!.Trim())}" : null,
+        AlertWebhook.Address(Webhook) is { } address ? $"send to {address.Host}" : null,
+    }.OfType<string>().ToList();
+
+    /// <summary>
+    /// The variables a <see cref="Command"/> is run with, so a script can use the alert's text and reading without them
+    /// being put in a command line, where a headline or a calendar event's title could add to the command.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> Environment(string text, MetricStore store) => new Dictionary<string, string>
+    {
+        [AlertVariable] = Describe(),
+        [MessageVariable] = text,
+        [MetricVariable] = Metric,
+        [ValueVariable] = store.TryGet(Metric, out var sample) && sample.Value is { } value ? value.ToString(CultureInfo.InvariantCulture) : string.Empty,
+    };
+
+    private static bool Has(string? text) => !string.IsNullOrWhiteSpace(text);
 
     /// <summary>True when the reading is out of bounds; false when it's within them or there's no reading.</summary>
     public bool IsBreached(MetricSample sample) =>
@@ -54,6 +100,61 @@ public sealed record AlertRule(
     }
 
     private static string Number(double value) => value.ToString("0.##", CultureInfo.CurrentCulture);
+}
+
+/// <summary>
+/// The web request an alert sends: a POST of JSON (<c>{"alert": "gpu.hotspot above 95 for 10 s", "message": "…",
+/// "metric": "gpu.hotspot", "value": 97.2, "time": "2026-10-14T21:30:00Z"}</c>, for Home Assistant's webhooks and the
+/// like), or of just the text (for ntfy, which shows the body as the notification).
+/// </summary>
+public static class AlertWebhook
+{
+    private static readonly HttpClient Http = CreateClient();
+
+    /// <summary>The address, if it's an absolute http or https one.</summary>
+    public static Uri? Address(string? webhook) =>
+        Uri.TryCreate(webhook?.Trim(), UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) ? uri : null;
+
+    public static HttpContent Content(AlertRule rule, string text, MetricStore store, DateTimeOffset time)
+    {
+        if (rule.WebhookText)
+            return new StringContent(text, Encoding.UTF8, "text/plain");
+        var body = new JsonObject
+        {
+            ["alert"] = rule.Describe(),
+            ["message"] = text,
+            ["metric"] = rule.Metric,
+            ["value"] = store.TryGet(rule.Metric, out var sample) && sample.Value is { } value && double.IsFinite(value) ? value : null,
+            ["time"] = time.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture),
+        };
+        return new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json");
+    }
+
+    /// <summary>Sends it: null when it worked, or what went wrong.</summary>
+    /// <param name="send">Sends the request; HTTP unless a test swaps it.</param>
+    public static async Task<string?> SendAsync(AlertRule rule, string text, MetricStore store, DateTimeOffset time,
+        Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>? send = null, CancellationToken cancellationToken = default)
+    {
+        if (Address(rule.Webhook) is not { } address)
+            return $"\"{rule.Webhook}\" isn't a web address";
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, address) { Content = Content(rule, text, store, time) };
+            using var response = await (send ?? Http.SendAsync)(request, cancellationToken).ConfigureAwait(false);
+            return response.IsSuccessStatusCode ? null : $"{address.Host} answered {(int)response.StatusCode} {response.ReasonPhrase}";
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return ex is TaskCanceledException ? $"{address.Host} took too long to answer" : $"couldn't reach {address.Host}: {ex.Message}";
+        }
+    }
+
+    private static HttpClient CreateClient()
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(WebIdentity.UserAgent);
+        return client;
+    }
 }
 
 /// <summary>An alert going off, or its reading back to normal.</summary>

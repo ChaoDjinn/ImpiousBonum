@@ -198,6 +198,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `weather.pollen` (e.g. *Grass high*), `weather.pollen.grass`, `weather.pollen.tree`, `weather.pollen.weed`, and `weather.pollen.grass.level`, `weather.pollen.tree.level`, `weather.pollen.weed.level` (*None* to *Very high*) | The same, for places in Europe in season |
 | `weather.warnings` (how many), `weather.warning` (the most serious one's headline), `weather.warning.level` (e.g. *Yellow* or *Severe*) | Warnings of severe weather for the same place, from the Met Office in the UK or the National Weather Service in the US, every 10 minutes, once *Weather* → *Severe weather warnings* is on (see [Severe weather warnings](#severe-weather-warnings)) |
 | `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set on the *Calendars* page, every 15 minutes (see [Calendar](#calendar)) |
+| `calendar.<name>.next.title`, `calendar.<name>.next.time`, `calendar.<name>.next.location`, `calendar.<name>.next.minutes`, `calendar.<name>.now.title`, `calendar.<name>.today` | The same for one calendar, e.g. `calendar.work.next.title` for a calendar called *Work* |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
@@ -345,7 +346,10 @@ are all handled; events show in this PC's time. If a calendar can't be fetched, 
 `calendar.status` says what's wrong. An agenda can show some calendars and not others (*Calendars*: `Work, Family`),
 so a calendar's name can't have a comma in it or be `all`.
 The metrics put the next event anywhere: `{calendar.next.title}` at `{calendar.next.time}`, or a `stat` of
-`calendar.next.minutes`. A private link lets anyone who has it read the calendar, so it's kept only in this PC's
+`calendar.next.minutes`. Those look at all your calendars; each calendar has its own as well, listed in the metric
+picker under *Calendar: Work* and so on, so `{calendar.work.next.title}` is the next event in *Work* only. The name in
+the id is the calendar's, in lower case with a hyphen for spaces and punctuation (*Family Birthdays* is
+`calendar.family-birthdays.…`), so renaming a calendar changes its metrics. A private link lets anyone who has it read the calendar, so it's kept only in this PC's
 `settings.json`, never in layouts you export.
 
 ### News
@@ -516,6 +520,21 @@ Warning colours only help if you're looking. An alert tells you when a reading s
 
 - **A Windows notification**, with the reading in it.
 - **A banner flashing on the dashboard**, with a pulsing red outline, until the reading is back to normal. It shows over dimming too. Tap it to dismiss it.
+- **A sound:** one of Windows' own (*Exclamation*, *Asterisk*, *Hand*, *Question*, *Beep*) or a `.wav` file. *Play* tries it.
+- **Switch to a layout**, say one that shows your temperatures large.
+- **Run a program**, hidden, such as a `.bat` file or `powershell.exe` with `-File C:\Scripts\alert.ps1`. It gets the alert in
+  environment variables rather than on its command line: `IB_ALERT_MESSAGE` (the alert's text), `IB_ALERT_METRIC`,
+  `IB_ALERT_VALUE` (the reading, with a dot for decimals) and `IB_ALERT` (e.g. *gpu.hotspot above 95 for 10 s*). Nothing
+  waits for it to finish.
+- **Send it to a web address**, as a POST. Normally that's JSON, which suits a [Home Assistant webhook](https://www.home-assistant.io/docs/automation/trigger/#webhook-trigger)
+  (`http://homeassistant.local:8123/api/webhook/<id>`):
+  `{"alert": "gpu.hotspot above 95 for 10 s", "message": "GPU is cooking: 97.2 °C", "metric": "gpu.hotspot", "value": 97.2, "time": "2026-10-14T21:30:00Z"}`.
+  *Just the message, not JSON* sends only the text, which is what [ntfy](https://ntfy.sh) shows as a notification on
+  your phone (`https://ntfy.sh/<your topic>`).
+
+Everything but the banner happens once, when the alert goes off. If a sound, layout, program or web address doesn't
+work, a notification says why and it's written to `dashboard.log`. In the demo (`--demo`) the readings are made up, so
+alerts there never switch layouts, run programs or send anything.
 
 An alert goes off once, and only goes off again after the reading has been back to normal for 30 seconds, so a value hovering around the limit doesn't send a stream of notifications. A metric with no reading (no game running for `fps`, say) never counts as out of bounds. Alerts are kept in `settings.json` (`alerts`) and written to `dashboard.log` when they go off.
 

@@ -5,6 +5,8 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 
 ## Unreleased
 
+- Each calendar has its own next-event metrics as well as the ones for all your calendars, so a text widget can show the next event in just one: `{calendar.work.next.title}` at `{calendar.work.next.time}`. The metric picker lists them under *Calendar: Work* and so on.
+- Alerts can do more when they go off: play a sound (a Windows sound or a `.wav` file), switch to another layout, run a program or script (which gets the alert's text and reading in environment variables), or send the alert to a web address, as JSON for Home Assistant's webhooks or as plain text for ntfy notifications on your phone.
 - Each network adapter has its own download and upload rates, link speed (*1 Gbps*) and IP address, such as `{net.ethernet.down}` or `{net.wi-fi.speed}`, listed in the metric picker under *Network: Ethernet* and so on.
 - Wi-Fi signal strength as a percentage (`wifi.signal`) and in dBm (`wifi.rssi`), and the network's name (`wifi.ssid`), on PCs with Wi-Fi. They're read without location access, so Windows doesn't ask for it or show its location icon.
 - The battery's time left (`sys.battery.time`), on laptops and with a USB UPS that Windows sees as a battery.
