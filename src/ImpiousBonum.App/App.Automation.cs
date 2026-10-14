@@ -13,8 +13,12 @@ namespace ImpiousBonum.App;
 public partial class App
 {
     private readonly AlertMonitor _alerts = new();
+    private AlertActions? _alertActions;
 
-    /// <summary>Checks the alert rules each second: notifies when one goes off, and keeps the dashboard's banner current.</summary>
+    /// <summary>
+    /// Checks the alert rules each second: notifies and does what else an alert asks for when one goes off, and keeps
+    /// the dashboard's banner current.
+    /// </summary>
     private void UpdateAlerts()
     {
         if (_sampler is null || _window is null)
@@ -22,10 +26,29 @@ public partial class App
         foreach (var alert in _alerts.Update(_settings.Alerts, _sampler.Store, DateTime.UtcNow))
         {
             AppLog.Info(alert.Started ? $"Alert: {alert.Rule.Describe()}: {alert.Text}" : $"Alert over: {alert.Rule.Describe()}");
-            if (alert.Started && alert.Rule.Notify)
+            if (!alert.Started)
+                continue;
+            if (alert.Rule.Notify)
                 _tray?.ShowAlert(alert.Text);
+            // Made-up readings mustn't run commands or tell a smart home anything.
+            if (_demo)
+                continue;
+            _alertActions ??= new AlertActions(SwitchLayoutFromAlert, problem =>
+            {
+                AppLog.Warning($"Alert: {problem}");
+                _tray?.ShowError("Impious Bonum", problem);
+            });
+            _alertActions.Run(alert.Rule, alert.Text, _sampler.Store);
         }
         _window.ShowAlerts(_alerts.Active.Where(rule => rule.Flash).Select(rule => (rule.Describe(), rule.Text(_sampler.Store))).ToList());
+    }
+
+    private string? SwitchLayoutFromAlert(string name)
+    {
+        if (_layouts?.Library.Find(name) is not { } found)
+            return $"There's no layout called \"{name}\" any more. Change the alert on Impious Bonum's Alerts page.";
+        SelectLayout(found);
+        return null;
     }
 
     private readonly WarningNotifications _warningNotices = new();
