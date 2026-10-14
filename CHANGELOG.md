@@ -3,6 +3,12 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+- Each network adapter has its own download and upload rates, link speed (*1 Gbps*) and IP address, such as `{net.ethernet.down}` or `{net.wi-fi.speed}`, listed in the metric picker under *Network: Ethernet* and so on.
+- Wi-Fi signal strength as a percentage (`wifi.signal`) and in dBm (`wifi.rssi`), and the network's name (`wifi.ssid`), on PCs with Wi-Fi. They're read without location access, so Windows doesn't ask for it or show its location icon.
+- The battery's time left (`sys.battery.time`), on laptops and with a USB UPS that Windows sees as a battery.
+
 ## 0.14.0
 
 Much more weather (more readings, air quality and pollen, severe weather warnings, more places and a choice of details), news tickers for each feed, fonts you can see before you pick, text that shrinks to fit, and dragging to reorder in the editor.
