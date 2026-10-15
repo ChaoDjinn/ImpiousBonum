@@ -40,10 +40,11 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 ## Features
 
 **Your PC at a glance**
-- CPU, memory, GPU, drives and network out of the box; add the optional sensor service for temperatures, fans, clocks, power and per-app FPS with frame times and 1% lows, about 280 metrics on a typical PC. [More](<docs/guide.md#what-it-shows>)
+- CPU, memory, GPU, drives and network out of the box, down to each network adapter's speeds, the Wi-Fi signal and a laptop's battery time left; add the optional sensor service for temperatures, fans, clocks, power and per-app FPS with frame times and 1% lows, about 280 metrics on a typical PC. [More](<docs/guide.md#what-it-shows>)
 - Graphs, multi-line graphs, gauges, stat tiles, every CPU thread as a heatmap, drives, and the apps using the most CPU or memory. [More](<docs/guide.md#widgets-in-depth>)
 - Session recaps when you finish playing a game you've linked to a layout: average, lowest and highest FPS, loads and temperatures. [More](<docs/guide.md#session-recaps>)
-- Alerts when a reading stays out of bounds, and logging to CSV files for a spreadsheet. [More](<docs/guide.md#alerts>)
+- Alerts when a reading stays out of bounds: a notification, a banner on the dashboard, a sound, a switch to another layout, a script to run, or a message to Home Assistant or your phone (via ntfy). [More](<docs/guide.md#alerts>)
+- Logging to CSV files for a spreadsheet. [More](<docs/guide.md#logging>)
 
 <table>
   <tr>
@@ -53,7 +54,8 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 </table>
 
 **Your day**
-- Clocks with other time zones, timers and countdowns, the weather (no account needed), your calendar's agenda, and news headlines. [More](<docs/guide.md#world-clocks>)
+- Clocks with other time zones, timers and countdowns, your calendar's agenda (or the next event in just one calendar), and news headlines as a list or a ticker for each feed. [More](<docs/guide.md#world-clocks>)
+- The weather, with no account needed: up to 16 days or 48 hours ahead, the details you choose, more places to move between, air quality and pollen, and severe weather warnings in the UK and US. [More](<docs/guide.md#weather>)
 - What's playing, with album art and controls, an audio visualiser, and buttons that open programs, send shortcuts or switch layouts. [More](<docs/guide.md#now-playing-and-buttons>)
 - Your own data from any web address or command. [More](<docs/guide.md#custom-data>)
 
@@ -69,7 +71,7 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 </table>
 
 **Make it yours**
-- A layout editor with live preview, drag and resize, and a searchable picker for every metric, plus touch editing on the dashboard itself. [More](<docs/guide.md#layout-editor>)
+- A layout editor with live preview, drag and resize, a searchable picker for every metric, fonts you can see before you pick, and text that shrinks to fit, plus touch editing on the dashboard itself. [More](<docs/guide.md#layout-editor>)
 - 43 built-in themes, from clean to retro to neon, with gradients, glow, and picture, GIF or video backgrounds. [More](<docs/guide.md#layout-editor>)
 - A gallery of ready-made layouts to try with your own readings and import, and export to share yours. [More](<docs/guide.md#layout-gallery>)
 
@@ -130,7 +132,7 @@ or from the app: *About and updates* → *Report a problem*. Please report secur
 
 ## Good to know
 
-Impious Bonum is young: it's at version 0.13, first released at the end of September 2026, and it changes quickly
+Impious Bonum is young: it's at version 0.15, first released at the end of September 2026, and it changes quickly
 (installed copies update themselves). Some things it doesn't do yet, or does with a catch:
 
 - **Windows 10 and 11 only.**
@@ -142,6 +144,8 @@ Impious Bonum is young: it's at version 0.13, first released at the end of Septe
   backgrounds. Anyone with its link can see the dashboard ([details](<docs/guide.md#tablet-view>)).
 - **Claude usage needs Claude Code in a terminal** on a Pro or Max plan; the Claude Desktop app doesn't report it.
 - **Calendars are read from iCal links** (Google, Outlook and iCloud all have one), not by signing in.
+- **Severe weather warnings are for the UK and US only** (the Met Office and the National Weather Service), and
+  **pollen is only counted in Europe**, in season.
 
 ## Roadmap
 
@@ -164,6 +168,10 @@ Impious Bonum is young: it's at version 0.13, first released at the end of Septe
 - [x] More widget types: 22 so far
 - [x] Themes: 43 built in, with gradients, glow and moving backgrounds
 - [x] Screenshots of the real dashboard, the editor and the widgets, here and in the guide
+- [x] A window with a page for every setting, and a gallery of 13 ready-made layouts for screens from 3.5" to 4K
+- [x] Weather: longer forecasts, more readings, more places, air quality and pollen, and severe weather warnings
+- [x] Alerts that play a sound, switch layout, run a program or send a web request
+- [x] Network adapters, Wi-Fi signal and battery time left
 
 </details>
 
