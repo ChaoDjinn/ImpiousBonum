@@ -32,7 +32,7 @@ mean the widget's own.
 ## Widgets
 
 - **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
-- **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda)
+- **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [News](#news-news) · [Claude usage](#claude-usage-claude)
 - **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape)
@@ -196,7 +196,7 @@ An accent-coloured line icon followed by a live value, e.g. a chip and the CPU t
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` | `cpu` | Icon |
+| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `cpu` | Icon |
 | `text` | template | `{cpu.temp:nounit} °C` | Text |
 | `fontSize` | number (6–400) | `64` | Font size |
 | `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
@@ -402,6 +402,30 @@ What's coming up in your calendars (set them in the editor, or on the Calendars 
 | `spacing` | number (0–100) | `6` | Event spacing |
 | `nowColor` | color | `accent` | What's on now. The colour of events that are happening now. |
 
+## Countdowns (`countdowns`)
+
+How long until the days you add, soonest first: birthdays, holidays, a release, a trip. On the day, it says Today in the accent colour.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `events` | list | 4 entries | Events. Each with a label and a date. One that comes round every year starts again the day after; one that happens once leaves the list. |
+| `count` | number (1–50) | `5` | Rows. The most it lists, soonest first. |
+| `style` | `days` / `time` | `days` | How long. days says 69 days, Tomorrow or Today; time gives the days, hours and minutes, e.g. 69d 02:13. |
+| `heading` | text | — | Heading. Shown above the list, e.g. Coming up. Empty shows none. |
+| `emptyText` | text | `Nothing coming up` | When there's nothing. Empty shows nothing. |
+| `fontSize` | number (6–200) | `22` | Font size |
+| `headingSize` | number (6–200) | — | Heading size. Empty uses 75% of the font size. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Rows that would be cut off at the bottom, say in a bigger font, are left out, and a first row too tall for the widget gets smaller to fit. |
+| `spacing` | number (0–100) | `6` | Row spacing |
+| `todayColor` | color | `accent` | Today's colour. The colour of the events that are today. |
+
+Each entry in `events`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `Christmas` | Label |
+| `date` | text | `12-25` | Date. A month and day that comes round every year, e.g. 12-25 or 03-14 09:00, or a date that happens once, e.g. 2026-12-25 or 2026-12-25 18:00. |
+
 ## Now playing (`media`)
 
 What's playing in Spotify, a browser, Media Player or any app in Windows' media controls: album art, title, artist, progress and buttons to skip or pause.
@@ -464,8 +488,8 @@ Each entry in `buttons`:
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `label` | text | `Play/pause` | Label. Empty shows just the icon. |
-| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` | `play-pause` | Icon |
-| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `open` / `keys` / `layout` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys and layout use the target below. |
+| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `play-pause` | Icon |
+| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `mic-mute` / `open` / `keys` / `layout` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys and layout use the target below. mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. |
 | `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name. |
 | `arguments` | text | — | Arguments. open: command-line arguments for a program. |
 

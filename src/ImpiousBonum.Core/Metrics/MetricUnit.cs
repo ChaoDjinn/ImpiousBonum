@@ -32,4 +32,10 @@ public enum MetricUnit
 
     /// <summary>Pollen grains in a cubic metre of air.</summary>
     GrainsPerCubicMetre,
+
+    /// <summary>Energy: a kilowatt for an hour, as electricity is billed.</summary>
+    KilowattHours,
+
+    /// <summary>gCO₂/kWh: how much carbon dioxide making a kWh of electricity gives off.</summary>
+    GramsOfCo2PerKilowattHour,
 }

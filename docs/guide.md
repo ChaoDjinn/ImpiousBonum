@@ -6,9 +6,9 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage)
-- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
-- [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [dimming](#dimming), [logging](#logging)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
+- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
+- [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
 - [Command line](#command-line)
 
@@ -29,8 +29,9 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), [status checks](#status-checks) (`statusChecks`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
+-
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
+- `energy.json`: the energy your PC has used today and this month so far, so a restart carries on from it (see [Energy use](#energy-use)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
 
 ### The window and the tray menu
@@ -46,6 +47,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | *Pages and schedule* | Swiping and turning between layouts, and what shows when (see [Pages](#pages) and [Schedule](#schedule)) |
 | *Game layouts* | Games linked to a layout or theme, and session recaps (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
 | *Sensors* | Whether the sensor service is running, installing, updating or removing it, and which app the FPS reading follows (see [the sensor service](#sensor-service-temperatures-fans-power-fps)) |
+| *Energy* | Your PC's power now and the energy it's used today and this month, the price and currency for what that costs, the allowance for the parts nothing measures, and Great Britain's grid carbon intensity (see [Energy use](#energy-use)) |
 | *Weather* | The location, more places for the weather widget to move between, the units, air quality and pollen, severe weather warnings, and turning the weather off (see [Weather](#weather)) |
 | *Calendars*, *News feeds* | The links the agenda and news widgets read (see [Calendar](#calendar) and [News](#news)) |
 | *Claude usage* | Whether Claude Code is reporting, and connecting it (see [Claude usage](#claude-usage)) |
@@ -92,13 +94,16 @@ Every box is a widget you can move, resize, restyle or replace. Twenty-three wid
 The editor is the *Layouts* page of the window, which opens on your main screen: tray → *Edit layout…*, or right-click / press and hold on the dashboard. Right-click or press and hold on one of [more dashboards](#more-dashboards) to edit that one's layout instead. At the top, *Screen* picks which screen's dashboard you're editing and *Layout* which saved layout it shows:
 
 - **Preview:** click a widget to select it, drag to move, drag the handles to resize. Moves snap to a grid (toolbar); hold Alt to place freely. Arrow keys nudge, Shift+arrows by 10.
+- **Snapping to other widgets:** while you drag or resize a widget, its edges and centre snap to other widgets' edges and centres, and to the canvas's edges and middle, once they're within a few pixels. A thin line shows what it has lined up with. Resizing snaps only the edges you're dragging. Hold Alt to place freely.
+- **Several widgets at once:** Ctrl+click or Shift+click widgets in the preview or the *Widgets* list to add them to the selection (or take one out again), drag a box around them on empty canvas (with Ctrl or Shift held to add to what's selected), or press Ctrl+A for all of them. Drag any of them to move them all; arrows nudge them all; *Duplicate* (Ctrl+D) and *Delete* (Del) work on all of them. Click one of them to go back to just that one, or press Esc for none. The properties say how many are selected; select one to change its settings.
+- **Align:** with two or more selected, *Align ▾* on the toolbar (or *Align* in the list's right-click menu) lines them up by their left edges, centres, right edges, tops, middles or bottoms, against the space they take up together. *Distribute horizontally* and *Distribute vertically* put equal gaps between three or more, keeping them within the space they take up now. *Same width* and *Same height* make them as wide or as tall as the first one you selected. Each is one undo.
 - **Metrics:** template and metric fields have a `{…}` button that opens a searchable list of every metric (about 280 on a typical PC, including every raw sensor) with live values. Pick one and choose how to show it (e.g. `18.7 GB`, `19,138 MB` or just `18.7`) and it's inserted at the cursor. Under each field a live preview shows what it renders now and flags unknown metric ids.
 - **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists, boxes to tick such as a news widget's feeds) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme. To reorder a list (a rows widget's rows, a clock's other places, buttons, warning colours, the feeds ticked…), drag an entry by the handle at its left, or move it a place at a time with Alt+Up and Alt+Down from its handle or one of its text or number boxes (in a drop-down, they open its list instead).
 - **Fonts:** the font list shows each font's name in that font, so you can see what you're picking. Symbol and icon fonts, such as *Wingdings* and *Segoe MDL2 Assets*, show their name as usual with a few of their symbols beside it. While the list is open, the font under the mouse (or the one you move to with the arrow keys) shows on the widget straight away: click it or press Enter to keep it, or press Esc or click elsewhere to go back to the font you had. With the list closed, Up and Down change to the next font straight away, and one undo goes back to where you started. You can still type a font's name. A widget's own *Font* has *Theme font* at the top of the list, to follow the layout's theme again.
 - **Setting a widget up:** the weather, agenda, news and Claude usage widgets need something set up outside the layout. Select one and *Set up*, at the top of its properties, says what's set up now and has a button for it: *Set location…*, *Calendars…*, *News feeds…* or *Connect Claude Code…*. They do the same as the window's own pages.
-- **Widgets:** add, duplicate (Ctrl+D) and delete. The *Widgets* list is the drawing order, and lower in the list draws on top: drag a widget up or down it to change the order, or press Ctrl+] to bring the selected widget forward and Ctrl+[ to send it back. Right-click a widget in the list for *Bring forward*, *Send back*, *Duplicate* and *Delete*.
-- **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
-- **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout, each shown with a sample of its colours. *Orange* (the default look) and 54 others are built in: clean ones like *High Contrast*, *Swiss* and *Glacier*, retro ones like *Amber*, *8-Bit*, *Desktop 95* and *Blue Screen*, moods like *Outrun*, *Cyberpunk*, *Grimoire*, *Aurora* and *Gatsby*, a *Night Watch* theme in dim reds for a screen you keep on at night, well-known editor palettes such as *Dracula*, *Nord*, *Gruvbox*, *Solarized* and *Catppuccin*, and ones for the holidays through the year: *Lunar New Year*, *Valentine*, *Shamrock* (St Patrick's Day), *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* (Bonfire Night or New Year's Eve), *Hanukkah*, *Christmas* and *Gingerbread*. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
+- **Widgets:** add, duplicate (Ctrl+D) and delete. The *Widgets* list is the drawing order, and lower in the list draws on top: drag a widget up or down it to change the order, or press Ctrl+] to bring the selected widget forward and Ctrl+[ to send it back. Right-click a widget in the list for *Bring forward*, *Send back*, *Duplicate*, *Delete* and *Align*.
+- **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize, or drag across empty space to select the widgets inside; the editor follows along (and vice versa), with the same snapping and undo.
+- **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout, each shown with a sample of its colours. *Orange* (the default look) and 54 others are built in: clean ones like *High Contrast*, *Swiss* and *Glacier*, retro ones like *Amber*, *8-Bit*, *Desktop 95* and *Blue Screen*, moods like *Outrun*, *Cyberpunk*, *Grimoire*, *Aurora* and *Gatsby*, a *Night Watch* theme in dim reds for a screen you keep on at night, well-known editor palettes such as *Dracula*, *Nord*, *Gruvbox*, *Solarized* and *Catppuccin*, and ones for the holidays through the year: *Lunar New Year*, *Valentine*, *Shamrock* (St Patrick's Day), *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* (Bonfire Night or New Year's Eve), *Hanukkah*, *Christmas* and *Gingerbread*, which [Holiday themes](#holiday-themes) can show on their days. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
 - **Moving backgrounds:** the theme's background *Image* can be an animated GIF or a video (MP4, M4V or WMV), which plays muted and on a loop behind the widgets, with the same fit and opacity settings as a picture. GIF frames are prepared once at the size the canvas shows them and kept under 48 MB in all (a long GIF is made smaller, then thinned), and fast GIFs are held to 20 frames a second. A moving background stops while the dashboard is hidden. The tablet view and USB screens show a still frame. Moving backgrounds cost more CPU than a still picture, a video most of all, since the dashboard draws without the graphics card unless you turn hardware rendering on. Exported layouts carry a video up to 50 MB.
 - **A widget's own look:** every widget has *Widget theme* settings (font, weight and the theme's colours) that override the layout's theme for that widget alone; leave them empty to follow the theme. Named colours in its other settings, like `accent`, then mean the widget's own. Many widgets also have colours of their own, such as a bar's track or *Now playing*'s progress bar, so changing the theme's bar track doesn't change everything that happens to use it.
 - **Text that fits:** a big font size, or a font that's wider or taller than the theme's, can make text too big for its widget. Widgets with text have *Shrink to fit*, on by default: text that would be cut off gets smaller, evenly, until it fits, and a label and its value on one line get smaller together rather than run into each other. Text that fits keeps exactly the size you set; turn it off to keep your sizes whatever happens. Names that end with … when they're too long, as in *Top apps*, still do, down to their first few letters. *Agenda* and *News* end long lines with … too, and rather than shrink the whole list, they leave out the rows at the bottom that would be cut off; a first row too tall for the widget on its own gets smaller.
@@ -206,11 +211,14 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
+| `mic.muted` (1 when muted, 0 when not), `mic.name`, `mic.inuse`, `mic.apps`, `camera.inuse`, `camera.apps` | The microphone Windows uses for calls, and the apps using it or the camera, every 2 seconds (see [Microphone and camera](#microphone-and-camera)). The microphone's appear on PCs with a microphone, the camera's once an app has used a camera |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
 | `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; *Sensors* → *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
+| `power.total`, `energy.today`, `energy.month`, `energy.cost.today`, `energy.cost.month` | The whole PC's power (the sensor service's CPU and graphics card power, and an allowance for the rest), the energy it's used today and this month, and what that costs at your price (see [Energy use](#energy-use)) |
+| `grid.carbon`, `grid.carbon.index`, `grid.carbon.best`, `grid.carbon.region` | Great Britain's grid carbon intensity from NESO, every 30 minutes, once *Energy* → *Grid carbon intensity* is on (see [Grid carbon intensity](#grid-carbon-intensity)) |
 | `claude.session`, `claude.week`, `claude.session.resets`, `claude.week.resets`, `claude.status` | Your Claude plan's usage limits, from Claude Code's status line (see [Claude usage](#claude-usage)) |
 
 ### Sensor service (temperatures, fans, power, FPS)
@@ -247,6 +255,33 @@ Average FPS hides stutter: a game can average 120 FPS and still hitch. The senso
 <p align="center"><img src="images/widgets/frame-times.png" width="600" alt="Stat tiles of the frame rate at 145 and the 1% and 0.1% lows, each with a trend line and its range, and a graph of the average and slowest frame times"></p>
 
 A sensor service from before 0.8 doesn't send these; *Sensors* → *Update…* brings it up to date.
+
+### Energy use
+
+What your PC is using and what it costs, as readings for any widget. The *Energy* page shows them too, and is where you set your price.
+
+- **Power now:** `power.total`, in watts: the CPU's package power and the graphics card's, from the [sensor service](#sensor-service-temperatures-fans-power-fps), plus an allowance for the parts nothing measures (the motherboard, memory, drives and fans). The allowance is 50 W, which suits most desktops; *Energy* → *Everything else* changes it. Monitors, speakers and anything else plugged in aren't counted, and nor is what the power supply itself loses (often a tenth or so): raise the allowance if you'd like that counted.
+- **Energy used:** `energy.today`, in kWh since midnight, and `energy.month`, since the 1st, added up from `power.total` every second.
+- **What it costs:** `energy.cost.today` and `energy.cost.month`, at the price you type under *Energy* → *Price per kWh*: `0.25`, say, or `24.5p` in pence or cents. They show your region's currency symbol where your region puts it, such as *£0.48*; *Currency symbol* changes it. Without a price they have no reading. The cost is the energy so far at the price now, so a new price applies to the whole day and month. Standing charges aren't included.
+
+Without the sensor service there's no power reading, so `power.total` shows a dash and nothing is counted; the *Energy* page says why. The CPU's power needs the PawnIO driver, as CPU temperatures do: without it, only the graphics card's and the allowance are counted, and the page says so. Some built-in graphics don't report their power, and then it's the CPU's and the allowance.
+
+Energy is only counted while Impious Bonum is running: time it isn't, or the PC is asleep, isn't counted. Today's and this month's totals are kept in `energy.json` in the settings folder, saved every minute, so a restart carries on from them. Today's starts again at midnight, and the month's on the 1st.
+
+For example, `{power.total} · {energy.today} today ({energy.cost.today})` in a text widget reads *433 W · 1.92 kWh today (£0.48)*, and a `graph` of `power.total` shows the power climb when a game starts.
+
+#### Grid carbon intensity
+
+Turn on *Energy* → *Grid carbon intensity* to see how much CO₂ Great Britain's electricity is giving off: the more wind and sun, the less. It's only for Great Britain (England, Scotland and Wales), as Northern Ireland's grid is separate, and it's off until you turn it on.
+
+- `grid.carbon`: the carbon intensity now, in grams of CO₂ for each kWh, e.g. *142 gCO₂/kWh*.
+- `grid.carbon.index`: its level: *Very low*, *Low*, *Moderate*, *High* or *Very high*.
+- `grid.carbon.best`: when it'll be lowest in the next 24 hours, e.g. *Lowest around 03:30*, or *Lowest now*: a good time for a long game update, or the washing machine.
+- `grid.carbon.region`: whose figures they are: *Great Britain*, or your region's name.
+
+The figures are for Great Britain as a whole unless you give *Your area*: the first half of your postcode, such as `LS1`, for your region's (Yorkshire, say). Type the whole postcode if you like; only the first half is kept.
+
+Every 30 minutes, the next 24 hours' forecast comes from the [Carbon Intensity API](https://carbonintensity.org.uk), run by NESO, Great Britain's National Energy System Operator (formerly National Grid ESO). Nothing about you is sent but the first half of your postcode, if you give it, and nothing at all while it's off. Between fetches the readings move on through the forecast, half an hour at a time. If it can't be reached it tries again five minutes later, and the last figures stay for up to three hours. Carbon intensity forecasts by NESO, from carbonintensity.org.uk, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ### Weather
 
@@ -472,6 +507,41 @@ and set `"refreshInterval": 15` on your `statusLine` so the widget knows Claude 
 
 The `bars` widget is the same widget for any metrics, e.g. CPU and RAM load. Its *Hide without a reading* setting works the same way.
 
+### Microphone and camera
+
+Whether your microphone is muted, and which apps are using it or your camera: for a light that goes red while you're live, or a reminder that you're muted.
+
+| Metric | |
+|---|---|
+| `mic.muted` | 1 while the microphone is muted, 0 while it isn't |
+| `mic.name` | The microphone's name, as Windows' sound settings show it |
+| `mic.inuse`, `camera.inuse` | 1 while any app is using the microphone (or the camera), 0 while none is |
+| `mic.apps`, `camera.apps` | The apps using it, e.g. *Discord, OBS*. No reading while none is |
+
+- **Which microphone:** the one Windows uses for calls. That's your default microphone, unless you've picked a different *Default Communication Device* in the Sound control panel's *Recording* tab.
+- **Muted** means Windows' own mute, the one in the sound settings, which a [`mic-mute` button](#now-playing-and-buttons) turns on and off. An app's own mute (Discord's, say) or a mute switch on a headset doesn't change it, so it doesn't show here.
+- **The apps** using them are read from the record Windows keeps for its privacy settings (*Settings* → *Privacy & security* → *Microphone* → *Recent activity*) and its microphone and camera icons. Reading it needs no permission, and Impious Bonum never uses the microphone or camera itself, so Windows doesn't ask or show its icons for it. Desktop apps go by their program's name (*Discord*, *Chrome*, *OBS*), Store apps by the end of their package name (*WindowsCamera*).
+- The microphone's metrics appear on PCs with a microphone, or where an app has used one; the camera's once an app has used a camera.
+
+<p align="center"><img src="images/widgets/microphone.png" width="600" alt="MIC lit up red while Discord is using the microphone, CAMERA dim because the camera's off, the microphone's name, In use by Discord, and a Mute button with a microphone icon"></p>
+
+To make a widget go red, give it a warning colour on one of these metrics (see [editing layouts by hand](#editing-layouts-by-hand)). The picture's widgets: *MIC* lights up while an app is using the microphone and *CAMERA* while one is using the camera (`track` is the theme's dim bar colour, so they're barely there until then), the microphone's name turns red while it's muted, the apps using it show underneath only while there are some, and the button mutes and unmutes it, its icon crossed out while muted:
+
+```json
+{ "type": "text", "x": 30, "y": 20, "width": 200, "height": 70, "fontSize": 48, "text": "● MIC", "color": "track",
+  "thresholds": [{ "metric": "mic.inuse", "above": 0, "color": "critical" }] },
+{ "type": "text", "x": 250, "y": 20, "width": 300, "height": 70, "fontSize": 48, "text": "● CAMERA", "color": "track",
+  "thresholds": [{ "metric": "camera.inuse", "above": 0, "color": "critical" }] },
+{ "type": "icon", "x": 30, "y": 115, "width": 520, "height": 56, "icon": "mic", "text": "{mic.name}", "fontSize": 34,
+  "iconSize": 48, "gap": 20, "thresholds": [{ "metric": "mic.muted", "above": 0, "color": "critical" }] },
+{ "type": "text", "x": 98, "y": 176, "width": 452, "height": 40, "fontSize": 26, "text": "In use by {mic.apps}",
+  "color": "secondary", "hideUnavailable": true },
+{ "type": "buttons", "x": 590, "y": 20, "width": 180, "height": 200, "iconSize": 64,
+  "buttons": [{ "label": "Mute", "icon": "mic", "action": "mic-mute" }] }
+```
+
+In the editor, the same rules are each widget's *Warning colours*: pick the metric, set *Above* to 0, and choose a colour.
+
 ## Widgets in depth
 
 ### Top apps
@@ -526,6 +596,25 @@ another page, switch layouts or edit the layout: timers with the same label, mod
 countdown on two pages is the same countdown. Timers start again from scratch when the app restarts. The notification
 only comes while the timer is on screen; if it's on a page you're not showing, it comes when you next show it.
 
+### Countdowns
+
+The `countdowns` widget lists how long it is until the days you're looking forward to, soonest first: birthdays,
+holidays, a game's release, a trip. In the editor, add entries to *Events*, each with a label and a date, written
+month first like the timer's:
+
+- A month and day with no year, such as `12-25` or `03-14 09:00`, comes round every year. On the day it says *Today*,
+  and the day after it starts counting to next year's.
+- A date, such as `2026-12-25` or `2026-12-25 18:00`, happens once. It says *Today* on the day, then leaves the list.
+- A time of day, such as `23:30`, counts to the next one, so it's always today or tomorrow.
+
+Each row shows *69 days*, *Tomorrow* or *Today*; set *How long* to `time` for the days, hours and minutes instead, such
+as *69d 02:13*. Events that are today are in the accent colour (or your own *Today's colour*). The order you add them
+in doesn't matter: the list always shows the soonest first. *Rows* is the most it shows, and with *Shrink to fit* on,
+rows that don't fit are left out rather than cut in half. A *Heading* can go above the list, and *When there's
+nothing* is shown once everything has gone. A date it can't read says *Unknown date* in red, at the bottom.
+
+<p align="center"><img src="images/widgets/countdowns.png" width="600" alt="Two lists of countdowns, soonest first: the days until Halloween, Bonfire Night, a birthday, Christmas and New Year, and the days, hours and minutes until bedtime (in orange, as it's today), the fireworks, Christmas and a flight"></p>
+
 ### Now playing and buttons
 
 The *Now playing* widget (`media`) shows what's playing in any app that appears in Windows' media controls (the ones in the volume flyout): Spotify, YouTube in a browser, Media Player and so on. It has the album art, title and artist (both templates, so `{media.artist} · {media.album}` works too), a progress bar with the position and length, and previous / play-pause / next buttons. It hides while nothing is playing, and shows faded while you edit the layout. The `media.*` metrics work in any widget too, e.g. a gauge of `media.progress`.
@@ -538,6 +627,7 @@ The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a
 |---|---|
 | `play-pause`, `next`, `previous`, `stop` | Like the keyboard's media keys: they act on what *Now playing* shows |
 | `volume-up`, `volume-down`, `mute` | Like the keyboard's volume keys |
+| `mic-mute` | Mutes the microphone Windows uses for calls, or unmutes it (see [Microphone and camera](#microphone-and-camera)). With the `mic` icon, the button shows `mic-off` while it's muted, whatever muted it |
 | `open` | Opens the *target*: a program (`calc.exe`), a file or folder (`C:\Games`), a web address, or a Windows link such as `ms-settings:sound`. *Arguments* are passed to a program |
 | `keys` | Sends a shortcut such as `Ctrl+Shift+M`, `Win+D` or `F13` to the app you're using. Names are like `A`, `5`, `F1`–`F24`, `Enter`, `Space`, `Esc`, `Tab`, `Home`, `PgUp`, `Up`, `Delete`, `VolumeUp`, `MediaPlayPause` |
 | `layout` | Switches to the layout named in *target* |
@@ -648,21 +738,58 @@ This works whether or not *Switch automatically* is on.
 
 ### Schedule
 
-The dashboard can change with the time of day: the dim red *Night Watch* theme from 22:00 to 07:00, say, a calmer layout during working hours, or the screen at 30% overnight. It can also follow Windows' dark and light mode, e.g. *Nord* while Windows is dark and *Glacier* while it's light.
+The dashboard can change with the time of day: the dim red *Night Watch* theme from 22:00 to 07:00, say, a calmer layout during working hours, or the screen at 30% overnight. It can also follow the sun, Windows' dark and light mode, or the time of year: *Night Watch* from sunset to sunrise, *Nord* while Windows is dark and *Glacier* while it's light, or a spooky theme from 24 October to 1 November.
 
-*Pages and schedule* → *Add to the schedule* picks when (between two times, which may cross midnight, or while Windows is in dark or light mode) and what to do: show a layout, a theme, dim the screen (see [Dimming](#dimming)), or any mix. The page lists the rules, marking the ones that apply now, and *Follow the schedule* turns them all off and on. Rules combine: when several apply, the layout comes from the first of them that names a layout, the theme from the first that names a theme, and the brightness likewise.
+*Pages and schedule* → *Add to the schedule* picks when and what to do. When is one of:
+
+- **Between two times**, which may cross midnight.
+- **From sunset to sunrise**, or **from sunrise to sunset**. The sun's times are worked out on your PC for the weather's location (see [Weather](#weather)), so nothing is fetched for them, but without a location these rules never apply: the dialog and the page say so.
+- **While Windows is in dark mode**, or in light mode.
+- **All day**, on the dates below.
+
+*Only from … to …* limits any of them to the same dates every year, written month then day: `10-24` to `11-01`, or `12-20` to `01-06`, which crosses New Year. Both days are included, and the same date twice is a single day. The dialog spells the dates out (*Every year from 24 Oct to 1 Nov*) so a day written first shows up. A night belongs to the evening it starts: 01:00 on 1 November is still the night of 31 October, so a Halloween rule from 18:00 to 02:00 on `10-31` lasts into the small hours, and so does one from sunset to sunrise.
+
+What to do is show a layout, a theme, dim the screen (see [Dimming](#dimming)), or any mix. The page lists the rules, marking the ones that apply now, and *Follow the schedule* turns them all off and on. Rules combine: when several apply, the layout comes from the first of them that names a layout, the theme from the first that names a theme, and the brightness likewise. So put a rule for some dates above an everyday one for its theme to win on those dates.
 
 A game linked under *Game layouts* still wins while it's in front, and the schedule fills in what its link doesn't set: a game linked to a layout gets the night theme at night. Like game layouts, scheduled ones are temporary: picking a layout from the tray makes it your choice, and renaming a layout updates the rules. The schedule is in `settings.json` too:
 
 ```json
 "schedule": [
+  { "fromDate": "10-24", "toDate": "11-01", "theme": "Grimoire" },
+  { "when": "night", "fromDate": "12-01", "toDate": "12-31", "theme": "Ice" },
   { "from": "22:00", "to": "07:00", "theme": "Night Watch" },
   { "when": "dark", "theme": "Nord" },
   { "from": "09:00", "to": "17:30", "layout": "Work" },
   { "from": "00:00", "to": "06:00", "brightness": 0 }
 ],
-"scheduleEnabled": true
+"scheduleEnabled": true,
+"holidayThemes": false
 ```
+
+`when` is `dark` or `light` for Windows' mode, or `night` (sunset to sunrise) or `day` (sunrise to sunset). `fromDate` and `toDate` go with any rule, or make one on their own for the whole of those days.
+
+#### Holiday themes
+
+*Pages and schedule* → *Holiday themes* (off until you turn it on) shows the built-in holiday theme on and around each holiday, and says which it's showing or which comes next:
+
+| Theme | When |
+|---|---|
+| *Lunar New Year* | From the eve, for a week |
+| *Valentine* | 13 and 14 February |
+| *Shamrock* | 16 and 17 March, for St Patrick's Day |
+| *Easter* | Good Friday to Easter Monday |
+| *Eid* | Eid al-Fitr from the eve for three days, and Eid al-Adha from the eve for four |
+| *Diwali* | Its five days, from two before Lakshmi Puja to two after |
+| *Halloween* | 24 to 31 October |
+| *Day of the Dead* | 1 and 2 November |
+| *Fireworks* | Bonfire Night (5 November), and New Year's Eve to New Year's Day |
+| *Hanukkah* | From the eve, for the eight days |
+| *Gingerbread* | 1 to 17 December |
+| *Christmas* | 18 to 30 December |
+
+Easter is worked out, and Hanukkah, Eid and Lunar New Year come from the Hebrew, Um al-Qura (Saudi Arabia's, which most printed calendars follow) and Chinese calendars that come with Impious Bonum, so they keep coming round. Eid starts when the new moon is seen, so where you are it may begin a day later. Diwali's dates are in a table that runs to 2035. When two holidays overlap, the shorter one shows: Christmas Day over Hanukkah, Hanukkah over the run-up to Christmas, and Diwali over Halloween.
+
+A holiday's theme comes after everything else: a rule above that sets a theme (while *Follow the schedule* is on) wins, and so does a game's link, but a rule that only sets a layout or brightness still gets the holiday's theme. It's stored as `holidayThemes` in `settings.json`.
 
 #### Dimming
 

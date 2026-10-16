@@ -30,6 +30,8 @@ public sealed class MetricFormatterTests : IDisposable
     [InlineData(MetricUnit.Degrees, -31.9, "-32°")]
     [InlineData(MetricUnit.MicrogramsPerCubicMetre, 4.8, "5 µg/m³")]
     [InlineData(MetricUnit.GrainsPerCubicMetre, 61.2, "61 grains/m³")]
+    [InlineData(MetricUnit.KilowattHours, 1.917, "1.92 kWh")]
+    [InlineData(MetricUnit.GramsOfCo2PerKilowattHour, 141.6, "142 gCO₂/kWh")]
     public void Formats_units_with_default_precision(MetricUnit unit, double value, string expected) =>
         Assert.Equal(expected, MetricFormatter.Format(Sample(unit, value)));
 
