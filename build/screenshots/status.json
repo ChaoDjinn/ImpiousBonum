@@ -1,0 +1,12 @@
+// The servers at home, up and down, for the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 400,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "status", "x": 30, "y": 40, "width": 440, "height": 320, "fontSize": 32, "spacing": 22, "since": true },
+    { "type": "text", "x": 520, "y": 90, "width": 250, "height": 40, "fontSize": 24, "text": "Servers", "color": "secondary" },
+    { "type": "text", "x": 520, "y": 130, "width": 250, "height": 70, "fontSize": 48, "text": "{status.summary}" },
+    { "type": "text", "x": 520, "y": 200, "width": 250, "height": 50, "fontSize": 30, "text": "{status.up} of 4 up", "color": "accent" }
+  ]
+}

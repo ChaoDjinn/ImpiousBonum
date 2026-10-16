@@ -28,6 +28,12 @@ public static class DemoReadings
     /// </summary>
     public const string Spectrum = "demo.spectrum";
 
+    /// <summary>
+    /// What a photo frame with no folder shows in a snapshot (a <see cref="DemoPhoto"/>), rather than an empty box. The
+    /// picture itself is drawn by the app.
+    /// </summary>
+    public const string Photo = "demo.photo";
+
     /// <summary>Fills <paramref name="store"/> with the demo readings, as they'd be at <paramref name="now"/>.</summary>
     /// <param name="artwork">The album art for what's playing (PNG or JPEG bytes), if any.</param>
     public static void Fill(MetricStore store, DateTime now, byte[]? artwork = null)
@@ -313,6 +319,22 @@ public static class DemoReadings
                 null, i == 0 ? "moderate" : null);
         }).ToList();
         GridCarbonProvider.Publish(store, new CarbonForecast(CarbonForecast.GreatBritain, periods), new DateTimeOffset(now), TimeZoneInfo.Local);
+
+        // The servers at home: all up but Plex, which stopped answering twelve minutes ago.
+        new StatusProvider(() => []).Initialize(store);
+        IReadOnlyList<CheckStatus> checks =
+        [
+            new("Router", true, 2, "12 days", null),
+            new("NAS", true, 4, "6 days", null),
+            new("Pi-hole", true, 3, "3 h", null),
+            new("Plex", false, null, "12 min", "No answer"),
+        ];
+        foreach (var check in checks)
+            StatusProvider.Register(store, check.Name);
+        StatusProvider.Publish(store, checks);
+
+        // A photo for a photo frame with no folder, taken on a summer evening.
+        store.SetAttachment(Photo, new DemoPhoto("Lakeside at dusk.jpg", new DateTime(2026, 8, 14, 20, 31, 0)));
     }
 
     /// <summary>

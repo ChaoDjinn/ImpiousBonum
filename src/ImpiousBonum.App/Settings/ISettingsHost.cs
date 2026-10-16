@@ -71,9 +71,13 @@ internal interface ISettingsHost
 
     void SetTabletButtons(bool on);
 
-    void ShowTabletLink();
+    /// <summary>Share every reading as JSON with other apps that have the link's secret.</summary>
+    void SetTabletReadings(bool on);
 
-    void CopyTabletLink();
+    /// <summary>The link and its QR code, for the main dashboard or the saved layout <paramref name="layout"/>.</summary>
+    void ShowTabletLink(string? layout);
+
+    void CopyTabletLink(string? layout);
 
     void NewTabletLink();
 

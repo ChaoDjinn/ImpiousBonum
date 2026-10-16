@@ -50,7 +50,13 @@ public abstract class Widget : Grid
     public static readonly RoutedEvent ActionEvent = EventManager.RegisterRoutedEvent(
         "Action", RoutingStrategy.Bubble, typeof(EventHandler<WidgetActionEventArgs>), typeof(Widget));
 
-    protected void RequestAction(WidgetAction action) => RaiseEvent(new WidgetActionEventArgs(action));
+    /// <summary>Asks for the action; false when nothing took it, as in the editor's preview or a snapshot.</summary>
+    protected bool RequestAction(WidgetAction action)
+    {
+        var args = new WidgetActionEventArgs(action);
+        RaiseEvent(args);
+        return args.Handled;
+    }
 
     /// <summary>Hides the widget while it has nothing to show (faded instead while <see cref="Editing"/>).</summary>
     protected void SetUnavailable(bool unavailable)

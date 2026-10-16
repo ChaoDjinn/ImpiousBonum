@@ -11,6 +11,9 @@ internal sealed class TabletAndUsbPage(ISettingsHost host) : CardPage("Tablet an
 
     private SettingsCard? _usbCard;
 
+    // The layout the link below shows, or null for the main dashboard. Not saved: every link works, whichever is picked here.
+    private string? _linkLayout;
+
     private AppSettings Settings => host.Settings;
 
     protected override void Build()
@@ -29,19 +32,38 @@ internal sealed class TabletAndUsbPage(ISettingsHost host) : CardPage("Tablet an
             Ui.Switch(Settings.TabletButtons, "Let tablets press buttons", host.SetTabletButtons)));
         buttons.IsEnabled = on;
 
-        var link = on && Settings.TabletToken is { } token ? TabletLinkWindow.FirstLink(Settings.TabletPort, token) : null;
+        var readings = Add(Ui.Card("", "Share readings with other apps",
+            "Apps on your network such as Home Assistant or Rainmeter can read every reading as JSON with the link's secret, "
+            + "including the text ones: what's playing, your next event, your IP address. Anyone with the link could read them.",
+            Ui.Switch(Settings.TabletReadings, "Share readings with other apps", host.SetTabletReadings)));
+        readings.IsEnabled = on;
+
+        var saved = host.Layouts.List();
+        _linkLayout = saved.FirstOrDefault(l => string.Equals(l, _linkLayout, StringComparison.OrdinalIgnoreCase));
+        var linkLayouts = saved.Select(l => ((string?)l, l)).Prepend(((string?)null, "Same as the main dashboard"));
+        var layoutCard = Add(Ui.Card("", "Layout for the link",
+            "Each tablet can show a layout of its own: pick one, then open the link below on that tablet",
+            Ui.Choice(linkLayouts, _linkLayout, "Layout for the link", layout =>
+            {
+                _linkLayout = layout;
+                Load();
+            })));
+        layoutCard.IsEnabled = on;
+
+        var link = on && Settings.TabletToken is { } token ? TabletLinkWindow.FirstLink(Settings.TabletPort, token, _linkLayout) : null;
         var linkCard = Add(Ui.Card("", "Link",
             on ? link ?? "This PC doesn't seem to be on a local network." : "Turn on the tablet view for a link to open.",
             Ui.Row(
-                Ui.Button("Show QR code…", host.ShowTabletLink),
-                Ui.Button("Copy", host.CopyTabletLink),
+                Ui.Button("Show QR code…", () => host.ShowTabletLink(_linkLayout)),
+                Ui.Button("Copy", () => host.CopyTabletLink(_linkLayout)),
                 Ui.Button("New link", () =>
                 {
                     host.NewTabletLink();
                     Load();
                 }))));
         linkCard.IsEnabled = on;
-        Add(Ui.Note("A new link stops the old one working, for when it's been shared with someone it shouldn't have been."));
+        Add(Ui.Note("A layout of its own stays as it is, in its own theme: game layouts and the schedule only change the main dashboard. "
+            + "Renaming or deleting it stops its links working. A new link stops every old one working, for when one's been shared with someone it shouldn't have been."));
 
         Add(Ui.Heading("USB screen"));
         var usb = Settings.UsbScreen;
