@@ -165,10 +165,14 @@ public static class DemoReadings
         {
             Precipitation = d == 1 ? 6.2 : 0.4, Wind = 14 + d % 4, Gusts = 30 + d % 6, Uv = 3, Daylight = TimeSpan.FromMinutes(649 - 4 * d),
         }).ToList();
+        // A shower in about 40 minutes, a quarter of an hour at a time from the one that ended last, as Open-Meteo gives them.
+        var quarter = now.Date.AddMinutes(Math.Floor(now.TimeOfDay.TotalMinutes / 15) * 15);
+        double[] shower = [0, 0, 0, 0, 0.2, 0.7, 1.4, 0.6, 0.1, 0, 0, 0];
         var report = new WeatherReport(WeatherUnits.Metric, now, 14, 13, 72, 11, 225, 2, now.Hour is >= 7 and < 20,
             hours, days, now.Date.AddHours(7.2), now.Date.AddHours(18.6))
         {
             Gusts = 24, Uv = now.Hour is >= 7 and < 20 ? 2 : 0, Pressure = 1016, DewPoint = 9, Visibility = 18000, Clouds = 45, Precipitation = 0,
+            QuarterHours = [.. shower.Select((amount, i) => new QuarterHour(quarter.AddMinutes(15 * i), amount))],
         };
         weather.Publish(store, report, new WeatherRequest("Harbourton", 50.6, -2.0, WeatherUnits.Metric), now);
 
