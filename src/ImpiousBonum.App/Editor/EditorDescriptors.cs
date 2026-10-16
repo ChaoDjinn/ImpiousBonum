@@ -70,7 +70,7 @@ public static class EditorDescriptors
                 "A soft neon glow around every widget's text and shapes: 0.3 is subtle, 1 is strong. Empty or 0 is none. Uses a little more CPU."),
             new("glowColor", "Glow colour", SettingKind.Color, defaults.GlowColor, effects, "Empty glows in the accent colour."),
             Setting.Choice("particles", "Kind", defaults.Particles, ParticleLayer.Kinds, particles,
-                "Snow, autumn leaves, cherry-blossom petals or confetti falling behind the widgets, or embers rising. They cost CPU while they move, most with a glow or on a big screen: the guide has the numbers."),
+                "Snow, autumn leaves, cherry-blossom petals or confetti falling behind the widgets, or embers rising. While a theme has them, its widgets go without its glow, and they slow down or stand still if moving would cost much CPU."),
             Setting.Number("particleAmount", "Amount", defaults.ParticleAmount, 0, 1, particles, "How many: 0.2 is a few, 1 is a flurry."),
             new("particleColor", "Colour", SettingKind.Color, defaults.ParticleColor, particles,
                 "One colour for them all, in a few shades. Empty is their own: white snow, autumn leaves, pink petals, orange embers, and confetti in the theme's colours."),

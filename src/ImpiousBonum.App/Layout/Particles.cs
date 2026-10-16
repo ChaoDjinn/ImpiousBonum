@@ -299,6 +299,31 @@ public sealed class ParticleLayer : FrameworkElement
     /// </summary>
     public static readonly TimeSpan FrameTime = TimeSpan.FromMilliseconds(40);
 
+    /// <summary>
+    /// Drawn without the graphics card, each frame redraws everything over the particles, so a bigger dashboard costs
+    /// more: up to this many screen pixels (a 1920 × 520 strip, say) they move at the full rate, and above it slower,
+    /// in proportion, so the cost stays about the same.
+    /// </summary>
+    public const double SoftwarePixels = 1_000_000;
+
+    /// <summary>The fewest frames a second a big dashboard starts at, before <see cref="Pace"/> tries it.</summary>
+    public const double SlowestFramesPerSecond = 6;
+
+    /// <summary>
+    /// The most of one core the whole app should use while particles move. Above it, they slow down; past the slowest
+    /// they stand still. What a frame costs depends on the screen's size and how much is on it, so it's measured.
+    /// </summary>
+    public const double Budget = 0.10;
+
+    /// <summary>Below this share of one core they speed up again, never faster than they started.</summary>
+    public const double Comfortable = 0.04;
+
+    /// <summary>How often what the app is using is checked.</summary>
+    public static readonly TimeSpan CheckEvery = TimeSpan.FromSeconds(2);
+
+    /// <summary>The slowest they go before standing still.</summary>
+    public static readonly TimeSpan SlowestFrame = TimeSpan.FromSeconds(1);
+
     /// <summary>How many steps of opacity brushes are made for; finer would look no different.</summary>
     private const int Levels = 6;
 
@@ -318,6 +343,9 @@ public sealed class ParticleLayer : FrameworkElement
     private readonly Pen?[] _veins;
     private readonly DispatcherTimer? _timer;
     private readonly Stopwatch _clock = new();
+    private readonly Stopwatch _sinceCheck = new();
+    private TimeSpan _cpuAtCheck;
+    private TimeSpan _fastest = FrameTime;
 
     private ParticleLayer(ParticleKind kind, IReadOnlyList<Color> colors, double width, double height, double amount, bool animate)
     {
@@ -365,17 +393,101 @@ public sealed class ParticleLayer : FrameworkElement
     /// <summary>True while they're moving.</summary>
     public bool Playing => _timer?.IsEnabled == true;
 
+    /// <summary>True once moving cost more than <see cref="Budget"/> even at the slowest: they stay as they are.</summary>
+    public bool StandingStill { get; private set; }
+
     internal ParticleField Field => _field;
 
     public void Play()
     {
-        if (_timer is null || _timer.IsEnabled)
+        if (_timer is null || _timer.IsEnabled || StandingStill)
             return;
         _clock.Restart();
+        _sinceCheck.Restart();
+        _cpuAtCheck = ProcessorTime();
         _timer.Start();
     }
 
     public void Pause() => _timer?.Stop();
+
+    /// <summary>How long between frames now: from <see cref="FastestInterval"/>, slowed by <see cref="Pace"/> as needed.</summary>
+    public TimeSpan FrameInterval
+    {
+        get => _timer?.Interval ?? FrameTime;
+        set
+        {
+            if (_timer is not null && _timer.Interval != value)
+                _timer.Interval = value;
+        }
+    }
+
+    /// <summary>
+    /// The quickest they move on this screen (see <see cref="FrameTimeFor"/>). Setting it (the window was resized, say)
+    /// starts them at that rate again, and gives particles that were standing still another go.
+    /// </summary>
+    public TimeSpan FastestInterval
+    {
+        get => _fastest;
+        set
+        {
+            _fastest = value;
+            FrameInterval = value;
+            StandingStill = false;
+        }
+    }
+
+    /// <summary>
+    /// The next time between frames, given the current one, the quickest allowed and the share of one core the app used
+    /// since the last check: twice as long when it's over <see cref="Budget"/>, or null to stand still once that's past
+    /// <see cref="SlowestFrame"/>; quicker again when it's under <see cref="Comfortable"/>; otherwise the same.
+    /// </summary>
+    internal static TimeSpan? Pace(TimeSpan current, TimeSpan fastest, double share)
+    {
+        if (share > Budget)
+            return current >= SlowestFrame ? null : Min(current * 2, SlowestFrame);
+        if (share < Comfortable && current > fastest)
+            return Max(current / 1.5, fastest);
+        return current;
+
+        static TimeSpan Min(TimeSpan a, TimeSpan b) => a < b ? a : b;
+        static TimeSpan Max(TimeSpan a, TimeSpan b) => a > b ? a : b;
+    }
+
+    private static TimeSpan ProcessorTime()
+    {
+        using var process = Process.GetCurrentProcess();
+        return process.TotalProcessorTime;
+    }
+
+    /// <summary>Every <see cref="CheckEvery"/>, slows down, speeds up or stands still by what the app has been using.</summary>
+    private void CheckCost()
+    {
+        if (_sinceCheck.Elapsed < CheckEvery)
+            return;
+        var cpu = ProcessorTime();
+        var share = (cpu - _cpuAtCheck).TotalSeconds / _sinceCheck.Elapsed.TotalSeconds;
+        _cpuAtCheck = cpu;
+        _sinceCheck.Restart();
+        if (Pace(FrameInterval, _fastest, share) is { } next)
+        {
+            FrameInterval = next;
+            return;
+        }
+        StandingStill = true;
+        Pause();
+    }
+
+    /// <summary>
+    /// The time between frames for a dashboard drawn over <paramref name="pixels"/> screen pixels: the full rate with the
+    /// graphics card or on a small screen, and slower on a big one drawn without it (see <see cref="SoftwarePixels"/>).
+    /// </summary>
+    public static TimeSpan FrameTimeFor(double pixels, bool software)
+    {
+        if (!software || !double.IsFinite(pixels) || pixels <= SoftwarePixels)
+            return FrameTime;
+        var perSecond = Math.Max(SlowestFramesPerSecond, SoftwarePixels / pixels / FrameTime.TotalSeconds);
+        return TimeSpan.FromSeconds(1 / perSecond);
+    }
 
     /// <summary>
     /// The colours they come in: <c>particleColor</c> in a few shades if the theme sets one, confetti in the theme's own
@@ -410,10 +522,14 @@ public sealed class ParticleLayer : FrameworkElement
 
     private void Frame()
     {
-        var elapsed = _clock.Elapsed.TotalSeconds;
+        // In steps no longer than the field takes at once, so slower frames still move at the same speed; a long gap
+        // (after a pause) only counts as a couple of frames, so nothing jumps.
+        var elapsed = Math.Min(_clock.Elapsed.TotalSeconds, Math.Max(ParticleField.LongestStep, 2 * FrameInterval.TotalSeconds));
         _clock.Restart();
-        _field.Step(elapsed);
+        for (; elapsed > 0; elapsed -= ParticleField.LongestStep)
+            _field.Step(Math.Min(elapsed, ParticleField.LongestStep));
         InvalidateVisual();
+        CheckCost();
     }
 
     protected override void OnRender(DrawingContext dc)
