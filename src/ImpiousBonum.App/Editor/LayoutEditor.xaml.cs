@@ -20,6 +20,29 @@ public partial class LayoutEditor : UserControl
 {
     private static readonly double[] SnapSizes = [1, 5, 10, 20, 40];
 
+    /// <summary>The Align menu, in groups between separators: what each item does, its name and its tooltip.</summary>
+    private static readonly (Arrangement Arrangement, string Header, string ToolTip)[][] AlignChoices =
+    [
+        [
+            (Arrangement.AlignLeft, "Align left", "Line up their left edges with the leftmost"),
+            (Arrangement.AlignCentres, "Align centres", "Line up their centres on one line down the middle of them all"),
+            (Arrangement.AlignRight, "Align right", "Line up their right edges with the rightmost"),
+        ],
+        [
+            (Arrangement.AlignTop, "Align top", "Line up their top edges with the highest"),
+            (Arrangement.AlignMiddles, "Align middles", "Line up their middles on one line across the middle of them all"),
+            (Arrangement.AlignBottom, "Align bottom", "Line up their bottom edges with the lowest"),
+        ],
+        [
+            (Arrangement.DistributeHorizontally, "Distribute horizontally", "Equal gaps between them from left to right, in the space they take up now. Needs three or more."),
+            (Arrangement.DistributeVertically, "Distribute vertically", "Equal gaps between them from top to bottom, in the space they take up now. Needs three or more."),
+        ],
+        [
+            (Arrangement.SameWidth, "Same width", "Make them as wide as the first one you selected"),
+            (Arrangement.SameHeight, "Same height", "Make them as tall as the first one you selected"),
+        ],
+    ];
+
     private readonly LayoutSession _session;
     private readonly PreviewSurface _preview;
     private readonly PropertyPanel _properties;
@@ -29,6 +52,9 @@ public partial class LayoutEditor : UserControl
     private readonly MenuItem _deleteLayoutItem;
     private readonly MenuItem _bringForwardItem;
     private readonly MenuItem _sendBackItem;
+    private readonly MenuItem _alignListItem;
+    /// <summary>Every Align menu item, in both menus, with how many widgets it needs selected.</summary>
+    private readonly List<(MenuItem Item, int Needs)> _alignItems = [];
     private bool _syncingList;
     private bool _syncingLayouts;
     private bool _syncingScreens;
@@ -94,7 +120,12 @@ public partial class LayoutEditor : UserControl
         layoutMenu.Items.Add(_deleteLayoutItem);
         LayoutMenuButton.ContextMenu = layoutMenu;
 
-        // A widget's menu in the list (right-clicking one selects it), with the keyboard's ways of doing the same.
+        var alignMenu = new ContextMenu();
+        AddAlignItems(alignMenu.Items);
+        AlignButton.ContextMenu = alignMenu;
+
+        // A widget's menu in the list (right-clicking one selects it, or keeps the selection it's in), with the keyboard's
+        // ways of doing the same.
         var widgetMenu = new ContextMenu();
         _bringForwardItem = MenuItemFor("Bring forward", "Draw on top of the next widget", () => _session.MoveSelected(+1), "Ctrl+]");
         _sendBackItem = MenuItemFor("Send back", "Draw behind the previous widget", () => _session.MoveSelected(-1), "Ctrl+[");
@@ -103,6 +134,11 @@ public partial class LayoutEditor : UserControl
         widgetMenu.Items.Add(new Separator());
         widgetMenu.Items.Add(MenuItemFor("Duplicate", null, _session.DuplicateSelected, "Ctrl+D"));
         widgetMenu.Items.Add(MenuItemFor("Delete", null, _session.DeleteSelected, "Del"));
+        widgetMenu.Items.Add(new Separator());
+        _alignListItem = new MenuItem { Header = "Align", ToolTip = "Select two or more widgets to line them up" };
+        ToolTipService.SetShowOnDisabled(_alignListItem, true);
+        AddAlignItems(_alignListItem.Items);
+        widgetMenu.Items.Add(_alignListItem);
         WidgetList.ContextMenu = widgetMenu;
         DragReorder.Attach(WidgetList, _session.MoveWidget);
 
@@ -132,6 +168,24 @@ public partial class LayoutEditor : UserControl
         var item = new MenuItem { Header = header, ToolTip = toolTip, InputGestureText = gesture };
         item.Click += (_, _) => action();
         return item;
+    }
+
+    /// <summary>The Align menu's items, for the toolbar's drop-down and the widget list's menu.</summary>
+    private void AddAlignItems(ItemCollection items)
+    {
+        foreach (var group in AlignChoices)
+        {
+            if (items.Count > 0)
+                items.Add(new Separator());
+            foreach (var (arrangement, header, toolTip) in group)
+            {
+                var item = MenuItemFor(header, toolTip, () => _session.ArrangeSelected(arrangement));
+                // Distributing needs three, so with two selected it says why it's greyed out.
+                ToolTipService.SetShowOnDisabled(item, true);
+                _alignItems.Add((item, ArrangeGeometry.Needs(arrangement)));
+                items.Add(item);
+            }
+        }
     }
 
     /// <summary>What a widget needs set up outside the layout, offered as buttons when it's selected.</summary>
@@ -220,16 +274,27 @@ public partial class LayoutEditor : UserControl
     private void SyncListSelection()
     {
         _syncingList = true;
-        WidgetList.SelectedIndex = _session.SelectedIndex;
+        // Left alone when it already matches, such as when the change came from clicking in the list itself.
+        if (!ListSelection().SequenceEqual(_session.Selection))
+        {
+            // The first picked goes first, so the list agrees about which that was.
+            WidgetList.UnselectAll();
+            WidgetList.SelectedIndex = _session.SelectedIndex;
+            foreach (var index in _session.Selection.Skip(1).Where(i => i < WidgetList.Items.Count))
+                WidgetList.SelectedItems.Add(WidgetList.Items[index]);
+        }
         if (_session.SelectedIndex >= 0)
             WidgetList.ScrollIntoView(WidgetList.SelectedItem);
         _syncingList = false;
     }
 
+    /// <summary>The widgets selected in the list, in the order they were picked.</summary>
+    private IEnumerable<int> ListSelection() => WidgetList.SelectedItems.Cast<object>().Select(WidgetList.Items.IndexOf);
+
     private void OnListSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!_syncingList)
-            _session.Select(WidgetList.SelectedIndex);
+            _session.Select(ListSelection());
     }
 
     /// <summary>"Graph: CPU", "Text: {gpu.load}" — enough to tell widgets apart.</summary>
@@ -240,6 +305,11 @@ public partial class LayoutEditor : UserControl
     internal sealed record ListEntry(string Name, string Detail)
     {
         public string ToolTip => Detail.Length > 0 ? $"{Name}:{Detail}" : Name;
+
+        // Each row is a widget of its own even when two read the same (a copy, say), so selecting one doesn't select both.
+        public bool Equals(ListEntry? other) => ReferenceEquals(this, other);
+
+        public override int GetHashCode() => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this);
 
         public static ListEntry Of(System.Text.Json.Nodes.JsonObject widget)
         {
@@ -483,6 +553,13 @@ public partial class LayoutEditor : UserControl
         AddButton.ContextMenu.IsOpen = true;
     }
 
+    private void OnAlign(object sender, RoutedEventArgs e)
+    {
+        AlignButton.ContextMenu.PlacementTarget = AlignButton;
+        AlignButton.ContextMenu.Placement = PlacementMode.Bottom;
+        AlignButton.ContextMenu.IsOpen = true;
+    }
+
     private void OnDuplicate(object sender, RoutedEventArgs e) => _session.DuplicateSelected();
 
     private void OnDelete(object sender, RoutedEventArgs e) => _session.DeleteSelected();
@@ -527,13 +604,23 @@ public partial class LayoutEditor : UserControl
         UndoButton.IsEnabled = _session.CanUndo;
         RedoButton.IsEnabled = _session.CanRedo;
 
-        var selected = _session.SelectedIndex >= 0;
-        DuplicateButton.IsEnabled = selected;
-        DeleteButton.IsEnabled = selected;
-        _bringForwardItem.IsEnabled = selected && _session.SelectedIndex < _session.Document.Widgets.Count - 1;
-        _sendBackItem.IsEnabled = selected && _session.SelectedIndex > 0;
+        var count = _session.Selection.Count;
+        DuplicateButton.IsEnabled = count > 0;
+        DeleteButton.IsEnabled = count > 0;
+        AlignButton.IsEnabled = count >= 2;
+        _alignListItem.IsEnabled = count >= 2;
+        foreach (var (item, needs) in _alignItems)
+            item.IsEnabled = count >= needs;
+        // Several widgets have no one place in the drawing order to move from.
+        _bringForwardItem.IsEnabled = count == 1 && _session.SelectedIndex < _session.Document.Widgets.Count - 1;
+        _sendBackItem.IsEnabled = count == 1 && _session.SelectedIndex > 0;
 
-        if (_session.SelectedWidget is { } widget)
+        if (count > 1)
+        {
+            var r = EditGeometry.Bounds(_session.Selection.Select(i => LayoutSession.GeometryOf(_session.Document.Widgets[i])));
+            StatusText.Text = $"{count} widgets selected · position {r.X:0}, {r.Y:0} · size {r.Width:0}×{r.Height:0} together · drag one to move them all · arrows nudge (Shift for 10)";
+        }
+        else if (_session.SelectedWidget is { } widget)
         {
             var r = LayoutSession.GeometryOf(widget);
             StatusText.Text = $"{Describe(widget)} · position {r.X:0}, {r.Y:0} · size {r.Width:0}×{r.Height:0} · arrows nudge (Shift for 10) · Ctrl+] brings forward, Ctrl+[ sends back";
@@ -558,7 +645,7 @@ public partial class LayoutEditor : UserControl
             e.Handled = true;
     }
 
-    /// <summary>Does what a key does in the editor (its shortcuts, and arrows nudging the selected widget).</summary>
+    /// <summary>Does what a key does in the editor (its shortcuts, and arrows nudging the selected widgets).</summary>
     /// <returns>Whether the key was one of them, and so is used up.</returns>
     internal bool HandleKey(Key key, ModifierKeys modifiers)
     {
@@ -594,11 +681,12 @@ public partial class LayoutEditor : UserControl
             case Key.Escape when !typing:
                 _session.Select(-1);
                 break;
-            case Key.Left or Key.Right or Key.Up or Key.Down when !typing && _session.SelectedWidget is { } widget:
+            case Key.A when ctrl && !typing:
+                _session.Select(Enumerable.Range(0, _session.Document.Widgets.Count));
+                break;
+            case Key.Left or Key.Right or Key.Up or Key.Down when !typing && _session.Selection.Count > 0:
                 var step = shift ? 10 : 1;
-                var r = LayoutSession.GeometryOf(widget);
-                r.Offset(key switch { Key.Left => -step, Key.Right => step, _ => 0 }, key switch { Key.Up => -step, Key.Down => step, _ => 0 });
-                _session.SetGeometry(_session.SelectedIndex, r, $"nudge:{_session.SelectedIndex}", null);
+                _session.NudgeSelected(key switch { Key.Left => -step, Key.Right => step, _ => 0 }, key switch { Key.Up => -step, Key.Down => step, _ => 0 });
                 break;
             default:
                 return false;

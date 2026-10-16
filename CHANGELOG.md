@@ -24,6 +24,11 @@ Themes for the holidays, eight more layouts in the gallery, and countdowns that 
 **Countdowns every year**
 - A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
+**Lining widgets up in the editor**
+- Widgets snap to each other as you drag or resize them: their edges and centres line up with other widgets' edges and centres, and with the canvas's edges and middle, and a thin line shows what they've lined up with. Hold Alt to place freely, as before.
+- Select several widgets at once: Ctrl+click or Shift+click them in the preview or the *Widgets* list, drag a box around them on empty canvas, or press Ctrl+A for all of them. Drag one to move them all, nudge them with the arrow keys, or duplicate or delete them together.
+- *Align* on the toolbar, and in the list's right-click menu, lines up the selected widgets by their left edges, centres, right edges, tops, middles or bottoms, spaces three or more out with equal gaps, or makes them all the same width or height. Each is one undo.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.
