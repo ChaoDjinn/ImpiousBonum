@@ -9,6 +9,16 @@ public static class SunPosition
     private static readonly DateTime J2000 = new(2000, 1, 1, 12, 0, 0, DateTimeKind.Utc);
 
     /// <summary>
+    /// <see cref="Elevation"/> at sunrise and sunset: the sun's top edge is on the horizon then, lifted by the air, while
+    /// its centre is really this far below it.
+    /// </summary>
+    public const double SunsetElevation = -0.833;
+
+    /// <summary>Between sunset and sunrise at a place.</summary>
+    public static bool IsDown(double latitude, double longitude, DateTimeOffset time) =>
+        Elevation(latitude, longitude, time) < SunsetElevation;
+
+    /// <summary>
     /// How high the sun is above the horizon at a place, in degrees: 90 overhead, below 0 after sunset. This is where
     /// it really is; the air lifts it a little near the horizon (half a degree at sunrise), which isn't allowed for.
     /// </summary>

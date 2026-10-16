@@ -3,6 +3,12 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+**Schedule**
+- Schedule rules can follow the sun: show *Night Watch* from sunset to sunrise, say, or a bright theme from sunrise to sunset. Sunset and sunrise are worked out on your PC for the weather's location, so nothing extra is fetched; without a location these rules never apply, and the dialog and *Pages and schedule* say so.
+- Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

@@ -204,7 +204,7 @@ public partial class App
     /// <summary>Checks the schedule (each second, with the game check) and switches when what it wants changes.</summary>
     private void UpdateSchedule()
     {
-        var look = _settings.ScheduleEnabled ? ScheduledLook.From(_settings.Schedule, TimeOnly.FromDateTime(DateTime.Now), WindowsColourMode.IsDark()) : null;
+        var look = _settings.ScheduleEnabled ? ScheduledLook.From(_settings.Schedule, ScheduleNow.Current(_settings.WeatherLocation)) : null;
         if (look == _scheduled)
             return;
         _scheduled = look;
@@ -243,7 +243,7 @@ public partial class App
     {
         if (_layouts is null)
             return;
-        if (ScheduleRuleWindow.Ask(owner, _layouts.List(), _layouts.Themes.List(), "Night Watch") is not { } rule)
+        if (ScheduleRuleWindow.Ask(owner, _layouts.List(), _layouts.Themes.List(), "Night Watch", _settings.WeatherLocation is not null) is not { } rule)
             return;
         _settings.Schedule.Add(rule);
         _settings.Save();

@@ -592,14 +592,25 @@ This works whether or not *Switch automatically* is on.
 
 ### Schedule
 
-The dashboard can change with the time of day: the dim red *Night Watch* theme from 22:00 to 07:00, say, a calmer layout during working hours, or the screen at 30% overnight. It can also follow Windows' dark and light mode, e.g. *Nord* while Windows is dark and *Glacier* while it's light.
+The dashboard can change with the time of day: the dim red *Night Watch* theme from 22:00 to 07:00, say, a calmer layout during working hours, or the screen at 30% overnight. It can also follow the sun, Windows' dark and light mode, or the time of year: *Night Watch* from sunset to sunrise, *Nord* while Windows is dark and *Glacier* while it's light, or a spooky theme from 24 October to 1 November.
 
-*Pages and schedule* → *Add to the schedule* picks when (between two times, which may cross midnight, or while Windows is in dark or light mode) and what to do: show a layout, a theme, dim the screen (see [Dimming](#dimming)), or any mix. The page lists the rules, marking the ones that apply now, and *Follow the schedule* turns them all off and on. Rules combine: when several apply, the layout comes from the first of them that names a layout, the theme from the first that names a theme, and the brightness likewise.
+*Pages and schedule* → *Add to the schedule* picks when and what to do. When is one of:
+
+- **Between two times**, which may cross midnight.
+- **From sunset to sunrise**, or **from sunrise to sunset**. The sun's times are worked out on your PC for the weather's location (see [Weather](#weather)), so nothing is fetched for them, but without a location these rules never apply: the dialog and the page say so.
+- **While Windows is in dark mode**, or in light mode.
+- **All day**, on the dates below.
+
+*Only from … to …* limits any of them to the same dates every year, written month then day: `10-24` to `11-01`, or `12-20` to `01-06`, which crosses New Year. Both days are included, and the same date twice is a single day. The dialog spells the dates out (*Every year from 24 Oct to 1 Nov*) so a day written first shows up. A night belongs to the evening it starts: 01:00 on 1 November is still the night of 31 October, so a Halloween rule from 18:00 to 02:00 on `10-31` lasts into the small hours, and so does one from sunset to sunrise.
+
+What to do is show a layout, a theme, dim the screen (see [Dimming](#dimming)), or any mix. The page lists the rules, marking the ones that apply now, and *Follow the schedule* turns them all off and on. Rules combine: when several apply, the layout comes from the first of them that names a layout, the theme from the first that names a theme, and the brightness likewise. So put a rule for some dates above an everyday one for its theme to win on those dates.
 
 A game linked under *Game layouts* still wins while it's in front, and the schedule fills in what its link doesn't set: a game linked to a layout gets the night theme at night. Like game layouts, scheduled ones are temporary: picking a layout from the tray makes it your choice, and renaming a layout updates the rules. The schedule is in `settings.json` too:
 
 ```json
 "schedule": [
+  { "fromDate": "10-24", "toDate": "11-01", "theme": "Grimoire" },
+  { "when": "night", "fromDate": "12-01", "toDate": "12-31", "theme": "Ice" },
   { "from": "22:00", "to": "07:00", "theme": "Night Watch" },
   { "when": "dark", "theme": "Nord" },
   { "from": "09:00", "to": "17:30", "layout": "Work" },
@@ -607,6 +618,8 @@ A game linked under *Game layouts* still wins while it's in front, and the sched
 ],
 "scheduleEnabled": true
 ```
+
+`when` is `dark` or `light` for Windows' mode, or `night` (sunset to sunrise) or `day` (sunrise to sunset). `fromDate` and `toDate` go with any rule, or make one on their own for the whole of those days.
 
 #### Dimming
 
