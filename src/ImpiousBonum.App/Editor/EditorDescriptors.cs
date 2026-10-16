@@ -53,6 +53,8 @@ public static class EditorDescriptors
             Setting.Color("track", "Bar track", defaults.Track, colours, "The unfilled part of bars.", named: false),
             Setting.Color("warning", "Warning", defaults.Warning, colours, "Used by warning colour rules that say \"warning\".", named: false),
             Setting.Color("critical", "Critical", defaults.Critical, colours, "Used by warning colour rules that say \"critical\".", named: false),
+            Setting.Toggle("warningSymbols", "Warning symbols", defaults.WarningSymbols, colours,
+                "A value in the warning colour gets a ▲ beside it too, and one in the critical colour a ◆, so you can tell them apart without seeing colour."),
             new("backgroundImage", "Image", SettingKind.ImageFile, defaults.BackgroundImage, BackgroundGroup,
                 "A picture drawn behind the widgets, over the background colour. An animated GIF or a video (MP4, WMV) moves."),
             Setting.Choice("backgroundFit", "Fit", defaults.BackgroundFit, BackgroundImage.Fits, BackgroundGroup,

@@ -87,6 +87,12 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - A *Buttons* action, `web`, sends a web request when you tap it: run a Home Assistant script or scene, switch a smart light, start a Node-RED flow or send a notification to your phone with ntfy. Each button has its address, a method (`GET`, `POST` or `PUT`), and if it needs them a body, such as JSON, and a header, such as `Authorization: Bearer` and a token. The guide has examples for Home Assistant and ntfy.
 - The button lights up for a moment in the accent colour when the request worked, or the critical colour when it didn't, and `dashboard.log` says why. A tablet allowed to press buttons can press these too.
 - Importing a layout, from a file or the gallery, lists where its web buttons send and asks before keeping them, as it does for buttons that open programs. Exporting one leaves their headers out, since they're usually a password or token.
+
+**Warnings you can tell apart without colour**
+- A new theme setting, *Warning symbols*: a value in the theme's warning colour gets a ▲ beside it too, and one in its critical colour a ◆, so warning and critical don't rely on colour alone. Text, icon and value, stat tiles, graphs, gauges, bars, drives and *Top apps* show it; *CPU threads* keeps to colour. It's off unless you turn it on, and text that only just fits shrinks a little to make room for it.
+- A new built-in theme, *Clear Sight*, for colour blindness: a sky blue accent, gold warnings and deep pink-red critical ones that stay apart with every common kind of colour blindness, with warning symbols on. That's 56 in all.
+- Ticking a box in the editor's settings with Narrator now changes the setting, as clicking it does.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.
