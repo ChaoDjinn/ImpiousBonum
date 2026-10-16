@@ -17,7 +17,8 @@ A big one: themes for the holidays and a schedule that puts them on by itself, n
 
 **Snow, leaves and more**
 - A new theme setting, *Particles*: snow, autumn leaves, cherry-blossom petals or confetti falling behind the widgets, or embers rising from the bottom. Snow sways as it falls, leaves tumble, petals flutter, and embers drift up and fade. *Amount* sets how many, and *Colour* makes them all one colour; otherwise snow is white, leaves are autumn colours, petals pink and embers orange and gold, and confetti comes in the theme's colours.
-- The built-in themes leave them off, since they cost CPU. They're cheap on a small screen with no glow, but with a theme's glow, or on a 4K dashboard, they take most of a CPU core unless you turn on *Draw with the graphics card*. The guide has the numbers, and suggests snow with *Christmas* and leaves or embers with *Halloween*, with their glow turned off.
+- They look after their own cost. While a theme has particles, its widgets go without its glow, which made every frame many times dearer. They start slower on a big screen drawn without the graphics card, and slow down, or stand still, whenever Impious Bonum would otherwise use more than a tenth of a CPU core. On a 1920 × 480 strip they cost under 1% of one core.
+- The built-in themes leave them off. The guide has the numbers, and suggests snow with *Christmas* and leaves or embers with *Halloween*.
 - They stop while the dashboard is hidden or minimised, and the tablet view, USB screens and snapshots show them still. Moving backgrounds now stop while it's minimised too.
 
 **Themes from a picture**

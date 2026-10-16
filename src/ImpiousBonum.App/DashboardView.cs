@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
+using System.Windows.Media;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
@@ -54,6 +56,7 @@ public sealed class DashboardView : Canvas
         if (IsVisible && _window?.WindowState != WindowState.Minimized)
         {
             _background?.Play();
+            PaceParticles();
             _particles?.Play();
         }
         else
@@ -63,17 +66,43 @@ public sealed class DashboardView : Canvas
         }
     }
 
-    /// <summary>Follows the window the view is in, to stop moving while it's minimised.</summary>
+    /// <summary>Follows the window the view is in, to stop moving while it's minimised and pace particles to its size.</summary>
     private void Watch(Window? window)
     {
         if (_window is not null)
+        {
             _window.StateChanged -= OnWindowStateChanged;
+            _window.SizeChanged -= OnWindowSizeChanged;
+        }
         _window = window;
         if (_window is not null)
+        {
             _window.StateChanged += OnWindowStateChanged;
+            _window.SizeChanged += OnWindowSizeChanged;
+        }
     }
 
     private void OnWindowStateChanged(object? sender, EventArgs e) => PlayBackground();
+
+    // A new size gives particles that had to stand still another go.
+    private void OnWindowSizeChanged(object? sender, SizeChangedEventArgs e) => PlayBackground();
+
+    /// <summary>
+    /// Starts the particles slower on a big dashboard drawn without the graphics card, where every frame redraws
+    /// everything over them (see <see cref="ParticleLayer.FrameTimeFor"/>); from there they pace themselves.
+    /// </summary>
+    private void PaceParticles()
+    {
+        if (_particles is null || _window is null || !IsVisible)
+            return;
+        // The screen pixels the view covers, after the window has scaled it to fit.
+        var bounds = TransformToAncestor(_window).TransformBounds(new Rect(RenderSize));
+        var dpi = VisualTreeHelper.GetDpi(_window);
+        var pixels = bounds.Width * dpi.DpiScaleX * bounds.Height * dpi.DpiScaleY;
+        var fastest = ParticleLayer.FrameTimeFor(pixels, RenderOptions.ProcessRenderMode == RenderMode.SoftwareOnly);
+        if (fastest != _particles.FastestInterval || _particles.StandingStill)
+            _particles.FastestInterval = fastest;
+    }
 
     /// <param name="themeSettings">The layout's theme once resolved (see <see cref="ThemeLibrary.Resolve"/>).</param>
     public void Build(LayoutDocument layout, ThemeSettings themeSettings)
@@ -93,11 +122,14 @@ public sealed class DashboardView : Canvas
             Children.Add(_particles);
         PlayBackground();
 
+        // With particles moving behind them, every widget is redrawn each frame, and a glow makes that many times dearer,
+        // so the widgets go without it while the theme has particles.
+        var glow = _particles is null ? theme.Glow : null;
         foreach (var definition in layout.Widgets)
         {
             var widget = WidgetFactory.Create(definition, theme);
             widget.Editing = _editing;
-            widget.Effect = theme.Glow;
+            widget.Effect = glow;
             widget.Width = definition.GetDouble("width", 200);
             widget.Height = definition.GetDouble("height", 100);
             SetLeft(widget, definition.GetDouble("x", 0));

@@ -140,6 +140,47 @@ public sealed class ParticleTests
         }
     }
 
+    [Theory]
+    [InlineData(400_000, true, 40)]
+    [InlineData(1_000_000, true, 40)]
+    [InlineData(2_000_000, true, 80)]
+    [InlineData(8_294_400, true, 167)]
+    [InlineData(8_294_400, false, 40)]
+    public void Big_dashboards_drawn_without_the_graphics_card_start_slower(double pixels, bool software, double milliseconds) =>
+        Assert.Equal(milliseconds, ParticleLayer.FrameTimeFor(pixels, software).TotalMilliseconds, 0);
+
+    [Fact]
+    public void They_slow_down_while_the_app_is_busy_and_stand_still_past_the_slowest()
+    {
+        var fastest = ParticleLayer.FrameTime;
+        Assert.Equal(TimeSpan.FromMilliseconds(80), ParticleLayer.Pace(fastest, fastest, 0.3));
+        Assert.Equal(ParticleLayer.SlowestFrame, ParticleLayer.Pace(TimeSpan.FromMilliseconds(640), fastest, 0.3));
+        Assert.Null(ParticleLayer.Pace(ParticleLayer.SlowestFrame, fastest, 0.3));
+
+        // Quicker again once it's quiet, but never quicker than they started.
+        Assert.Equal(TimeSpan.FromMilliseconds(80), ParticleLayer.Pace(TimeSpan.FromMilliseconds(120), fastest, 0.01));
+        Assert.Equal(fastest, ParticleLayer.Pace(TimeSpan.FromMilliseconds(50), fastest, 0.01));
+        Assert.Equal(TimeSpan.FromMilliseconds(80), ParticleLayer.Pace(TimeSpan.FromMilliseconds(80), TimeSpan.FromMilliseconds(80), 0));
+
+        // In between, as they are.
+        Assert.Equal(TimeSpan.FromMilliseconds(160), ParticleLayer.Pace(TimeSpan.FromMilliseconds(160), fastest, 0.07));
+    }
+
+    [Fact]
+    public void Widgets_go_without_the_glow_while_the_theme_has_particles()
+    {
+        Sta.Run(() =>
+        {
+            var layout = new LayoutDocument { Widgets = [new System.Text.Json.Nodes.JsonObject { ["type"] = "clock" }] };
+            var view = new DashboardView();
+            view.Build(layout, new ThemeSettings { Glow = 0.5 });
+            Assert.NotNull(view.Children.OfType<Widgets.Widget>().Single().Effect);
+
+            view.Build(layout, new ThemeSettings { Glow = 0.5, Particles = "snow" });
+            Assert.Null(view.Children.OfType<Widgets.Widget>().Single().Effect);
+        });
+    }
+
     [Fact]
     public void The_same_theme_places_them_the_same_way()
     {
