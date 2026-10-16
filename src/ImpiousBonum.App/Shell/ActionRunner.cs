@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Native;
@@ -20,6 +22,15 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
     private const ushort VolumeMute = 0xAD, VolumeDown = 0xAE, VolumeUp = 0xAF;
     private const ushort MediaNext = 0xB0, MediaPrevious = 0xB1, MediaStop = 0xB2, MediaPlayPause = 0xB3;
 
+    /// <summary>How long a web button waits for an answer.</summary>
+    public static readonly TimeSpan WebTimeout = TimeSpan.FromSeconds(10);
+
+    /// <summary>Sends web buttons' requests; HTTP unless a test swaps it.</summary>
+    public Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>? WebSender { get; init; }
+
+    /// <summary>Told why a web button's request didn't work, for the log.</summary>
+    public Action<string> Failed { get; init; } = AppLog.Warning;
+
     public string? Run(WidgetAction action)
     {
         switch (action.Kind.ToLowerInvariant())
@@ -37,6 +48,7 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
                 return action.Target.Length == 0 ? "This button has no layout to switch to. Set its target in the editor." : switchLayout(action.Target);
             case WidgetAction.Keys:
                 return KeyChord.Parse(action.Target, out var problem) is { } chord ? Send(chord) : $"This button's keys can't be sent. {problem}";
+            case WidgetAction.Web: return SendWebRequest(action);
             default:
                 return $"Buttons can't \"{action.Kind}\". Pick an action in the editor.";
         }
@@ -103,6 +115,77 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
             },
         },
     };
+
+    /// <summary>
+    /// Sends a web button's request in the background and tells the button how it went (see <see cref="WidgetAction.Done"/>).
+    /// Settings that can't make a request are a problem for the user now; a request that fails goes to the log with
+    /// the server's answer, never with the header, which can hold a password or token.
+    /// </summary>
+    private string? SendWebRequest(WidgetAction action)
+    {
+        if (WebRequest(action, out var problem) is not { } request)
+        {
+            action.Done?.Invoke(false);
+            return problem;
+        }
+        _ = SendAsync(request, action.Done);
+        return null;
+    }
+
+    // Called on the UI thread, and carries on there after the request, so the button hears back on it too.
+    private async Task SendAsync(HttpRequestMessage request, Action<bool>? done)
+    {
+        string? failed;
+        using (request)
+            failed = await Core.WebRequestSender.SendAsync(request, WebTimeout, WebSender);
+        if (failed is not null)
+            Failed($"Button (web): {failed}");
+        done?.Invoke(failed is null);
+    }
+
+    /// <summary>
+    /// A web button's request: its method to its address, with its body (for POST and PUT) and its header. Null, with
+    /// what's wrong in <paramref name="problem"/>, if its settings don't make one. The problem never repeats the header's value.
+    /// </summary>
+    internal static HttpRequestMessage? WebRequest(WidgetAction action, out string? problem)
+    {
+        var address = Core.WebRequestSender.Address(action.Target);
+        var method = action.Method.Length == 0 ? "POST" : action.Method.Trim().ToUpperInvariant();
+        MediaTypeHeaderValue? contentType = null;
+        var colon = action.Header.IndexOf(':');
+        problem =
+            action.Target.Length == 0 ? "This button has no web address to send to. Set its target in the editor."
+            : address is null ? $"This button's target isn't a web address: {action.Target}. It should start with http:// or https://."
+            : !WidgetAction.WebMethods.Contains(method) ? $"Buttons can't send a web request with \"{action.Method}\". Pick GET, POST or PUT in the editor."
+            : action.ContentType.Length > 0 && !MediaTypeHeaderValue.TryParse(action.ContentType, out contentType)
+                ? $"This button's content type should be one like application/json, not {action.ContentType}."
+            : action.Header.Length > 0 && (colon <= 0 || action.Header.Any(char.IsControl))
+                ? "This button's header can't be sent. Write it as Name: value, such as Authorization: Bearer and a token."
+            : null;
+        if (problem is not null)
+            return null;
+
+        var request = new HttpRequestMessage(new HttpMethod(method), address);
+        if (!string.IsNullOrWhiteSpace(action.Body) && method != "GET")
+        {
+            // JSON for a body that looks like it, as Home Assistant wants, and plain text for anything else, as ntfy wants.
+            contentType ??= new MediaTypeHeaderValue(action.Body.TrimStart() is ['{', ..] or ['[', ..] ? "application/json" : "text/plain");
+            contentType.CharSet ??= "utf-8";
+            request.Content = new StringContent(action.Body, System.Text.Encoding.UTF8);
+            request.Content.Headers.ContentType = contentType;
+        }
+        // Only a request header: the body's type has a setting of its own.
+        var name = colon > 0 ? action.Header[..colon].Trim() : string.Empty;
+        if (name.Length > 0 && !request.Headers.TryAddWithoutValidation(name, action.Header[(colon + 1)..].Trim()))
+        {
+            request.Dispose();
+            problem = name.StartsWith("Content-", StringComparison.OrdinalIgnoreCase)
+                ? $"This button can't send its {name} header. Set the body's type in Content type instead."
+                : $"This button can't send a header called {name}.";
+            return null;
+        }
+        return request;
+    }
 
     /// <summary>Keys Windows expects with the extended flag: navigation, the right-hand modifiers, Windows and media keys.</summary>
     internal static bool IsExtended(ushort vk) =>

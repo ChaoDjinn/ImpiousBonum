@@ -105,15 +105,15 @@ public sealed record AlertRule(
 /// <summary>
 /// The web request an alert sends: a POST of JSON (<c>{"alert": "gpu.hotspot above 95 for 10 s", "message": "…",
 /// "metric": "gpu.hotspot", "value": 97.2, "time": "2026-10-14T21:30:00Z"}</c>, for Home Assistant's webhooks and the
-/// like), or of just the text (for ntfy, which shows the body as the notification).
+/// like), or of just the text (for ntfy, which shows the body as the notification). <see cref="WebRequestSender"/>
+/// sends it.
 /// </summary>
 public static class AlertWebhook
 {
-    private static readonly HttpClient Http = CreateClient();
+    public static readonly TimeSpan Timeout = TimeSpan.FromSeconds(15);
 
     /// <summary>The address, if it's an absolute http or https one.</summary>
-    public static Uri? Address(string? webhook) =>
-        Uri.TryCreate(webhook?.Trim(), UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) ? uri : null;
+    public static Uri? Address(string? webhook) => WebRequestSender.Address(webhook);
 
     public static HttpContent Content(AlertRule rule, string text, MetricStore store, DateTimeOffset time)
     {
@@ -137,23 +137,8 @@ public static class AlertWebhook
     {
         if (Address(rule.Webhook) is not { } address)
             return $"\"{rule.Webhook}\" isn't a web address";
-        try
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Post, address) { Content = Content(rule, text, store, time) };
-            using var response = await (send ?? Http.SendAsync)(request, cancellationToken).ConfigureAwait(false);
-            return response.IsSuccessStatusCode ? null : $"{address.Host} answered {(int)response.StatusCode} {response.ReasonPhrase}";
-        }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
-        {
-            return ex is TaskCanceledException ? $"{address.Host} took too long to answer" : $"couldn't reach {address.Host}: {ex.Message}";
-        }
-    }
-
-    private static HttpClient CreateClient()
-    {
-        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd(WebIdentity.UserAgent);
-        return client;
+        using var request = new HttpRequestMessage(HttpMethod.Post, address) { Content = Content(rule, text, store, time) };
+        return await WebRequestSender.SendAsync(request, Timeout, send, cancellationToken).ConfigureAwait(false);
     }
 }
 

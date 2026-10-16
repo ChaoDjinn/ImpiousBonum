@@ -83,7 +83,7 @@ public static class LayoutValidator
                 SettingKind.Toggle when value.GetValueKind() is not (JsonValueKind.True or JsonValueKind.False) => "should be true or false",
                 SettingKind.Items when value is not JsonArray => "should be a list",
                 SettingKind.Text or SettingKind.Template or SettingKind.DriveTemplate or SettingKind.Metric or SettingKind.Color or SettingKind.Choice or SettingKind.Icon or SettingKind.Font or SettingKind.FontFile or SettingKind.ImageFile
-                    or SettingKind.Picks when value.GetValueKind() != JsonValueKind.String => "should be text",
+                    or SettingKind.Picks or SettingKind.Folder when value.GetValueKind() != JsonValueKind.String => "should be text",
                 SettingKind.Choice or SettingKind.Icon when !setting.Choices!.Contains(value.GetValue<string>()) =>
                     $"should be one of {string.Join(", ", setting.Choices!)}",
                 // Names from a list the app keeps (news feeds, say) can't be known here, and the editor shows ones that have gone.
