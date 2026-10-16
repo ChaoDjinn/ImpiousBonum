@@ -140,7 +140,7 @@ To put a picture behind the widgets, add `"backgroundImage": "C:\\Pictures\\wall
 
 *Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file, background image and image widgets' pictures inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor's *Layouts ▾*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual. A [photo frame](#photo-frame)'s folder isn't exported: it stays on your PC, and whoever imports the layout chooses their own.
 
-A layout from someone else could have a harmless-looking button that runs any program, so if it has buttons that open something, the import lists what they'd open and asks whether to keep them or clear them.
+A layout from someone else could have a harmless-looking button that runs any program, or one that sends a web request to something on your network, so if it has buttons that open something or [send web requests](#web-request-buttons), the import lists what they'd open and where they'd send, and asks whether to keep them or clear them. Exporting leaves out web buttons' headers, which are usually a password or token.
 
 An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder. Imports only take the layout and the font (`.ttf`, `.otf`) and images it names, reject a file with `..` or absolute paths in it, and cap sizes (1 MB for the layout, 50 MB per file).
 
@@ -152,9 +152,9 @@ choose *A few big things* (up to 6 widgets) or *Lots at once*: a TV across the r
 things, while a monitor at arm's length can show lots. Pick a layout to see it drawn live with your own readings.
 *Show on* puts it on the screen you picked (*Add a dashboard on* gives a screen without one a dashboard), then *Edit
 it* opens it in the editor; with *Any screen*, *Add to my layouts* only adds it. It's added the same way as importing
-a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open programs.
-Pictures and fonts inside a shared layout show once it's added. In the editor, *Layouts ▾* → *Get one from the
-gallery…* opens it for the screen you're editing.
+a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open programs
+or send web requests. Pictures and fonts inside a shared layout show once it's added. In the editor, *Layouts ▾* →
+*Get one from the gallery…* opens it for the screen you're editing.
 
 So far it has twenty-one, made along with the app, for screens from a 3.5" USB screen (480 × 320), a 7" panel
 (1024 × 600) and a 1280 × 800 tablet through 1920 × 480 and 1920 × 720 bars to 1080p, 1440p and 4K monitors, a TV
@@ -631,8 +631,42 @@ The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a
 | `open` | Opens the *target*: a program (`calc.exe`), a file or folder (`C:\Games`), a web address, or a Windows link such as `ms-settings:sound`. *Arguments* are passed to a program |
 | `keys` | Sends a shortcut such as `Ctrl+Shift+M`, `Win+D` or `F13` to the app you're using. Names are like `A`, `5`, `F1`–`F24`, `Enter`, `Space`, `Esc`, `Tab`, `Home`, `PgUp`, `Up`, `Delete`, `VolumeUp`, `MediaPlayPause` |
 | `layout` | Switches to the layout named in *target* |
+| `web` | Sends a web request to the *target* address, for Home Assistant, smart lights, Node-RED or ntfy (see [Web request buttons](#web-request-buttons)) |
 
-Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything in the tablet view, which is read-only, or while you edit the layout. If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
+Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything while you edit the layout, or in the tablet view unless you [let tablets press them](#tablet-view). If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
+
+#### Web request buttons
+
+A `web` button sends a web request when you tap it: to run a Home Assistant script or scene, switch a smart light or plug that has a web address of its own, start a Node-RED flow, or send a notification to your phone with [ntfy](https://ntfy.sh). As well as its *target*, the address (`http://` or `https://`), each one has:
+
+- **Method:** `POST` (the default), `GET` or `PUT`.
+- **Body:** what a `POST` or `PUT` sends, such as JSON or a message. *Content type* says what it is; left empty, it's `application/json` for a body in `{ }` or `[ ]` and `text/plain` for anything else.
+- **Header:** one header as `Name: value`, usually `Authorization: Bearer` and a token.
+
+The request goes in the background, so the dashboard carries on, and gives up after 10 seconds. The button stays pressed until the answer comes, then lights up for a moment: in the theme's accent colour if it worked, or its critical colour if it didn't, when `dashboard.log` says why (*homeassistant.local answered 401 Unauthorized*, say) but never what's in the header. Taps while it waits don't count, so a slow server doesn't get a queue of requests. With *Let tablets press buttons* on (see [Tablet view](#tablet-view)), a tablet can press it too, and sees it light up.
+
+| To | Set up as |
+|---|---|
+| Run a Home Assistant automation | Give the automation a [webhook trigger](https://www.home-assistant.io/docs/automation/trigger/#webhook-trigger), then target `http://homeassistant.local:8123/api/webhook/<webhook id>` with `POST`. It needs no token: the webhook id is the secret, so make it hard to guess |
+| Run a Home Assistant script or scene | Target `http://homeassistant.local:8123/api/services/script/turn_on`, body `{"entity_id": "script.movie_night"}`, header `Authorization: Bearer <long-lived token>`. Make the token on your Home Assistant profile's *Security* tab, under *Long-lived access tokens*. For a scene it's `scene/turn_on` and `scene.evening`; to switch a light, `light/toggle` and `light.desk_lamp` |
+| A notification on your phone | Target `https://ntfy.sh/<your topic>`, body `Dinner's ready`, and subscribe to the topic in the ntfy app, which shows the body as the notification. A header such as `Title: From the dashboard` gives it a title |
+
+In the layout file, those three look like this:
+
+```json
+{ "type": "buttons", "x": 30, "y": 30, "width": 600, "height": 140,
+  "buttons": [
+    { "label": "Lights off", "icon": "power", "action": "web",
+      "target": "http://homeassistant.local:8123/api/webhook/lights-off-7f3a9c" },
+    { "label": "Movie night", "icon": "moon", "action": "web",
+      "target": "http://homeassistant.local:8123/api/services/script/turn_on",
+      "body": "{\"entity_id\": \"script.movie_night\"}", "header": "Authorization: Bearer <long-lived token>" },
+    { "label": "Dinner", "icon": "chat", "action": "web", "target": "https://ntfy.sh/<your topic>",
+      "body": "Dinner's ready", "header": "Title: From the dashboard" }
+  ] }
+```
+
+The header is kept in the layout as plain text. *Export…* leaves headers out, since they're usually a password or token, and says so: whoever imports the layout adds their own. The address and body go with it, so leave secrets out of those in a layout you share. A layout from someone else could send requests to things on your network, so importing one with web buttons lists where they send and asks first (see [Sharing layouts](#sharing-layouts)).
 
 ### Audio visualiser
 

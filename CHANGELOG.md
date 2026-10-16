@@ -60,6 +60,12 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - A new *Energy* page, and readings for any widget: your whole PC's power now (`power.total`: the CPU's and graphics card's from the sensor service, and 50 W for the rest, which you can change), the energy it's used today and this month (`energy.today`, `energy.month`), and what that costs at your price per kWh (`energy.cost.today`, `energy.cost.month`, such as *£0.48*).
 - It's counted while Impious Bonum runs, needs the sensor service, and is kept across restarts. Today's total starts again at midnight, and the month's on the 1st.
 - Turn on *Energy* → *Grid carbon intensity* for how clean Great Britain's electricity is now (`grid.carbon`, `grid.carbon.index`) and when it'll be cleanest in the next 24 hours (`grid.carbon.best`, such as *Lowest around 03:30*), from NESO's Carbon Intensity API every 30 minutes. Give the first half of your postcode for your region's figures. It's off until you turn it on, and nothing about you is sent but that half.
+
+**Buttons that send web requests**
+- A *Buttons* action, `web`, sends a web request when you tap it: run a Home Assistant script or scene, switch a smart light, start a Node-RED flow or send a notification to your phone with ntfy. Each button has its address, a method (`GET`, `POST` or `PUT`), and if it needs them a body, such as JSON, and a header, such as `Authorization: Bearer` and a token. The guide has examples for Home Assistant and ntfy.
+- The button lights up for a moment in the accent colour when the request worked, or the critical colour when it didn't, and `dashboard.log` says why. A tablet allowed to press buttons can press these too.
+- Importing a layout, from a file or the gallery, lists where its web buttons send and asks before keeping them, as it does for buttons that open programs. Exporting one leaves their headers out, since they're usually a password or token.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.
