@@ -1,0 +1,15 @@
+// Polished copper and brass on dark gunmetal, like the dials of an old machine.
+{
+  "fontFamily": "Bahnschrift",
+  "fontWeight": "SemiLight",
+  "foreground": "#F6E7D6",
+  "secondary": "#C2E8B98A",
+  "accent": "#E0823F",
+  "background": "#15171A",
+  "track": "#2E2620",
+  "warning": "#FFE066",
+  "critical": "#FF5B4A",
+  "accent2": "#D8B04C",
+  "backgroundGradient": "#241B15",
+  "glow": 0.2
+}

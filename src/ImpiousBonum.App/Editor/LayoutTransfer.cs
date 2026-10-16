@@ -1,11 +1,12 @@
 using System.IO;
+using System.Text.Json.Nodes;
 using System.Windows;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;
 
 namespace ImpiousBonum.App.Editor;
 
-/// <summary>The Export… and Import… dialogs, shared by the editor and the tray.</summary>
+/// <summary>The Export… and Import… dialogs, shared by the editor and the tray, and adding what's picked in the gallery.</summary>
 public static class LayoutTransfer
 {
     private const string Caption = "Impious Bonum";
@@ -110,6 +111,44 @@ public static class LayoutTransfer
     }
 
     /// <summary>
+    /// Adds a theme from the gallery to the saved themes, asking before replacing a saved theme with the same name. A
+    /// built-in theme can't be replaced, so one named like it has to have another name. Returns the saved name, or null
+    /// if cancelled or it couldn't be saved (the user has been told).
+    /// </summary>
+    public static string? AddTheme(Window? owner, ThemeLibrary themes, string name, JsonObject values)
+    {
+        if (themes.Find(name) is { } existing)
+        {
+            var builtIn = ThemeLibrary.IsBuiltIn(existing);
+            var answer = builtIn
+                ? Show(owner, $"There's a built-in theme called \"{existing}\", and built-in themes can't be replaced.{Environment.NewLine}{Environment.NewLine}" +
+                    "Add this one under another name?", MessageBoxButton.OKCancel, MessageBoxImage.Information)
+                : Show(owner, $"There's already a theme called \"{existing}\". Replace it? Every layout using it will change.{Environment.NewLine}{Environment.NewLine}" +
+                    "Yes replaces it. No keeps both and lets you name the new one.", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+            if (answer is MessageBoxResult.Cancel)
+                return null;
+            if (builtIn || answer == MessageBoxResult.No)
+            {
+                var newName = NamePromptWindow.Ask(owner, "Add theme", "Name for the theme", SuggestName(themes, name), themes.CheckNewName);
+                if (newName is null)
+                    return null;
+                name = newName;
+            }
+        }
+
+        try
+        {
+            themes.Save(name, values);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            Show(owner, $"Couldn't save the theme: {ex.Message}", MessageBoxButton.OK, MessageBoxImage.Error);
+            return null;
+        }
+        return themes.Find(name) ?? name;
+    }
+
+    /// <summary>
     /// A layout from someone else can have a harmless-looking button that runs any program, or one that sends a web
     /// request to a device on your network. If it has buttons that open something or send a request, lists what and
     /// asks: keep them, clear what they open and where they send, or cancel the import. False means cancel.
@@ -137,12 +176,17 @@ public static class LayoutTransfer
     }
 
     /// <summary>"Name (2)", "Name (3)"… whichever is free first.</summary>
-    public static string SuggestName(LayoutLibrary library, string name)
+    public static string SuggestName(LayoutLibrary library, string name) => SuggestName(name, n => library.CheckNewName(n));
+
+    /// <summary>"Name (2)", "Name (3)"… whichever theme name is free first.</summary>
+    public static string SuggestName(ThemeLibrary themes, string name) => SuggestName(name, themes.CheckNewName);
+
+    private static string SuggestName(string name, Func<string, string?> check)
     {
         for (var i = 2; i < 1000; i++)
         {
             var candidate = $"{name} ({i})";
-            if (library.CheckNewName(candidate) is null)
+            if (check(candidate) is null)
                 return candidate;
         }
         return name;

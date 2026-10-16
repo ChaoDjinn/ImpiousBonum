@@ -1,0 +1,12 @@
+// Ink greys on paper, like an e-reader: matte, calm and easy on the eyes.
+{
+  "fontFamily": "Sitka Text",
+  "fontWeight": "Normal",
+  "foreground": "#1E1E1E",
+  "secondary": "#B31E1E1E",
+  "accent": "#4D4D4D",
+  "background": "#E6E6E1",
+  "track": "#CACAC4",
+  "warning": "#7A5C00",
+  "critical": "#A12A22"
+}

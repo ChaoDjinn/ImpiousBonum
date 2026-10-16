@@ -304,7 +304,7 @@ public static class LayoutPackage
     }
 
     /// <summary>Hand-made files saved by Notepad may start with a UTF-8 byte order mark, which the JSON reader refuses.</summary>
-    private static ReadOnlySpan<byte> WithoutBom(byte[] json) =>
+    internal static ReadOnlySpan<byte> WithoutBom(byte[] json) =>
         json.AsSpan().StartsWith("\uFEFF"u8) ? json.AsSpan(3) : json;
 
     /// <summary>Reads an entry, stopping as soon as it passes the limit: the size in the zip header can't be trusted.</summary>

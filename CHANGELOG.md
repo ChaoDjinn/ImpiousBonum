@@ -21,6 +21,11 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - *Case Strip* (480 × 1920): for the tall screens inside a PC case, with temperatures and FPS, CPU and GPU dials, every CPU thread, memory and an audio visualiser.
 - That's 21 in all. The gallery's pictures now show the audio visualiser moving, as it would with music on.
 
+**Themes in the gallery**
+- The *Gallery* page has a *Themes* tab: themes other people have made, each shown on the default layout with your own readings. *Add to my themes* keeps one with your saved themes, for any layout to use, asking before it replaces a theme of yours with the same name.
+- Five to start with: *Deep Sea* (bioluminescent teal glowing on abyss blue), *Nebula* (violet fading into blue, with a pink glow), *Copper* (copper and brass on dark gunmetal), and two light ones, *Matcha* (soft greens on a pale foam) and *Paper* (e-ink greys).
+- To share a theme of your own, see [Sharing a theme](gallery/README.md#sharing-a-theme).
+
 **Countdowns every year**
 - A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
