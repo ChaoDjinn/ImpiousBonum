@@ -123,30 +123,52 @@ public partial class App
         }
     }
 
-    private void ShowTabletLink()
+    /// <summary>The link and its QR code: for the main dashboard, or for the saved layout <paramref name="layout"/>.</summary>
+    private void ShowTabletLink(string? layout = null)
     {
         if (_tabletLink is not null)
         {
+            _tabletLink.ShowLayout(layout);
             BringToFront(_tabletLink);
             return;
         }
         if (_tablet?.IsRunning != true || _settings.TabletToken is not { } token)
             return;
 
-        _tabletLink = new TabletLinkWindow(_settings.TabletPort, token, NewTabletLink);
+        _tabletLink = new TabletLinkWindow(_settings.TabletPort, token, NewTabletLink, layout);
         _tabletLink.Closed += (_, _) => _tabletLink = null;
         _tabletLink.Show();
         BringToFront(_tabletLink);
     }
 
-    private void CopyTabletLink()
+    private void CopyTabletLink(string? layout)
     {
         if (_settings.TabletToken is not { } token)
             return;
-        if (TabletLinkWindow.FirstLink(_settings.TabletPort, token) is not { } link)
+        if (TabletLinkWindow.FirstLink(_settings.TabletPort, token, layout) is not { } link)
             _tray?.ShowError("No tablet link", "This PC doesn't seem to be on a local network.");
         else if (TabletLinkWindow.CopyToClipboard(link))
             _tray?.ShowInfo("Tablet link copied", link);
+    }
+
+    /// <summary>
+    /// A saved layout a tablet's link names, in its own theme: game layouts and the schedule are about the main screen,
+    /// so they don't change it. A file that can't be read shows the built-in layout, as on another dashboard.
+    /// </summary>
+    private (LayoutDocument Layout, ThemeSettings Theme) LoadTabletLayout(string name)
+    {
+        var layouts = _layouts!;
+        LayoutDocument layout;
+        try
+        {
+            layout = layouts.Library.Load(name);
+        }
+        catch (Exception ex) when (ex is JsonException or IOException)
+        {
+            AppLog.Warning($"Tablet view: couldn't read layout \"{name}\": {ex.Message}");
+            layout = LayoutStore.LoadDefault();
+        }
+        return (layout, layouts.Themes.Resolve(layout.Theme));
     }
 
     /// <summary>A new secret for the link: tablets using the old one stop updating. Returns the new secret.</summary>

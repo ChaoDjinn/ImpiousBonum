@@ -77,5 +77,7 @@ public static class TabletAccess
         return found.OrderByDescending(f => f.HasGateway).Select(f => f.Address).Distinct().ToList();
     }
 
-    public static string Link(IPAddress address, int port, string token) => $"http://{address}:{port}/?k={token}";
+    /// <summary>The link a tablet opens: the main dashboard, or the saved layout <paramref name="layout"/>.</summary>
+    public static string Link(IPAddress address, int port, string token, string? layout = null) =>
+        $"http://{address}:{port}/?k={token}" + (layout is null ? "" : $"&layout={Uri.EscapeDataString(layout)}");
 }

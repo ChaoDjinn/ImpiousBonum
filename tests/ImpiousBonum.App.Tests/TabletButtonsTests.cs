@@ -3,6 +3,7 @@ using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
+using ImpiousBonum.Core.Remote;
 
 namespace ImpiousBonum.App.Tests;
 
@@ -45,5 +46,46 @@ public sealed class TabletButtonsTests
             Assert.False(tablet.PressAt(0.75, 0.4));
             Assert.Single(actions);
         });
+    }
+
+    [Fact]
+    public void A_tap_presses_the_button_on_the_layout_that_tablet_shows()
+    {
+        Sta.Run(() =>
+        {
+            const string token = "s3cret-token_value";
+            // The same place on another layout has a different button.
+            var media = Layout();
+            media.Widgets[0]["buttons"] = new JsonArray(new JsonObject { ["label"] = "Play", ["action"] = "play-pause" });
+            using var tablet = new TabletView
+            {
+                AllowTaps = true,
+                FindLayout = name => string.Equals(name, "Media", StringComparison.OrdinalIgnoreCase) ? "Media" : null,
+                LoadLayout = _ => (media, new ThemeSettings()),
+            };
+            var actions = new List<string>();
+            tablet.ActionRequested += (_, action) => actions.Add(action.Kind);
+            using var server = new TabletServer(0, token);
+            tablet.Serve(server);
+            tablet.Build(Layout(), new ThemeSettings());
+            var store = new MetricStore();
+
+            server.Respond(Get($"/frame?k={token}"));
+            server.Respond(Get($"/frame?k={token}&layout=media"));
+            tablet.Refresh(store, DateTime.Now);
+
+            Assert.Equal(200, server.Respond(Tap($"/tap?k={token}&layout=media&x=0.25&y=0.5")).Status);
+            Assert.Equal(200, server.Respond(Tap($"/tap?k={token}&x=0.25&y=0.5")).Status);
+            Assert.Equal([WidgetAction.PlayPause, WidgetAction.Mute], actions);
+
+            // A layout that isn't drawn for a tablet has nothing to press, and one that isn't there isn't asked.
+            Assert.False(tablet.PressAt("Streamer", 0.25, 0.5));
+            Assert.Equal(410, server.Respond(Tap($"/tap?k={token}&layout=Streamer&x=0.25&y=0.5")).Status);
+            Assert.Equal(2, actions.Count);
+        });
+
+        static HttpRequestHead Get(string target) => HttpRequestHead.Parse($"GET {target} HTTP/1.1\r\nHost: pc")!;
+
+        static HttpRequestHead Tap(string target) => HttpRequestHead.Parse($"POST {target} HTTP/1.1\r\nHost: pc")!;
     }
 }

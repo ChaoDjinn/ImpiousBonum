@@ -394,6 +394,7 @@ public sealed partial class PropertyPanel : StackPanel
         SettingKind.ImageFile => FileEditor(target, setting, "Images (*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff)|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff|All files|*.*", "Choose a background image"),
         SettingKind.Template or SettingKind.DriveTemplate or SettingKind.Metric => MetricTextEditor(target, setting),
         SettingKind.Picks => PicksEditor(target, setting),
+        SettingKind.Folder => FolderEditor(target, setting, "Choose a folder of pictures"),
         _ => TextEditor(target, setting),
     };
 
@@ -583,7 +584,25 @@ public sealed partial class PropertyPanel : StackPanel
         return (combo, () => combo.SelectedItem = CurrentString(target, setting));
     }
 
-    private (FrameworkElement, Action) FileEditor(SettingTarget target, SettingDescriptor setting, string filter, string title)
+    private (FrameworkElement, Action) FileEditor(SettingTarget target, SettingDescriptor setting, string filter, string title) =>
+        PathEditor(target, setting, () =>
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = filter, Title = title };
+            return dialog.ShowDialog(Window.GetWindow(this)) == true ? dialog.FileName : null;
+        });
+
+    private (FrameworkElement, Action) FolderEditor(SettingTarget target, SettingDescriptor setting, string title) =>
+        PathEditor(target, setting, () =>
+        {
+            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = title };
+            // From the folder chosen now, if it's still there.
+            if (CurrentString(target, setting) is { Length: > 0 } current && System.IO.Directory.Exists(current))
+                dialog.InitialDirectory = current;
+            return dialog.ShowDialog(Window.GetWindow(this)) == true ? dialog.FolderName : null;
+        });
+
+    /// <summary>A path to type, or to <paramref name="choose"/> with Browse… (which returns null if cancelled).</summary>
+    private (FrameworkElement, Action) PathEditor(SettingTarget target, SettingDescriptor setting, Func<string?> choose)
     {
         var panel = new DockPanel();
         var browse = new Button { Content = "Browse…", Margin = new Thickness(6, 0, 0, 0) };
@@ -595,9 +614,8 @@ public sealed partial class PropertyPanel : StackPanel
         box.TextChanged += (_, _) => Write(target, setting.Key, box.Text.Length == 0 ? null : JsonValue.Create(box.Text));
         browse.Click += (_, _) =>
         {
-            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = filter, Title = title };
-            if (dialog.ShowDialog(Window.GetWindow(this)) == true)
-                _session.SetValue(target, setting.Key, JsonValue.Create(dialog.FileName), this);
+            if (choose() is { } path)
+                _session.SetValue(target, setting.Key, JsonValue.Create(path), this);
         };
         return (panel, Refresh);
 

@@ -26,7 +26,7 @@
             </Grid>
         </Border>
         <StackPanel Margin="{DynamicResource DialogPadding}">
-            <TextBlock TextWrapping="Wrap" Margin="0,0,0,16"
+            <TextBlock x:Name="IntroText" TextWrapping="Wrap" Margin="0,0,0,16"
                        Text="Scan the code, or open the link, on a tablet or phone on the same Wi-Fi." />
 
             <Border Background="White" Padding="12" HorizontalAlignment="Center" CornerRadius="8">
