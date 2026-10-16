@@ -85,7 +85,7 @@ public partial class App : ISettingsHost
                 return;
             if (descriptor.Type == BarsWidget.ClaudeDescriptor.Type)
                 OfferClaudeCodeConnection(owner);
-            else if (descriptor.Type == WeatherWidget.Descriptor.Type && _settings.WeatherLocation is null)
+            else if ((descriptor.Type == WeatherWidget.Descriptor.Type || descriptor.Type == RainWidget.Descriptor.Type) && _settings.WeatherLocation is null)
                 SetWeatherLocation(owner);
         };
         EditedWindow()?.BeginEdit(session);
@@ -426,4 +426,6 @@ public partial class App : ISettingsHost
         _settings.Save();
         AppLog.Info($"Hardware rendering {(on ? "on" : "off")} from the next start");
     }
+
+    Task ISettingsHost.RestoreBackupAsync(string path) => RestoreBackupAsync(path);
 }

@@ -4,7 +4,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 ## Contents
 
-- [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
+- [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [photo frame](#photo-frame)
@@ -34,6 +34,8 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 - `energy.json`: the energy your PC has used today and this month so far, so a restart carries on from it (see [Energy use](#energy-use)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
 
+To keep a copy of your settings, layouts and themes, or move them to another PC, see [Backing up your settings](#backing-up-your-settings).
+
 ### The window and the tray menu
 
 Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bonum*, or double-click the icon), or start Impious Bonum again from the Start menu while it's running. A sidebar on the left has a page for each part of the app, as in Windows' Settings, and changes take effect as you make them. The layout editor is the exception: it has *Save*, and asks before another page takes its place while it has unsaved changes. The window follows Windows' light or dark mode.
@@ -54,7 +56,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | *Custom data* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
 | *Status checks* | Whether your own servers and services are up (see [Status checks](#status-checks)) |
 | *Alerts*, *Hotkeys*, *Logging* | See [Alerts](#alerts), [Hotkeys](#hotkeys) and [Logging](#logging) |
-| *General* | *Start with Windows*, drawing with the graphics card, and the settings folder and `dashboard.log` |
+| *General* | *Start with Windows*, drawing with the graphics card, the settings folder, backing it up and restoring it (see [Backing up your settings](#backing-up-your-settings)), and `dashboard.log` |
 | *About and updates* | The version, checking for and installing updates, what's new, this guide and the widget reference for your version, *Report a problem*, and *Details* to copy into a problem report |
 
 The tray menu keeps to the basics: *Open Impious Bonum*, *Edit layout…* (the window on the main dashboard's layout), *Layout* to switch the main dashboard's layout quickly, *Restart to update to x.y.z* when an update is waiting, and *Exit*. Its first line shows the installed version, and it's dark or light with the taskbar (Settings → Personalisation → Colours → *Choose your mode*).
@@ -71,6 +73,20 @@ Without a spare screen, *Screens* → pick the monitor → *Size* → *A window*
 - The canvas scales to the window, so a small window shrinks everything evenly. For a window that isn't a strip, give the layout a matching size in the editor (*Canvas*); *Match dashboard screen* uses the window's size.
 
 *Size* → *Fill the screen* goes back to covering the whole monitor.
+
+### Backing up your settings
+
+*General* → *Back up and restore* → *Back up…* saves your whole setup as one `.ibbackup` file: `settings.json` (calendars, alerts, hotkeys, the schedule, custom data, which screens the dashboards are on and the rest), every saved layout with the fonts and pictures in its folder under `layouts`, and your saved themes. Keep it somewhere safe, or take it to another PC.
+
+**A backup has private things in it**: your calendar links, the tablet link, and the web addresses and commands you've set up, for alerts and custom data among others (with any tokens in custom data's headers). Keep it somewhere only you can open, and don't share it the way you'd share a layout: to share a layout, export it instead (see [Sharing layouts](#sharing-layouts)).
+
+*Restore…* shows what's in a backup: when it was made, by which version of Impious Bonum, and how many layouts and saved themes it has. Once you say yes, Impious Bonum first saves your setup as it is now in a folder beside the settings folder (`%AppData%\ImpiousBonum backups`, as *Before restoring 2026-10-16 14.05.ibbackup*), so you can restore that to go back. Then it closes, puts the backup's settings, layouts and themes in place of yours, and starts again. Layouts and themes that aren't in the backup go, though they're in the one saved before restoring.
+
+- A backup from a newer version of Impious Bonum says so first: this version would drop the settings it doesn't know about. Update first (*About and updates*) to keep everything.
+- Left out: `dashboard.log`, the `logs` folder and `sessions.csv`, which are records rather than settings (restoring them would lose what's been recorded since), and `claude-usage.json`, which Claude Code keeps up to date. *Start with Windows* and the sensor service belong to Windows rather than the settings folder, so restoring leaves them as they are.
+- Fonts and pictures a layout uses from elsewhere, such as your Pictures folder, aren't in a backup. To take a layout with them to another PC, export it.
+- On another PC, a layout's fonts and pictures from its folder under `layouts` work as before. The dashboards look for the screens they were on, so choose screens for them on *Screens*.
+- Only restore your own backups: a backup sets the programs and web addresses that custom data, alerts and buttons use. Restoring checks the file as importing a layout does: it refuses one with `..` or absolute paths in it, caps sizes (100 MB a file, 1 GB in all), and takes only settings, layouts with their fonts and pictures, and themes.
 
 ## Layouts and the editor
 
@@ -214,6 +230,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set on the *Weather* page, every 15 minutes |
 | `weather.gusts`, `weather.wind.degrees`, `weather.pressure`, `weather.pressure.trend` (*Rising*, *Falling* or *Steady* over the last 3 hours), `weather.dewpoint`, `weather.visibility`, `weather.clouds`, `weather.precipitation` (the last 15 minutes), `weather.precipitation.today`, `weather.rain.hour`, `weather.tomorrow.rain`, `weather.uv`, `weather.uv.max` (today's highest), `weather.uv.level` (*Low* to *Extreme*), `weather.daylight` | The same forecast (see [Weather](#weather)) |
 | `weather.sun.elevation` | How high the sun is, in degrees, worked out on your PC from the place and the time, every 30 seconds |
+| `weather.rain.soon` (e.g. *Rain from 14:30*), `weather.rain.next` (minutes until it rains, 0 while it is) | The same forecast's next two hours, a quarter of an hour at a time (see [Rain soon](#rain-soon)) |
 | `weather.aqi`, `weather.aqi.level`, `weather.aqi.european`, `weather.aqi.us`, `weather.pm25`, `weather.pm10`, `weather.ozone`, `weather.no2` | Open-Meteo's air quality (from CAMS) for the same place, every hour, once *Weather* → *Air quality and pollen* is on (see [Air quality and pollen](#air-quality-and-pollen)) |
 | `weather.pollen` (e.g. *Grass high*), `weather.pollen.grass`, `weather.pollen.tree`, `weather.pollen.weed`, and `weather.pollen.grass.level`, `weather.pollen.tree.level`, `weather.pollen.weed.level` (*None* to *Very high*) | The same, for places in Europe in season |
 | `weather.warnings` (how many), `weather.warning` (the most serious one's headline), `weather.warning.level` (e.g. *Yellow* or *Severe*) | Warnings of severe weather for the same place, from the Met Office in the UK or the National Weather Service in the US, every 10 minutes, once *Weather* → *Severe weather warnings* is on (see [Severe weather warnings](#severe-weather-warnings)) |
@@ -336,6 +353,19 @@ For example, `UV {weather.uv} ({weather.uv.level}) · {weather.pressure} {weathe
 The location is set once for the PC, so every layout shows the same place (and the widget can move between it and [more places](#more-places)). Units follow your Windows region (°C, km/h, mm, km and hPa, or °F, mph, inches, miles and inches of mercury); *Weather* → *Units* changes them.
 
 Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-commercial use and needs no account. When you search, what you type goes to Open-Meteo, and to [OpenStreetMap](https://www.openstreetmap.org)'s place search only when Open-Meteo doesn't find it (it knows more suburbs, parks and postcodes). After that only the place's coordinates are used: they go to Open-Meteo every 15 minutes for the forecast (and every hour for [air quality and pollen](#air-quality-and-pollen), if you turn them on), and with [severe weather warnings](#severe-weather-warnings) on, a US place's go to the National Weather Service every 10 minutes. Nothing else is sent, and nothing at all until you search or set a location. *Turn off weather* forgets the place (and any [more places](#more-places)) and stops it. If the internet is down the last forecast stays for up to three hours. Weather data by Open-Meteo.com, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Place search by OpenStreetMap ([© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)).
+
+#### Rain soon
+
+The *Rain soon* widget shows the rain in the next two hours at your location: a bar for each quarter of an hour, taller the heavier the rain, with the time every half hour under them. A line above says what's coming: *Dry for the next 2 hours*, *Rain from 14:30*, *Rain stopping around 15:15*, or *Light rain for the next 2 hours* (*Moderate* or *Heavy* when it is). It says snow instead when the forecast for that hour is snow. Add it with *Add widget* → *Rain soon* in the editor; like the *Weather* widget, it needs a location.
+
+<p align="center"><img src="images/widgets/rain.png" width="600" alt="The weather now, 14° and partly cloudy, and under it Rain from 22:30 with a bar for each quarter of an hour: none until half past ten, then a shower that's heaviest around eleven and tails off by a quarter to twelve"></p>
+
+- **The bars:** a quarter-hour that's dry has no bar, so two dry hours are just the line along the bottom. A drizzle still gets a small bar, so you can see it; light rain (up to 2.5 mm an hour) reaches up to half way, and heavy rain (10 mm an hour or more) the top. They're in the accent colour unless you choose another, and turning off *Summary* leaves just the bars and the times.
+- **Readings for any widget:** `weather.rain.soon` is the line above the bars, and `weather.rain.next` is how many minutes until it rains: 0 while it's raining, and no reading while it stays dry for the next two hours. An [alert](#alerts) on `weather.rain.next` below 30 is a reminder to bring the washing in.
+- **Where it's most precise:** Open-Meteo's forecasts a quarter of an hour at a time come from weather models that work in that detail only over central Europe (Germany's ICON-D2 and France's AROME) and North America (the US's HRRR). Elsewhere each quarter-hour is filled in from the hourly forecast, so it can't say just when in the hour a shower starts or stops.
+- **Your location's:** like the `weather.*` readings, it's always your location's rain, even while a *Weather* widget beside it shows one of your [more places](#more-places).
+
+Times are the place's own, like the hourly forecast's. It all comes in the same request as the rest of the forecast, so nothing more is sent and there are no extra requests.
 
 #### More places
 

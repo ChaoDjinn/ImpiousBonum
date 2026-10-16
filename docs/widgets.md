@@ -34,7 +34,7 @@ mean the widget's own.
 - **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
-- **Weather, news and Claude:** [Weather](#weather-weather) · [News](#news-news) · [Claude usage](#claude-usage-claude)
+- **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [News](#news-news) · [Claude usage](#claude-usage-claude)
 - **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape) · [Photo frame](#photo-frame-photos)
 
 ## Text (`text`)
@@ -522,6 +522,20 @@ The weather now and the days or hours ahead, from Open-Meteo.com, and severe wea
 | `iconColor` | color | `accent` | Icon colour. For outline icons. |
 | `textColor` | color | `foreground` | Text colour. The temperatures, and the conditions when they have the larger line (first in Details to show). |
 | `detailColor` | color | `secondary` | Detail colour. The smaller details beside the temperature, the forecast's lows, times and days, and what's under each day or hour. |
+
+## Rain soon (`rain`)
+
+The rain in the next two hours at your location, from Open-Meteo.com: a bar for each quarter of an hour, taller the heavier the rain, under a line such as Rain from 14:30. Set your location in the editor (select the widget) or on the Weather page.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `showSummary` | true/false | `true` | Summary. The line above the bars: Dry for the next 2 hours, Rain from 14:30, Rain stopping around 15:15, or Light rain for the next 2 hours (moderate or heavy when it is). It says snow instead when the forecast is for snow. |
+| `fontSize` | number (6–200) | `22` | Font size. The summary's; the times under the bars are a little smaller. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `barColor` | color | `accent` | Bar colour |
+| `textColor` | color | `foreground` | Text colour. The summary. |
+| `timeColor` | color | `secondary` | Time colour. The times under the bars. |
+| `trackColor` | color | `track` | Baseline colour. The line the bars stand on, which is all there is while it's dry. |
 
 ## News (`news`)
 
