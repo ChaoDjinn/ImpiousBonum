@@ -1,0 +1,25 @@
+// Countdowns in days, and in days, hours and minutes, for the README and the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 400,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "countdowns", "x": 30, "y": 40, "width": 380, "height": 330, "heading": "Coming up", "fontSize": 28, "count": 6,
+      "events": [
+        { "label": "Halloween", "date": "10-31" },
+        { "label": "Bonfire Night", "date": "11-05" },
+        { "label": "Mum's birthday", "date": "11-19" },
+        { "label": "Christmas", "date": "12-25" },
+        { "label": "New Year", "date": "01-01" },
+        { "label": "Sam's birthday", "date": "02-03" },
+        { "label": "Trip to Lisbon", "date": "2027-03-14" }
+      ] },
+    { "type": "countdowns", "x": 470, "y": 40, "width": 300, "height": 240, "heading": "Counting down", "style": "time", "fontSize": 28,
+      "events": [
+        { "label": "Bedtime", "date": "23:30" },
+        { "label": "Fireworks", "date": "11-05 19:00" },
+        { "label": "Christmas", "date": "12-25" },
+        { "label": "Flight", "date": "2027-03-14 06:40" }
+      ] }
+  ]
+}

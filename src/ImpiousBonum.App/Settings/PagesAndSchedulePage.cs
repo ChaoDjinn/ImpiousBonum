@@ -6,7 +6,7 @@ namespace ImpiousBonum.App.Settings;
 
 /// <summary>Pages and schedule: swiping and turning between the main dashboard's layouts, and what shows when.</summary>
 internal sealed class PagesAndSchedulePage(ISettingsHost host) : CardPage("Pages and schedule",
-    "Swipe between the main dashboard's layouts or let them take turns, and show a layout or theme at certain times or with Windows in dark or light mode.")
+    "Swipe between the main dashboard's layouts or let them take turns, and show a layout or theme at certain times or dates, after sunset, on holidays, or with Windows in dark or light mode.")
 {
     internal static readonly int[] RotateChoices = [0, 15, 30, 60, 300];
 
@@ -46,11 +46,12 @@ internal sealed class PagesAndSchedulePage(ISettingsHost host) : CardPage("Pages
                 Load();
             })));
 
-        var active = ScheduledLook.Active(Settings.Schedule, TimeOnly.FromDateTime(DateTime.Now), WindowsColourMode.IsDark());
+        var current = ScheduleNow.Current(Settings.WeatherLocation);
+        var active = ScheduledLook.Active(Settings.Schedule, current);
         foreach (var rule in Settings.Schedule)
         {
             var now = Settings.ScheduleEnabled && active.Contains(rule);
-            Add(Ui.Card(now ? "" : null, rule.Describe(), now ? "Showing now" : null,
+            Add(Ui.Card(now ? "" : null, rule.Describe(), now ? "Showing now" : Why(rule),
                 Ui.Button("Remove", () =>
                 {
                     host.RemoveScheduleRule(rule);
@@ -64,7 +65,36 @@ internal sealed class PagesAndSchedulePage(ISettingsHost host) : CardPage("Pages
                     host.AddScheduleRule(owner);
                 Load();
             })));
+
+        Add(Ui.Card("", "Holiday themes", HolidayNote(current, active),
+            Ui.Switch(Settings.HolidayThemes, "Holiday themes", on =>
+            {
+                host.SetHolidayThemes(on);
+                Load();
+            })));
     }
+
+    /// <summary>What Holiday themes does, and while it's on, the holiday it's showing or the next one.</summary>
+    private string HolidayNote(ScheduleNow now, IReadOnlyList<ScheduleRule> active)
+    {
+        const string what = "Christmas, Halloween, Diwali, Eid, Hanukkah, Lunar New Year and more, each on and around its day. "
+            + "A rule above that sets a theme wins, and so does a game's.";
+        if (!Settings.HolidayThemes)
+            return what;
+        var today = DateOnly.FromDateTime(now.Time);
+        if (Holidays.On(today) is { } holiday)
+        {
+            return Settings.ScheduleEnabled && active.Any(rule => !string.IsNullOrWhiteSpace(rule.Theme))
+                ? $"{what} {holiday.Describe()} today, but a rule above sets the theme."
+                : $"{what} Showing {holiday.Describe()} now.";
+        }
+        return Holidays.Next(today) is { } next ? $"{what} Next: {next.Describe()}, from {ScheduleRule.DescribeDate(next.Start)}." : what;
+    }
+
+    /// <summary>Why a rule that never applies doesn't, or null.</summary>
+    private string? Why(ScheduleRule rule) => rule.FollowsSun && Settings.WeatherLocation is null
+        ? "Never applies yet: sunset and sunrise come from the weather's location, and there isn't one. Set it on the Weather page."
+        : null;
 
     private void SetPages(bool swipe, int seconds, IReadOnlyList<string> pages)
     {
