@@ -34,7 +34,7 @@
 
 Impious Bonum turns a spare screen into a live view of your PC: CPU, GPU, memory, temperatures, FPS, drives and
 network, alongside a clock, the weather, your calendar, what's playing and buttons to control it all. Lay it out how
-you like in a visual editor, pick from 55 themes, and it runs quietly in the tray using about 50 MB of memory. No
+you like in a visual editor, pick from 56 themes, and it runs quietly in the tray using about 50 MB of memory. No
 spare screen? It works as a window too, or on a tablet over Wi-Fi.
 
 ## Features
@@ -42,6 +42,8 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 **Your PC at a glance**
 - CPU, memory, GPU, drives and network out of the box, down to each network adapter's speeds, the Wi-Fi signal and a laptop's battery time left; add the optional sensor service for temperatures, fans, clocks, power and per-app FPS with frame times and 1% lows, about 280 metrics on a typical PC. [More](<docs/guide.md#what-it-shows>)
 - Graphs, multi-line graphs, gauges, stat tiles, every CPU thread as a heatmap, drives, and the apps using the most CPU or memory. [More](<docs/guide.md#widgets-in-depth>)
+- The PC's power use and what it costs, and how clean Great Britain's electricity is right now. [More](<docs/guide.md#energy-use>)
+- A status board for your own servers and services (a NAS, Pi-hole, Plex, a website), whether your microphone is muted or in use, and the batteries of your Bluetooth headset, mouse and controller. [More](<docs/guide.md#status-checks>)
 - Session recaps when you finish playing a game you've linked to a layout: average, lowest and highest FPS, loads and temperatures. [More](<docs/guide.md#session-recaps>)
 - Alerts when a reading stays out of bounds: a notification, a banner on the dashboard, a sound, a switch to another layout, a script to run, or a message to Home Assistant or your phone (via ntfy). [More](<docs/guide.md#alerts>)
 - Logging to CSV files for a spreadsheet. [More](<docs/guide.md#logging>)
@@ -54,9 +56,10 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 </table>
 
 **Your day**
-- Clocks with other time zones, timers and countdowns, your calendar's agenda (or the next event in just one calendar), and news headlines as a list or a ticker for each feed. [More](<docs/guide.md#world-clocks>)
-- The weather, with no account needed: up to 16 days or 48 hours ahead, the details you choose, more places to move between, air quality and pollen, and severe weather warnings in the UK and US. [More](<docs/guide.md#weather>)
-- What's playing, with album art and controls, an audio visualiser, and buttons that open programs, send shortcuts or switch layouts. [More](<docs/guide.md#now-playing-and-buttons>)
+- Clocks with other time zones, timers, countdowns to birthdays and holidays that come round every year, your calendar's agenda (or the next event in just one calendar), and news headlines as a list or a ticker for each feed. [More](<docs/guide.md#world-clocks>)
+- The weather, with no account needed: up to 16 days or 48 hours ahead, the details you choose, more places to move between, air quality and pollen, severe weather warnings in the UK and US, rain in the next two hours, and the sun's arc and the moon's phase. [More](<docs/guide.md#weather>)
+- What's playing, with album art and controls, an audio visualiser, and buttons that open programs, send shortcuts, switch layouts, mute your microphone or send a web request to Home Assistant. [More](<docs/guide.md#now-playing-and-buttons>)
+- A photo frame for a folder of pictures, and the cover art of the game you're playing. [More](<docs/guide.md#photo-frame>)
 - Your own data from any web address or command. [More](<docs/guide.md#custom-data>)
 
 <table>
@@ -71,19 +74,19 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 </table>
 
 **Make it yours**
-- A layout editor with live preview, drag and resize, a searchable picker for every metric, fonts you can see before you pick, and text that shrinks to fit, plus touch editing on the dashboard itself. [More](<docs/guide.md#layout-editor>)
-- 55 built-in themes, from clean to retro to neon to the holidays (Halloween, Christmas, Diwali and more), with gradients, glow, and picture, GIF or video backgrounds. [More](<docs/guide.md#layout-editor>)
-- A gallery of ready-made layouts to try with your own readings and import, and export to share yours. [More](<docs/guide.md#layout-gallery>)
+- A layout editor with live preview, drag and resize with snapping and alignment, a searchable picker for every metric, fonts you can see before you pick, and text that shrinks to fit, plus touch editing on the dashboard itself. [More](<docs/guide.md#layout-editor>)
+- 56 built-in themes, from clean to retro to neon to the holidays (Halloween, Christmas, Diwali and more), with gradients, glow, and picture, GIF or video backgrounds; or make one from your wallpaper, any picture or Windows' accent colour. Warning symbols and the Clear Sight theme help with colour blindness. [More](<docs/guide.md#layout-editor>)
+- A gallery of ready-made layouts and themes to try with your own readings and import, and export to share yours. [More](<docs/guide.md#layout-gallery>)
 
 **It fits around you**
-- Different layouts for different games, a schedule for times of day, sunset, dates or dark mode, pages to swipe between, and global hotkeys. [More](<docs/guide.md#automatic-behaviour>)
+- Different layouts for different games, a schedule for times of day, sunset, dates or dark mode, holiday themes that come on by themselves, pages to swipe between, and global hotkeys. [More](<docs/guide.md#automatic-behaviour>)
 - Dims or blacks out when you're away. [More](<docs/guide.md#dimming>)
-- On a spare monitor (or several, each with its own layout), as a window, or on a tablet or phone in its browser. Support for small 3.5" USB screens is there too, but hasn't been tried on a real one yet. [More](<docs/guide.md#more-screens>)
-- Light: about 50 MB of memory and a fraction of a percent of the CPU. A per-user installer with no admin prompt, and small automatic updates.
+- On a spare monitor (or several, each with its own layout), as a window, or on a tablet or phone in its browser, each tablet with a layout of its own. Other apps such as Home Assistant can read its readings as JSON. Support for small 3.5" USB screens is there too, but hasn't been tried on a real one yet. [More](<docs/guide.md#more-screens>)
+- Light: about 50 MB of memory and a fraction of a percent of the CPU. A per-user installer with no admin prompt, small automatic updates, and a backup of your whole setup in one file.
 
 ## A look for every desk
 
-55 built-in themes, or make your own. Here's the default layout in eight of them:
+56 built-in themes, or make your own. Here's the default layout in eight of them:
 
 <p align="center"><img src="docs/images/themes.png" alt="The default layout in the Outrun, Nord, Dracula, Solarized Light, Amber, Cyberpunk, Blueprint and Catppuccin themes"></p>
 
@@ -91,7 +94,7 @@ Or start from a layout in the [gallery](gallery):
 
 <table>
   <tr>
-    <td width="50%"><img src="gallery/images/gaming-hud.png" alt="Gaming HUD: a big frame rate, frame times, 1% lows, CPU and GPU load, temperature gauges and the session so far"><br><b>Gaming HUD</b>: frame rate, frame times and the session so far</td>
+    <td width="50%"><img src="gallery/images/gaming-hud.png" alt="Gaming HUD: a big frame rate, frame times, 1% lows, CPU and GPU load, temperature gauges, the game's banner and the session so far"><br><b>Gaming HUD</b>: frame rate, frame times, the game's banner and the session so far</td>
     <td width="50%"><img src="gallery/images/system-monitor.png" alt="System Monitor: CPU, GPU and network lines, every CPU thread as a heatmap, the busiest apps, drives and memory"><br><b>System Monitor</b>: loads, every CPU thread, the busiest apps</td>
   </tr>
   <tr>
@@ -165,13 +168,17 @@ Impious Bonum is young: it's at version 0.15, first released at the end of Septe
 - [x] Vulkan/OpenGL frame counting
 - [x] Tablet view: the dashboard in a browser over the local network
 - [x] Bars, and Claude plan usage from Claude Code
-- [x] More widget types: 22 so far
-- [x] Themes: 55 built in, holidays too, with gradients, glow and moving backgrounds
+- [x] More widget types: 28 so far
+- [x] Themes: 56 built in, holidays too, with gradients, glow and moving backgrounds, plus themes made from a picture
 - [x] Screenshots of the real dashboard, the editor and the widgets, here and in the guide
-- [x] A window with a page for every setting, and a gallery of 21 ready-made layouts for screens from 3.5" to 4K
-- [x] Weather: longer forecasts, more readings, more places, air quality and pollen, and severe weather warnings
+- [x] A window with a page for every setting, and a gallery of 21 ready-made layouts for screens from 3.5" to 4K, and themes
+- [x] Weather: longer forecasts, more readings, more places, air quality and pollen, severe weather warnings, rain in the next two hours, and the sun and moon
 - [x] Alerts that play a sound, switch layout, run a program or send a web request
 - [x] Network adapters, Wi-Fi signal and battery time left
+- [x] A schedule that follows the sun, dates of the year and the holidays
+- [x] Status checks for your own servers, energy use and cost, the microphone and camera, and wireless devices' batteries
+- [x] Snapping and alignment in the editor, warning symbols for colour blindness, and backing up your settings
+- [x] A layout per tablet, and readings as JSON for other apps
 
 </details>
 
