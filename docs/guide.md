@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
@@ -243,6 +243,8 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set on the *Weather* page, every 15 minutes |
 | `weather.gusts`, `weather.wind.degrees`, `weather.pressure`, `weather.pressure.trend` (*Rising*, *Falling* or *Steady* over the last 3 hours), `weather.dewpoint`, `weather.visibility`, `weather.clouds`, `weather.precipitation` (the last 15 minutes), `weather.precipitation.today`, `weather.rain.hour`, `weather.tomorrow.rain`, `weather.uv`, `weather.uv.max` (today's highest), `weather.uv.level` (*Low* to *Extreme*), `weather.daylight` | The same forecast (see [Weather](#weather)) |
 | `weather.sun.elevation` | How high the sun is, in degrees, worked out on your PC from the place and the time, every 30 seconds |
+| `moon.phase` (e.g. *Waxing gibbous*), `moon.illumination` (how much is lit, %), `moon.age` (days since the new moon), `moon.next.full`, `moon.next.new` (e.g. *Sat 24 Oct*), `moon.rise`, `moon.set` | The moon, worked out on your PC every minute; moonrise and moonset need the weather's location (see [Sun and moon](#sun-and-moon)) |
+
 | `weather.rain.soon` (e.g. *Rain from 14:30*), `weather.rain.next` (minutes until it rains, 0 while it is) | The same forecast's next two hours, a quarter of an hour at a time (see [Rain soon](#rain-soon)) |
 | `weather.aqi`, `weather.aqi.level`, `weather.aqi.european`, `weather.aqi.us`, `weather.pm25`, `weather.pm10`, `weather.ozone`, `weather.no2` | Open-Meteo's air quality (from CAMS) for the same place, every hour, once *Weather* → *Air quality and pollen* is on (see [Air quality and pollen](#air-quality-and-pollen)) |
 | `weather.pollen` (e.g. *Grass high*), `weather.pollen.grass`, `weather.pollen.tree`, `weather.pollen.weed`, and `weather.pollen.grass.level`, `weather.pollen.tree.level`, `weather.pollen.weed.level` (*None* to *Very high*) | The same, for places in Europe in season |
@@ -420,6 +422,27 @@ Turn on *Weather* → *Severe weather warnings* for warnings of storms, floods, 
 The Met Office gives warnings for 16 areas of the UK, such as *North West England* or *Strathclyde*, and *Automatic* picks the one your location is in. Near the edge of one, the next may suit you better: *Met Office area* chooses it. Places picked from a search know which country they're in. A location typed in as coordinates gets the Met Office's warnings if it's in Great Britain, but to get the NWS's, set it by searching for its name: coordinates alone are never sent to the NWS, in case they're in Canada or Mexico.
 
 Every 10 minutes while they're on, for a UK place only its Met Office area is sent to the Met Office (`metoffice.gov.uk`), never the place itself; for a US place its coordinates go to the National Weather Service (`api.weather.gov`). A place anywhere else isn't sent anywhere, and nothing at all is fetched while warnings are off. If they can't be reached it tries again three minutes later, and the last warnings stay for up to an hour (each still goes when it ends). Warnings from the Met Office (© Crown copyright) and from the US National Weather Service.
+
+#### Sun and moon
+
+The *Sun and moon* widget (`sun`) shows the day as an arc from sunrise on the left to sunset on the right, with the sun on it and the part of the day gone filled in, and how long it's light inside. Beside it is the moon as it looks tonight, with its phase, how much of it is lit, the next full moon, and when it rises and sets. Add it with *Add widget* → *Sun and moon* in the editor.
+
+<p align="center"><img src="images/widgets/sun.png" width="600" alt="The sun and moon widget at a quarter to ten at night: an empty arc from sunrise at 07:12 to sunset at 18:36 with 11 h 24 min of daylight inside it, and beside it a waxing gibbous moon, 79% lit, with the date of the next full moon, when it rose and when it sets"></p>
+
+- **The sun:** today's sunrise and sunset, from midnight to midnight, so after sunset the arc stays empty until the next day. In the far north and south, a day the sun doesn't rise or set says *Up all day* or *Down all day*.
+- **The moon:** lit on the right as it grows towards full and on the left as it shrinks, as it looks from the northern hemisphere; from the southern hemisphere it's the other way round. Its phase is *New moon*, *First quarter*, *Full moon* or *Last quarter* all through the day it comes, as calendars have them, and *Waxing crescent*, *Waxing gibbous*, *Waning gibbous* or *Waning crescent* in between.
+- **Moonrise and moonset:** while the moon's up, when it rose and when it sets (*Rose 15:24 · sets 02:36*); while it's down, when it next rises and then sets. It rises about 50 minutes later each day, so about once a month there's a day it doesn't rise at all. Turn off *Moonrise and moonset* to leave them out.
+- **In the editor:** *Show* picks the sun, the moon or both. The sun and the part of the day it's been up are in the accent colour, the moon's lit side in the secondary colour, and the rest of the arc and the moon's dark side in the track colour, unless you choose your own. With *Shrink to fit* on, text too big for the widget gets smaller to fit.
+
+It's all worked out on your PC from the date and the weather's location, so nothing is sent or fetched for it, and it carries on offline. The phases come within a few minutes of the almanacs', and the rising and setting within a couple of minutes. The sun needs a location (*Weather* → *Set location…*, or *Set location…* under *Set up* in the editor); without one, the arc says so. The moon's phase doesn't, but without a location the moon is drawn as it looks from the northern hemisphere, and there's no moonrise or moonset. Times are in your PC's time zone.
+
+The moon's readings work in any widget, e.g. `{moon.phase}, full moon {moon.next.full}` in a text widget reads *Waxing gibbous, full moon Sat 24 Oct*:
+
+- `moon.phase`: its phase, as above.
+- `moon.illumination`: how much of it is lit, in %.
+- `moon.age`: how many days since the new moon, from 0 to 29.5.
+- `moon.next.full` and `moon.next.new`: the days of the next full and new moons, e.g. *Sat 24 Oct*.
+- `moon.rise` and `moon.set`: when it rises (or rose, while it's up) and sets, e.g. *15:24*. They need the location.
 
 ### Calendar
 
