@@ -381,4 +381,6 @@ public partial class App : ISettingsHost
         _settings.Save();
         AppLog.Info($"Hardware rendering {(on ? "on" : "off")} from the next start");
     }
+
+    Task ISettingsHost.RestoreBackupAsync(string path) => RestoreBackupAsync(path);
 }

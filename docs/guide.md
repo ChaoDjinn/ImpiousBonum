@@ -4,7 +4,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 ## Contents
 
-- [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
+- [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
@@ -33,6 +33,8 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
 
+To keep a copy of your settings, layouts and themes, or move them to another PC, see [Backing up your settings](#backing-up-your-settings).
+
 ### The window and the tray menu
 
 Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bonum*, or double-click the icon), or start Impious Bonum again from the Start menu while it's running. A sidebar on the left has a page for each part of the app, as in Windows' Settings, and changes take effect as you make them. The layout editor is the exception: it has *Save*, and asks before another page takes its place while it has unsaved changes. The window follows Windows' light or dark mode.
@@ -51,7 +53,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | *Claude usage* | Whether Claude Code is reporting, and connecting it (see [Claude usage](#claude-usage)) |
 | *Custom data* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
 | *Alerts*, *Hotkeys*, *Logging* | See [Alerts](#alerts), [Hotkeys](#hotkeys) and [Logging](#logging) |
-| *General* | *Start with Windows*, drawing with the graphics card, and the settings folder and `dashboard.log` |
+| *General* | *Start with Windows*, drawing with the graphics card, the settings folder, backing it up and restoring it (see [Backing up your settings](#backing-up-your-settings)), and `dashboard.log` |
 | *About and updates* | The version, checking for and installing updates, what's new, this guide and the widget reference for your version, *Report a problem*, and *Details* to copy into a problem report |
 
 The tray menu keeps to the basics: *Open Impious Bonum*, *Edit layout…* (the window on the main dashboard's layout), *Layout* to switch the main dashboard's layout quickly, *Restart to update to x.y.z* when an update is waiting, and *Exit*. Its first line shows the installed version, and it's dark or light with the taskbar (Settings → Personalisation → Colours → *Choose your mode*).
@@ -68,6 +70,20 @@ Without a spare screen, *Screens* → pick the monitor → *Size* → *A window*
 - The canvas scales to the window, so a small window shrinks everything evenly. For a window that isn't a strip, give the layout a matching size in the editor (*Canvas*); *Match dashboard screen* uses the window's size.
 
 *Size* → *Fill the screen* goes back to covering the whole monitor.
+
+### Backing up your settings
+
+*General* → *Back up and restore* → *Back up…* saves your whole setup as one `.ibbackup` file: `settings.json` (calendars, alerts, hotkeys, the schedule, custom data, which screens the dashboards are on and the rest), every saved layout with the fonts and pictures in its folder under `layouts`, and your saved themes. Keep it somewhere safe, or take it to another PC.
+
+**A backup has private things in it**: your calendar links, the tablet link, and the web addresses and commands you've set up, for alerts and custom data among others (with any tokens in custom data's headers). Keep it somewhere only you can open, and don't share it the way you'd share a layout: to share a layout, export it instead (see [Sharing layouts](#sharing-layouts)).
+
+*Restore…* shows what's in a backup: when it was made, by which version of Impious Bonum, and how many layouts and saved themes it has. Once you say yes, Impious Bonum first saves your setup as it is now in a folder beside the settings folder (`%AppData%\ImpiousBonum backups`, as *Before restoring 2026-10-16 14.05.ibbackup*), so you can restore that to go back. Then it closes, puts the backup's settings, layouts and themes in place of yours, and starts again. Layouts and themes that aren't in the backup go, though they're in the one saved before restoring.
+
+- A backup from a newer version of Impious Bonum says so first: this version would drop the settings it doesn't know about. Update first (*About and updates*) to keep everything.
+- Left out: `dashboard.log`, the `logs` folder and `sessions.csv`, which are records rather than settings (restoring them would lose what's been recorded since), and `claude-usage.json`, which Claude Code keeps up to date. *Start with Windows* and the sensor service belong to Windows rather than the settings folder, so restoring leaves them as they are.
+- Fonts and pictures a layout uses from elsewhere, such as your Pictures folder, aren't in a backup. To take a layout with them to another PC, export it.
+- On another PC, a layout's fonts and pictures from its folder under `layouts` work as before. The dashboards look for the screens they were on, so choose screens for them on *Screens*.
+- Only restore your own backups: a backup sets the programs and web addresses that custom data, alerts and buttons use. Restoring checks the file as importing a layout does: it refuses one with `..` or absolute paths in it, caps sizes (100 MB a file, 1 GB in all), and takes only settings, layouts with their fonts and pictures, and themes.
 
 ## Layouts and the editor
 
