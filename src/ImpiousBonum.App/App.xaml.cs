@@ -309,6 +309,8 @@ public partial class App : Application
         _openWait?.Unregister(null);
         _openSignal?.Dispose();
         _singleInstance?.ReleaseMutex();
+        // Closed, not just released, so a copy started again after a restore isn't taken for a second one.
+        _singleInstance?.Dispose();
         _singleInstance = null;
         return true;
     }

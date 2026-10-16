@@ -50,6 +50,11 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.
 - *Holiday themes* on *Pages and schedule* shows the matching new holiday theme on and around each holiday: *Lunar New Year*, *Valentine*, *Shamrock*, *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* for Bonfire Night and New Year's Eve, *Hanukkah*, *Gingerbread* and *Christmas*. Easter is worked out, and Hanukkah, Eid and Lunar New Year come from the Hebrew, Islamic and Chinese calendars that come with the app, so they move with the year; Diwali's dates run to 2035. It's off until you turn it on, and a rule in the schedule or a game that sets a theme still wins.
 
+**Backing up your settings**
+- *General* → *Back up…* saves your whole setup as one `.ibbackup` file: your settings, every saved layout with its fonts and pictures, and your saved themes. Keep it somewhere safe, or take it to another PC. It has private things in it, such as your calendar links and the tablet link, so keep it to yourself.
+- *Restore…* shows what's in a backup (when it was made, by which version, how many layouts and themes) and asks before replacing anything. It saves your setup as it is first, in `%AppData%\ImpiousBonum backups`, so you can go back, then Impious Bonum starts again with the backup's. A backup from a newer version says so first.
+- Logs and the list of game sessions aren't in a backup, and restoring leaves yours as they are.
+
 **Rain soon**
 - A new *Rain soon* widget, under *Weather, news and Claude*, shows the rain in the next two hours at your location: a bar for each quarter of an hour, taller the heavier the rain, with the time every half hour under them. A drizzle still shows, and two dry hours are just a line.
 - A line above the bars says what's coming: *Dry for the next 2 hours*, *Rain from 14:30*, *Rain stopping around 15:15* or *Light rain for the next 2 hours*, and snow when the forecast is for snow.

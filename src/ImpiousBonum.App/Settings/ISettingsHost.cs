@@ -212,6 +212,12 @@ internal interface ISettingsHost
     Task RestartToUpdateAsync();
 
     void SetHardwareRendering(bool on);
+
+    /// <summary>
+    /// Closes everything, replaces the settings, layouts and saved themes with a backup's (saving the ones there are
+    /// first) and starts again. Does nothing if the layout editor's unsaved changes are kept instead.
+    /// </summary>
+    Task RestoreBackupAsync(string path);
 }
 
 /// <summary>Where updating has got to, for the About page.</summary>
