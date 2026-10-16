@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
@@ -29,8 +29,9 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`, `holidayThemes`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [energy use](#energy-use) (`energyPrice`, `energyCurrency`, `energyOtherWatts`), [grid carbon intensity](#grid-carbon-intensity) (`gridCarbon`, `gridCarbonArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`, `holidayThemes`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
+- `energy.json`: the energy your PC has used today and this month so far, so a restart carries on from it (see [Energy use](#energy-use)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
 
 ### The window and the tray menu
@@ -46,6 +47,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | *Pages and schedule* | Swiping and turning between layouts, and what shows when (see [Pages](#pages) and [Schedule](#schedule)) |
 | *Game layouts* | Games linked to a layout or theme, and session recaps (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
 | *Sensors* | Whether the sensor service is running, installing, updating or removing it, and which app the FPS reading follows (see [the sensor service](#sensor-service-temperatures-fans-power-fps)) |
+| *Energy* | Your PC's power now and the energy it's used today and this month, the price and currency for what that costs, the allowance for the parts nothing measures, and Great Britain's grid carbon intensity (see [Energy use](#energy-use)) |
 | *Weather* | The location, more places for the weather widget to move between, the units, air quality and pollen, severe weather warnings, and turning the weather off (see [Weather](#weather)) |
 | *Calendars*, *News feeds* | The links the agenda and news widgets read (see [Calendar](#calendar) and [News](#news)) |
 | *Claude usage* | Whether Claude Code is reporting, and connecting it (see [Claude usage](#claude-usage)) |
@@ -211,6 +213,8 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
+| `power.total`, `energy.today`, `energy.month`, `energy.cost.today`, `energy.cost.month` | The whole PC's power (the sensor service's CPU and graphics card power, and an allowance for the rest), the energy it's used today and this month, and what that costs at your price (see [Energy use](#energy-use)) |
+| `grid.carbon`, `grid.carbon.index`, `grid.carbon.best`, `grid.carbon.region` | Great Britain's grid carbon intensity from NESO, every 30 minutes, once *Energy* → *Grid carbon intensity* is on (see [Grid carbon intensity](#grid-carbon-intensity)) |
 | `claude.session`, `claude.week`, `claude.session.resets`, `claude.week.resets`, `claude.status` | Your Claude plan's usage limits, from Claude Code's status line (see [Claude usage](#claude-usage)) |
 
 ### Sensor service (temperatures, fans, power, FPS)
@@ -247,6 +251,33 @@ Average FPS hides stutter: a game can average 120 FPS and still hitch. The senso
 <p align="center"><img src="images/widgets/frame-times.png" width="600" alt="Stat tiles of the frame rate at 145 and the 1% and 0.1% lows, each with a trend line and its range, and a graph of the average and slowest frame times"></p>
 
 A sensor service from before 0.8 doesn't send these; *Sensors* → *Update…* brings it up to date.
+
+### Energy use
+
+What your PC is using and what it costs, as readings for any widget. The *Energy* page shows them too, and is where you set your price.
+
+- **Power now:** `power.total`, in watts: the CPU's package power and the graphics card's, from the [sensor service](#sensor-service-temperatures-fans-power-fps), plus an allowance for the parts nothing measures (the motherboard, memory, drives and fans). The allowance is 50 W, which suits most desktops; *Energy* → *Everything else* changes it. Monitors, speakers and anything else plugged in aren't counted, and nor is what the power supply itself loses (often a tenth or so): raise the allowance if you'd like that counted.
+- **Energy used:** `energy.today`, in kWh since midnight, and `energy.month`, since the 1st, added up from `power.total` every second.
+- **What it costs:** `energy.cost.today` and `energy.cost.month`, at the price you type under *Energy* → *Price per kWh*: `0.25`, say, or `24.5p` in pence or cents. They show your region's currency symbol where your region puts it, such as *£0.48*; *Currency symbol* changes it. Without a price they have no reading. The cost is the energy so far at the price now, so a new price applies to the whole day and month. Standing charges aren't included.
+
+Without the sensor service there's no power reading, so `power.total` shows a dash and nothing is counted; the *Energy* page says why. The CPU's power needs the PawnIO driver, as CPU temperatures do: without it, only the graphics card's and the allowance are counted, and the page says so. Some built-in graphics don't report their power, and then it's the CPU's and the allowance.
+
+Energy is only counted while Impious Bonum is running: time it isn't, or the PC is asleep, isn't counted. Today's and this month's totals are kept in `energy.json` in the settings folder, saved every minute, so a restart carries on from them. Today's starts again at midnight, and the month's on the 1st.
+
+For example, `{power.total} · {energy.today} today ({energy.cost.today})` in a text widget reads *433 W · 1.92 kWh today (£0.48)*, and a `graph` of `power.total` shows the power climb when a game starts.
+
+#### Grid carbon intensity
+
+Turn on *Energy* → *Grid carbon intensity* to see how much CO₂ Great Britain's electricity is giving off: the more wind and sun, the less. It's only for Great Britain (England, Scotland and Wales), as Northern Ireland's grid is separate, and it's off until you turn it on.
+
+- `grid.carbon`: the carbon intensity now, in grams of CO₂ for each kWh, e.g. *142 gCO₂/kWh*.
+- `grid.carbon.index`: its level: *Very low*, *Low*, *Moderate*, *High* or *Very high*.
+- `grid.carbon.best`: when it'll be lowest in the next 24 hours, e.g. *Lowest around 03:30*, or *Lowest now*: a good time for a long game update, or the washing machine.
+- `grid.carbon.region`: whose figures they are: *Great Britain*, or your region's name.
+
+The figures are for Great Britain as a whole unless you give *Your area*: the first half of your postcode, such as `LS1`, for your region's (Yorkshire, say). Type the whole postcode if you like; only the first half is kept.
+
+Every 30 minutes, the next 24 hours' forecast comes from the [Carbon Intensity API](https://carbonintensity.org.uk), run by NESO, Great Britain's National Energy System Operator (formerly National Grid ESO). Nothing about you is sent but the first half of your postcode, if you give it, and nothing at all while it's off. Between fetches the readings move on through the forecast, half an hour at a time. If it can't be reached it tries again five minutes later, and the last figures stay for up to three hours. Carbon intensity forecasts by NESO, from carbonintensity.org.uk, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ### Weather
 

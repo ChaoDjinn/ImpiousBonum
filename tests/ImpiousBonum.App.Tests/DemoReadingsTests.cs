@@ -112,6 +112,27 @@ public sealed class DemoReadingsTests
     }
 
     [Fact]
+    public void Every_energy_and_grid_carbon_reading_has_a_made_up_value()
+    {
+        var store = new MetricStore();
+        DemoReadings.Fill(store, Evening);
+
+        var readings = store.Definitions.Where(d => d.Category is "Energy" or "Grid carbon").ToList();
+        Assert.Equal(9, readings.Count);
+        Assert.All(readings, d => Assert.True(store.TryGet(d.Id, out var sample) && sample.HasValue, d.Id));
+        // The whole PC is the CPU and graphics card and 50 W for the rest, all the way along its graph.
+        var power = store.GetHistory(EnergyProvider.Power, MetricStore.DefaultHistoryLength);
+        Assert.Equal(MetricStore.DefaultHistoryLength, power.Length);
+        Assert.Equal(store.GetHistory(Core.Sensors.SensorAliases.CpuPower, 1)[0] + store.GetHistory(Core.Sensors.SensorAliases.GpuPower, 1)[0] + 50, power[^1]);
+        store.TryGet(EnergyProvider.Today, out var today);
+        Assert.Equal(1.92, today.Value);
+        store.TryGet(EnergyProvider.CostToday, out var cost);
+        Assert.Equal(0.48, cost.Value!.Value, 9);
+        store.TryGet(GridCarbonProvider.Index, out var level);
+        Assert.Equal("Moderate", level.Text);
+    }
+
+    [Fact]
     public void They_are_the_same_every_time()
     {
         var (first, second) = (new MetricStore(), new MetricStore());

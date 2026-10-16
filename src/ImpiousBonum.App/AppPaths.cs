@@ -37,6 +37,9 @@ public static class AppPaths
     /// <summary>Written by Claude Code's status line (<see cref="Core.Claude.ClaudeStatusLine"/>), which always uses the default folder.</summary>
     public static string ClaudeUsageFile => Path.Combine(DataDirectory, Core.Claude.ClaudeUsageFile.FileName);
 
+    /// <summary>Today's and this month's energy so far (see <see cref="Core.Energy.EnergyTotals"/>), so a restart carries on from them.</summary>
+    public static string EnergyFile => Path.Combine(DataDirectory, Core.Energy.EnergyTotals.FileName);
+
     public static void UseDataDirectory(string directory) => DataDirectory = Path.GetFullPath(directory);
 
     public static void EnsureCreated() => Directory.CreateDirectory(DataDirectory);

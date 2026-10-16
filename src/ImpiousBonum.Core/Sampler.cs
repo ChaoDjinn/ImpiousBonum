@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ImpiousBonum.Core.CustomData;
+using ImpiousBonum.Core.Energy;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Sessions;
@@ -42,11 +43,18 @@ public sealed class Sampler : IAsyncDisposable
     /// Other places to get forecasts for, besides <paramref name="weather"/>'s, for the weather widget to move between;
     /// null, or none, fetches no more. They're fetched on the weather's loop, and only along with its place.
     /// </param>
+    /// <param name="energy">The allowance, price and currency for the energy readings; null for the defaults (no price).</param>
+    /// <param name="energyTotalsPath">Where today's and this month's energy are kept between runs; null keeps them only while it runs.</param>
+    /// <param name="gridCarbon">
+    /// Whose grid carbon intensity to get; null, or returning null (off), fetches none. It's sampled on the energy's loop,
+    /// so it adds no loop of its own.
+    /// </param>
     public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(
         string pingHost = "1.1.1.1", Func<(int ProcessId, string? Name)>? frameRateTarget = null, string? claudeUsagePath = null,
         Func<WeatherRequest?>? weather = null, Func<IReadOnlyList<CustomSource>>? customData = null,
         Func<IReadOnlyList<CalendarLink>>? calendars = null, Func<IReadOnlyList<NewsFeed>>? news = null, Func<string?>? gameInFront = null, Action<SessionRecap>? sessionEnded = null,
-        Func<AirQualityRequest?>? airQuality = null, Func<WarningsRequest?>? warnings = null, Func<IReadOnlyList<WeatherRequest>>? weatherPlaces = null) =>
+        Func<AirQualityRequest?>? airQuality = null, Func<WarningsRequest?>? warnings = null, Func<IReadOnlyList<WeatherRequest>>? weatherPlaces = null,
+        Func<EnergySettings>? energy = null, string? energyTotalsPath = null, Func<GridCarbonRequest?>? gridCarbon = null) =>
     [
         new CpuProvider(),
         new MemoryProvider(),
@@ -68,6 +76,7 @@ public sealed class Sampler : IAsyncDisposable
         new SessionProvider(gameInFront ?? (() => null), sessionEnded),
         new PrivacyProvider(),
         .. claudeUsagePath is null ? Array.Empty<IMetricProvider>() : [new ClaudeUsageProvider(claudeUsagePath)],
+        new EnergyProvider(energy ?? (() => EnergySettings.Default), energyTotalsPath, new GridCarbonProvider(gridCarbon ?? (() => null))),
     ];
 
     public void Start()
