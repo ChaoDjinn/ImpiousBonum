@@ -2,6 +2,8 @@ using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using ImpiousBonum.App.Editor;
+using ImpiousBonum.App.Widgets;
 
 namespace ImpiousBonum.App.Layout;
 
@@ -20,11 +22,24 @@ public sealed record GalleryEntry(string Name, string File, string? Author, stri
     }.OfType<string>());
 }
 
+/// <summary>A theme someone has shared in the gallery.</summary>
+/// <param name="Name">What it's saved as in your themes: always a valid theme name.</param>
+/// <param name="File">The file's name in the gallery's <c>themes</c> folder: a theme <c>.json</c>.</param>
+public sealed record GalleryTheme(string Name, string File, string? Author, string? Description)
+{
+    /// <summary>"by someone", for the list.</summary>
+    public string Details => Author is { Length: > 0 } a ? $"by {a}" : "";
+}
+
+/// <summary>What a gallery's index lists.</summary>
+public sealed record GalleryIndex(IReadOnlyList<GalleryEntry> Layouts, IReadOnlyList<GalleryTheme> Themes);
+
 /// <summary>
-/// The shared layout gallery: an <c>index.json</c> listing layouts, and the layouts, in one web folder (the
-/// <c>gallery</c> folder of the Impious Bonum repository unless settings say otherwise). Everything in it comes from
-/// other people, so names are checked before they become addresses, sizes are capped, and packages are read with
-/// <see cref="LayoutPackage.Read(Stream, string)"/>'s safety rules.
+/// The shared layout gallery: an <c>index.json</c> listing layouts and themes, the layouts, and the themes in a
+/// <c>themes</c> folder, in one web folder (the <c>gallery</c> folder of the Impious Bonum repository unless settings
+/// say otherwise). Everything in it comes from other people, so names are checked before they become addresses, sizes
+/// are capped, packages are read with <see cref="LayoutPackage.Read(Stream, string)"/>'s safety rules, and themes are
+/// checked by <see cref="OpenTheme"/>.
 /// </summary>
 public static class Gallery
 {
@@ -32,13 +47,18 @@ public static class Gallery
 
     public const string IndexFile = "index.json";
 
+    /// <summary>The folder inside the gallery that holds its themes.</summary>
+    public const string ThemeFolder = "themes/";
+
+    /// <summary>Theme settings a shared theme leaves out: they name files on someone else's PC.</summary>
+    private static readonly string[] ThemeFileKeys = ["fontFile", "backgroundImage"];
+
     private static readonly HttpClient Http = CreateClient();
 
     /// <summary>The entries in an index, skipping any without a name or with a file name that isn't a plain .ibl or .json name.</summary>
     public static IReadOnlyList<GalleryEntry> ParseIndex(string json)
     {
-        var root = JsonNode.Parse(json, documentOptions: new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
-        if (root?["layouts"] is not JsonArray layouts)
+        if (ParseRoot(json)?["layouts"] is not JsonArray layouts)
             return [];
         var entries = new List<GalleryEntry>();
         foreach (var node in layouts.OfType<JsonObject>())
@@ -53,6 +73,28 @@ public static class Gallery
         return entries;
     }
 
+    /// <summary>
+    /// The themes in an index, skipping any whose name couldn't be a theme's or whose file isn't a plain .json name. An
+    /// index from before the gallery had themes has none, and apps from before then don't look for them.
+    /// </summary>
+    public static IReadOnlyList<GalleryTheme> ParseThemes(string json)
+    {
+        if (ParseRoot(json)?["themes"] is not JsonArray themes)
+            return [];
+        var entries = new List<GalleryTheme>();
+        foreach (var node in themes.OfType<JsonObject>())
+        {
+            var name = node.GetString("name")?.Trim();
+            var file = node.GetString("file")?.Trim();
+            // The name becomes the file name of the theme once it's saved.
+            if (name is null || LayoutLibrary.ValidateName(name) is not null || file is null || !IsPlainFileName(file)
+                || !file.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                continue;
+            entries.Add(new GalleryTheme(name, file, node.GetString("author"), node.GetString("description")));
+        }
+        return entries;
+    }
+
     /// <summary>A file name with nothing that could reach outside the gallery folder, ending .ibl or .json.</summary>
     public static bool IsPlainFileName(string file) =>
         file.Length is > 0 and <= 200
@@ -61,10 +103,11 @@ public static class Gallery
         && !file.Any(char.IsControl)
         && (file.EndsWith(LayoutPackage.Extension, StringComparison.OrdinalIgnoreCase) || file.EndsWith(".json", StringComparison.OrdinalIgnoreCase));
 
-    public static async Task<IReadOnlyList<GalleryEntry>> ListAsync(string address, CancellationToken cancellationToken = default)
+    public static async Task<GalleryIndex> ListAsync(string address, CancellationToken cancellationToken = default)
     {
         var bytes = await GetAsync(new Uri(Folder(address), IndexFile), LayoutPackage.MaxLayoutBytes, cancellationToken).ConfigureAwait(false);
-        return ParseIndex(System.Text.Encoding.UTF8.GetString(bytes));
+        var json = System.Text.Encoding.UTF8.GetString(bytes);
+        return new GalleryIndex(ParseIndex(json), ParseThemes(json));
     }
 
     /// <summary>Downloads and opens an entry's layout. Throws <see cref="InvalidDataException"/> if it isn't a usable layout.</summary>
@@ -93,6 +136,69 @@ public static class Gallery
             Skipped = package.Skipped,
         };
     }
+
+    /// <summary>Downloads and checks a shared theme. Throws <see cref="InvalidDataException"/> if it isn't a usable theme.</summary>
+    public static async Task<JsonObject> DownloadThemeAsync(string address, GalleryTheme theme, CancellationToken cancellationToken = default)
+    {
+        var bytes = await GetAsync(new Uri(Folder(address), ThemeFolder + Uri.EscapeDataString(theme.File)), LayoutPackage.MaxLayoutBytes, cancellationToken).ConfigureAwait(false);
+        return OpenTheme(bytes);
+    }
+
+    /// <summary>
+    /// A shared theme's values, ready for <see cref="ThemeLibrary.Save"/>. A shared theme is one plain file, so a font
+    /// file or background picture it names (somewhere on someone else's PC) is left out, as are settings this version
+    /// doesn't know (from a newer one, say) and a <c>base</c>. Throws <see cref="InvalidDataException"/>, saying why, if
+    /// it isn't a theme or a value is wrong.
+    /// </summary>
+    public static JsonObject OpenTheme(byte[] data)
+    {
+        if (data.Length > LayoutPackage.MaxLayoutBytes)
+            throw new InvalidDataException($"The theme is bigger than {LayoutPackage.MaxLayoutBytes / (1024 * 1024)} MB.");
+        JsonNode? root;
+        try
+        {
+            root = JsonNode.Parse(LayoutPackage.WithoutBom(data), documentOptions: IndexOptions);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidDataException($"The theme can't be read: {ex.Message}");
+        }
+        if (root is not JsonObject values)
+            throw new InvalidDataException("The theme should be a { … } object.");
+
+        // Keys match ignoring case, as in any theme file; they're written the usual way.
+        var settings = EditorDescriptors.Theme;
+        var theme = new JsonObject();
+        foreach (var (key, value) in values)
+        {
+            if (value is not null && settings.FirstOrDefault(s => string.Equals(s.Key, key, StringComparison.OrdinalIgnoreCase)) is { } setting
+                && !ThemeFileKeys.Contains(setting.Key))
+                theme[setting.Key] = value.DeepClone();
+        }
+
+        foreach (var (key, value) in theme)
+        {
+            try
+            {
+                new JsonObject { [key] = value!.DeepClone() }.Deserialize<ThemeSettings>(JsonDefaults.Options);
+            }
+            catch (JsonException)
+            {
+                var number = settings.First(s => s.Key == key).Kind == SettingKind.Number;
+                throw new InvalidDataException($"'{key}' should be {(number ? "a number" : "text")}.");
+            }
+        }
+        // A font's name, not a place to fetch one from: WPF reads "file://server/fonts/#Name" as a font at that address.
+        if (ThemeLibrary.GetString(theme, "fontFamily") is { } font && font.IndexOfAny(['/', '\\', '#', ':']) >= 0)
+            throw new InvalidDataException("'fontFamily' should be the name of a font, such as Segoe UI.");
+        if (LayoutValidator.Validate(new LayoutDocument { Theme = theme }).FirstOrDefault() is { } problem)
+            throw new InvalidDataException(problem.StartsWith("Theme: ", StringComparison.Ordinal) ? problem["Theme: ".Length..] : problem);
+        return theme;
+    }
+
+    private static readonly JsonDocumentOptions IndexOptions = new() { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true };
+
+    private static JsonNode? ParseRoot(string json) => JsonNode.Parse(json, documentOptions: IndexOptions);
 
     private static Uri Folder(string address) => new(address.EndsWith('/') ? address : address + "/");
 

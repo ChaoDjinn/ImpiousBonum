@@ -1,6 +1,7 @@
 // The layout gallery (the app's Gallery page). Each entry is a file in this folder: an .ibl package made with
 // Export… in the editor, or a bare layout .json. To share a layout, add its file and an entry here in a pull request.
 // "widgets" counts its widgets, not shapes and pictures: the gallery tells simple layouts from busy ones by it.
+// "themes" lists shared themes: each is a theme .json in the themes folder, with no font file or background picture.
 {
   "layouts": [
     {
@@ -52,10 +53,10 @@
       "name": "Gaming HUD",
       "file": "gaming-hud.json",
       "author": "Impious Bonum",
-      "description": "Frame rate front and centre, frame times, 1% lows, temperatures and how the session's going. Neon Outrun theme.",
+      "description": "Frame rate front and centre, frame times, 1% lows, temperatures, the game's banner from Steam and how the session's going. Neon Outrun theme.",
       "width": 1920,
       "height": 480,
-      "widgets": 10
+      "widgets": 11
     },
     {
       "name": "Desk Companion",
@@ -191,6 +192,38 @@
       "width": 480,
       "height": 1920,
       "widgets": 10
+    }
+  ],
+  "themes": [
+    {
+      "name": "Deep Sea",
+      "file": "deep-sea.json",
+      "author": "Impious Bonum",
+      "description": "Bioluminescent teal glowing out of the abyss, fading from black to the deep blue below."
+    },
+    {
+      "name": "Nebula",
+      "file": "nebula.json",
+      "author": "Impious Bonum",
+      "description": "Violet fading into deep blue, with pink and starlight blue and a pink glow."
+    },
+    {
+      "name": "Copper",
+      "file": "copper.json",
+      "author": "Impious Bonum",
+      "description": "Polished copper and brass on dark gunmetal, like the dials of an old machine."
+    },
+    {
+      "name": "Matcha",
+      "file": "matcha.json",
+      "author": "Impious Bonum",
+      "description": "A calm light theme: whisked matcha green on a pale foam."
+    },
+    {
+      "name": "Paper",
+      "file": "paper.json",
+      "author": "Impious Bonum",
+      "description": "A light theme in ink greys on paper, like an e-reader: matte and easy on the eyes."
     }
   ]
 }

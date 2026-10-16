@@ -6,8 +6,8 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
-- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [photo frame](#photo-frame)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries)
+- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
 - [Command line](#command-line)
@@ -43,7 +43,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | Page | |
 |---|---|
 | *Layouts* | The layout editor, on the screen you pick (see [Layout editor](#layout-editor)) |
-| *Gallery* | Ready-made layouts for screens like yours, to put straight on one (see [Layout gallery](#layout-gallery)) |
+| *Gallery* | Ready-made layouts for screens like yours, to put straight on one, and themes to add to yours (see [Layout gallery](#layout-gallery)) |
 | *Screens* | Your monitors as Windows arranges them: which shows the main dashboard and how its window behaves, the dashboards on the others, and dimming when you're away (see [Windowed mode](#windowed-mode), [More dashboards](#more-dashboards) and [Dimming](#dimming)) |
 | *Tablet and USB screen* | The dashboard in a browser on a tablet or phone, and on a small USB screen (see [Tablet view](#tablet-view) and [USB screens](#usb-screens)) |
 | *Pages and schedule* | Swiping and turning between layouts, and what shows when (see [Pages](#pages) and [Schedule](#schedule)) |
@@ -120,8 +120,9 @@ The editor is the *Layouts* page of the window, which opens on your main screen:
 - **Widgets:** add, duplicate (Ctrl+D) and delete. The *Widgets* list is the drawing order, and lower in the list draws on top: drag a widget up or down it to change the order, or press Ctrl+] to bring the selected widget forward and Ctrl+[ to send it back. Right-click a widget in the list for *Bring forward*, *Send back*, *Duplicate*, *Delete* and *Align*.
 - **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize, or drag across empty space to select the widgets inside; the editor follows along (and vice versa), with the same snapping and undo.
 - **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout, each shown with a sample of its colours. *Orange* (the default look) and 55 others are built in: clean ones like *High Contrast*, *Swiss* and *Glacier*, *Clear Sight* for [colour blindness](#warning-symbols), retro ones like *Amber*, *8-Bit*, *Desktop 95* and *Blue Screen*, moods like *Outrun*, *Cyberpunk*, *Grimoire*, *Aurora* and *Gatsby*, a *Night Watch* theme in dim reds for a screen you keep on at night, well-known editor palettes such as *Dracula*, *Nord*, *Gruvbox*, *Solarized* and *Catppuccin*, and ones for the holidays through the year: *Lunar New Year*, *Valentine*, *Shamrock* (St Patrick's Day), *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* (Bonfire Night or New Year's Eve), *Hanukkah*, *Christmas* and *Gingerbread*, which [Holiday themes](#holiday-themes) can show on their days. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
+- **Colours from a picture:** *Colours from ▾*, under *Theme*, makes the layout's colours to match a picture: your *Windows wallpaper* (the picture showing now, if it's a slideshow or Windows Spotlight, or its colour if it's a solid colour), the layout's *Background image*, *A picture…* you choose, or *Windows accent colour*, which makes a dark or light theme to match your apps in Windows (Settings → Personalisation → Colours). The background comes from a dark colour that covers much of the picture, or a light one if the picture is mostly light, and the accent and the colour it fades to from the picture's most vivid colours; the text, bar track, warning and critical colours are made to go with them. Whatever the picture, text stays easy to read and the other colours stand out from the background, and warnings stay amber and critical red unless the picture's colours are too close, when they turn towards yellow, orange or pink. The colours go in as this layout's own, over its theme's, and show straight away: one undo puts yours back, and *Save theme as…* keeps them as a theme. The font, background image and glow stay as they were, though the glow takes the new accent colour, and a background fade is cleared so the background matches.
 - **Moving backgrounds:** the theme's background *Image* can be an animated GIF or a video (MP4, M4V or WMV), which plays muted and on a loop behind the widgets, with the same fit and opacity settings as a picture. GIF frames are prepared once at the size the canvas shows them and kept under 48 MB in all (a long GIF is made smaller, then thinned), and fast GIFs are held to 20 frames a second. A moving background stops while the dashboard is hidden or minimised. The tablet view and USB screens show a still frame. Moving backgrounds cost more CPU than a still picture, a video most of all, since the dashboard draws without the graphics card unless you turn hardware rendering on. Exported layouts carry a video up to 50 MB.
-- **Snow, leaves and more:** under *Particles* in the theme's settings, *Kind* sets snow, autumn leaves, cherry-blossom petals or confetti falling over the background, behind the widgets, or embers rising from the bottom. Snow sways as it falls, leaves tumble, petals flutter, and embers drift up and fade. *Amount* (0 to 1) sets how many: a few dozen on a 1920 × 480 screen at 0.5, the default. Snow is white, leaves are autumn oranges, reds and golds, petals are pink, embers orange and gold, and confetti comes in the theme's own colours; *Colour* makes them all one colour instead, in a few shades. The built-in themes leave them off, but snow suits *Christmas* and *Gingerbread*, leaves or embers *Halloween*, petals *Sakura* and confetti *Fireworks*. In a layout file that's `"theme": { "base": "Christmas", "particles": "snow", "glow": 0 }` (see below for why the glow is off). They stop while the dashboard is hidden or minimised, and the tablet view, USB screens and snapshots show them still. They move about 20 times a second, and each time the whole dashboard is drawn again, which without the graphics card is only cheap on a small screen with no glow. On a Ryzen 7 7700X, snow on the default 1920 × 480 layout cost too little to measure (under 1% of one core, with or without). With a theme's glow, which is drawn again with them, it took about two-thirds of one core instead of 2%, so set *Glow* to 0 to use them with a theme that has one, such as *Christmas*, *Halloween* or *Fireworks*. A 3840 × 2160 dashboard took all of one core, glow or not. With *General* → *Draw with the graphics card* on, snow took about an eighth of one core at either size, glow and all.
+- **Snow, leaves and more:** under *Particles* in the theme's settings, *Kind* sets snow, autumn leaves, cherry-blossom petals or confetti falling over the background, behind the widgets, or embers rising from the bottom. Snow sways as it falls, leaves tumble, petals flutter, and embers drift up and fade. *Amount* (0 to 1) sets how many: a few dozen on a 1920 × 480 screen at 0.5, the default. Snow is white, leaves are autumn oranges, reds and golds, petals are pink, embers orange and gold, and confetti comes in the theme's own colours; *Colour* makes them all one colour instead, in a few shades. The built-in themes leave them off, but snow suits *Christmas* and *Gingerbread*, leaves or embers *Halloween*, petals *Sakura* and confetti *Fireworks*. In a layout file that's `"theme": { "base": "Christmas", "particles": "snow", "glow": 0 }`, with the glow off for the reason below. They stop while the dashboard is hidden or minimised, and the tablet view, USB screens and snapshots show them still. They move about 20 times a second, and each time the whole dashboard is drawn again, which without the graphics card is only cheap on a small screen with no glow. On a Ryzen 7 7700X, snow on the default 1920 × 480 layout cost too little to measure (under 1% of one core, with or without). With a theme's glow, which is drawn again with them, it took about two-thirds of one core instead of 2%, so set *Glow* to 0 to use them with a theme that has one, such as *Christmas*, *Halloween* or *Fireworks*. A 3840 × 2160 dashboard took all of one core, glow or not. With *General* → *Draw with the graphics card* on, snow took about an eighth of one core at either size, glow and all.
 - **A widget's own look:** every widget has *Widget theme* settings (font, weight and the theme's colours) that override the layout's theme for that widget alone; leave them empty to follow the theme. Named colours in its other settings, like `accent`, then mean the widget's own. Many widgets also have colours of their own, such as a bar's track or *Now playing*'s progress bar, so changing the theme's bar track doesn't change everything that happens to use it.
 - **Text that fits:** a big font size, or a font that's wider or taller than the theme's, can make text too big for its widget. Widgets with text have *Shrink to fit*, on by default: text that would be cut off gets smaller, evenly, until it fits, and a label and its value on one line get smaller together rather than run into each other. Text that fits keeps exactly the size you set; turn it off to keep your sizes whatever happens. Names that end with … when they're too long, as in *Top apps*, still do, down to their first few letters. *Agenda* and *News* end long lines with … too, and rather than shrink the whole list, they leave out the rows at the bottom that would be cut off; a first row too tall for the widget on its own gets smaller.
 - **Gradients and glow:** under *Gradients and glow* in the theme's settings, *Accent fades to* makes graphs, bars, gauges and icons fade from the accent to a second colour; *Background fades to* fades the background from top to bottom; and *Glow* (0 to 1) puts a soft neon halo around every widget's text and shapes, in the accent colour or its own. *Outrun*, *Vaporwave*, *Aurora*, *Magma*, *Cyberpunk* and *Toxic* use them. The glow costs a little CPU, since the dashboard draws without the graphics card by default.
@@ -157,7 +158,7 @@ To put a picture behind the widgets, add `"backgroundImage": "C:\\Pictures\\wall
 
 Warning colours change a value's colour as it runs hot, but with colour blindness warning and critical can look alike, or like the value's usual colour. Tick *Warning symbols* in the theme's *Colours* (select the canvas in the editor), or add `"warningSymbols": true` to a theme, and a value in the theme's warning colour gets a ▲ beside it too, and one in its critical colour a ◆. The shape says which it is, whatever the colour looks like.
 
-- Text, *Icon and value* and stat tiles have it after the value; graphs, bars, drives and *Top apps* have it just before the value on the right; a gauge has it after the value in the middle of the dial.
+- Text, *Icon and value* and stat tiles have it after the value; graphs, bars, drives, *Device batteries* and *Top apps* have it just before the value on the right; a gauge has it after the value in the middle of the dial.
 - It takes no room while the value is normal. With *Shrink to fit* on, text that only just fits gets a little smaller to make room for it.
 - *CPU threads* keeps to colour alone: a symbol in every thread would be too busy to read.
 - Only the theme's `warning` and `critical` colours get one. A warning colour of your own, such as `#FF00FF` or `accent`, doesn't, since only you know what it means.
@@ -191,11 +192,24 @@ across the room, a monitor turned on its side and a tall strip inside a PC case.
 audio visualiser, the weather in detail, the news, your network, streaming, or counting down to Christmas or
 Halloween. Yours could be next.
 
+The gallery has themes too: pick *Themes* at the top of the page to see each one on the default layout, drawn live
+with your own readings. *Add to my themes* keeps it with your saved themes, for any layout to use: click empty canvas
+in the editor and pick it under *Theme*. You're asked before a theme of yours with the same name is replaced; a
+built-in theme can't be, so one named like a built-in theme is added under a name you choose. So far there are five:
+*Deep Sea* (bioluminescent teal on abyss blue, with a glow), *Nebula* (violet fading into blue, with a pink glow),
+*Copper* (copper and brass on gunmetal), and two light ones, *Matcha* (soft greens) and *Paper* (e-ink greys).
+
 The gallery is the [`gallery`](../gallery) folder of this repository. To share a layout, export it (*Layouts ▾ →
 Export…* in the editor), add the `.ibl` file and an entry in [`gallery/index.json`](../gallery/index.json), and open a
 pull request. A plain layout `.json` works too if it has no pictures or fonts. The tests check every gallery layout
 opens and is valid, and that its widget count is right. To use a gallery of your own instead, set `"galleryAddress"`
 in `settings.json` to a web folder, or a folder on this PC, with an `index.json` in it.
+
+To share a theme, save it in the editor (*Save theme as…*), copy its file from `themes` in the settings folder into
+the gallery's `themes` folder, add an entry under `themes` in `index.json`, and open a pull request: see [Sharing a
+theme](../gallery/README.md#sharing-a-theme). A shared theme is one plain file, so it uses a font that comes with
+Windows and has no background picture; the gallery leaves out a `fontFile` or `backgroundImage`, and won't add a theme
+with a value it can't use. The tests check each gallery theme is as easy to read as the built-in ones.
 
 ### Pages
 
@@ -231,17 +245,21 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set on the *Weather* page, every 15 minutes |
 | `weather.gusts`, `weather.wind.degrees`, `weather.pressure`, `weather.pressure.trend` (*Rising*, *Falling* or *Steady* over the last 3 hours), `weather.dewpoint`, `weather.visibility`, `weather.clouds`, `weather.precipitation` (the last 15 minutes), `weather.precipitation.today`, `weather.rain.hour`, `weather.tomorrow.rain`, `weather.uv`, `weather.uv.max` (today's highest), `weather.uv.level` (*Low* to *Extreme*), `weather.daylight` | The same forecast (see [Weather](#weather)) |
 | `weather.sun.elevation` | How high the sun is, in degrees, worked out on your PC from the place and the time, every 30 seconds |
+| `moon.phase` (e.g. *Waxing gibbous*), `moon.illumination` (how much is lit, %), `moon.age` (days since the new moon), `moon.next.full`, `moon.next.new` (e.g. *Sat 24 Oct*), `moon.rise`, `moon.set` | The moon, worked out on your PC every minute; moonrise and moonset need the weather's location (see [Sun and moon](#sun-and-moon)) |
+
 | `weather.rain.soon` (e.g. *Rain from 14:30*), `weather.rain.next` (minutes until it rains, 0 while it is) | The same forecast's next two hours, a quarter of an hour at a time (see [Rain soon](#rain-soon)) |
 | `weather.aqi`, `weather.aqi.level`, `weather.aqi.european`, `weather.aqi.us`, `weather.pm25`, `weather.pm10`, `weather.ozone`, `weather.no2` | Open-Meteo's air quality (from CAMS) for the same place, every hour, once *Weather* → *Air quality and pollen* is on (see [Air quality and pollen](#air-quality-and-pollen)) |
 | `weather.pollen` (e.g. *Grass high*), `weather.pollen.grass`, `weather.pollen.tree`, `weather.pollen.weed`, and `weather.pollen.grass.level`, `weather.pollen.tree.level`, `weather.pollen.weed.level` (*None* to *Very high*) | The same, for places in Europe in season |
 | `weather.warnings` (how many), `weather.warning` (the most serious one's headline), `weather.warning.level` (e.g. *Yellow* or *Severe*) | Warnings of severe weather for the same place, from the Met Office in the UK or the National Weather Service in the US, every 10 minutes, once *Weather* → *Severe weather warnings* is on (see [Severe weather warnings](#severe-weather-warnings)) |
 | `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set on the *Calendars* page, every 15 minutes (see [Calendar](#calendar)) |
 | `calendar.<name>.next.title`, `calendar.<name>.next.time`, `calendar.<name>.next.location`, `calendar.<name>.next.minutes`, `calendar.<name>.now.title`, `calendar.<name>.today` | The same for one calendar, e.g. `calendar.work.next.title` for a calendar called *Work* |
+| `game.name`, `game.appid` | The game you're playing: Steam's name and app id for a Steam game, or the name in its exe for a game linked under *Game layouts*. No reading while no game is in front (see [Game cover art](#game-cover-art)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `mic.muted` (1 when muted, 0 when not), `mic.name`, `mic.inuse`, `mic.apps`, `camera.inuse`, `camera.apps` | The microphone Windows uses for calls, and the apps using it or the camera, every 2 seconds (see [Microphone and camera](#microphone-and-camera)). The microphone's appear on PCs with a microphone, the camera's once an app has used a camera |
+| `battery.<name>` (%), `battery.<name>.name`, `battery.low` | Your wireless headset's, mouse's, keyboard's and game controller's batteries, as Windows' Bluetooth settings show them, every minute (see [Device batteries](#device-batteries)). Only on PCs with such devices |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
 | `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; *Sensors* → *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
@@ -408,6 +426,27 @@ Turn on *Weather* → *Severe weather warnings* for warnings of storms, floods, 
 The Met Office gives warnings for 16 areas of the UK, such as *North West England* or *Strathclyde*, and *Automatic* picks the one your location is in. Near the edge of one, the next may suit you better: *Met Office area* chooses it. Places picked from a search know which country they're in. A location typed in as coordinates gets the Met Office's warnings if it's in Great Britain, but to get the NWS's, set it by searching for its name: coordinates alone are never sent to the NWS, in case they're in Canada or Mexico.
 
 Every 10 minutes while they're on, for a UK place only its Met Office area is sent to the Met Office (`metoffice.gov.uk`), never the place itself; for a US place its coordinates go to the National Weather Service (`api.weather.gov`). A place anywhere else isn't sent anywhere, and nothing at all is fetched while warnings are off. If they can't be reached it tries again three minutes later, and the last warnings stay for up to an hour (each still goes when it ends). Warnings from the Met Office (© Crown copyright) and from the US National Weather Service.
+
+#### Sun and moon
+
+The *Sun and moon* widget (`sun`) shows the day as an arc from sunrise on the left to sunset on the right, with the sun on it and the part of the day gone filled in, and how long it's light inside. Beside it is the moon as it looks tonight, with its phase, how much of it is lit, the next full moon, and when it rises and sets. Add it with *Add widget* → *Sun and moon* in the editor.
+
+<p align="center"><img src="images/widgets/sun.png" width="600" alt="The sun and moon widget at a quarter to ten at night: an empty arc from sunrise at 07:12 to sunset at 18:36 with 11 h 24 min of daylight inside it, and beside it a waxing gibbous moon, 79% lit, with the date of the next full moon, when it rose and when it sets"></p>
+
+- **The sun:** today's sunrise and sunset, from midnight to midnight, so after sunset the arc stays empty until the next day. In the far north and south, a day the sun doesn't rise or set says *Up all day* or *Down all day*.
+- **The moon:** lit on the right as it grows towards full and on the left as it shrinks, as it looks from the northern hemisphere; from the southern hemisphere it's the other way round. Its phase is *New moon*, *First quarter*, *Full moon* or *Last quarter* all through the day it comes, as calendars have them, and *Waxing crescent*, *Waxing gibbous*, *Waning gibbous* or *Waning crescent* in between.
+- **Moonrise and moonset:** while the moon's up, when it rose and when it sets (*Rose 15:24 · sets 02:36*); while it's down, when it next rises and then sets. It rises about 50 minutes later each day, so about once a month there's a day it doesn't rise at all. Turn off *Moonrise and moonset* to leave them out.
+- **In the editor:** *Show* picks the sun, the moon or both. The sun and the part of the day it's been up are in the accent colour, the moon's lit side in the secondary colour, and the rest of the arc and the moon's dark side in the track colour, unless you choose your own. With *Shrink to fit* on, text too big for the widget gets smaller to fit.
+
+It's all worked out on your PC from the date and the weather's location, so nothing is sent or fetched for it, and it carries on offline. The phases come within a few minutes of the almanacs', and the rising and setting within a couple of minutes. The sun needs a location (*Weather* → *Set location…*, or *Set location…* under *Set up* in the editor); without one, the arc says so. The moon's phase doesn't, but without a location the moon is drawn as it looks from the northern hemisphere, and there's no moonrise or moonset. Times are in your PC's time zone.
+
+The moon's readings work in any widget, e.g. `{moon.phase}, full moon {moon.next.full}` in a text widget reads *Waxing gibbous, full moon Sat 24 Oct*:
+
+- `moon.phase`: its phase, as above.
+- `moon.illumination`: how much of it is lit, in %.
+- `moon.age`: how many days since the new moon, from 0 to 29.5.
+- `moon.next.full` and `moon.next.new`: the days of the next full and new moons, e.g. *Sat 24 Oct*.
+- `moon.rise` and `moon.set`: when it rises (or rose, while it's up) and sets, e.g. *15:24*. They need the location.
 
 ### Calendar
 
@@ -585,6 +624,51 @@ To make a widget go red, give it a warning colour on one of these metrics (see [
 
 In the editor, the same rules are each widget's *Warning colours*: pick the metric, set *Above* to 0, and choose a colour.
 
+### Device batteries
+
+How much charge your wireless devices have left, as Windows' Bluetooth settings show it: a Bluetooth headset, mouse,
+keyboard or game controller, or an Xbox controller. The `batteries` widget lists them, each with a bar, and turns one
+the critical colour once it's under 20 %.
+
+<p align="center"><img src="images/widgets/batteries.png" width="600" alt="Three devices with bars: a controller at 55 %, a headset at 72 % and a mouse at 18 %, its bar and charge in red; beside them, Mouse is low"></p>
+
+- **Which devices:** the ones *Settings* → *Bluetooth & devices* shows a battery level for. Headsets send it over
+  Bluetooth's hands-free connection, and Bluetooth LE mice, keyboards, controllers and earbuds have a battery Windows
+  reads itself. Xbox controllers on the Xbox Wireless Adapter or a cable come from Windows' game controller support
+  instead. A mouse, keyboard or headset with a USB receiver of its own usually tells only its maker's app, so it
+  doesn't show here.
+- **When:** every minute. A device shows once it connects, and goes once it's switched off or out of range, within a
+  minute or so of either.
+- Impious Bonum only reads what Windows already knows: it never connects to a device itself, and needs no permission.
+  Nothing shows on PCs without such devices.
+
+Each device's readings appear when it first connects, listed in the metric picker under *Device batteries*. The name
+in the id is the device's, in lower case with a hyphen for spaces and punctuation (*WH-1000XM4* is
+`battery.wh-1000xm4`, *Xbox Wireless Controller* `battery.xbox-wireless-controller`). Two devices with the same name
+are told apart by a number: *Controller* and *Controller 2*.
+
+| Reading | |
+|---|---|
+| `battery.<name>` | How much charge it has left, e.g. *72 %*. No reading while it's away |
+| `battery.<name>.name` | Its name, as Bluetooth settings show it |
+| `battery.low` | The name of the one with the least charge, once it's under 20 %, e.g. *Mouse*. No reading while none is |
+
+The widget shows every connected device by name, or just the ones you choose: *Devices* works like the
+[news widget's feeds](#news), and offers every device that has connected since Impious Bonum started. It hides while
+none of them is connected (and shows faded while you edit the layout, so you can still place it). Its *Warning
+colours* start with one rule, under 20 in the critical colour, for each device's bar and charge; change it, or add
+milder ones before it.
+
+The picture's warning shows only while a device is low, as `battery.low` has no reading otherwise:
+
+```json
+{ "type": "batteries", "x": 30, "y": 35, "width": 460, "height": 240, "fontSize": 30, "barHeight": 8, "spacing": 22 },
+{ "type": "text", "x": 530, "y": 115, "width": 250, "height": 60, "fontSize": 40, "text": "{battery.low} is low",
+  "color": "critical", "hideUnavailable": true }
+```
+
+To be told, add an [alert](#alerts) on `battery.<name>` below 20, say.
+
 ## Widgets in depth
 
 ### Top apps
@@ -725,13 +809,35 @@ updates once a second.
 
 ### Images and shapes
 
-The *Image* widget shows a picture from a PNG, JPG, GIF (first frame), BMP or TIFF file: a logo, album artwork, a photo of your build. *Fit* works like the background image's (fill, fit, stretch, center, tile), and it can have rounded corners and be see-through. *Recolour* draws the picture's shape in a theme colour, so a white logo on a transparent background turns the theme's accent and follows theme changes. Pictures are decoded at about the size they're shown, so a large file costs little memory.
+The *Image* widget shows a picture from a PNG, JPG, GIF (first frame), BMP or TIFF file: a logo, album artwork, a photo of your build. *Fit* works like the background image's (fill, fit, stretch, center, tile), and it can have rounded corners and be see-through. *Recolour* draws the picture's shape in a theme colour, so a white logo on a transparent background turns the theme's accent and follows theme changes. Pictures are decoded at about the size they're shown, so a large file costs little memory. It can show the game you're playing instead: see [Game cover art](#game-cover-art).
 
 The *Shape* widget is a rounded panel, a circle or a divider line, for grouping widgets or separating them. Shapes are added behind the other widgets, so a panel sits under whatever you put on it; drag it lower in the editor's *Widgets* list (or press Ctrl+]) to draw it on top instead. Their default colour is the theme's `track`, the same subtle shade as an empty bar.
 
 `track` and `background` work as colour names everywhere, like `foreground`, `secondary`, `accent`, `warning` and `critical`.
 
 Exported layouts carry their image widgets' pictures, like the background image and font.
+
+### Game cover art
+
+An *Image* widget can show the game you're playing: set *Show* to `game`. For a Steam game it shows Steam's own art, whichever *Game picture* you choose:
+
+| Game picture | |
+|---|---|
+| `cover` | The tall box art, as Steam's library shows it |
+| `header` | The wide banner from the game's store page |
+| `hero` | The big picture across the top of the game's page in Steam's library |
+
+The pictures come from Steam's own cache on your PC, so nothing is downloaded; Steam keeps them for each game that has shown in your library. If it hasn't the one you chose, the widget shows another it has. A game Steam didn't install, or hasn't pictures of yet, shows its own icon, whole and in the middle.
+
+A game is the app in front, as for the FPS reading and [game layouts](#game-layouts), when Steam installed it or when it's linked to a layout or theme on the *Game layouts* page. So for a game from another store, link it to get its icon. The picture stays for a few seconds when you alt-tab away, and goes once no game is in front, leaving the widget empty; turn on *Hide when there's no game* to hide it instead (it shows faded while you edit the layout). The *Gaming HUD* in the [gallery](#layout-gallery) has the game's banner beside the session so far.
+
+The game's name and Steam app id are readings too: `game.name` is Steam's name for it, or else the description in its exe, and `game.appid` is empty for a game Steam didn't install. A text widget of `{game.name}` shows what you're playing.
+
+It costs next to nothing: the game is looked up only when a different app comes to the front, and remembered, Steam's list of installed games is read again at most every ten minutes, and each picture is decoded at the size it's shown. In the layout file:
+
+```json
+{ "type": "image", "x": 30, "y": 30, "width": 300, "height": 450, "source": "game", "art": "cover", "cornerRadius": 12, "hideNoGame": true }
+```
 
 ### Photo frame
 

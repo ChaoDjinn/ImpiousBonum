@@ -1,0 +1,9 @@
+// The sun's day and tonight's moon, for the guide (build/screenshots.ps1). It's drawn at 21:47, after sunset.
+{
+  "width": 800,
+  "height": 280,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "sun", "x": 30, "y": 30, "width": 740, "height": 220, "fontSize": 26, "moonSize": 150, "thickness": 8 }
+  ]
+}

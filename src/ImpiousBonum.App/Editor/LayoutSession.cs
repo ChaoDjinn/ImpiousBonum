@@ -360,6 +360,25 @@ public sealed class LayoutSession
     }
 
     /// <summary>
+    /// Sets several theme values at once, as the layout's own (over its theme's), as one undo step: the colours made
+    /// from a picture, say. A null value leaves that setting empty, even where the layout's theme sets it.
+    /// </summary>
+    public void SetThemeValues(IReadOnlyDictionary<string, string?> values)
+    {
+        var theme = Document.Theme.DeepClone().AsObject();
+        foreach (var (key, value) in values)
+        {
+            ThemeLibrary.SetString(theme, key, value);
+            // An explicit null hides the theme's value; one the theme doesn't set needs nothing.
+            if (value is null && Themes.Resolve(theme).ToJson().ContainsKey(key))
+                theme[key] = null;
+        }
+        if (JsonNode.DeepEquals(Document.Theme, theme))
+            return;
+        Edit(ChangeKind.Content, null, null, null, document => document.Theme = theme);
+    }
+
+    /// <summary>
     /// Saves the theme the layout is drawn with as a saved theme, and switches the layout to it with no values of its own.
     /// Used by "Save theme as" (a new name) and "Update theme" (the named theme). Undoable, though the file stays written.
     /// </summary>

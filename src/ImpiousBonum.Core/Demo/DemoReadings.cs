@@ -339,6 +339,26 @@ public static class DemoReadings
 
         // A photo for a photo frame with no folder, taken on a summer evening.
         store.SetAttachment(Photo, new DemoPhoto("Lakeside at dusk.jpg", new DateTime(2026, 8, 14, 20, 31, 0)));
+
+        // The sun went down at 18:36, and a waxing gibbous moon is high in the south: up since the afternoon, it sets in
+        // the small hours, and it's full in five days.
+        var moon = new MoonProvider(() => null);
+        moon.Initialize(store);
+        DateTimeOffset At(int days, double hours) => new(now.Date.AddDays(days).AddHours(hours));
+        var sunrise = new DateTimeOffset(report.Sunrise!.Value);
+        var sunset = new DateTimeOffset(report.Sunset!.Value);
+        moon.Publish(store, new SkyReport(new DateTimeOffset(now),
+            new MoonReport(0.79, true, 10.4, "Waxing gibbous", At(5, 6.6), At(20, 1.1)) { Rise = At(0, 15.4), Set = At(1, 2.6) },
+            new SunDay(At(0, 0), At(1, 0), sunrise, sunset, sunset - sunrise), 50.6));
+
+        // A wireless headset, a mouse that wants charging and a controller.
+        using var batteries = new BatteryProvider(() => []);
+        batteries.Publish(store, [new DeviceBattery("Headset", 72), new DeviceBattery("Mouse", 18), new DeviceBattery("Controller", 55)]);
+
+        // The game in front is from Steam. Its pictures (GameArtProvider.Art) are drawn by the app, like the album cover.
+        new GameArtProvider(() => (0, null)).Initialize(store);
+        store.SetText(GameArtProvider.Name, "Starfall Odyssey");
+        store.SetText(GameArtProvider.AppId, "3141590");
     }
 
     /// <summary>
