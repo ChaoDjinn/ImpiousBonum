@@ -20,8 +20,8 @@ public sealed class ImageWidget : Widget
 
     public static WidgetDescriptor Descriptor { get; } = new(
         "image", "Image",
-        "A picture from a file: a logo, artwork or a photo. It's packed into exported layouts so it travels with them. "
-        + "Or the cover art of the game you're playing.",
+        "A logo, artwork or a photo from a file, packed into exported layouts so it travels with them, or the cover art of "
+        + "the game you're playing.",
         240, 240,
         [
             Setting.Choice("source", "Show", FileSource, [FileSource, GameSource], group: Setting.Content,
@@ -112,13 +112,16 @@ public sealed class ImageWidget : Widget
         if (size == _decoded)
             return;
         _decoded = size;
+        // At least the stepped size, but in the widget's own shape, so fill crops the picture to what shows and no more.
+        var scale = Math.Max(size.Item1 / ActualWidth, size.Item2 / ActualHeight);
+        var (width, height) = (ActualWidth * scale, ActualHeight * scale);
 
         // A game's icon is small and square, so it's shown whole whatever the fit.
         var picture = _gameArt?.Picture(_art);
         var fit = _gameArt is not null && _gameArt.IsIcon(picture) ? "fit" : _fit;
         var loaded = _game
-            ? picture is null ? null : BackgroundImage.Load(picture, fit, size.Item1, size.Item2)
-            : BackgroundImage.Load(_file!, fit, size.Item1, size.Item2);
+            ? picture is null ? null : BackgroundImage.Load(picture, fit, width, height)
+            : BackgroundImage.Load(_file!, fit, width, height);
         if (loaded is not { } bitmap)
         {
             _picture.Background = null;

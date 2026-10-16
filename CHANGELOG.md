@@ -93,6 +93,14 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - A new built-in theme, *Clear Sight*, for colour blindness: a sky blue accent, gold warnings and deep pink-red critical ones that stay apart with every common kind of colour blindness, with warning symbols on. That's 56 in all.
 - Ticking a box in the editor's settings with Narrator now changes the setting, as clicking it does.
 
+**The cover art of the game you're playing**
+- An *Image* widget can show the game you're playing instead of a picture from a file: set *Show* to *game* and pick its *Game picture*. For a Steam game that's Steam's own art: the tall *cover*, the wide *header* banner or the big *hero* picture from its library page. Other games show their own icon.
+- The pictures come from Steam's cache on your PC, so nothing is downloaded. A game counts when Steam installed it, or when you've linked it to a layout or theme on the *Game layouts* page, which is how games from other stores get their icon.
+- The widget is empty while no game is in front, or with *Hide when there's no game*, hidden. A quick alt-tab doesn't blank it.
+- Two new readings for any widget: `game.name` (Steam's name for the game, or the one in its exe) and `game.appid` (its Steam app id).
+- The *Gaming HUD* in the gallery shows the game's banner beside the session so far.
+- An *Image* widget set to *fill* now crops its picture to the widget's own shape, rather than sometimes cutting off more than it needed to.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

@@ -52,10 +52,10 @@
       "name": "Gaming HUD",
       "file": "gaming-hud.json",
       "author": "Impious Bonum",
-      "description": "Frame rate front and centre, frame times, 1% lows, temperatures and how the session's going. Neon Outrun theme.",
+      "description": "Frame rate front and centre, frame times, 1% lows, temperatures, the game's banner from Steam and how the session's going. Neon Outrun theme.",
       "width": 1920,
       "height": 480,
-      "widgets": 10
+      "widgets": 11
     },
     {
       "name": "Desk Companion",

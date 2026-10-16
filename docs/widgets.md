@@ -594,11 +594,14 @@ Each entry in `thresholds`:
 
 ## Image (`image`)
 
-A picture from a file: a logo, artwork or a photo. It's packed into exported layouts so it travels with them.
+A logo, artwork or a photo from a file, packed into exported layouts so it travels with them, or the cover art of the game you're playing.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
+| `source` | `file` / `game` | `file` | Show. file shows the picture below. game shows the game you're playing: Steam's art for it, or its icon. |
 | `file` | imagefile | — | Picture. A PNG, JPG, GIF, BMP or TIFF file. |
+| `art` | `cover` / `header` / `hero` | `cover` | Game picture. For a Steam game: cover is the tall box art, header the wide banner, hero the big picture from its library page. Other games show their icon. |
+| `hideNoGame` | true/false | `false` | Hide when there's no game. Otherwise it's empty while no game is in front. It shows faded while you edit the layout. |
 | `fit` | `fill` / `fit` / `stretch` / `center` / `tile` | `fit` | Fit. fill covers the box (cropping), fit shows it all, stretch distorts to fit, center and tile keep its size. |
 | `opacity` | number (0–1) | `1` | Opacity |
 | `cornerRadius` | number (0–1000) | `0` | Corner radius |

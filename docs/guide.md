@@ -7,7 +7,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
-- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [photo frame](#photo-frame)
+- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
 - [Command line](#command-line)
@@ -236,6 +236,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `weather.warnings` (how many), `weather.warning` (the most serious one's headline), `weather.warning.level` (e.g. *Yellow* or *Severe*) | Warnings of severe weather for the same place, from the Met Office in the UK or the National Weather Service in the US, every 10 minutes, once *Weather* → *Severe weather warnings* is on (see [Severe weather warnings](#severe-weather-warnings)) |
 | `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set on the *Calendars* page, every 15 minutes (see [Calendar](#calendar)) |
 | `calendar.<name>.next.title`, `calendar.<name>.next.time`, `calendar.<name>.next.location`, `calendar.<name>.next.minutes`, `calendar.<name>.now.title`, `calendar.<name>.today` | The same for one calendar, e.g. `calendar.work.next.title` for a calendar called *Work* |
+| `game.name`, `game.appid` | The game you're playing: Steam's name and app id for a Steam game, or the name in its exe for a game linked under *Game layouts*. No reading while no game is in front (see [Game cover art](#game-cover-art)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
@@ -724,13 +725,35 @@ updates once a second.
 
 ### Images and shapes
 
-The *Image* widget shows a picture from a PNG, JPG, GIF (first frame), BMP or TIFF file: a logo, album artwork, a photo of your build. *Fit* works like the background image's (fill, fit, stretch, center, tile), and it can have rounded corners and be see-through. *Recolour* draws the picture's shape in a theme colour, so a white logo on a transparent background turns the theme's accent and follows theme changes. Pictures are decoded at about the size they're shown, so a large file costs little memory.
+The *Image* widget shows a picture from a PNG, JPG, GIF (first frame), BMP or TIFF file: a logo, album artwork, a photo of your build. *Fit* works like the background image's (fill, fit, stretch, center, tile), and it can have rounded corners and be see-through. *Recolour* draws the picture's shape in a theme colour, so a white logo on a transparent background turns the theme's accent and follows theme changes. Pictures are decoded at about the size they're shown, so a large file costs little memory. It can show the game you're playing instead: see [Game cover art](#game-cover-art).
 
 The *Shape* widget is a rounded panel, a circle or a divider line, for grouping widgets or separating them. Shapes are added behind the other widgets, so a panel sits under whatever you put on it; drag it lower in the editor's *Widgets* list (or press Ctrl+]) to draw it on top instead. Their default colour is the theme's `track`, the same subtle shade as an empty bar.
 
 `track` and `background` work as colour names everywhere, like `foreground`, `secondary`, `accent`, `warning` and `critical`.
 
 Exported layouts carry their image widgets' pictures, like the background image and font.
+
+### Game cover art
+
+An *Image* widget can show the game you're playing: set *Show* to `game`. For a Steam game it shows Steam's own art, whichever *Game picture* you choose:
+
+| Game picture | |
+|---|---|
+| `cover` | The tall box art, as Steam's library shows it |
+| `header` | The wide banner from the game's store page |
+| `hero` | The big picture across the top of the game's page in Steam's library |
+
+The pictures come from Steam's own cache on your PC, so nothing is downloaded; Steam keeps them for each game that has shown in your library. If it hasn't the one you chose, the widget shows another it has. A game Steam didn't install, or hasn't pictures of yet, shows its own icon, whole and in the middle.
+
+A game is the app in front, as for the FPS reading and [game layouts](#game-layouts), when Steam installed it or when it's linked to a layout or theme on the *Game layouts* page. So for a game from another store, link it to get its icon. The picture stays for a few seconds when you alt-tab away, and goes once no game is in front, leaving the widget empty; turn on *Hide when there's no game* to hide it instead (it shows faded while you edit the layout). The *Gaming HUD* in the [gallery](#layout-gallery) has the game's banner beside the session so far.
+
+The game's name and Steam app id are readings too: `game.name` is Steam's name for it, or else the description in its exe, and `game.appid` is empty for a game Steam didn't install. A text widget of `{game.name}` shows what you're playing.
+
+It costs next to nothing: the game is looked up only when a different app comes to the front, and remembered, Steam's list of installed games is read again at most every ten minutes, and each picture is decoded at the size it's shown. In the layout file:
+
+```json
+{ "type": "image", "x": 30, "y": 30, "width": 300, "height": 450, "source": "game", "art": "cover", "cornerRadius": 12, "hideNoGame": true }
+```
 
 ### Photo frame
 
