@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using ImpiousBonum.Core.Alerts;
 using ImpiousBonum.Core.CustomData;
+using ImpiousBonum.Core.Energy;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
 using ImpiousBonum.Core.Weather;
@@ -349,6 +350,30 @@ public sealed class AppSettings
     /// <summary>What the warnings provider should fetch, or null when they're off, there's no location or nobody warns the place.</summary>
     public WarningsRequest? WeatherWarningsRequest() =>
         WeatherWarnings && WeatherWarningsPlace() is { Source: not WarningSource.None } place ? place : null;
+
+    /// <summary>What a kWh costs (the Energy page), or null: then there are no cost readings.</summary>
+    public double? EnergyPrice { get; set; }
+
+    /// <summary>The currency symbol the costs show, or null for the one of the region Windows is set to.</summary>
+    public string? EnergyCurrency { get; set; }
+
+    /// <summary>Watts added to the CPU's and graphics card's for the parts nothing measures: the motherboard, memory, drives and fans.</summary>
+    public int EnergyOtherWatts { get; set; } = (int)Core.Energy.EnergySettings.DefaultOtherWatts;
+
+    /// <summary>What the energy readings need, with hand edits that make no sense (a negative price, say) left out.</summary>
+    public EnergySettings EnergySettings() => new(
+        Math.Clamp(EnergyOtherWatts, 0, 2000),
+        EnergyPrice is > 0 and < 1000 ? EnergyPrice : null,
+        string.IsNullOrWhiteSpace(EnergyCurrency) ? EnergyCost.DefaultSymbol : EnergyCurrency.Trim());
+
+    /// <summary>Great Britain's grid carbon intensity (the Energy page). Off by default: nothing is fetched until it's on.</summary>
+    public bool GridCarbon { get; set; }
+
+    /// <summary>The first half of a postcode for a region's carbon intensity, e.g. LS1, or null for Great Britain as a whole.</summary>
+    public string? GridCarbonArea { get; set; }
+
+    /// <summary>What the grid carbon provider should fetch, or null when it's off.</summary>
+    public GridCarbonRequest? GridCarbonRequest() => GridCarbon ? new GridCarbonRequest(CarbonIntensity.Area(GridCarbonArea)) : null;
 
     public static AppSettings Load()
     {
