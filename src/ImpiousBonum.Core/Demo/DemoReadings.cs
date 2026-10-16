@@ -350,6 +350,10 @@ public static class DemoReadings
         moon.Publish(store, new SkyReport(new DateTimeOffset(now),
             new MoonReport(0.79, true, 10.4, "Waxing gibbous", At(5, 6.6), At(20, 1.1)) { Rise = At(0, 15.4), Set = At(1, 2.6) },
             new SunDay(At(0, 0), At(1, 0), sunrise, sunset, sunset - sunrise), 50.6));
+
+        // A wireless headset, a mouse that wants charging and a controller.
+        using var batteries = new BatteryProvider(() => []);
+        batteries.Publish(store, [new DeviceBattery("Headset", 72), new DeviceBattery("Mouse", 18), new DeviceBattery("Controller", 55)]);
     }
 
     /// <summary>

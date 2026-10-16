@@ -18,6 +18,7 @@ public static class WidgetFactory
         .. In(Readings,
             TextWidget.Descriptor, GraphWidget.Descriptor, LinesWidget.Descriptor, GaugeWidget.Descriptor, StatWidget.Descriptor,
             CoresWidget.Descriptor, IconValueWidget.Descriptor, BarsWidget.Descriptor, RowsWidget.Descriptor, DrivesWidget.Descriptor,
+            BatteriesWidget.Descriptor,
             ProcessesWidget.Descriptor, StatusWidget.Descriptor),
         .. In(Time, ClockWidget.Descriptor, TimerWidget.Descriptor, AgendaWidget.Descriptor, CountdownsWidget.Descriptor),
         .. In(Media, MediaWidget.Descriptor, VisualizerWidget.Descriptor, ButtonsWidget.Descriptor),
