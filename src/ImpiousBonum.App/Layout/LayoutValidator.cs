@@ -167,13 +167,17 @@ public static class LayoutValidator
         if (theme.BackgroundOpacity is < 0 or > 1 || double.IsNaN(theme.BackgroundOpacity))
             issues.Add("Theme: 'backgroundOpacity' should be between 0 and 1.");
 
-        foreach (var (name, value) in new[] { ("accent2", theme.Accent2), ("backgroundGradient", theme.BackgroundGradient), ("glowColor", theme.GlowColor) })
+        foreach (var (name, value) in new[] { ("accent2", theme.Accent2), ("backgroundGradient", theme.BackgroundGradient), ("glowColor", theme.GlowColor), ("particleColor", theme.ParticleColor) })
         {
             if (!string.IsNullOrWhiteSpace(value) && !IsColor(value, allowNamed: false))
                 issues.Add($"Theme: '{name}' should be a colour like #FF9800, or empty.");
         }
         if (theme.Glow is < 0 or > 1 || theme.Glow is { } glow && double.IsNaN(glow))
             issues.Add("Theme: 'glow' should be between 0 and 1.");
+        if (!ParticleLayer.Kinds.Contains(theme.Particles))
+            issues.Add($"Theme: 'particles' should be one of {string.Join(", ", ParticleLayer.Kinds)}.");
+        if (theme.ParticleAmount is < 0 or > 1 || double.IsNaN(theme.ParticleAmount))
+            issues.Add("Theme: 'particleAmount' should be between 0 and 1.");
     }
 
     /// <summary>

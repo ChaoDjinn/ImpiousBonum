@@ -93,6 +93,11 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - A new built-in theme, *Clear Sight*, for colour blindness: a sky blue accent, gold warnings and deep pink-red critical ones that stay apart with every common kind of colour blindness, with warning symbols on. That's 56 in all.
 - Ticking a box in the editor's settings with Narrator now changes the setting, as clicking it does.
 
+**Snow, leaves and more**
+- A new theme setting, *Particles*: snow, autumn leaves, cherry-blossom petals or confetti falling behind the widgets, or embers rising from the bottom. Snow sways as it falls, leaves tumble, petals flutter, and embers drift up and fade. *Amount* sets how many, and *Colour* makes them all one colour; otherwise snow is white, leaves are autumn colours, petals pink and embers orange and gold, and confetti comes in the theme's colours.
+- The built-in themes leave them off, since they cost CPU. They're cheap on a small screen with no glow, but with a theme's glow, or on a 4K dashboard, they take most of a CPU core unless you turn on *Draw with the graphics card*. The guide has the numbers, and suggests snow with *Christmas* and leaves or embers with *Halloween*, with their glow turned off.
+- They stop while the dashboard is hidden or minimised, and the tablet view, USB screens and snapshots show them still. Moving backgrounds now stop while it's minimised too.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

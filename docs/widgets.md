@@ -669,3 +669,6 @@ settings folder, each holding the settings below; changing one restyles every la
 | `backgroundGradient` | color | — | Background fades to. The background fades from its colour at the top to this at the bottom. Empty is a plain background. |
 | `glow` | number (0–1) | — | Glow. A soft neon glow around every widget's text and shapes: 0.3 is subtle, 1 is strong. Empty or 0 is none. Uses a little more CPU. |
 | `glowColor` | color | — | Glow colour. Empty glows in the accent colour. |
+| `particles` | `none` / `snow` / `leaves` / `petals` / `confetti` / `embers` | `none` | Kind. Snow, autumn leaves, cherry-blossom petals or confetti falling behind the widgets, or embers rising. They cost CPU while they move, most with a glow or on a big screen: the guide has the numbers. |
+| `particleAmount` | number (0–1) | `0.5` | Amount. How many: 0.2 is a few, 1 is a flurry. |
+| `particleColor` | color | — | Colour. One colour for them all, in a few shades. Empty is their own: white snow, autumn leaves, pink petals, orange embers, and confetti in the theme's colours. |
