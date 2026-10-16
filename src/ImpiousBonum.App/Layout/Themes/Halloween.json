@@ -1,0 +1,15 @@
+// Pumpkin orange fading to witch's purple on a moonless night, with a jack-o'-lantern glow.
+{
+  "fontFamily": "Segoe Print",
+  "fontWeight": "Bold",
+  "foreground": "#FFEBD6",
+  "secondary": "#C2FFD3A8",
+  "accent": "#FF7A1A",
+  "background": "#0E0814",
+  "track": "#2A1630",
+  "warning": "#FFD23F",
+  "critical": "#FF2E4C",
+  "accent2": "#B65CFF",
+  "backgroundGradient": "#1F0A26",
+  "glow": 0.35
+}

@@ -34,7 +34,7 @@
 
 Impious Bonum turns a spare screen into a live view of your PC: CPU, GPU, memory, temperatures, FPS, drives and
 network, alongside a clock, the weather, your calendar, what's playing and buttons to control it all. Lay it out how
-you like in a visual editor, pick from 43 themes, and it runs quietly in the tray using about 50 MB of memory. No
+you like in a visual editor, pick from 55 themes, and it runs quietly in the tray using about 50 MB of memory. No
 spare screen? It works as a window too, or on a tablet over Wi-Fi.
 
 ## Features
@@ -72,7 +72,7 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 
 **Make it yours**
 - A layout editor with live preview, drag and resize, a searchable picker for every metric, fonts you can see before you pick, and text that shrinks to fit, plus touch editing on the dashboard itself. [More](<docs/guide.md#layout-editor>)
-- 43 built-in themes, from clean to retro to neon, with gradients, glow, and picture, GIF or video backgrounds. [More](<docs/guide.md#layout-editor>)
+- 55 built-in themes, from clean to retro to neon to the holidays (Halloween, Christmas, Diwali and more), with gradients, glow, and picture, GIF or video backgrounds. [More](<docs/guide.md#layout-editor>)
 - A gallery of ready-made layouts to try with your own readings and import, and export to share yours. [More](<docs/guide.md#layout-gallery>)
 
 **It fits around you**
@@ -83,7 +83,7 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 
 ## A look for every desk
 
-43 built-in themes, or make your own. Here's the default layout in eight of them:
+55 built-in themes, or make your own. Here's the default layout in eight of them:
 
 <p align="center"><img src="docs/images/themes.png" alt="The default layout in the Outrun, Nord, Dracula, Solarized Light, Amber, Cyberpunk, Blueprint and Catppuccin themes"></p>
 
@@ -166,9 +166,9 @@ Impious Bonum is young: it's at version 0.15, first released at the end of Septe
 - [x] Tablet view: the dashboard in a browser over the local network
 - [x] Bars, and Claude plan usage from Claude Code
 - [x] More widget types: 22 so far
-- [x] Themes: 43 built in, with gradients, glow and moving backgrounds
+- [x] Themes: 55 built in, holidays too, with gradients, glow and moving backgrounds
 - [x] Screenshots of the real dashboard, the editor and the widgets, here and in the guide
-- [x] A window with a page for every setting, and a gallery of 13 ready-made layouts for screens from 3.5" to 4K
+- [x] A window with a page for every setting, and a gallery of 21 ready-made layouts for screens from 3.5" to 4K
 - [x] Weather: longer forecasts, more readings, more places, air quality and pollen, and severe weather warnings
 - [x] Alerts that play a sound, switch layout, run a program or send a web request
 - [x] Network adapters, Wi-Fi signal and battery time left

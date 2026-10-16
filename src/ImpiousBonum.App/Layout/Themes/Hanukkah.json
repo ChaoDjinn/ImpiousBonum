@@ -1,0 +1,16 @@
+// Blue and silver by candlelight, for the eight nights.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "SemiLight",
+  "foreground": "#F4F7FF",
+  "secondary": "#C2C9D6F5",
+  "accent": "#5AA9FF",
+  "background": "#0B1B3F",
+  "track": "#1C2F5C",
+  "warning": "#FFC94D",
+  "critical": "#FF6B6B",
+  "accent2": "#DCE6FF",
+  "backgroundGradient": "#071229",
+  "glow": 0.3,
+  "glowColor": "#FFC94D"
+}

@@ -5,6 +5,25 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 
 ## Unreleased
 
+Themes for the holidays, eight more layouts in the gallery, countdowns that come round every year, and a schedule that follows the sun and the calendar.
+
+**Holiday themes**
+- Twelve new built-in themes for the holidays through the year: *Lunar New Year* (gold on lantern red), *Valentine* (rose pinks in a love-letter script), *Shamrock* (emerald and gold for St Patrick's Day), *Easter* (a light theme in lilac and mint), *Eid* (lantern gold on a teal night), *Diwali* (marigold glowing into rangoli pink), *Halloween* (pumpkin orange fading to witch's purple, with a jack-o'-lantern glow), *Day of the Dead* (marigold, magenta and turquoise), *Fireworks* (gold bursting into magenta, for Bonfire Night or New Year's Eve), *Hanukkah* (blue and silver by candlelight), *Christmas* (fairy-light gold and holly red on evergreen) and *Gingerbread* (icing, candy pink and gumdrop green). That's 55 in all.
+
+**More layouts in the gallery**
+- *Listening Room* (1920 × 480): what's playing with its album art, volume buttons, the time, and an audio visualiser right across the bottom.
+- *Network* (1920 × 480): download and upload over time, the Wi-Fi signal and network name, the ping, the IP address and how much has gone each way.
+- *Festive* (1920 × 480): the days left until Christmas, the time, the weather and your music, in the new Christmas theme.
+- *Trick or Treat* (1280 × 800, for a tablet): the countdown to trick-or-treating, the time, tonight's weather hour by hour and your spooky playlist, in the Halloween theme.
+- *Streamer* (1024 × 600, for a touch screen): buttons for your streaming app's scenes and muting your mic, an on-air stopwatch, and your FPS, upload, CPU and GPU.
+- *Weather Station* (1080p): the weather now in detail, every three hours ahead and the week, dials for UV, humidity, air quality and wind, and the sun and pressure.
+- *News Desk* (1080p): a ticker for each news feed, the time around the world, the weather and your calendar, laid out like a front page.
+- *Case Strip* (480 × 1920): for the tall screens inside a PC case, with temperatures and FPS, CPU and GPU dials, every CPU thread, memory and an audio visualiser.
+- That's 21 in all. The gallery's pictures now show the audio visualiser moving, as it would with music on.
+
+**Countdowns every year**
+- A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
+
 **Schedule**
 - Schedule rules can follow the sun: show *Night Watch* from sunset to sunrise, say, or a bright theme from sunrise to sunset. Sunset and sunrise are worked out on your PC for the weather's location, so nothing extra is fetched; without a location these rules never apply, and the dialog and *Pages and schedule* say so.
 - Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.

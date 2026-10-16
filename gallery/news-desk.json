@@ -1,0 +1,23 @@
+// News desk: the time here and around the world, a ticker for each of your news feeds, the weather and what's coming
+// up in your calendars. Add feeds on the News feeds page (tap a headline to read it), calendars on the Calendars page,
+// and change the places in the editor.
+{
+  "width": 1920,
+  "height": 1080,
+  "theme": "Swiss",
+  "widgets": [
+    { "type": "shape", "x": 625, "y": 40, "width": 10, "height": 1000, "shape": "line", "color": "secondary", "thickness": 1 },
+    { "type": "shape", "x": 660, "y": 385, "width": 1220, "height": 10, "shape": "line", "color": "foreground", "thickness": 3 },
+    { "type": "clock", "x": 40, "y": 40, "width": 560, "height": 520, "timeSize": 140, "dateSize": 26, "zoneSize": 30, "zoneLayout": "rows",
+      "zones": [
+        { "label": "London", "zone": "Europe/London" },
+        { "label": "New York", "zone": "America/New_York" },
+        { "label": "Tokyo", "zone": "Asia/Tokyo" },
+        { "label": "Sydney", "zone": "Australia/Sydney" }
+      ] },
+    { "type": "news", "x": 660, "y": 40, "width": 1220, "height": 330, "style": "tickers", "count": 5, "seconds": 10, "fontSize": 36, "spacing": 16 },
+    { "type": "agenda", "x": 660, "y": 430, "width": 1220, "height": 610, "days": 3, "count": 9, "fontSize": 32, "headerSize": 22, "spacing": 10 },
+    { "type": "weather", "x": 40, "y": 610, "width": 560, "height": 200, "forecast": "none", "fontSize": 96 },
+    { "type": "weather", "x": 40, "y": 840, "width": 560, "height": 200, "showCurrent": false, "count": 4, "forecastSize": 26 }
+  ]
+}

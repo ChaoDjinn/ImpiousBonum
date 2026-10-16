@@ -31,6 +31,24 @@
       "widgets": 5
     },
     {
+      "name": "Streamer",
+      "file": "streamer.json",
+      "author": "Impious Bonum",
+      "description": "For a 7\" 1024 × 600 touch screen beside your stream: scene and mute buttons, an on-air stopwatch, FPS, upload, CPU and GPU.",
+      "width": 1024,
+      "height": 600,
+      "widgets": 6
+    },
+    {
+      "name": "Trick or Treat",
+      "file": "trick-or-treat.json",
+      "author": "Impious Bonum",
+      "description": "For a 1280 × 800 tablet, in the Halloween theme: the time, a countdown to trick-or-treating, tonight's weather and your spooky playlist.",
+      "width": 1280,
+      "height": 800,
+      "widgets": 6
+    },
+    {
       "name": "Gaming HUD",
       "file": "gaming-hud.json",
       "author": "Impious Bonum",
@@ -67,6 +85,33 @@
       "widgets": 4
     },
     {
+      "name": "Listening Room",
+      "file": "listening-room.json",
+      "author": "Impious Bonum",
+      "description": "What's playing with its album art, volume buttons, the time, and bars that move with the music right across the screen.",
+      "width": 1920,
+      "height": 480,
+      "widgets": 4
+    },
+    {
+      "name": "Network",
+      "file": "network.json",
+      "author": "Impious Bonum",
+      "description": "Download and upload over time, the Wi-Fi signal and network name, the ping and its trend, the IP address and how much has gone each way.",
+      "width": 1920,
+      "height": 480,
+      "widgets": 6
+    },
+    {
+      "name": "Festive",
+      "file": "festive.json",
+      "author": "Impious Bonum",
+      "description": "The days left until Christmas, every year, with the time, the weather and your Christmas music, in the Christmas theme.",
+      "width": 1920,
+      "height": 480,
+      "widgets": 5
+    },
+    {
       "name": "Sim Rig",
       "file": "sim-rig.json",
       "author": "Impious Bonum",
@@ -94,6 +139,24 @@
       "widgets": 12
     },
     {
+      "name": "Weather Station",
+      "file": "weather-station.json",
+      "author": "Impious Bonum",
+      "description": "The weather now in detail, every three hours ahead and the week, dials for UV, humidity, air quality and wind, and the sun and pressure.",
+      "width": 1920,
+      "height": 1080,
+      "widgets": 9
+    },
+    {
+      "name": "News Desk",
+      "file": "news-desk.json",
+      "author": "Impious Bonum",
+      "description": "Laid out like a front page: a ticker for each of your news feeds, the time around the world, the weather and your calendar.",
+      "width": 1920,
+      "height": 1080,
+      "widgets": 5
+    },
+    {
       "name": "Workstation",
       "file": "workstation.json",
       "author": "Impious Bonum",
@@ -119,6 +182,15 @@
       "width": 1080,
       "height": 1920,
       "widgets": 9
+    },
+    {
+      "name": "Case Strip",
+      "file": "case-strip.json",
+      "author": "Impious Bonum",
+      "description": "For the tall 480 × 1920 screens inside a PC case: the time, temperatures, FPS, CPU and GPU dials, every thread, memory and bars for the music.",
+      "width": 480,
+      "height": 1920,
+      "widgets": 10
     }
   ]
 }

@@ -355,7 +355,7 @@ A stopwatch, a countdown, or the time left until a time or date. Tap the time to
 |---|---|---|---|
 | `mode` | `countdown` / `stopwatch` / `until` | `countdown` | Mode. countdown counts down from the length below; stopwatch counts up; until counts down to the time or date below and runs by itself. |
 | `duration` | text | `25:00` | Length. For countdown: minutes:seconds or hours:minutes:seconds, e.g. 5:00 or 1:30:00. A plain number is minutes. |
-| `target` | text | `18:00` | Until. For until: a time of day (the next one comes round daily) or a date and time, e.g. 2026-12-25 or 2026-12-25 09:00. |
+| `target` | text | `18:00` | Until. For until: a time of day (the next one comes round daily), a month and day with no year (comes round yearly, e.g. 12-25 or 10-31 18:00), or a date and time, e.g. 2026-12-25 or 2026-12-25 09:00. |
 | `label` | text | — | Label. Shown above the time. Timers with the same label, mode and length share one clock, so pages and other layouts can show the same timer. |
 | `doneText` | text | `Time's up` | When done. For countdown and until: shown and sent as a notification when it reaches zero. Empty sends none. |
 | `notify` | true/false | `true` | Notify when done. A Windows notification when a countdown or until reaches zero, as long as the timer is on screen. |
@@ -568,7 +568,7 @@ A `backgroundImage` is drawn over the `background` colour and behind the widgets
 
 Instead of its own values, a layout can use a saved theme by name: `"theme": "Ice"`. To change a few of the theme's
 values for one layout, name it as `base` and add the ones to change: `"theme": { "base": "Ice", "accent": "#FF4081" }`.
-Built-in themes: `8-Bit`, `Amber`, `Aurora`, `Bauhaus`, `Blue Screen`, `Blueprint`, `Catppuccin`, `Chalkboard`, `Cockpit`, `Cyberpunk`, `Desktop 95`, `Dracula`, `Dune`, `Espresso`, `Forest`, `Gatsby`, `Glacier`, `Grimoire`, `Gruvbox`, `Handheld`, `High Contrast`, `Ice`, `Magma`, `Monokai`, `Night Watch`, `Noir`, `Nord`, `Notebook`, `Orange`, `Outrun`, `Rose Pine`, `Sakura`, `Solarized`, `Solarized Light`, `Stadium`, `Swiss`, `Tactical`, `Terminal`, `Tokyo Night`, `Toxic`, `Tropical`, `Typewriter`, `Vaporwave`. Your own are in `themes\<name>.json` in the
+Built-in themes: `8-Bit`, `Amber`, `Aurora`, `Bauhaus`, `Blue Screen`, `Blueprint`, `Catppuccin`, `Chalkboard`, `Christmas`, `Cockpit`, `Cyberpunk`, `Day of the Dead`, `Desktop 95`, `Diwali`, `Dracula`, `Dune`, `Easter`, `Eid`, `Espresso`, `Fireworks`, `Forest`, `Gatsby`, `Gingerbread`, `Glacier`, `Grimoire`, `Gruvbox`, `Halloween`, `Handheld`, `Hanukkah`, `High Contrast`, `Ice`, `Lunar New Year`, `Magma`, `Monokai`, `Night Watch`, `Noir`, `Nord`, `Notebook`, `Orange`, `Outrun`, `Rose Pine`, `Sakura`, `Shamrock`, `Solarized`, `Solarized Light`, `Stadium`, `Swiss`, `Tactical`, `Terminal`, `Tokyo Night`, `Toxic`, `Tropical`, `Typewriter`, `Valentine`, `Vaporwave`. Your own are in `themes\<name>.json` in the
 settings folder, each holding the settings below; changing one restyles every layout that uses it.
 
 | Setting | Type | Default | Description |

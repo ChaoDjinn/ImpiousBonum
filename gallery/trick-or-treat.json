@@ -1,0 +1,17 @@
+// Trick or treat: for a 1280 × 800 tablet or screen, in the Halloween theme. The time, the countdown to going out at
+// 6 pm on the 31st (change Until for yours), tonight's weather hour by hour, and bars that move with your spooky playlist.
+{
+  "width": 1280,
+  "height": 800,
+  "theme": "Halloween",
+  "widgets": [
+    { "type": "clock", "x": 40, "y": 30, "width": 700, "height": 300, "timeSize": 160, "dateSize": 28 },
+    { "type": "timer", "x": 760, "y": 50, "width": 480, "height": 260, "mode": "until", "target": "10-31 18:00", "label": "Trick or treat",
+      "doneText": "Happy Halloween!", "fontSize": 72, "labelSize": 28 },
+    { "type": "weather", "x": 40, "y": 370, "width": 600, "height": 200, "forecast": "none", "fontSize": 96, "iconStyle": "colour" },
+    { "type": "weather", "x": 40, "y": 600, "width": 600, "height": 170, "showCurrent": false, "forecast": "hours", "count": 5, "forecastSize": 26,
+      "iconStyle": "colour" },
+    { "type": "visualizer", "x": 680, "y": 380, "width": 560, "height": 220, "bands": 32, "style": "mirror", "gap": 5 },
+    { "type": "media", "x": 680, "y": 630, "width": 560, "height": 140, "fontSize": 28, "controlSize": 40 }
+  ]
+}

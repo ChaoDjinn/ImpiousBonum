@@ -57,6 +57,10 @@ public sealed class DemoReadingsTests
         Assert.NotNull(store.GetAttachment(WeatherProvider.Forecast));
         Assert.NotEmpty((IReadOnlyList<Core.Calendar.CalendarEvent>)store.GetAttachment(CalendarProvider.Events)!);
         Assert.Equal(new byte[] { 1, 2, 3 }, store.GetAttachment(MediaProvider.Artwork));
+        Assert.All((double[])store.GetAttachment(DemoReadings.Spectrum)!, level => Assert.InRange(level, 0.05, 1));
+        Assert.Equal(MetricStore.DefaultHistoryLength, store.GetHistory(NetworkProvider.IdFor("Wi-Fi", NetworkProvider.AdapterDown)!, MetricStore.DefaultHistoryLength).Length);
+        store.TryGet(WifiProvider.Network, out var network);
+        Assert.Equal("Harbourton-5G", network.Text);
     }
 
     [Fact]
