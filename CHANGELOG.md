@@ -10,6 +10,12 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 **Holiday themes**
 - Twelve new built-in themes for the holidays through the year: *Lunar New Year* (gold on lantern red), *Valentine* (rose pinks in a love-letter script), *Shamrock* (emerald and gold for St Patrick's Day), *Easter* (a light theme in lilac and mint), *Eid* (lantern gold on a teal night), *Diwali* (marigold glowing into rangoli pink), *Halloween* (pumpkin orange fading to witch's purple, with a jack-o'-lantern glow), *Day of the Dead* (marigold, magenta and turquoise), *Fireworks* (gold bursting into magenta, for Bonfire Night or New Year's Eve), *Hanukkah* (blue and silver by candlelight), *Christmas* (fairy-light gold and holly red on evergreen) and *Gingerbread* (icing, candy pink and gumdrop green). That's 55 in all.
 
+**Themes from a picture**
+- *Colours from ▾* in the editor's theme settings makes the layout's colours from your Windows wallpaper, the layout's background image, a picture you choose, or Windows' accent colour. It shows in the preview straight away, one undo puts your colours back, and *Save theme as…* keeps it as a theme of your own.
+- The background comes from a dark colour that covers much of the picture, or a light one for a mostly light picture, which makes a light theme. The accents come from its most vivid colours, and the text, bar track, warning and critical colours are made to go with them.
+- However dark, light, dull or garish the picture, the text stays easy to read and the accents, warnings and critical colours stand out from the background as much as in the built-in themes. Warnings stay amber and critical red where they can, turning towards yellow, orange or pink when the picture's own colours are close to them.
+- With Windows' accent colour, the theme is dark or light to match your apps in Windows. A wallpaper slideshow or Windows Spotlight gives the picture showing at the moment, and a solid colour wallpaper works too.
+
 **More layouts in the gallery**
 - *Listening Room* (1920 × 480): what's playing with its album art, volume buttons, the time, and an audio visualiser right across the bottom.
 - *Network* (1920 × 480): download and upload over time, the Wi-Fi signal and network name, the ping, the IP address and how much has gone each way.

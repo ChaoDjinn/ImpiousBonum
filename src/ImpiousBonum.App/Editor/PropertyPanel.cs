@@ -212,6 +212,7 @@ public sealed partial class PropertyPanel : StackPanel
         buttons.Children.Add(update);
         buttons.Children.Add(detach);
         group.Children.Add(buttons);
+        AddColoursFrom(group);
 
         saveAs.Click += (_, _) =>
         {
