@@ -50,6 +50,12 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.
 - *Holiday themes* on *Pages and schedule* shows the matching new holiday theme on and around each holiday: *Lunar New Year*, *Valentine*, *Shamrock*, *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* for Bonfire Night and New Year's Eve, *Hanukkah*, *Gingerbread* and *Christmas*. Easter is worked out, and Hanukkah, Eid and Lunar New Year come from the Hebrew, Islamic and Chinese calendars that come with the app, so they move with the year; Diwali's dates run to 2035. It's off until you turn it on, and a rule in the schedule or a game that sets a theme still wins.
 
+**Sun and moon**
+- A new *Sun and moon* widget, under *Weather, news and Claude*: the day as an arc from sunrise to sunset with the sun on its way across and how long it's light, and beside it the moon as it looks tonight, with its phase, how much of it is lit, the next full moon, and when it rises and sets. It can show just the sun or just the moon too.
+- The moon is drawn the way up it looks from where you are: lit on the right as it grows in the northern hemisphere, on the left in the southern.
+- New readings for any widget: the moon's phase (`moon.phase`, e.g. *Waxing gibbous*), how much of it is lit (`moon.illumination`), how many days since the new moon (`moon.age`), the next full and new moons (`moon.next.full`, `moon.next.new`, e.g. *Sat 24 Oct*), and moonrise and moonset (`moon.rise`, `moon.set`).
+- It's all worked out on your PC from the date and the weather's location, so nothing is sent. The moon's phase works without a location; the sun, moonrise and moonset need one.
+
 **Backing up your settings**
 - *General* → *Back up…* saves your whole setup as one `.ibbackup` file: your settings, every saved layout with its fonts and pictures, and your saved themes. Keep it somewhere safe, or take it to another PC. It has private things in it, such as your calendar links and the tablet link, so keep it to yourself.
 - *Restore…* shows what's in a backup (when it was made, by which version, how many layouts and themes) and asks before replacing anything. It saves your setup as it is first, in `%AppData%\ImpiousBonum backups`, so you can go back, then Impious Bonum starts again with the backup's. A backup from a newer version says so first.
@@ -92,7 +98,6 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - A new theme setting, *Warning symbols*: a value in the theme's warning colour gets a ▲ beside it too, and one in its critical colour a ◆, so warning and critical don't rely on colour alone. Text, icon and value, stat tiles, graphs, gauges, bars, drives and *Top apps* show it; *CPU threads* keeps to colour. It's off unless you turn it on, and text that only just fits shrinks a little to make room for it.
 - A new built-in theme, *Clear Sight*, for colour blindness: a sky blue accent, gold warnings and deep pink-red critical ones that stay apart with every common kind of colour blindness, with warning symbols on. That's 56 in all.
 - Ticking a box in the editor's settings with Narrator now changes the setting, as clicking it does.
-
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

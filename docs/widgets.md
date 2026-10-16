@@ -34,7 +34,7 @@ mean the widget's own.
 - **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
-- **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [News](#news-news) · [Claude usage](#claude-usage-claude)
+- **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [Sun and moon](#sun-and-moon-sun) · [News](#news-news) · [Claude usage](#claude-usage-claude)
 - **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape) · [Photo frame](#photo-frame-photos)
 
 ## Text (`text`)
@@ -536,6 +536,24 @@ The rain in the next two hours at your location, from Open-Meteo.com: a bar for 
 | `textColor` | color | `foreground` | Text colour. The summary. |
 | `timeColor` | color | `secondary` | Time colour. The times under the bars. |
 | `trackColor` | color | `track` | Baseline colour. The line the bars stand on, which is all there is while it's dry. |
+
+## Sun and moon (`sun`)
+
+The day from sunrise to sunset with the sun on its way across, and the moon as it looks tonight, with its phase and the next full moon. Worked out on your PC: the sun needs your location (the Weather page), the moon doesn't.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `show` | `both` / `sun` / `moon` | `both` | Show. both has the sun's day on the left and the moon on the right; sun or moon shows just the one. |
+| `showMoonTimes` | true/false | `true` | Moonrise and moonset. Under the moon: when it rose and when it sets while it's up, or when it next rises and sets while it's down. They need your location. |
+| `fontSize` | number (6–200) | `20` | Text size. The day's length and the moon's phase; sunrise, sunset and the moon's other lines are a little smaller. |
+| `moonSize` | number (10–600) | `90` | Moon size. How wide the moon is. |
+| `thickness` | number (1–60) | `6` | Arc thickness |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `color` | color | `accent` | Sun colour. The sun, and the part of the arc it's been along today. |
+| `moonColor` | color | `secondary` | Moon colour. The moon's lit side. |
+| `trackColor` | color | `track` | Track colour. The rest of the arc, the horizon and the moon's dark side. track is the theme's bar track. |
+| `textColor` | color | `foreground` | Text colour. The day's length and the moon's phase. |
+| `detailColor` | color | `secondary` | Detail colour. Sunrise and sunset, and the moon's other lines: how much of it is lit, the next full moon, moonrise and moonset. |
 
 ## News (`news`)
 
