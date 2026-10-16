@@ -24,6 +24,17 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 **Countdowns every year**
 - A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
+**Status checks**
+- A *Status checks* page and a `status` widget for your own servers and services: a NAS, Pi-hole, Plex, the router or a website. Each check pings a host name or IP address, or asks a web address for its page (which can have to say a word, such as *Plex*), every 60 seconds or as often as you like. The widget lists them, or puts them in a grid, each with a dot in the accent colour while it's up and the critical colour while it's down, and how fast it answered.
+- A check that fails is checked again 10 seconds later, and only counts as down if that fails too, so one lost answer doesn't.
+- Each check has readings any widget can show, such as `status.nas.up`, `status.nas.ms` and `status.nas.since` (*3 h*), and `status.summary` says *All up* or which are down (*1 down: Plex*). *Alert…* beside a check sets up an alert for when it goes down.
+- Nothing is checked until you add a check, and only the addresses you add are contacted.
+
+**Lining widgets up in the editor**
+- Widgets snap to each other as you drag or resize them: their edges and centres line up with other widgets' edges and centres, and with the canvas's edges and middle, and a thin line shows what they've lined up with. Hold Alt to place freely, as before.
+- Select several widgets at once: Ctrl+click or Shift+click them in the preview or the *Widgets* list, drag a box around them on empty canvas, or press Ctrl+A for all of them. Drag one to move them all, nudge them with the arrow keys, or duplicate or delete them together.
+- *Align* on the toolbar, and in the list's right-click menu, lines up the selected widgets by their left edges, centres, right edges, tops, middles or bottoms, spaces three or more out with equal gaps, or makes them all the same width or height. Each is one undo.
+
 **Microphone and camera**
 - Whether your microphone is muted (`mic.muted`) and its name (`mic.name`), and which apps are using the microphone or the camera (`mic.inuse`, `mic.apps`, `camera.inuse`, `camera.apps`, e.g. *Discord, OBS*). Give a text or icon widget a warning colour on one of them for an *on air* light, or a reminder that you're muted. Windows doesn't ask permission or show its microphone icon for any of it: Impious Bonum never uses the microphone or camera itself.
 - A *Buttons* action, `mic-mute`, mutes and unmutes the microphone. With the new `mic` icon, the button shows `mic-off` while it's muted.
@@ -45,6 +56,48 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - New readings for any widget: the moon's phase (`moon.phase`, e.g. *Waxing gibbous*), how much of it is lit (`moon.illumination`), how many days since the new moon (`moon.age`), the next full and new moons (`moon.next.full`, `moon.next.new`, e.g. *Sat 24 Oct*), and moonrise and moonset (`moon.rise`, `moon.set`).
 - It's all worked out on your PC from the date and the weather's location, so nothing is sent. The moon's phase works without a location; the sun, moonrise and moonset need one.
 
+**Backing up your settings**
+- *General* → *Back up…* saves your whole setup as one `.ibbackup` file: your settings, every saved layout with its fonts and pictures, and your saved themes. Keep it somewhere safe, or take it to another PC. It has private things in it, such as your calendar links and the tablet link, so keep it to yourself.
+- *Restore…* shows what's in a backup (when it was made, by which version, how many layouts and themes) and asks before replacing anything. It saves your setup as it is first, in `%AppData%\ImpiousBonum backups`, so you can go back, then Impious Bonum starts again with the backup's. A backup from a newer version says so first.
+- Logs and the list of game sessions aren't in a backup, and restoring leaves yours as they are.
+
+**Rain soon**
+- A new *Rain soon* widget, under *Weather, news and Claude*, shows the rain in the next two hours at your location: a bar for each quarter of an hour, taller the heavier the rain, with the time every half hour under them. A drizzle still shows, and two dry hours are just a line.
+- A line above the bars says what's coming: *Dry for the next 2 hours*, *Rain from 14:30*, *Rain stopping around 15:15* or *Light rain for the next 2 hours*, and snow when the forecast is for snow.
+- The same as readings for any widget: `weather.rain.soon` for that line, and `weather.rain.next` for the minutes until it rains (0 while it is). An alert on it below 30 is a reminder to bring the washing in.
+- It's most precise in central Europe and North America, where Open-Meteo's forecast is worked out a quarter of an hour at a time; elsewhere it's filled in from the hourly forecast. It comes in the same request as the rest of the forecast, so nothing more is sent.
+
+**Photo frame**
+- A new *Photo frame* widget, under *Pictures and shapes*: a slideshow of the pictures in a folder, like a digital photo frame. Choose the folder in the editor, how long each photo shows, and whether they're shuffled or go by name or date. Tap it for the next one.
+- Photos fade into one another, fill the frame or fit inside it, and can have rounded corners and their file name or the date they were taken along the bottom. Photos taken with the camera on its side show the right way up.
+- It stays light with big photos: only the photo on show and the next one are read, at about the size they're shown, and nothing is read while the dashboard is hidden. Photos added to the folder turn up within a few minutes, and pictures that can't be read are passed over.
+- The folder stays on your PC: exported layouts and layouts in the gallery leave it out.
+
+**Energy use and cost**
+- A new *Energy* page, and readings for any widget: your whole PC's power now (`power.total`: the CPU's and graphics card's from the sensor service, and 50 W for the rest, which you can change), the energy it's used today and this month (`energy.today`, `energy.month`), and what that costs at your price per kWh (`energy.cost.today`, `energy.cost.month`, such as *£0.48*).
+- It's counted while Impious Bonum runs, needs the sensor service, and is kept across restarts. Today's total starts again at midnight, and the month's on the 1st.
+- Turn on *Energy* → *Grid carbon intensity* for how clean Great Britain's electricity is now (`grid.carbon`, `grid.carbon.index`) and when it'll be cleanest in the next 24 hours (`grid.carbon.best`, such as *Lowest around 03:30*), from NESO's Carbon Intensity API every 30 minutes. Give the first half of your postcode for your region's figures. It's off until you turn it on, and nothing about you is sent but that half.
+
+**A layout of its own on each tablet**
+- A tablet can show a different saved layout from the main dashboard: pick it under *Layout for the link* on the *Tablet and USB screen* page, then open that link or scan its QR code on the tablet. It keeps to that layout, in its own theme, whatever game layouts and the schedule do to the main dashboard.
+- With *Let tablets press buttons* on, taps press the buttons on the layout that tablet is showing.
+- A layout is only drawn while a tablet is showing it, and let go a few minutes after the last one closes, so it costs nothing the rest of the time.
+- Renaming or deleting a layout stops links to it working: the tablet says there's no layout of that name, and the page gives you a new link.
+
+**Readings for other apps**
+- *Share readings with other apps* on the *Tablet and USB screen* page (off by default) lets Home Assistant, Rainmeter or a script of your own read every reading as JSON while the tablet view is on: its name, unit, value and the value as the dashboard shows it. They need the tablet link's secret, and *New link* stops old ones working.
+- The [guide](docs/guide.md#readings-for-other-apps) has a Home Assistant sensor and a Rainmeter skin to start from.
+
+
+**Buttons that send web requests**
+- A *Buttons* action, `web`, sends a web request when you tap it: run a Home Assistant script or scene, switch a smart light, start a Node-RED flow or send a notification to your phone with ntfy. Each button has its address, a method (`GET`, `POST` or `PUT`), and if it needs them a body, such as JSON, and a header, such as `Authorization: Bearer` and a token. The guide has examples for Home Assistant and ntfy.
+- The button lights up for a moment in the accent colour when the request worked, or the critical colour when it didn't, and `dashboard.log` says why. A tablet allowed to press buttons can press these too.
+- Importing a layout, from a file or the gallery, lists where its web buttons send and asks before keeping them, as it does for buttons that open programs. Exporting one leaves their headers out, since they're usually a password or token.
+
+**Warnings you can tell apart without colour**
+- A new theme setting, *Warning symbols*: a value in the theme's warning colour gets a ▲ beside it too, and one in its critical colour a ◆, so warning and critical don't rely on colour alone. Text, icon and value, stat tiles, graphs, gauges, bars, drives and *Top apps* show it; *CPU threads* keeps to colour. It's off unless you turn it on, and text that only just fits shrinks a little to make room for it.
+- A new built-in theme, *Clear Sight*, for colour blindness: a sky blue accent, gold warnings and deep pink-red critical ones that stay apart with every common kind of colour blindness, with warning symbols on. That's 56 in all.
+- Ticking a box in the editor's settings with Narrator now changes the setting, as clicking it does.
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

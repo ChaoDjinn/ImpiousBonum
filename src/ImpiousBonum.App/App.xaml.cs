@@ -138,7 +138,9 @@ public partial class App : Application
             : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData, () => _settings.Calendars,
                 () => _settings.NewsFeeds,
                 () => _trackedGame, recap => Dispatcher.BeginInvoke(() => OnSessionEnded(recap)),
-                airQuality: () => _settings.AirQualityRequest(), warnings: () => _settings.WeatherWarningsRequest(), weatherPlaces: () => _settings.WeatherPlaceRequests()));
+                airQuality: () => _settings.AirQualityRequest(), warnings: () => _settings.WeatherWarningsRequest(), weatherPlaces: () => _settings.WeatherPlaceRequests(),
+                energy: () => _settings.EnergySettings(), energyTotalsPath: AppPaths.EnergyFile, gridCarbon: () => _settings.GridCarbonRequest(),
+                statusChecks: () => _settings.StatusChecks));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -164,7 +166,13 @@ public partial class App : Application
             _tray.ShowError("Settings couldn't be read", "Impious Bonum started with its default settings. Click for dashboard.log, which has the details.", TrayIcon.ShowLog);
         }
 
-        _tablet = new TabletView { AllowTaps = _settings.TabletButtons };
+        _tablet = new TabletView
+        {
+            AllowTaps = _settings.TabletButtons,
+            FindLayout = name => _layouts?.Library.Find(name),
+            LoadLayout = LoadTabletLayout,
+            Readings = _settings.TabletReadings ? _sampler.Store : null,
+        };
         _tablet.ActionRequested += (_, action) => RunAction(action);
         _usb = new UsbScreenView();
         _layouts = new LayoutStore(_settings);
@@ -301,6 +309,8 @@ public partial class App : Application
         _openWait?.Unregister(null);
         _openSignal?.Dispose();
         _singleInstance?.ReleaseMutex();
+        // Closed, not just released, so a copy started again after a restore isn't taken for a second one.
+        _singleInstance?.Dispose();
         _singleInstance = null;
         return true;
     }
@@ -325,7 +335,8 @@ public partial class App : Application
             return false;
 
         await using var sampler = demo ? null : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(settings.PingHost, claudeUsagePath: AppPaths.ClaudeUsageFile, weather: settings.WeatherRequest, customData: () => settings.CustomData, calendars: () => settings.Calendars, news: () => settings.NewsFeeds,
-            airQuality: settings.AirQualityRequest, warnings: settings.WeatherWarningsRequest, weatherPlaces: settings.WeatherPlaceRequests));
+            airQuality: settings.AirQualityRequest, warnings: settings.WeatherWarningsRequest, weatherPlaces: settings.WeatherPlaceRequests,
+            energy: settings.EnergySettings, gridCarbon: settings.GridCarbonRequest, statusChecks: () => settings.StatusChecks));
         var store = sampler?.Store ?? new MetricStore();
         var now = DateTime.Now;
         if (sampler is not null)

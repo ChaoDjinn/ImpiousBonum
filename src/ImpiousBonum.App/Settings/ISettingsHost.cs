@@ -71,9 +71,13 @@ internal interface ISettingsHost
 
     void SetTabletButtons(bool on);
 
-    void ShowTabletLink();
+    /// <summary>Share every reading as JSON with other apps that have the link's secret.</summary>
+    void SetTabletReadings(bool on);
 
-    void CopyTabletLink();
+    /// <summary>The link and its QR code, for the main dashboard or the saved layout <paramref name="layout"/>.</summary>
+    void ShowTabletLink(string? layout);
+
+    void CopyTabletLink(string? layout);
 
     void NewTabletLink();
 
@@ -152,6 +156,21 @@ internal interface ISettingsHost
     /// <summary>While warnings are on: whose the location gets and what they are now, or why there are none, e.g. "From the Met Office for Wales: none now".</summary>
     string WeatherWarningsStatus { get; }
 
+    /// <summary>What a kWh costs, or null for no cost readings.</summary>
+    void SetEnergyPrice(double? price);
+
+    /// <summary>A currency symbol for the costs, or null for the region's.</summary>
+    void SetEnergyCurrency(string? symbol);
+
+    /// <summary>Watts for the parts of the PC the sensor service doesn't measure.</summary>
+    void SetEnergyOtherWatts(int watts);
+
+    /// <summary>Grid carbon intensity on or off; on, it's fetched for Great Britain, or for the region of <see cref="AppSettings.GridCarbonArea"/>.</summary>
+    void SetGridCarbon(bool on);
+
+    /// <summary>The first half of a postcode, or null for Great Britain as a whole.</summary>
+    void SetGridCarbonArea(string? area);
+
     void SetCalendars(IReadOnlyList<CalendarLink> calendars);
 
     void SetNewsFeeds(IReadOnlyList<NewsFeed> feeds);
@@ -193,6 +212,12 @@ internal interface ISettingsHost
     Task RestartToUpdateAsync();
 
     void SetHardwareRendering(bool on);
+
+    /// <summary>
+    /// Closes everything, replaces the settings, layouts and saved themes with a backup's (saving the ones there are
+    /// first) and starts again. Does nothing if the layout editor's unsaved changes are kept instead.
+    /// </summary>
+    Task RestoreBackupAsync(string path);
 }
 
 /// <summary>Where updating has got to, for the About page.</summary>

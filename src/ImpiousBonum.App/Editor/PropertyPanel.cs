@@ -18,8 +18,9 @@ using WinForms = System.Windows.Forms;
 namespace ImpiousBonum.App.Editor;
 
 /// <summary>
-/// Shows the settings of the current selection (a widget, or the canvas and theme when nothing is selected),
-/// generated from descriptors. Each row has an editor that suits the setting's kind and a reset-to-default button.
+/// Shows the settings of the current selection (a widget, or the canvas and theme when nothing is selected, or just how
+/// many when several widgets are), generated from descriptors. Each row has an editor that suits the setting's kind and
+/// a reset-to-default button.
 /// </summary>
 public sealed partial class PropertyPanel : StackPanel
 {
@@ -77,7 +78,13 @@ public sealed partial class PropertyPanel : StackPanel
         _liveRefreshers.Clear();
         _itemCards.Clear();
 
-        if (_session.SelectedWidget is not { } widget)
+        if (_session.Selection.Count > 1)
+        {
+            // Settings differ from widget to widget, so there's no one value to show for most; one at a time instead.
+            AddHeading($"{_session.Selection.Count} widgets selected",
+                "Drag one to move them all, or use Align to line them up, space them out or make them the same size. Select just one to change its settings.");
+        }
+        else if (_session.SelectedWidget is not { } widget)
         {
             AddHeading("Canvas and theme", "Select a widget in the preview or the list to edit it.");
             var canvas = AddGroup("Canvas");
@@ -387,6 +394,7 @@ public sealed partial class PropertyPanel : StackPanel
         SettingKind.ImageFile => FileEditor(target, setting, "Images (*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff)|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff|All files|*.*", "Choose a background image"),
         SettingKind.Template or SettingKind.DriveTemplate or SettingKind.Metric => MetricTextEditor(target, setting),
         SettingKind.Picks => PicksEditor(target, setting),
+        SettingKind.Folder => FolderEditor(target, setting, "Choose a folder of pictures"),
         _ => TextEditor(target, setting),
     };
 
@@ -553,13 +561,15 @@ public sealed partial class PropertyPanel : StackPanel
     private (FrameworkElement, Action) ToggleEditor(SettingTarget target, SettingDescriptor setting)
     {
         var box = new CheckBox { VerticalAlignment = VerticalAlignment.Center };
-        box.Click += (_, _) => Write(target, setting.Key, JsonValue.Create(box.IsChecked == true));
+        // Checked and Unchecked rather than Click, so ticking it with Narrator counts too.
+        box.Checked += (_, _) => Write(target, setting.Key, JsonValue.Create(true));
+        box.Unchecked += (_, _) => Write(target, setting.Key, JsonValue.Create(false));
         return (box, Refresh);
 
         void Refresh()
         {
             var current = _session.GetValue(target, setting.Key);
-            box.IsChecked = current is JsonValue v && v.TryGetValue<bool>(out var b) ? b : setting.Default is true;
+            box.IsChecked = current is JsonValue v && v.TryGetValue<bool>(out var b) ? b : DefaultOf(target, setting) is true;
         }
     }
 
@@ -576,7 +586,25 @@ public sealed partial class PropertyPanel : StackPanel
         return (combo, () => combo.SelectedItem = CurrentString(target, setting));
     }
 
-    private (FrameworkElement, Action) FileEditor(SettingTarget target, SettingDescriptor setting, string filter, string title)
+    private (FrameworkElement, Action) FileEditor(SettingTarget target, SettingDescriptor setting, string filter, string title) =>
+        PathEditor(target, setting, () =>
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = filter, Title = title };
+            return dialog.ShowDialog(Window.GetWindow(this)) == true ? dialog.FileName : null;
+        });
+
+    private (FrameworkElement, Action) FolderEditor(SettingTarget target, SettingDescriptor setting, string title) =>
+        PathEditor(target, setting, () =>
+        {
+            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = title };
+            // From the folder chosen now, if it's still there.
+            if (CurrentString(target, setting) is { Length: > 0 } current && System.IO.Directory.Exists(current))
+                dialog.InitialDirectory = current;
+            return dialog.ShowDialog(Window.GetWindow(this)) == true ? dialog.FolderName : null;
+        });
+
+    /// <summary>A path to type, or to <paramref name="choose"/> with Browse… (which returns null if cancelled).</summary>
+    private (FrameworkElement, Action) PathEditor(SettingTarget target, SettingDescriptor setting, Func<string?> choose)
     {
         var panel = new DockPanel();
         var browse = new Button { Content = "Browse…", Margin = new Thickness(6, 0, 0, 0) };
@@ -588,9 +616,8 @@ public sealed partial class PropertyPanel : StackPanel
         box.TextChanged += (_, _) => Write(target, setting.Key, box.Text.Length == 0 ? null : JsonValue.Create(box.Text));
         browse.Click += (_, _) =>
         {
-            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = filter, Title = title };
-            if (dialog.ShowDialog(Window.GetWindow(this)) == true)
-                _session.SetValue(target, setting.Key, JsonValue.Create(dialog.FileName), this);
+            if (choose() is { } path)
+                _session.SetValue(target, setting.Key, JsonValue.Create(path), this);
         };
         return (panel, Refresh);
 
@@ -918,6 +945,8 @@ public sealed partial class PropertyPanel : StackPanel
             return setting.Default;
         if (value.TryGetValue<string>(out var text))
             return text;
+        if (value.TryGetValue<bool>(out var on))
+            return on;
         return JsonDefaults.TryGetNumber(value, out var number) ? number : setting.Default;
     }
 

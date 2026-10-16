@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Windows;
 using ImpiousBonum.App.Editor;
 using ImpiousBonum.App.Layout;
@@ -84,7 +85,7 @@ public partial class App : ISettingsHost
                 return;
             if (descriptor.Type == BarsWidget.ClaudeDescriptor.Type)
                 OfferClaudeCodeConnection(owner);
-            else if (descriptor.Type == WeatherWidget.Descriptor.Type && _settings.WeatherLocation is null)
+            else if ((descriptor.Type == WeatherWidget.Descriptor.Type || descriptor.Type == RainWidget.Descriptor.Type) && _settings.WeatherLocation is null)
                 SetWeatherLocation(owner);
         };
         EditedWindow()?.BeginEdit(session);
@@ -158,9 +159,18 @@ public partial class App : ISettingsHost
         AppLog.Info($"Tablets {(on ? "can" : "can't")} press buttons");
     }
 
-    void ISettingsHost.ShowTabletLink() => ShowTabletLink();
+    void ISettingsHost.SetTabletReadings(bool on)
+    {
+        _settings.TabletReadings = on;
+        _settings.Save();
+        if (_tablet is not null)
+            _tablet.Readings = on ? _sampler?.Store : null;
+        AppLog.Info($"Readings {(on ? "shared" : "not shared")} with other apps");
+    }
 
-    void ISettingsHost.CopyTabletLink() => CopyTabletLink();
+    void ISettingsHost.ShowTabletLink(string? layout) => ShowTabletLink(layout);
+
+    void ISettingsHost.CopyTabletLink(string? layout) => CopyTabletLink(layout);
 
     void ISettingsHost.NewTabletLink() => NewTabletLink();
 
@@ -313,6 +323,41 @@ public partial class App : ISettingsHost
 
     string ISettingsHost.WeatherWarningsStatus => WeatherWarningsStatus();
 
+    void ISettingsHost.SetEnergyPrice(double? price)
+    {
+        _settings.EnergyPrice = price;
+        _settings.Save();
+        AppLog.Info(price is null ? "Energy price: none" : string.Create(CultureInfo.InvariantCulture, $"Energy price: {price} a kWh"));
+    }
+
+    void ISettingsHost.SetEnergyCurrency(string? symbol)
+    {
+        _settings.EnergyCurrency = symbol;
+        _settings.Save();
+    }
+
+    void ISettingsHost.SetEnergyOtherWatts(int watts)
+    {
+        _settings.EnergyOtherWatts = watts;
+        _settings.Save();
+        AppLog.Info($"Energy: {watts} W for everything else");
+    }
+
+    void ISettingsHost.SetGridCarbon(bool on)
+    {
+        _settings.GridCarbon = on;
+        _settings.Save();
+        AppLog.Info($"Grid carbon intensity {(on ? "on" : "off")}");
+    }
+
+    void ISettingsHost.SetGridCarbonArea(string? area)
+    {
+        _settings.GridCarbonArea = area;
+        _settings.Save();
+        // Not which area: it says roughly where you live, and the log goes with bug reports.
+        AppLog.Info(area is null ? "Grid carbon for all of Great Britain" : "Grid carbon area chosen");
+    }
+
     void ISettingsHost.SetCalendars(IReadOnlyList<CalendarLink> calendars) => SetCalendars(calendars);
 
     void ISettingsHost.SetNewsFeeds(IReadOnlyList<NewsFeed> feeds) => SetNewsFeeds(feeds);
@@ -381,4 +426,6 @@ public partial class App : ISettingsHost
         _settings.Save();
         AppLog.Info($"Hardware rendering {(on ? "on" : "off")} from the next start");
     }
+
+    Task ISettingsHost.RestoreBackupAsync(string path) => RestoreBackupAsync(path);
 }

@@ -113,6 +113,12 @@ public partial class App
                     },
                 SetWeatherLocation)];
         }
+        if (descriptor.Type == RainWidget.Descriptor.Type)
+        {
+            return [new(_settings.WeatherLocation is null ? "Set location…" : "Change location…",
+                () => _settings.WeatherLocation is { } place ? $"The rain at {place.Name}." : "No location yet, so there's no forecast.",
+                SetWeatherLocation)];
+        }
         if (descriptor.Type == SunMoonWidget.Descriptor.Type)
         {
             return [new(_settings.WeatherLocation is null ? "Set location…" : "Change location…",
@@ -123,6 +129,15 @@ public partial class App
             return [new("Calendars…", () => Count(_settings.Calendars.Count, "calendar", "No calendars yet, so the agenda is empty."), EditCalendars)];
         if (descriptor.Type == NewsWidget.Descriptor.Type)
             return [new("News feeds…", () => Count(_settings.NewsFeeds.Count, "news feed", "No news feeds yet, so there are no headlines."), EditNews)];
+        if (descriptor.Type == StatusWidget.Descriptor.Type)
+        {
+            return [new("Add a check…", () => _settings.StatusChecks.Count switch
+            {
+                0 => "No status checks yet, so there's nothing to show.",
+                1 => "1 status check. Change it on the Status checks page.",
+                var count => $"{count} status checks. Change them on the Status checks page.",
+            }, AddStatusCheck)];
+        }
         if (descriptor.Type == BarsWidget.ClaudeDescriptor.Type)
         {
             return [new(IsClaudeCodeConnected() ? "Reconnect Claude Code" : "Connect Claude Code…",
@@ -140,13 +155,15 @@ public partial class App
     }
 
     /// <summary>
-    /// The names a widget setting can pick from that the app keeps: the news feeds, in the News feeds page's order, or the
-    /// weather's places, the location first and then the Weather page's more places (none without a location).
+    /// The names a widget setting can pick from that the app keeps: the news feeds, in the News feeds page's order, the
+    /// weather's places, the location first and then the Weather page's more places (none without a location), or the
+    /// status checks, in the Status checks page's order.
     /// </summary>
     internal IReadOnlyList<string> PickOptions(string source) => source switch
     {
         NewsWidget.FeedNames => [.. _settings.NewsFeeds.Select(f => f.Name)],
         WeatherWidget.PlaceNames => WeatherWidget.ShortNames(WeatherPlaceNames()),
+        StatusWidget.CheckNames => [.. _settings.StatusChecks.Select(c => c.Name.Trim())],
         _ => [],
     };
 
@@ -369,6 +386,7 @@ public partial class App
             }
             foreach (var extra in ExtrasShowing(name))
                 extra.Dashboard.SetGeometry(index, r.X, r.Y, r.Width, r.Height);
+            _tablet?.SetGeometry(name, index, r.X, r.Y, r.Width, r.Height);
             return;
         }
 
@@ -393,6 +411,7 @@ public partial class App
                 extra.Background = background;
                 extra.Dashboard.Build(session.Document, session.ResolvedTheme);
             }
+            _tablet?.Build(name, session.Document, session.ResolvedTheme);
             Refresh();
         }, DispatcherPriority.Background);
     }
@@ -413,6 +432,7 @@ public partial class App
         if (_layouts is null || _window is null)
             return;
         ApplyExtraDashboards();
+        _tablet?.ReloadLayouts();
 
         LayoutDocument layout;
         try

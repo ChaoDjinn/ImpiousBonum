@@ -22,6 +22,7 @@ public sealed class Theme
         Track = ParseBrush(settings.Track, Brushes.Transparent);
         Warning = ParseBrush(settings.Warning, Brushes.Gold);
         Critical = ParseBrush(settings.Critical, Brushes.Red);
+        WarningSymbols = settings.WarningSymbols;
         AccentColor = ParseBrush(settings.Accent, Brushes.Orange) is SolidColorBrush solid ? solid.Color : Colors.Orange;
         Glow = CreateGlow(settings.Glow, ParseBrush(settings.GlowColor, Brushes.Transparent) is SolidColorBrush { Color.A: > 0 } glow ? glow.Color : AccentColor);
     }
@@ -50,6 +51,9 @@ public sealed class Theme
     public Brush Warning { get; }
 
     public Brush Critical { get; }
+
+    /// <summary>Whether a value in <see cref="Warning"/> or <see cref="Critical"/> has a <see cref="Widgets.WarningSymbol"/> beside it too.</summary>
+    public bool WarningSymbols { get; }
 
     public static Theme From(ThemeSettings settings) => new(settings);
 

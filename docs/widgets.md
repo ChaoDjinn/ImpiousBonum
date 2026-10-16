@@ -31,11 +31,11 @@ mean the widget's own.
 
 ## Widgets
 
-- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Top apps](#top-apps-processes)
+- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
-- **Weather, news and Claude:** [Weather](#weather-weather) · [Sun and moon](#sun-and-moon-sun) · [News](#news-news) · [Claude usage](#claude-usage-claude)
-- **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape)
+- **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [Sun and moon](#sun-and-moon-sun) · [News](#news-news) · [Claude usage](#claude-usage-claude)
+- **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape) · [Photo frame](#photo-frame-photos)
 
 ## Text (`text`)
 
@@ -321,6 +321,22 @@ Each entry in `thresholds`:
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
 
+## Status checks (`status`)
+
+Whether your own servers and services are up (set them up on the Status checks page), as a list or a grid: each with a dot in the accent colour while it's up and the critical colour while it's down, its name and how fast it answered.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `checks` | `all`, or names in order, separated by commas | `all` | Checks. All checks, or just the ones chosen, in the order they're listed. |
+| `columns` | number (1–10) | `1` | Columns. 1 is a list; more makes a grid, filled a row at a time. |
+| `time` | true/false | `true` | Show response time. How long each took to answer, e.g. 4 ms. |
+| `since` | true/false | `false` | Show how long. How long each has been up or down, e.g. 3 h. |
+| `fontSize` | number (6–200) | `22` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `spacing` | number (0–100) | `8` | Spacing |
+| `upColor` | color | `accent` | Up. The dot of a check that's up. |
+| `downColor` | color | `critical` | Down. The dot of a check that's down, and the word Down. |
+
 ## Clock (`clock`)
 
 The time with the date underneath, in your Windows language and region, and the time in other places if you add them.
@@ -451,7 +467,7 @@ Bars that move with whatever the PC is playing, from low notes on the left to hi
 
 ## Buttons (`buttons`)
 
-Buttons to tap: play/pause, skip and volume, open a program, file or web address, send a keyboard shortcut to the app you're using, or switch layout.
+Buttons to tap: play/pause, skip and volume, open a program, file or web address, send a keyboard shortcut to the app you're using, switch layout, or send a web request to Home Assistant, smart lights or ntfy.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
@@ -473,9 +489,13 @@ Each entry in `buttons`:
 |---|---|---|---|
 | `label` | text | `Play/pause` | Label. Empty shows just the icon. |
 | `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `play-pause` | Icon |
-| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `mic-mute` / `open` / `keys` / `layout` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys and layout use the target below. mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. |
-| `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name. |
+| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `mic-mute` / `open` / `keys` / `layout` / `web` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. |
+| `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… |
 | `arguments` | text | — | Arguments. open: command-line arguments for a program. |
+| `method` | `GET` / `POST` / `PUT` | `POST` | Method. web: how to send it. Webhooks, Home Assistant's services and ntfy want POST. |
+| `body` | text | — | Body. web: what a POST or PUT sends, e.g. {"entity_id": "script.movie_night"}, or the message for ntfy. |
+| `contentType` | text | — | Content type. web: the body's type. Empty sends application/json for a body in { } or [ ], and text/plain for anything else. |
+| `header` | text | — | Header. web: one header as Name: value, e.g. Authorization: Bearer and a token. Left out when you export the layout. |
 
 ## Weather (`weather`)
 
@@ -502,6 +522,20 @@ The weather now and the days or hours ahead, from Open-Meteo.com, and severe wea
 | `iconColor` | color | `accent` | Icon colour. For outline icons. |
 | `textColor` | color | `foreground` | Text colour. The temperatures, and the conditions when they have the larger line (first in Details to show). |
 | `detailColor` | color | `secondary` | Detail colour. The smaller details beside the temperature, the forecast's lows, times and days, and what's under each day or hour. |
+
+## Rain soon (`rain`)
+
+The rain in the next two hours at your location, from Open-Meteo.com: a bar for each quarter of an hour, taller the heavier the rain, under a line such as Rain from 14:30. Set your location in the editor (select the widget) or on the Weather page.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `showSummary` | true/false | `true` | Summary. The line above the bars: Dry for the next 2 hours, Rain from 14:30, Rain stopping around 15:15, or Light rain for the next 2 hours (moderate or heavy when it is). It says snow instead when the forecast is for snow. |
+| `fontSize` | number (6–200) | `22` | Font size. The summary's; the times under the bars are a little smaller. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `barColor` | color | `accent` | Bar colour |
+| `textColor` | color | `foreground` | Text colour. The summary. |
+| `timeColor` | color | `secondary` | Time colour. The times under the bars. |
+| `trackColor` | color | `track` | Baseline colour. The line the bars stand on, which is all there is while it's dry. |
 
 ## Sun and moon (`sun`)
 
@@ -603,6 +637,26 @@ A rounded panel, a circle or a line, to group widgets or divide them. It's added
 | `thickness` | number (0.5–100) | `2` | Line thickness. For a line. |
 | `opacity` | number (0–1) | `1` | Opacity |
 
+## Photo frame (`photos`)
+
+A slideshow of the pictures in a folder, like a digital photo frame; tap it for the next one. The folder is on this PC, so exported and shared layouts leave it out.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `folder` | folder | — | Folder. The folder of pictures to show: PNG, JPG, GIF, BMP and TIFF files. It stays on this PC: exported and shared layouts leave it out. |
+| `subfolders` | true/false | `true` | Include subfolders. The pictures in the folders inside it too. |
+| `seconds` | number (3–86400) | `30` | Seconds per photo. How long each photo shows. A tap moves on straight away. |
+| `order` | `shuffle` / `name` / `date` | `shuffle` | Order. shuffle shows every photo, in a random order, before any comes round again; name goes from A to Z; date goes from oldest to newest, by when the files last changed. |
+| `caption` | `none` / `name` / `date` | `none` | Caption. Along the bottom of the photo: its file name, or the date it was taken (or else the file's date). |
+| `dateFormat` | text | `d MMMM yyyy` | Date format. For a date caption: a .NET date format, e.g. d MMMM yyyy (14 August 2026) or d MMM yyyy, HH:mm (14 Aug 2026, 20:31). |
+| `fontSize` | number (6–200) | `18` | Caption size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `fit` | `fill` / `fit` | `fill` | Fit. fill covers the box, cropping the edges; fit shows the whole photo. |
+| `fade` | number (0–5) | `1` | Fade. How many seconds one photo takes to fade into the next; 0 changes straight away. |
+| `cornerRadius` | number (0–1000) | `0` | Corner radius |
+| `opacity` | number (0–1) | `1` | Opacity |
+| `captionColor` | color | `foreground` | Caption colour. Over a shade of the theme's background, so it can be read over any photo. |
+
 ## Theme
 
 The layout's `theme` object sets the font and colours every widget uses, and the canvas background.
@@ -610,7 +664,7 @@ A `backgroundImage` is drawn over the `background` colour and behind the widgets
 
 Instead of its own values, a layout can use a saved theme by name: `"theme": "Ice"`. To change a few of the theme's
 values for one layout, name it as `base` and add the ones to change: `"theme": { "base": "Ice", "accent": "#FF4081" }`.
-Built-in themes: `8-Bit`, `Amber`, `Aurora`, `Bauhaus`, `Blue Screen`, `Blueprint`, `Catppuccin`, `Chalkboard`, `Christmas`, `Cockpit`, `Cyberpunk`, `Day of the Dead`, `Desktop 95`, `Diwali`, `Dracula`, `Dune`, `Easter`, `Eid`, `Espresso`, `Fireworks`, `Forest`, `Gatsby`, `Gingerbread`, `Glacier`, `Grimoire`, `Gruvbox`, `Halloween`, `Handheld`, `Hanukkah`, `High Contrast`, `Ice`, `Lunar New Year`, `Magma`, `Monokai`, `Night Watch`, `Noir`, `Nord`, `Notebook`, `Orange`, `Outrun`, `Rose Pine`, `Sakura`, `Shamrock`, `Solarized`, `Solarized Light`, `Stadium`, `Swiss`, `Tactical`, `Terminal`, `Tokyo Night`, `Toxic`, `Tropical`, `Typewriter`, `Valentine`, `Vaporwave`. Your own are in `themes\<name>.json` in the
+Built-in themes: `8-Bit`, `Amber`, `Aurora`, `Bauhaus`, `Blue Screen`, `Blueprint`, `Catppuccin`, `Chalkboard`, `Christmas`, `Clear Sight`, `Cockpit`, `Cyberpunk`, `Day of the Dead`, `Desktop 95`, `Diwali`, `Dracula`, `Dune`, `Easter`, `Eid`, `Espresso`, `Fireworks`, `Forest`, `Gatsby`, `Gingerbread`, `Glacier`, `Grimoire`, `Gruvbox`, `Halloween`, `Handheld`, `Hanukkah`, `High Contrast`, `Ice`, `Lunar New Year`, `Magma`, `Monokai`, `Night Watch`, `Noir`, `Nord`, `Notebook`, `Orange`, `Outrun`, `Rose Pine`, `Sakura`, `Shamrock`, `Solarized`, `Solarized Light`, `Stadium`, `Swiss`, `Tactical`, `Terminal`, `Tokyo Night`, `Toxic`, `Tropical`, `Typewriter`, `Valentine`, `Vaporwave`. Your own are in `themes\<name>.json` in the
 settings folder, each holding the settings below; changing one restyles every layout that uses it.
 
 | Setting | Type | Default | Description |
@@ -625,6 +679,7 @@ settings folder, each holding the settings below; changing one restyles every la
 | `track` | color | `#1A1A1A` | Bar track. The unfilled part of bars. |
 | `warning` | color | `#FFC107` | Warning. Used by warning colour rules that say "warning". |
 | `critical` | color | `#F44336` | Critical. Used by warning colour rules that say "critical". |
+| `warningSymbols` | true/false | `false` | Warning symbols. A value in the warning colour gets a ▲ beside it too, and one in the critical colour a ◆, so you can tell them apart without seeing colour. |
 | `backgroundImage` | imagefile | — | Image. A picture drawn behind the widgets, over the background colour. An animated GIF or a video (MP4, WMV) moves. |
 | `backgroundFit` | `fill` / `fit` / `stretch` / `center` / `tile` | `fill` | Fit. fill covers the canvas (cropping), fit shows it all, stretch distorts to fit, center and tile keep its size. |
 | `backgroundOpacity` | number (0–1) | `1` | Opacity. Below 1 the background colour shows through, e.g. 0.4 to dim a busy picture on black. |

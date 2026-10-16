@@ -8,20 +8,29 @@ using QRCoder;
 
 namespace ImpiousBonum.App.Shell;
 
-/// <summary>Tablet and USB screen → Show QR code: the link as a QR code and as text, with copy and new-link buttons.</summary>
+/// <summary>
+/// Tablet and USB screen → Show QR code: the link as a QR code and as text, with copy and new-link buttons. The link
+/// shows the main dashboard, or a saved layout of its own.
+/// </summary>
 public partial class TabletLinkWindow : Window
 {
+    private const string Intro = "Scan the code, or open the link, on a tablet or phone on the same Wi-Fi.";
+
     private readonly int _port;
     private readonly Func<string> _newToken;
     private string _token;
+    private string? _layout;
 
     /// <param name="newToken">Replaces the link's secret (stopping old links) and returns the new one.</param>
-    public TabletLinkWindow(int port, string token, Func<string> newToken)
+    /// <param name="layout">The saved layout the link shows, or null for the main dashboard.</param>
+    public TabletLinkWindow(int port, string token, Func<string> newToken, string? layout = null)
     {
         InitializeComponent();
         _port = port;
         _token = token;
         _newToken = newToken;
+        _layout = layout;
+        IntroText.Text = IntroFor(layout);
 
         var addresses = TabletAccess.LocalAddresses();
         foreach (var address in addresses)
@@ -40,10 +49,21 @@ public partial class TabletLinkWindow : Window
     }
 
     /// <summary>The link on the PC's first local address, or null when it has none.</summary>
-    public static string? FirstLink(int port, string token) =>
-        TabletAccess.LocalAddresses() is [var address, ..] ? TabletAccess.Link(address, port, token) : null;
+    /// <param name="layout">The saved layout the link shows, or null for the main dashboard.</param>
+    public static string? FirstLink(int port, string token, string? layout = null) =>
+        TabletAccess.LocalAddresses() is [var address, ..] ? TabletAccess.Link(address, port, token, layout) : null;
 
-    private string? CurrentLink => AddressBox.SelectedItem is IPAddress address ? TabletAccess.Link(address, _port, _token) : null;
+    /// <summary>Shows the link for another layout (null for the main dashboard's), when the window's already open.</summary>
+    public void ShowLayout(string? layout)
+    {
+        _layout = layout;
+        IntroText.Text = IntroFor(layout);
+        ShowLink();
+    }
+
+    private static string IntroFor(string? layout) => layout is null ? Intro : $"{Intro} It shows the layout \"{layout}\", whatever the dashboard shows.";
+
+    private string? CurrentLink => AddressBox.SelectedItem is IPAddress address ? TabletAccess.Link(address, _port, _token, _layout) : null;
 
     private void ShowLink()
     {

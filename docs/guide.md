@@ -4,12 +4,12 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 ## Contents
 
-- [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
-- [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
-- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
+- [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
+- [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
+- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
-- [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
+- [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
 - [Command line](#command-line)
 
 ## Getting started
@@ -29,9 +29,12 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`, `holidayThemes`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [energy use](#energy-use) (`energyPrice`, `energyCurrency`, `energyOtherWatts`), [grid carbon intensity](#grid-carbon-intensity) (`gridCarbon`, `gridCarbonArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), [status checks](#status-checks) (`statusChecks`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), `scheduleEnabled`, `holidayThemes`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`, `tabletReadings`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
+- `energy.json`: the energy your PC has used today and this month so far, so a restart carries on from it (see [Energy use](#energy-use)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
+
+To keep a copy of your settings, layouts and themes, or move them to another PC, see [Backing up your settings](#backing-up-your-settings).
 
 ### The window and the tray menu
 
@@ -46,12 +49,14 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | *Pages and schedule* | Swiping and turning between layouts, and what shows when (see [Pages](#pages) and [Schedule](#schedule)) |
 | *Game layouts* | Games linked to a layout or theme, and session recaps (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
 | *Sensors* | Whether the sensor service is running, installing, updating or removing it, and which app the FPS reading follows (see [the sensor service](#sensor-service-temperatures-fans-power-fps)) |
+| *Energy* | Your PC's power now and the energy it's used today and this month, the price and currency for what that costs, the allowance for the parts nothing measures, and Great Britain's grid carbon intensity (see [Energy use](#energy-use)) |
 | *Weather* | The location, more places for the weather widget to move between, the units, air quality and pollen, severe weather warnings, and turning the weather off (see [Weather](#weather)) |
 | *Calendars*, *News feeds* | The links the agenda and news widgets read (see [Calendar](#calendar) and [News](#news)) |
 | *Claude usage* | Whether Claude Code is reporting, and connecting it (see [Claude usage](#claude-usage)) |
 | *Custom data* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
+| *Status checks* | Whether your own servers and services are up (see [Status checks](#status-checks)) |
 | *Alerts*, *Hotkeys*, *Logging* | See [Alerts](#alerts), [Hotkeys](#hotkeys) and [Logging](#logging) |
-| *General* | *Start with Windows*, drawing with the graphics card, and the settings folder and `dashboard.log` |
+| *General* | *Start with Windows*, drawing with the graphics card, the settings folder, backing it up and restoring it (see [Backing up your settings](#backing-up-your-settings)), and `dashboard.log` |
 | *About and updates* | The version, checking for and installing updates, what's new, this guide and the widget reference for your version, *Report a problem*, and *Details* to copy into a problem report |
 
 The tray menu keeps to the basics: *Open Impious Bonum*, *Edit layout…* (the window on the main dashboard's layout), *Layout* to switch the main dashboard's layout quickly, *Restart to update to x.y.z* when an update is waiting, and *Exit*. Its first line shows the installed version, and it's dark or light with the taskbar (Settings → Personalisation → Colours → *Choose your mode*).
@@ -69,6 +74,20 @@ Without a spare screen, *Screens* → pick the monitor → *Size* → *A window*
 
 *Size* → *Fill the screen* goes back to covering the whole monitor.
 
+### Backing up your settings
+
+*General* → *Back up and restore* → *Back up…* saves your whole setup as one `.ibbackup` file: `settings.json` (calendars, alerts, hotkeys, the schedule, custom data, which screens the dashboards are on and the rest), every saved layout with the fonts and pictures in its folder under `layouts`, and your saved themes. Keep it somewhere safe, or take it to another PC.
+
+**A backup has private things in it**: your calendar links, the tablet link, and the web addresses and commands you've set up, for alerts and custom data among others (with any tokens in custom data's headers). Keep it somewhere only you can open, and don't share it the way you'd share a layout: to share a layout, export it instead (see [Sharing layouts](#sharing-layouts)).
+
+*Restore…* shows what's in a backup: when it was made, by which version of Impious Bonum, and how many layouts and saved themes it has. Once you say yes, Impious Bonum first saves your setup as it is now in a folder beside the settings folder (`%AppData%\ImpiousBonum backups`, as *Before restoring 2026-10-16 14.05.ibbackup*), so you can restore that to go back. Then it closes, puts the backup's settings, layouts and themes in place of yours, and starts again. Layouts and themes that aren't in the backup go, though they're in the one saved before restoring.
+
+- A backup from a newer version of Impious Bonum says so first: this version would drop the settings it doesn't know about. Update first (*About and updates*) to keep everything.
+- Left out: `dashboard.log`, the `logs` folder and `sessions.csv`, which are records rather than settings (restoring them would lose what's been recorded since), and `claude-usage.json`, which Claude Code keeps up to date. *Start with Windows* and the sensor service belong to Windows rather than the settings folder, so restoring leaves them as they are.
+- Fonts and pictures a layout uses from elsewhere, such as your Pictures folder, aren't in a backup. To take a layout with them to another PC, export it.
+- On another PC, a layout's fonts and pictures from its folder under `layouts` work as before. The dashboards look for the screens they were on, so choose screens for them on *Screens*.
+- Only restore your own backups: a backup sets the programs and web addresses that custom data, alerts and buttons use. Restoring checks the file as importing a layout does: it refuses one with `..` or absolute paths in it, caps sizes (100 MB a file, 1 GB in all), and takes only settings, layouts with their fonts and pictures, and themes.
+
 ## Layouts and the editor
 
 ### The default layout
@@ -77,7 +96,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="images/default-layout.svg" alt="Map of the default layout: CPU, GPU and memory graphs, CPU and GPU temperatures and the frame rate, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Twenty-two widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `weather` ([Weather](#weather)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Twenty-three widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `weather` ([Weather](#weather)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
 
 <table>
   <tr>
@@ -91,13 +110,16 @@ Every box is a widget you can move, resize, restyle or replace. Twenty-two widge
 The editor is the *Layouts* page of the window, which opens on your main screen: tray → *Edit layout…*, or right-click / press and hold on the dashboard. Right-click or press and hold on one of [more dashboards](#more-dashboards) to edit that one's layout instead. At the top, *Screen* picks which screen's dashboard you're editing and *Layout* which saved layout it shows:
 
 - **Preview:** click a widget to select it, drag to move, drag the handles to resize. Moves snap to a grid (toolbar); hold Alt to place freely. Arrow keys nudge, Shift+arrows by 10.
+- **Snapping to other widgets:** while you drag or resize a widget, its edges and centre snap to other widgets' edges and centres, and to the canvas's edges and middle, once they're within a few pixels. A thin line shows what it has lined up with. Resizing snaps only the edges you're dragging. Hold Alt to place freely.
+- **Several widgets at once:** Ctrl+click or Shift+click widgets in the preview or the *Widgets* list to add them to the selection (or take one out again), drag a box around them on empty canvas (with Ctrl or Shift held to add to what's selected), or press Ctrl+A for all of them. Drag any of them to move them all; arrows nudge them all; *Duplicate* (Ctrl+D) and *Delete* (Del) work on all of them. Click one of them to go back to just that one, or press Esc for none. The properties say how many are selected; select one to change its settings.
+- **Align:** with two or more selected, *Align ▾* on the toolbar (or *Align* in the list's right-click menu) lines them up by their left edges, centres, right edges, tops, middles or bottoms, against the space they take up together. *Distribute horizontally* and *Distribute vertically* put equal gaps between three or more, keeping them within the space they take up now. *Same width* and *Same height* make them as wide or as tall as the first one you selected. Each is one undo.
 - **Metrics:** template and metric fields have a `{…}` button that opens a searchable list of every metric (about 280 on a typical PC, including every raw sensor) with live values. Pick one and choose how to show it (e.g. `18.7 GB`, `19,138 MB` or just `18.7`) and it's inserted at the cursor. Under each field a live preview shows what it renders now and flags unknown metric ids.
 - **Properties:** every setting of the selected widget, with the right control for each (numbers, colours with a picker, fonts, drop-downs, lists, boxes to tick such as a news widget's feeds) and a reset-to-default button. Click empty canvas or press Esc for canvas size and theme. To reorder a list (a rows widget's rows, a clock's other places, buttons, warning colours, the feeds ticked…), drag an entry by the handle at its left, or move it a place at a time with Alt+Up and Alt+Down from its handle or one of its text or number boxes (in a drop-down, they open its list instead).
 - **Fonts:** the font list shows each font's name in that font, so you can see what you're picking. Symbol and icon fonts, such as *Wingdings* and *Segoe MDL2 Assets*, show their name as usual with a few of their symbols beside it. While the list is open, the font under the mouse (or the one you move to with the arrow keys) shows on the widget straight away: click it or press Enter to keep it, or press Esc or click elsewhere to go back to the font you had. With the list closed, Up and Down change to the next font straight away, and one undo goes back to where you started. You can still type a font's name. A widget's own *Font* has *Theme font* at the top of the list, to follow the layout's theme again.
 - **Setting a widget up:** the weather, agenda, news and Claude usage widgets need something set up outside the layout. Select one and *Set up*, at the top of its properties, says what's set up now and has a button for it: *Set location…*, *Calendars…*, *News feeds…* or *Connect Claude Code…*. They do the same as the window's own pages.
-- **Widgets:** add, duplicate (Ctrl+D) and delete. The *Widgets* list is the drawing order, and lower in the list draws on top: drag a widget up or down it to change the order, or press Ctrl+] to bring the selected widget forward and Ctrl+[ to send it back. Right-click a widget in the list for *Bring forward*, *Send back*, *Duplicate* and *Delete*.
-- **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
-- **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout, each shown with a sample of its colours. *Orange* (the default look) and 54 others are built in: clean ones like *High Contrast*, *Swiss* and *Glacier*, retro ones like *Amber*, *8-Bit*, *Desktop 95* and *Blue Screen*, moods like *Outrun*, *Cyberpunk*, *Grimoire*, *Aurora* and *Gatsby*, a *Night Watch* theme in dim reds for a screen you keep on at night, well-known editor palettes such as *Dracula*, *Nord*, *Gruvbox*, *Solarized* and *Catppuccin*, and ones for the holidays through the year: *Lunar New Year*, *Valentine*, *Shamrock* (St Patrick's Day), *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* (Bonfire Night or New Year's Eve), *Hanukkah*, *Christmas* and *Gingerbread*, which [Holiday themes](#holiday-themes) can show on their days. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
+- **Widgets:** add, duplicate (Ctrl+D) and delete. The *Widgets* list is the drawing order, and lower in the list draws on top: drag a widget up or down it to change the order, or press Ctrl+] to bring the selected widget forward and Ctrl+[ to send it back. Right-click a widget in the list for *Bring forward*, *Send back*, *Duplicate*, *Delete* and *Align*.
+- **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize, or drag across empty space to select the widgets inside; the editor follows along (and vice versa), with the same snapping and undo.
+- **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout, each shown with a sample of its colours. *Orange* (the default look) and 55 others are built in: clean ones like *High Contrast*, *Swiss* and *Glacier*, *Clear Sight* for [colour blindness](#warning-symbols), retro ones like *Amber*, *8-Bit*, *Desktop 95* and *Blue Screen*, moods like *Outrun*, *Cyberpunk*, *Grimoire*, *Aurora* and *Gatsby*, a *Night Watch* theme in dim reds for a screen you keep on at night, well-known editor palettes such as *Dracula*, *Nord*, *Gruvbox*, *Solarized* and *Catppuccin*, and ones for the holidays through the year: *Lunar New Year*, *Valentine*, *Shamrock* (St Patrick's Day), *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* (Bonfire Night or New Year's Eve), *Hanukkah*, *Christmas* and *Gingerbread*, which [Holiday themes](#holiday-themes) can show on their days. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
 - **Moving backgrounds:** the theme's background *Image* can be an animated GIF or a video (MP4, M4V or WMV), which plays muted and on a loop behind the widgets, with the same fit and opacity settings as a picture. GIF frames are prepared once at the size the canvas shows them and kept under 48 MB in all (a long GIF is made smaller, then thinned), and fast GIFs are held to 20 frames a second. A moving background stops while the dashboard is hidden. The tablet view and USB screens show a still frame. Moving backgrounds cost more CPU than a still picture, a video most of all, since the dashboard draws without the graphics card unless you turn hardware rendering on. Exported layouts carry a video up to 50 MB.
 - **A widget's own look:** every widget has *Widget theme* settings (font, weight and the theme's colours) that override the layout's theme for that widget alone; leave them empty to follow the theme. Named colours in its other settings, like `accent`, then mean the widget's own. Many widgets also have colours of their own, such as a bar's track or *Now playing*'s progress bar, so changing the theme's bar track doesn't change everything that happens to use it.
 - **Text that fits:** a big font size, or a font that's wider or taller than the theme's, can make text too big for its widget. Widgets with text have *Shrink to fit*, on by default: text that would be cut off gets smaller, evenly, until it fits, and a label and its value on one line get smaller together rather than run into each other. Text that fits keeps exactly the size you set; turn it off to keep your sizes whatever happens. Names that end with … when they're too long, as in *Top apps*, still do, down to their first few letters. *Agenda* and *News* end long lines with … too, and rather than shrink the whole list, they leave out the rows at the bottom that would be cut off; a first row too tall for the widget on its own gets smaller.
@@ -120,7 +142,7 @@ The canvas has a design size (default 1920×480) and scales to fit the window. E
 
 `{id}` formats automatically (`18.7 GB`, `11.8 %`, `79.7 KB/s`). After a colon you can add a number format (`0.0`, `N0`), force a byte unit (`MB`, `GB`, …) or write `nounit`. Readings that aren't available show as `—`.
 
-To make a value change colour when it runs hot, give its `text`, `icon`, `graph` or `drives` widget warning colours (in the editor, or as `thresholds` in the layout file): `[{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }]`. `warning` and `critical` are theme colours, and `below` works too, e.g. for a low frame rate.
+To make a value change colour when it runs hot, give its `text`, `icon`, `graph` or `drives` widget warning colours (in the editor, or as `thresholds` in the layout file): `[{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }]`. `warning` and `critical` are theme colours, and `below` works too, e.g. for a low frame rate. With the theme's `warningSymbols` on, a value in `warning` also has a ▲ beside it and one in `critical` a ◆ (see [Warning symbols](#warning-symbols)).
 
 If a layout has a typo or an out-of-range value, the tray shows a notification naming the file and saying what and where, e.g. *unknown setting 'fontsize' (did you mean 'fontSize'?)*.
 
@@ -130,11 +152,23 @@ To use a font you don't want to install, point the theme at the file: `"fontFile
 
 To put a picture behind the widgets, add `"backgroundImage": "C:\\Pictures\\wallpaper.jpg"` to the theme. `backgroundFit` is `fill` (the default: covers the canvas, cropping the edges), `fit`, `stretch`, `center` or `tile`, and `backgroundOpacity` below 1 lets the `background` colour show through, which dims a busy picture on black. The image is decoded at the canvas size, so a 4K wallpaper doesn't cost extra memory. If the file is missing the dashboard just shows the colour. The full list of theme settings is at the end of the [widget reference](widgets.md#theme).
 
+### Warning symbols
+
+Warning colours change a value's colour as it runs hot, but with colour blindness warning and critical can look alike, or like the value's usual colour. Tick *Warning symbols* in the theme's *Colours* (select the canvas in the editor), or add `"warningSymbols": true` to a theme, and a value in the theme's warning colour gets a ▲ beside it too, and one in its critical colour a ◆. The shape says which it is, whatever the colour looks like.
+
+- Text, *Icon and value* and stat tiles have it after the value; graphs, bars, drives and *Top apps* have it just before the value on the right; a gauge has it after the value in the middle of the dial.
+- It takes no room while the value is normal. With *Shrink to fit* on, text that only just fits gets a little smaller to make room for it.
+- *CPU threads* keeps to colour alone: a symbol in every thread would be too busy to read.
+- Only the theme's `warning` and `critical` colours get one. A warning colour of your own, such as `#FF00FF` or `accent`, doesn't, since only you know what it means.
+- It's off unless you turn it on, so layouts look as they always have.
+
+The built-in *Clear Sight* theme has it on, with colours picked to stay apart with each common kind of colour blindness (red-blind, green-blind and blue-blind): a sky blue accent, gold for warning and a deep pink-red for critical, the gold much lighter than the red so they stay apart on a dim screen too. To keep another theme's look with the symbols, tick *Warning symbols* for the layout, or *Save theme as…* a copy with it ticked.
+
 ### Sharing layouts
 
-*Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file, background image and image widgets' pictures inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor's *Layouts ▾*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual.
+*Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file, background image and image widgets' pictures inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor's *Layouts ▾*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual. A [photo frame](#photo-frame)'s folder isn't exported: it stays on your PC, and whoever imports the layout chooses their own.
 
-A layout from someone else could have a harmless-looking button that runs any program, so if it has buttons that open something, the import lists what they'd open and asks whether to keep them or clear them.
+A layout from someone else could have a harmless-looking button that runs any program, or one that sends a web request to something on your network, so if it has buttons that open something or [send web requests](#web-request-buttons), the import lists what they'd open and where they'd send, and asks whether to keep them or clear them. Exporting leaves out web buttons' headers, which are usually a password or token.
 
 An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder. Imports only take the layout and the font (`.ttf`, `.otf`) and images it names, reject a file with `..` or absolute paths in it, and cap sizes (1 MB for the layout, 50 MB per file).
 
@@ -146,9 +180,9 @@ choose *A few big things* (up to 6 widgets) or *Lots at once*: a TV across the r
 things, while a monitor at arm's length can show lots. Pick a layout to see it drawn live with your own readings.
 *Show on* puts it on the screen you picked (*Add a dashboard on* gives a screen without one a dashboard), then *Edit
 it* opens it in the editor; with *Any screen*, *Add to my layouts* only adds it. It's added the same way as importing
-a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open programs.
-Pictures and fonts inside a shared layout show once it's added. In the editor, *Layouts ▾* → *Get one from the
-gallery…* opens it for the screen you're editing.
+a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open programs
+or send web requests. Pictures and fonts inside a shared layout show once it's added. In the editor, *Layouts ▾* →
+*Get one from the gallery…* opens it for the screen you're editing.
 
 So far it has twenty-one, made along with the app, for screens from a 3.5" USB screen (480 × 320), a 7" panel
 (1024 × 600) and a 1280 × 800 tablet through 1920 × 480 and 1920 × 720 bars to 1080p, 1440p and 4K monitors, a TV
@@ -197,6 +231,8 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `weather.gusts`, `weather.wind.degrees`, `weather.pressure`, `weather.pressure.trend` (*Rising*, *Falling* or *Steady* over the last 3 hours), `weather.dewpoint`, `weather.visibility`, `weather.clouds`, `weather.precipitation` (the last 15 minutes), `weather.precipitation.today`, `weather.rain.hour`, `weather.tomorrow.rain`, `weather.uv`, `weather.uv.max` (today's highest), `weather.uv.level` (*Low* to *Extreme*), `weather.daylight` | The same forecast (see [Weather](#weather)) |
 | `weather.sun.elevation` | How high the sun is, in degrees, worked out on your PC from the place and the time, every 30 seconds |
 | `moon.phase` (e.g. *Waxing gibbous*), `moon.illumination` (how much is lit, %), `moon.age` (days since the new moon), `moon.next.full`, `moon.next.new` (e.g. *Sat 24 Oct*), `moon.rise`, `moon.set` | The moon, worked out on your PC every minute; moonrise and moonset need the weather's location (see [Sun and moon](#sun-and-moon)) |
+
+| `weather.rain.soon` (e.g. *Rain from 14:30*), `weather.rain.next` (minutes until it rains, 0 while it is) | The same forecast's next two hours, a quarter of an hour at a time (see [Rain soon](#rain-soon)) |
 | `weather.aqi`, `weather.aqi.level`, `weather.aqi.european`, `weather.aqi.us`, `weather.pm25`, `weather.pm10`, `weather.ozone`, `weather.no2` | Open-Meteo's air quality (from CAMS) for the same place, every hour, once *Weather* → *Air quality and pollen* is on (see [Air quality and pollen](#air-quality-and-pollen)) |
 | `weather.pollen` (e.g. *Grass high*), `weather.pollen.grass`, `weather.pollen.tree`, `weather.pollen.weed`, and `weather.pollen.grass.level`, `weather.pollen.tree.level`, `weather.pollen.weed.level` (*None* to *Very high*) | The same, for places in Europe in season |
 | `weather.warnings` (how many), `weather.warning` (the most serious one's headline), `weather.warning.level` (e.g. *Yellow* or *Severe*) | Warnings of severe weather for the same place, from the Met Office in the UK or the National Weather Service in the US, every 10 minutes, once *Weather* → *Severe weather warnings* is on (see [Severe weather warnings](#severe-weather-warnings)) |
@@ -212,6 +248,8 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
+| `power.total`, `energy.today`, `energy.month`, `energy.cost.today`, `energy.cost.month` | The whole PC's power (the sensor service's CPU and graphics card power, and an allowance for the rest), the energy it's used today and this month, and what that costs at your price (see [Energy use](#energy-use)) |
+| `grid.carbon`, `grid.carbon.index`, `grid.carbon.best`, `grid.carbon.region` | Great Britain's grid carbon intensity from NESO, every 30 minutes, once *Energy* → *Grid carbon intensity* is on (see [Grid carbon intensity](#grid-carbon-intensity)) |
 | `claude.session`, `claude.week`, `claude.session.resets`, `claude.week.resets`, `claude.status` | Your Claude plan's usage limits, from Claude Code's status line (see [Claude usage](#claude-usage)) |
 
 ### Sensor service (temperatures, fans, power, FPS)
@@ -248,6 +286,33 @@ Average FPS hides stutter: a game can average 120 FPS and still hitch. The senso
 <p align="center"><img src="images/widgets/frame-times.png" width="600" alt="Stat tiles of the frame rate at 145 and the 1% and 0.1% lows, each with a trend line and its range, and a graph of the average and slowest frame times"></p>
 
 A sensor service from before 0.8 doesn't send these; *Sensors* → *Update…* brings it up to date.
+
+### Energy use
+
+What your PC is using and what it costs, as readings for any widget. The *Energy* page shows them too, and is where you set your price.
+
+- **Power now:** `power.total`, in watts: the CPU's package power and the graphics card's, from the [sensor service](#sensor-service-temperatures-fans-power-fps), plus an allowance for the parts nothing measures (the motherboard, memory, drives and fans). The allowance is 50 W, which suits most desktops; *Energy* → *Everything else* changes it. Monitors, speakers and anything else plugged in aren't counted, and nor is what the power supply itself loses (often a tenth or so): raise the allowance if you'd like that counted.
+- **Energy used:** `energy.today`, in kWh since midnight, and `energy.month`, since the 1st, added up from `power.total` every second.
+- **What it costs:** `energy.cost.today` and `energy.cost.month`, at the price you type under *Energy* → *Price per kWh*: `0.25`, say, or `24.5p` in pence or cents. They show your region's currency symbol where your region puts it, such as *£0.48*; *Currency symbol* changes it. Without a price they have no reading. The cost is the energy so far at the price now, so a new price applies to the whole day and month. Standing charges aren't included.
+
+Without the sensor service there's no power reading, so `power.total` shows a dash and nothing is counted; the *Energy* page says why. The CPU's power needs the PawnIO driver, as CPU temperatures do: without it, only the graphics card's and the allowance are counted, and the page says so. Some built-in graphics don't report their power, and then it's the CPU's and the allowance.
+
+Energy is only counted while Impious Bonum is running: time it isn't, or the PC is asleep, isn't counted. Today's and this month's totals are kept in `energy.json` in the settings folder, saved every minute, so a restart carries on from them. Today's starts again at midnight, and the month's on the 1st.
+
+For example, `{power.total} · {energy.today} today ({energy.cost.today})` in a text widget reads *433 W · 1.92 kWh today (£0.48)*, and a `graph` of `power.total` shows the power climb when a game starts.
+
+#### Grid carbon intensity
+
+Turn on *Energy* → *Grid carbon intensity* to see how much CO₂ Great Britain's electricity is giving off: the more wind and sun, the less. It's only for Great Britain (England, Scotland and Wales), as Northern Ireland's grid is separate, and it's off until you turn it on.
+
+- `grid.carbon`: the carbon intensity now, in grams of CO₂ for each kWh, e.g. *142 gCO₂/kWh*.
+- `grid.carbon.index`: its level: *Very low*, *Low*, *Moderate*, *High* or *Very high*.
+- `grid.carbon.best`: when it'll be lowest in the next 24 hours, e.g. *Lowest around 03:30*, or *Lowest now*: a good time for a long game update, or the washing machine.
+- `grid.carbon.region`: whose figures they are: *Great Britain*, or your region's name.
+
+The figures are for Great Britain as a whole unless you give *Your area*: the first half of your postcode, such as `LS1`, for your region's (Yorkshire, say). Type the whole postcode if you like; only the first half is kept.
+
+Every 30 minutes, the next 24 hours' forecast comes from the [Carbon Intensity API](https://carbonintensity.org.uk), run by NESO, Great Britain's National Energy System Operator (formerly National Grid ESO). Nothing about you is sent but the first half of your postcode, if you give it, and nothing at all while it's off. Between fetches the readings move on through the forecast, half an hour at a time. If it can't be reached it tries again five minutes later, and the last figures stay for up to three hours. Carbon intensity forecasts by NESO, from carbonintensity.org.uk, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ### Weather
 
@@ -290,6 +355,19 @@ For example, `UV {weather.uv} ({weather.uv.level}) · {weather.pressure} {weathe
 The location is set once for the PC, so every layout shows the same place (and the widget can move between it and [more places](#more-places)). Units follow your Windows region (°C, km/h, mm, km and hPa, or °F, mph, inches, miles and inches of mercury); *Weather* → *Units* changes them.
 
 Forecasts come from [Open-Meteo](https://open-meteo.com), which is free for non-commercial use and needs no account. When you search, what you type goes to Open-Meteo, and to [OpenStreetMap](https://www.openstreetmap.org)'s place search only when Open-Meteo doesn't find it (it knows more suburbs, parks and postcodes). After that only the place's coordinates are used: they go to Open-Meteo every 15 minutes for the forecast (and every hour for [air quality and pollen](#air-quality-and-pollen), if you turn them on), and with [severe weather warnings](#severe-weather-warnings) on, a US place's go to the National Weather Service every 10 minutes. Nothing else is sent, and nothing at all until you search or set a location. *Turn off weather* forgets the place (and any [more places](#more-places)) and stops it. If the internet is down the last forecast stays for up to three hours. Weather data by Open-Meteo.com, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Place search by OpenStreetMap ([© OpenStreetMap contributors](https://www.openstreetmap.org/copyright)).
+
+#### Rain soon
+
+The *Rain soon* widget shows the rain in the next two hours at your location: a bar for each quarter of an hour, taller the heavier the rain, with the time every half hour under them. A line above says what's coming: *Dry for the next 2 hours*, *Rain from 14:30*, *Rain stopping around 15:15*, or *Light rain for the next 2 hours* (*Moderate* or *Heavy* when it is). It says snow instead when the forecast for that hour is snow. Add it with *Add widget* → *Rain soon* in the editor; like the *Weather* widget, it needs a location.
+
+<p align="center"><img src="images/widgets/rain.png" width="600" alt="The weather now, 14° and partly cloudy, and under it Rain from 22:30 with a bar for each quarter of an hour: none until half past ten, then a shower that's heaviest around eleven and tails off by a quarter to twelve"></p>
+
+- **The bars:** a quarter-hour that's dry has no bar, so two dry hours are just the line along the bottom. A drizzle still gets a small bar, so you can see it; light rain (up to 2.5 mm an hour) reaches up to half way, and heavy rain (10 mm an hour or more) the top. They're in the accent colour unless you choose another, and turning off *Summary* leaves just the bars and the times.
+- **Readings for any widget:** `weather.rain.soon` is the line above the bars, and `weather.rain.next` is how many minutes until it rains: 0 while it's raining, and no reading while it stays dry for the next two hours. An [alert](#alerts) on `weather.rain.next` below 30 is a reminder to bring the washing in.
+- **Where it's most precise:** Open-Meteo's forecasts a quarter of an hour at a time come from weather models that work in that detail only over central Europe (Germany's ICON-D2 and France's AROME) and North America (the US's HRRR). Elsewhere each quarter-hour is filled in from the hourly forecast, so it can't say just when in the hour a shower starts or stops.
+- **Your location's:** like the `weather.*` readings, it's always your location's rain, even while a *Weather* widget beside it shows one of your [more places](#more-places).
+
+Times are the place's own, like the hourly forecast's. It all comes in the same request as the rest of the forecast, so nothing more is sent and there are no extra requests.
 
 #### More places
 
@@ -418,6 +496,57 @@ Some examples:
 | A JSON API | Web address `https://api.github.com/repos/<owner>/<repo>`, fields `stars = stargazers_count` and `issues = open_issues_count` |
 
 Sources are stored in `settings.json` (`customData`) on this PC and never in a layout, so a layout from someone else can't add a command to run. Headers, tokens included, are stored there as plain text.
+
+### Status checks
+
+The `status` widget shows whether your own servers and services are up: a NAS, Pi-hole, Plex, the router, a website.
+Each has a dot in the accent colour while it's up and the critical colour while it's down, its name, and how fast it
+answered, as a list or a grid.
+
+<p align="center"><img src="images/widgets/status.png" width="600" alt="Four status checks: the router, the NAS and Pi-hole up with orange dots, answering in 2, 4 and 3 ms and up for 12 days, 6 days and 3 hours, and Plex down in red for 12 minutes; beside them, 1 down: Plex, and 3 of 4 up"></p>
+
+Add them on the *Status checks* page (or select the widget in the editor → *Add a check…*). Each has:
+
+- **Name:** what the dashboard calls it, such as *NAS*.
+- **Address:** a host name or IP address (`nas.local`, `192.168.1.10`), which is pinged, or a web address
+  (`http://pi.hole/admin`, `https://nas.local:5001`), whose page is asked for. A page counts as up when it loads (an
+  answer in the 200s or 300s); *401 Unauthorized* and the like count as down, so for a service behind a sign-in, use a
+  page that doesn't need one. To check a port, give its web address (`http://nas:8080`).
+- **Page must say:** for a web address, a word the page has to contain, in any case, to count as up, so a page that
+  loads but shows an error doesn't. A move to another page of the same server is followed (from `/` to
+  `/web/index.html`, say); a move to another site isn't, and then there's no page to find the word on.
+- **Accept its own certificate:** for an https address whose certificate Windows doesn't trust, as home servers often
+  have their own.
+- **Every:** how often to check it: every 60 seconds unless you say otherwise, and 10 at the least.
+
+*Check now* checks it once and says what it found. A ping waits 2 seconds for its reply and a page 10. One that fails
+is checked again 10 seconds later, and only counts as down if that fails too, so one lost answer doesn't.
+
+Each check has readings any widget can show, listed in the metric picker under *Status: NAS* and so on. The name in
+the id is the check's, in lower case with a hyphen for spaces and punctuation (*Pi-hole* is `status.pi-hole.…`), so
+renaming a check changes its readings.
+
+| Reading | |
+|---|---|
+| `status.<name>.up` | 1 while it's up, 0 while it's down |
+| `status.<name>.ms` | How long it took to answer, while it's up |
+| `status.<name>.since` | How long it's been up or down, e.g. *3 h* or *12 min*, counted from when Impious Bonum first checked it |
+| `status.up`, `status.down` | How many are up, and how many down |
+| `status.summary` | *All up*, or which are down: *1 down: Plex* |
+
+A widget can show some checks and not others: *Checks* works like the [news widget's feeds](#news), so a check's
+name can't have a comma in it or be `all`. *Columns* makes a grid, and *Show response time* and *Show how long* say
+what's beside each name. A check that's down says *Down* in words as well as colour.
+
+**To be told when one goes down,** add an [alert](#alerts) on `status.<name>.up` below 1. *Alert…* beside the check
+sets one up, with a notification saying *NAS is down*; it needn't wait any seconds, as a check is only down once it
+has failed twice. With *Flash a banner on the dashboard*, the banner stays until the check is back. To be told when
+it's back as well, add a second alert on `status.<name>.up` above 0; that one also goes off soon after Impious Bonum
+starts, when it first finds the check up.
+
+Nothing is checked until you add a check, and only the addresses you add are contacted: a ping, or a request for the
+page, as often as you say. Checks are kept in `settings.json` (`statusChecks`) on this PC and never in a layout, so a
+layout from someone else can't make the dashboard contact anything.
 
 ### Claude usage
 
@@ -567,8 +696,42 @@ The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a
 | `open` | Opens the *target*: a program (`calc.exe`), a file or folder (`C:\Games`), a web address, or a Windows link such as `ms-settings:sound`. *Arguments* are passed to a program |
 | `keys` | Sends a shortcut such as `Ctrl+Shift+M`, `Win+D` or `F13` to the app you're using. Names are like `A`, `5`, `F1`–`F24`, `Enter`, `Space`, `Esc`, `Tab`, `Home`, `PgUp`, `Up`, `Delete`, `VolumeUp`, `MediaPlayPause` |
 | `layout` | Switches to the layout named in *target* |
+| `web` | Sends a web request to the *target* address, for Home Assistant, smart lights, Node-RED or ntfy (see [Web request buttons](#web-request-buttons)) |
 
-Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything in the tablet view, which is read-only, or while you edit the layout. If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
+Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything while you edit the layout, or in the tablet view unless you [let tablets press them](#tablet-view). If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
+
+#### Web request buttons
+
+A `web` button sends a web request when you tap it: to run a Home Assistant script or scene, switch a smart light or plug that has a web address of its own, start a Node-RED flow, or send a notification to your phone with [ntfy](https://ntfy.sh). As well as its *target*, the address (`http://` or `https://`), each one has:
+
+- **Method:** `POST` (the default), `GET` or `PUT`.
+- **Body:** what a `POST` or `PUT` sends, such as JSON or a message. *Content type* says what it is; left empty, it's `application/json` for a body in `{ }` or `[ ]` and `text/plain` for anything else.
+- **Header:** one header as `Name: value`, usually `Authorization: Bearer` and a token.
+
+The request goes in the background, so the dashboard carries on, and gives up after 10 seconds. The button stays pressed until the answer comes, then lights up for a moment: in the theme's accent colour if it worked, or its critical colour if it didn't, when `dashboard.log` says why (*homeassistant.local answered 401 Unauthorized*, say) but never what's in the header. Taps while it waits don't count, so a slow server doesn't get a queue of requests. With *Let tablets press buttons* on (see [Tablet view](#tablet-view)), a tablet can press it too, and sees it light up.
+
+| To | Set up as |
+|---|---|
+| Run a Home Assistant automation | Give the automation a [webhook trigger](https://www.home-assistant.io/docs/automation/trigger/#webhook-trigger), then target `http://homeassistant.local:8123/api/webhook/<webhook id>` with `POST`. It needs no token: the webhook id is the secret, so make it hard to guess |
+| Run a Home Assistant script or scene | Target `http://homeassistant.local:8123/api/services/script/turn_on`, body `{"entity_id": "script.movie_night"}`, header `Authorization: Bearer <long-lived token>`. Make the token on your Home Assistant profile's *Security* tab, under *Long-lived access tokens*. For a scene it's `scene/turn_on` and `scene.evening`; to switch a light, `light/toggle` and `light.desk_lamp` |
+| A notification on your phone | Target `https://ntfy.sh/<your topic>`, body `Dinner's ready`, and subscribe to the topic in the ntfy app, which shows the body as the notification. A header such as `Title: From the dashboard` gives it a title |
+
+In the layout file, those three look like this:
+
+```json
+{ "type": "buttons", "x": 30, "y": 30, "width": 600, "height": 140,
+  "buttons": [
+    { "label": "Lights off", "icon": "power", "action": "web",
+      "target": "http://homeassistant.local:8123/api/webhook/lights-off-7f3a9c" },
+    { "label": "Movie night", "icon": "moon", "action": "web",
+      "target": "http://homeassistant.local:8123/api/services/script/turn_on",
+      "body": "{\"entity_id\": \"script.movie_night\"}", "header": "Authorization: Bearer <long-lived token>" },
+    { "label": "Dinner", "icon": "chat", "action": "web", "target": "https://ntfy.sh/<your topic>",
+      "body": "Dinner's ready", "header": "Title: From the dashboard" }
+  ] }
+```
+
+The header is kept in the layout as plain text. *Export…* leaves headers out, since they're usually a password or token, and says so: whoever imports the layout adds their own. The address and body go with it, so leave secrets out of those in a layout you share. A layout from someone else could send requests to things on your network, so importing one with web buttons lists where they send and asks first (see [Sharing layouts](#sharing-layouts)).
 
 ### Audio visualiser
 
@@ -592,11 +755,38 @@ The *Shape* widget is a rounded panel, a circle or a divider line, for grouping 
 
 Exported layouts carry their image widgets' pictures, like the background image and font.
 
+### Photo frame
+
+The *Photo frame* widget (`photos`) is a slideshow of the pictures in a folder, like a digital photo frame on the
+dashboard. In the editor, choose the folder with *Browse…* beside *Folder*. It shows the PNG, JPG, GIF, BMP and TIFF
+files there, and in the folders inside it unless you turn off *Include subfolders*. Each photo shows for *Seconds per
+photo* (30 to start with) and then fades into the next; tap the frame to move on straight away. *Order* is *shuffle*
+(every photo once, in a random order, before any comes round again), *name* (A to Z, with IMG2 before IMG10, as
+Explorer sorts them) or *date* (oldest first, by when the files last changed).
+
+<p align="center"><img src="images/widgets/photos.png" width="600" alt="A photo of a lake at dusk below hills, with rounded corners and 14 August 2026 along the bottom, beside the time and the date"></p>
+
+*Fit* is *fill*, which covers the frame and crops the edges, or *fit*, which shows the whole photo, with the rounded
+corners and caption on the photo itself. *Caption* puts the photo's file name, or the date it was taken, along the
+bottom over a shade of the theme's background, so it can be read over any photo. The date is the one the camera
+recorded, or else the file's, in the *Date format* you choose. Photos taken with the camera on its side show the right
+way up.
+
+It stays light however big your photos are: only the photo on show and the next one are read, each at about the size
+it's shown. Files that turn out not to be pictures, or can't be read, are passed over. The folder is looked at again
+every five minutes, so photos you add turn up and ones you delete stop showing. A folder with more than 10,000 pictures
+in it shows the first 10,000 found. While the dashboard is hidden (over a fullscreen game, say, or on a page that isn't
+showing) the slideshow waits and reads nothing. The tablet view moves on by itself, without the fade.
+
+The folder is a place on your PC, so it stays there: exported layouts and layouts in the gallery leave it out, and
+whoever adds the layout chooses a folder of their own. Until it has a folder, the frame is empty on the dashboard and
+says *Choose a folder* in the editor.
+
 ## Automatic behaviour
 
 ### Alerts
 
-Warning colours only help if you're looking. An alert tells you when a reading stays out of bounds: the GPU hot spot above 95 °C for 10 seconds, a drive over 95% full, a frame rate below 30, a [custom data](#custom-data) source reporting an error.
+Warning colours only help if you're looking. An alert tells you when a reading stays out of bounds: the GPU hot spot above 95 °C for 10 seconds, a drive over 95% full, a frame rate below 30, a [custom data](#custom-data) source reporting an error, one of your [servers](#status-checks) going down.
 
 *Alerts* → *Add…* picks the metric (the window shows its reading now), *Above* and/or *Below* a number, for how many seconds (so a brief spike doesn't count), an optional message (a template, so `GPU is cooking: {gpu.hotspot}` shows the reading), and what happens:
 
@@ -765,11 +955,66 @@ With more than one spare screen, each can have a dashboard of its own, with a di
 
 A tablet or phone on the same Wi-Fi can show the dashboard in its web browser, as a wireless second screen. *Tablet and USB screen* → *Show on tablets* turns it on and shows a link and a QR code (*Show QR code…* shows them again); open it on the tablet. It shows exactly what the dashboard shows (same layout, theme, background and game layouts), updated once a second, and keeps going while the dashboard window is hidden over a fullscreen game.
 
+- **A layout of its own:** each tablet can show a different saved layout instead. Pick it under *Layout for the link*, then open that link (or scan its QR code) on the tablet; the link ends in `&layout=` and the layout's name. That tablet then shows that layout in its own theme, whatever the dashboard is showing: game layouts, the schedule and pages only change the main dashboard. Changes in the editor show on it as you make them, like on a dashboard. Renaming or deleting the layout stops its links working, and the tablet says there's no layout of that name: pick it again for a new link. Up to four layouts can show on tablets at once, besides the main dashboard.
 - **Add it to the home screen** (Safari: Share → *Add to Home Screen*; Chrome: ⋮ → *Add to Home screen*) to open it without the browser's bars, or tap *Full screen* where the browser offers it. Set the tablet's screen timeout to never, since the page can't keep the screen on by itself over plain HTTP.
-- **Cost:** with no tablet watching it draws nothing. With one watching, it draws the layout off-screen and sends one JPEG a second, and only when something changed.
-- **Pressing buttons:** with *Let tablets press buttons* on (under *Tablet view*, off by default), tapping a button on the tablet presses it on the PC: the layout's *Buttons* widgets and the media controls, and nothing else. A ripple shows where the tap landed, and the result shows on the next frame. Anyone who has the link can then press those buttons, so only turn it on if the layout's buttons are ones you'd be happy for them to press, and use *New link* if a link gets out.
+- **Cost:** with no tablet watching it draws nothing. With one watching, it draws the layout off-screen and sends one JPEG a second, and only when something changed. A layout of its own is only made when a tablet first asks for it, costs the same as the main one while it's watched, and is let go a few minutes after the last tablet showing it stops asking.
+- **Pressing buttons:** with *Let tablets press buttons* on (under *Tablet view*, off by default), tapping a button on the tablet presses it on the PC: the layout's *Buttons* widgets and the media controls, and nothing else. On a tablet showing a layout of its own, it's that layout's buttons; one that switches layout switches the main dashboard's. A ripple shows where the tap landed, and the result shows on the next frame. Anyone who has the link can then press those buttons, so only turn it on if the layout's buttons are ones you'd be happy for them to press, and use *New link* if a link gets out.
 - **Security:** it's off by default and read-only unless you let tablets press buttons: otherwise the page can't change anything on the PC. The link carries a random secret, and *New link* stops old links working. It only answers addresses on the local network (private, link-local and loopback addresses), never the internet. When Windows asks about the firewall the first time, allow **private networks** only. It's plain HTTP, so someone watching your Wi-Fi traffic could see the dashboard's numbers.
 - It listens on port 8787. If another app uses that port, change `tabletPort` in `settings.json` and turn the tablet view off and on.
+
+#### Readings for other apps
+
+Other apps on your network can read the dashboard's readings as JSON: Home Assistant, Rainmeter on another PC, or a script of your own. Turn on *Share readings with other apps* under *Tablet view* (off by default). It works only while the tablet view is on, since it's the same small server, and it needs the link's secret (the part after `k=` in the tablet link): in the address as `?k=`, or in an `Authorization: Bearer` header.
+
+- `http://<PC>:8787/api/metrics` has every reading, `http://<PC>:8787/api/metrics/cpu.load` just one. Use the PC's address from the tablet link. Ids are the same as in a text widget (`{cpu.load}`), and the editor's metric picker lists them.
+- Each reading has its `id`, `name`, `category`, `unit` (`percent`, `celsius`, `bytesPerSecond` and so on), `value` (a number, or `null` for a text reading or one with nothing yet), `text` (for a text reading, such as what's playing) and `formatted`, the reading as the dashboard shows it:
+
+  ```json
+  {"metrics":[{"id":"cpu.load","name":"CPU load","category":"CPU","unit":"percent","value":37.5,"text":null,"formatted":"37.5 %"}]}
+  ```
+
+- **What's shared:** every reading the dashboard has, including the text ones (what's playing, your next calendar event, your IP address and Wi-Fi network's name), with anyone on your network who has the link. Nothing else, and nothing can be changed this way. *New link* stops the old secret working, so give the apps the new one. Each request just reads the latest readings; nothing is drawn.
+
+A [Home Assistant RESTful sensor](https://www.home-assistant.io/integrations/sensor.rest/), in `configuration.yaml`, reading two in one request every 10 seconds:
+
+```yaml
+rest:
+  - resource: http://192.168.1.20:8787/api/metrics
+    headers:
+      Authorization: Bearer YOUR-SECRET
+    scan_interval: 10
+    sensor:
+      - name: "PC CPU load"
+        value_template: "{{ (value_json.metrics | selectattr('id', 'eq', 'cpu.load') | first).value }}"
+        unit_of_measurement: "%"
+      - name: "PC GPU temperature"
+        value_template: "{{ (value_json.metrics | selectattr('id', 'eq', 'gpu.temp') | first).value }}"
+        unit_of_measurement: "°C"
+        device_class: temperature
+```
+
+A [Rainmeter](https://docs.rainmeter.net/manual/measures/webparser/) skin showing the CPU load as the dashboard does, every 5 seconds:
+
+```ini
+[Rainmeter]
+Update=1000
+
+[MeasureCpu]
+Measure=WebParser
+URL=http://192.168.1.20:8787/api/metrics/cpu.load?k=YOUR-SECRET
+RegExp=(?siU)"formatted":"(.*)"
+CodePage=65001
+UpdateRate=5
+StringIndex=1
+
+[MeterCpu]
+Meter=String
+MeasureName=MeasureCpu
+Text=CPU %1
+FontColor=255,255,255
+FontSize=14
+AntiAlias=1
+```
 
 ### USB screens
 

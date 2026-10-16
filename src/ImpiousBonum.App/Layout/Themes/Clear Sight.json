@@ -1,0 +1,13 @@
+// Sky blue, gold and deep pink-red that colour-blind eyes tell apart, with warning symbols on.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "Normal",
+  "foreground": "#FFFFFF",
+  "secondary": "#C9D3DD",
+  "accent": "#56B4E9",
+  "background": "#0B0F14",
+  "track": "#252D36",
+  "warning": "#F5C710",
+  "critical": "#E03C5A",
+  "warningSymbols": true
+}

@@ -28,6 +28,7 @@ public sealed class IconValueWidget : Widget
     private readonly ValueTemplate _template;
     private readonly TextBlock _text;
     private readonly ThresholdColors _thresholds;
+    private readonly WarningSymbol? _symbol;
 
     public IconValueWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
@@ -62,12 +63,14 @@ public sealed class IconValueWidget : Widget
         _text = CreateText(settings.Number("fontSize"));
         _text.VerticalAlignment = VerticalAlignment.Center;
         SetColumn(_text, 1);
-        Children.Add(Fit(_text, FitDirection.Both));
+        _symbol = CreateSymbol(_text);
+        Children.Add(Fit(Beside(_text, _symbol), FitDirection.Both));
     }
 
     public override void Refresh(MetricStore store, DateTime now)
     {
         _text.Text = _template.Render(store);
-        _text.Foreground = _thresholds.Pick(store, _template.MetricIds.FirstOrDefault(), Theme.Foreground);
+        _text.Foreground = _thresholds.Pick(store, _template.MetricIds.FirstOrDefault(), Theme.Foreground, out var level);
+        _symbol?.Show(level, _text.Foreground);
     }
 }
