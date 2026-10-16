@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
@@ -43,7 +43,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | Page | |
 |---|---|
 | *Layouts* | The layout editor, on the screen you pick (see [Layout editor](#layout-editor)) |
-| *Gallery* | Ready-made layouts for screens like yours, to put straight on one (see [Layout gallery](#layout-gallery)) |
+| *Gallery* | Ready-made layouts for screens like yours, to put straight on one, and themes to add to yours (see [Layout gallery](#layout-gallery)) |
 | *Screens* | Your monitors as Windows arranges them: which shows the main dashboard and how its window behaves, the dashboards on the others, and dimming when you're away (see [Windowed mode](#windowed-mode), [More dashboards](#more-dashboards) and [Dimming](#dimming)) |
 | *Tablet and USB screen* | The dashboard in a browser on a tablet or phone, and on a small USB screen (see [Tablet view](#tablet-view) and [USB screens](#usb-screens)) |
 | *Pages and schedule* | Swiping and turning between layouts, and what shows when (see [Pages](#pages) and [Schedule](#schedule)) |
@@ -157,7 +157,7 @@ To put a picture behind the widgets, add `"backgroundImage": "C:\\Pictures\\wall
 
 Warning colours change a value's colour as it runs hot, but with colour blindness warning and critical can look alike, or like the value's usual colour. Tick *Warning symbols* in the theme's *Colours* (select the canvas in the editor), or add `"warningSymbols": true` to a theme, and a value in the theme's warning colour gets a ▲ beside it too, and one in its critical colour a ◆. The shape says which it is, whatever the colour looks like.
 
-- Text, *Icon and value* and stat tiles have it after the value; graphs, bars, drives and *Top apps* have it just before the value on the right; a gauge has it after the value in the middle of the dial.
+- Text, *Icon and value* and stat tiles have it after the value; graphs, bars, drives, *Device batteries* and *Top apps* have it just before the value on the right; a gauge has it after the value in the middle of the dial.
 - It takes no room while the value is normal. With *Shrink to fit* on, text that only just fits gets a little smaller to make room for it.
 - *CPU threads* keeps to colour alone: a symbol in every thread would be too busy to read.
 - Only the theme's `warning` and `critical` colours get one. A warning colour of your own, such as `#FF00FF` or `accent`, doesn't, since only you know what it means.
@@ -191,11 +191,24 @@ across the room, a monitor turned on its side and a tall strip inside a PC case.
 audio visualiser, the weather in detail, the news, your network, streaming, or counting down to Christmas or
 Halloween. Yours could be next.
 
+The gallery has themes too: pick *Themes* at the top of the page to see each one on the default layout, drawn live
+with your own readings. *Add to my themes* keeps it with your saved themes, for any layout to use: click empty canvas
+in the editor and pick it under *Theme*. You're asked before a theme of yours with the same name is replaced; a
+built-in theme can't be, so one named like a built-in theme is added under a name you choose. So far there are five:
+*Deep Sea* (bioluminescent teal on abyss blue, with a glow), *Nebula* (violet fading into blue, with a pink glow),
+*Copper* (copper and brass on gunmetal), and two light ones, *Matcha* (soft greens) and *Paper* (e-ink greys).
+
 The gallery is the [`gallery`](../gallery) folder of this repository. To share a layout, export it (*Layouts ▾ →
 Export…* in the editor), add the `.ibl` file and an entry in [`gallery/index.json`](../gallery/index.json), and open a
 pull request. A plain layout `.json` works too if it has no pictures or fonts. The tests check every gallery layout
 opens and is valid, and that its widget count is right. To use a gallery of your own instead, set `"galleryAddress"`
 in `settings.json` to a web folder, or a folder on this PC, with an `index.json` in it.
+
+To share a theme, save it in the editor (*Save theme as…*), copy its file from `themes` in the settings folder into
+the gallery's `themes` folder, add an entry under `themes` in `index.json`, and open a pull request: see [Sharing a
+theme](../gallery/README.md#sharing-a-theme). A shared theme is one plain file, so it uses a font that comes with
+Windows and has no background picture; the gallery leaves out a `fontFile` or `backgroundImage`, and won't add a theme
+with a value it can't use. The tests check each gallery theme is as easy to read as the built-in ones.
 
 ### Pages
 
@@ -231,6 +244,8 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `weather.temp`, `weather.feels`, `weather.high`, `weather.low`, `weather.condition`, `weather.humidity`, `weather.wind`, `weather.wind.direction`, `weather.rain`, `weather.sunrise`, `weather.sunset`, `weather.tomorrow.high`, `weather.tomorrow.low`, `weather.tomorrow.condition`, `weather.location` | [Open-Meteo](https://open-meteo.com) forecast for the place set on the *Weather* page, every 15 minutes |
 | `weather.gusts`, `weather.wind.degrees`, `weather.pressure`, `weather.pressure.trend` (*Rising*, *Falling* or *Steady* over the last 3 hours), `weather.dewpoint`, `weather.visibility`, `weather.clouds`, `weather.precipitation` (the last 15 minutes), `weather.precipitation.today`, `weather.rain.hour`, `weather.tomorrow.rain`, `weather.uv`, `weather.uv.max` (today's highest), `weather.uv.level` (*Low* to *Extreme*), `weather.daylight` | The same forecast (see [Weather](#weather)) |
 | `weather.sun.elevation` | How high the sun is, in degrees, worked out on your PC from the place and the time, every 30 seconds |
+| `moon.phase` (e.g. *Waxing gibbous*), `moon.illumination` (how much is lit, %), `moon.age` (days since the new moon), `moon.next.full`, `moon.next.new` (e.g. *Sat 24 Oct*), `moon.rise`, `moon.set` | The moon, worked out on your PC every minute; moonrise and moonset need the weather's location (see [Sun and moon](#sun-and-moon)) |
+
 | `weather.rain.soon` (e.g. *Rain from 14:30*), `weather.rain.next` (minutes until it rains, 0 while it is) | The same forecast's next two hours, a quarter of an hour at a time (see [Rain soon](#rain-soon)) |
 | `weather.aqi`, `weather.aqi.level`, `weather.aqi.european`, `weather.aqi.us`, `weather.pm25`, `weather.pm10`, `weather.ozone`, `weather.no2` | Open-Meteo's air quality (from CAMS) for the same place, every hour, once *Weather* → *Air quality and pollen* is on (see [Air quality and pollen](#air-quality-and-pollen)) |
 | `weather.pollen` (e.g. *Grass high*), `weather.pollen.grass`, `weather.pollen.tree`, `weather.pollen.weed`, and `weather.pollen.grass.level`, `weather.pollen.tree.level`, `weather.pollen.weed.level` (*None* to *Very high*) | The same, for places in Europe in season |
@@ -242,6 +257,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `mic.muted` (1 when muted, 0 when not), `mic.name`, `mic.inuse`, `mic.apps`, `camera.inuse`, `camera.apps` | The microphone Windows uses for calls, and the apps using it or the camera, every 2 seconds (see [Microphone and camera](#microphone-and-camera)). The microphone's appear on PCs with a microphone, the camera's once an app has used a camera |
+| `battery.<name>` (%), `battery.<name>.name`, `battery.low` | Your wireless headset's, mouse's, keyboard's and game controller's batteries, as Windows' Bluetooth settings show them, every minute (see [Device batteries](#device-batteries)). Only on PCs with such devices |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
 | `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; *Sensors* → *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
@@ -408,6 +424,27 @@ Turn on *Weather* → *Severe weather warnings* for warnings of storms, floods, 
 The Met Office gives warnings for 16 areas of the UK, such as *North West England* or *Strathclyde*, and *Automatic* picks the one your location is in. Near the edge of one, the next may suit you better: *Met Office area* chooses it. Places picked from a search know which country they're in. A location typed in as coordinates gets the Met Office's warnings if it's in Great Britain, but to get the NWS's, set it by searching for its name: coordinates alone are never sent to the NWS, in case they're in Canada or Mexico.
 
 Every 10 minutes while they're on, for a UK place only its Met Office area is sent to the Met Office (`metoffice.gov.uk`), never the place itself; for a US place its coordinates go to the National Weather Service (`api.weather.gov`). A place anywhere else isn't sent anywhere, and nothing at all is fetched while warnings are off. If they can't be reached it tries again three minutes later, and the last warnings stay for up to an hour (each still goes when it ends). Warnings from the Met Office (© Crown copyright) and from the US National Weather Service.
+
+#### Sun and moon
+
+The *Sun and moon* widget (`sun`) shows the day as an arc from sunrise on the left to sunset on the right, with the sun on it and the part of the day gone filled in, and how long it's light inside. Beside it is the moon as it looks tonight, with its phase, how much of it is lit, the next full moon, and when it rises and sets. Add it with *Add widget* → *Sun and moon* in the editor.
+
+<p align="center"><img src="images/widgets/sun.png" width="600" alt="The sun and moon widget at a quarter to ten at night: an empty arc from sunrise at 07:12 to sunset at 18:36 with 11 h 24 min of daylight inside it, and beside it a waxing gibbous moon, 79% lit, with the date of the next full moon, when it rose and when it sets"></p>
+
+- **The sun:** today's sunrise and sunset, from midnight to midnight, so after sunset the arc stays empty until the next day. In the far north and south, a day the sun doesn't rise or set says *Up all day* or *Down all day*.
+- **The moon:** lit on the right as it grows towards full and on the left as it shrinks, as it looks from the northern hemisphere; from the southern hemisphere it's the other way round. Its phase is *New moon*, *First quarter*, *Full moon* or *Last quarter* all through the day it comes, as calendars have them, and *Waxing crescent*, *Waxing gibbous*, *Waning gibbous* or *Waning crescent* in between.
+- **Moonrise and moonset:** while the moon's up, when it rose and when it sets (*Rose 15:24 · sets 02:36*); while it's down, when it next rises and then sets. It rises about 50 minutes later each day, so about once a month there's a day it doesn't rise at all. Turn off *Moonrise and moonset* to leave them out.
+- **In the editor:** *Show* picks the sun, the moon or both. The sun and the part of the day it's been up are in the accent colour, the moon's lit side in the secondary colour, and the rest of the arc and the moon's dark side in the track colour, unless you choose your own. With *Shrink to fit* on, text too big for the widget gets smaller to fit.
+
+It's all worked out on your PC from the date and the weather's location, so nothing is sent or fetched for it, and it carries on offline. The phases come within a few minutes of the almanacs', and the rising and setting within a couple of minutes. The sun needs a location (*Weather* → *Set location…*, or *Set location…* under *Set up* in the editor); without one, the arc says so. The moon's phase doesn't, but without a location the moon is drawn as it looks from the northern hemisphere, and there's no moonrise or moonset. Times are in your PC's time zone.
+
+The moon's readings work in any widget, e.g. `{moon.phase}, full moon {moon.next.full}` in a text widget reads *Waxing gibbous, full moon Sat 24 Oct*:
+
+- `moon.phase`: its phase, as above.
+- `moon.illumination`: how much of it is lit, in %.
+- `moon.age`: how many days since the new moon, from 0 to 29.5.
+- `moon.next.full` and `moon.next.new`: the days of the next full and new moons, e.g. *Sat 24 Oct*.
+- `moon.rise` and `moon.set`: when it rises (or rose, while it's up) and sets, e.g. *15:24*. They need the location.
 
 ### Calendar
 
@@ -584,6 +621,51 @@ To make a widget go red, give it a warning colour on one of these metrics (see [
 ```
 
 In the editor, the same rules are each widget's *Warning colours*: pick the metric, set *Above* to 0, and choose a colour.
+
+### Device batteries
+
+How much charge your wireless devices have left, as Windows' Bluetooth settings show it: a Bluetooth headset, mouse,
+keyboard or game controller, or an Xbox controller. The `batteries` widget lists them, each with a bar, and turns one
+the critical colour once it's under 20 %.
+
+<p align="center"><img src="images/widgets/batteries.png" width="600" alt="Three devices with bars: a controller at 55 %, a headset at 72 % and a mouse at 18 %, its bar and charge in red; beside them, Mouse is low"></p>
+
+- **Which devices:** the ones *Settings* → *Bluetooth & devices* shows a battery level for. Headsets send it over
+  Bluetooth's hands-free connection, and Bluetooth LE mice, keyboards, controllers and earbuds have a battery Windows
+  reads itself. Xbox controllers on the Xbox Wireless Adapter or a cable come from Windows' game controller support
+  instead. A mouse, keyboard or headset with a USB receiver of its own usually tells only its maker's app, so it
+  doesn't show here.
+- **When:** every minute. A device shows once it connects, and goes once it's switched off or out of range, within a
+  minute or so of either.
+- Impious Bonum only reads what Windows already knows: it never connects to a device itself, and needs no permission.
+  Nothing shows on PCs without such devices.
+
+Each device's readings appear when it first connects, listed in the metric picker under *Device batteries*. The name
+in the id is the device's, in lower case with a hyphen for spaces and punctuation (*WH-1000XM4* is
+`battery.wh-1000xm4`, *Xbox Wireless Controller* `battery.xbox-wireless-controller`). Two devices with the same name
+are told apart by a number: *Controller* and *Controller 2*.
+
+| Reading | |
+|---|---|
+| `battery.<name>` | How much charge it has left, e.g. *72 %*. No reading while it's away |
+| `battery.<name>.name` | Its name, as Bluetooth settings show it |
+| `battery.low` | The name of the one with the least charge, once it's under 20 %, e.g. *Mouse*. No reading while none is |
+
+The widget shows every connected device by name, or just the ones you choose: *Devices* works like the
+[news widget's feeds](#news), and offers every device that has connected since Impious Bonum started. It hides while
+none of them is connected (and shows faded while you edit the layout, so you can still place it). Its *Warning
+colours* start with one rule, under 20 in the critical colour, for each device's bar and charge; change it, or add
+milder ones before it.
+
+The picture's warning shows only while a device is low, as `battery.low` has no reading otherwise:
+
+```json
+{ "type": "batteries", "x": 30, "y": 35, "width": 460, "height": 240, "fontSize": 30, "barHeight": 8, "spacing": 22 },
+{ "type": "text", "x": 530, "y": 115, "width": 250, "height": 60, "fontSize": 40, "text": "{battery.low} is low",
+  "color": "critical", "hideUnavailable": true }
+```
+
+To be told, add an [alert](#alerts) on `battery.<name>` below 20, say.
 
 ## Widgets in depth
 

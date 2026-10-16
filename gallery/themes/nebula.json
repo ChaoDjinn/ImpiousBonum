@@ -1,0 +1,16 @@
+// Violet fading into deep blue, with a pink glow like a cloud where stars are born.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "Light",
+  "foreground": "#F5EFFF",
+  "secondary": "#C2D9C8FF",
+  "accent": "#FF6AD5",
+  "background": "#1C0A3D",
+  "track": "#2C1A58",
+  "warning": "#FFD166",
+  "critical": "#FF5470",
+  "accent2": "#7FA8FF",
+  "backgroundGradient": "#0A1B4F",
+  "glow": 0.45,
+  "glowColor": "#FF5CC8"
+}

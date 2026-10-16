@@ -6,6 +6,7 @@ using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Settings;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
+using ImpiousBonum.Core.Providers;
 
 namespace ImpiousBonum.App;
 
@@ -119,6 +120,12 @@ public partial class App
                 () => _settings.WeatherLocation is { } place ? $"The rain at {place.Name}." : "No location yet, so there's no forecast.",
                 SetWeatherLocation)];
         }
+        if (descriptor.Type == SunMoonWidget.Descriptor.Type)
+        {
+            return [new(_settings.WeatherLocation is null ? "Set location…" : "Change location…",
+                () => _settings.WeatherLocation is { } place ? $"The sun and moon at {place.Name}." : "No location yet, so there's no sunrise or sunset. The moon still shows.",
+                SetWeatherLocation)];
+        }
         if (descriptor.Type == AgendaWidget.Descriptor.Type)
             return [new("Calendars…", () => Count(_settings.Calendars.Count, "calendar", "No calendars yet, so the agenda is empty."), EditCalendars)];
         if (descriptor.Type == NewsWidget.Descriptor.Type)
@@ -150,14 +157,15 @@ public partial class App
 
     /// <summary>
     /// The names a widget setting can pick from that the app keeps: the news feeds, in the News feeds page's order, the
-    /// weather's places, the location first and then the Weather page's more places (none without a location), or the
-    /// status checks, in the Status checks page's order.
+    /// weather's places, the location first and then the Weather page's more places (none without a location), the
+    /// status checks, in the Status checks page's order, or the devices with a battery seen since the app started.
     /// </summary>
     internal IReadOnlyList<string> PickOptions(string source) => source switch
     {
         NewsWidget.FeedNames => [.. _settings.NewsFeeds.Select(f => f.Name)],
         WeatherWidget.PlaceNames => WeatherWidget.ShortNames(WeatherPlaceNames()),
         StatusWidget.CheckNames => [.. _settings.StatusChecks.Select(c => c.Name.Trim())],
+        BatteriesWidget.DeviceNames => _sampler is null ? [] : BatteryProvider.Names(_sampler.Store),
         _ => [],
     };
 

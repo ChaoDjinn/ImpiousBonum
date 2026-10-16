@@ -90,20 +90,20 @@ public sealed class ThemeTests : IDisposable
     }
 
     [Fact]
-    public void Built_in_themes_set_every_colour_and_stay_readable()
+    public void Built_in_and_gallery_themes_set_every_colour_and_stay_readable()
     {
         var library = Library();
         string[] keys = ["fontFamily", "fontWeight", "foreground", "secondary", "accent", "background", "track", "warning", "critical"];
 
-        foreach (var name in ThemeLibrary.BuiltInNames)
+        // The themes shared in the gallery are held to the same rules.
+        foreach (var (name, values) in ThemeLibrary.BuiltInNames.Select(n => (n, library.Load(n))).Concat(GalleryTests.RepositoryThemes()))
         {
             // Every value set, so none quietly falls back to the orange defaults.
-            var values = library.Load(name);
             foreach (var key in keys)
                 Assert.True(ThemeLibrary.GetString(values, key) is not null, $"{name} doesn't set {key}.");
 
             // WCAG contrast against the background: 4.5:1 for text, 3:1 for the rest (large text and graphics).
-            var theme = library.Resolve(new JsonObject { ["base"] = name });
+            var theme = ThemeSettings.Merge(values, null);
             Assert.True(Contrast(theme.Foreground, theme.Background) >= 4.5, $"{name}: foreground is hard to read.");
             foreach (var (key, value) in new[] { ("secondary", theme.Secondary), ("accent", theme.Accent), ("warning", theme.Warning), ("critical", theme.Critical) })
                 Assert.True(Contrast(value, theme.Background) >= 3, $"{name}: {key} is hard to see.");
