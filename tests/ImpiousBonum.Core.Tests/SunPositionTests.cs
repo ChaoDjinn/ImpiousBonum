@@ -26,6 +26,18 @@ public sealed class SunPositionTests
         Assert.InRange(SunPosition.Elevation(51.51, -0.13, new DateTimeOffset(2026, 10, 11, 6, 17, 0, TimeSpan.Zero)), -1.1, -0.6);
     }
 
+    [Theory]
+    // Open-Meteo has sunrise in London at 07:17 BST and sunset at 18:13 BST on 11 October 2026.
+    [InlineData(51.51, -0.13, "2026-10-11T06:10:00Z", true)]
+    [InlineData(51.51, -0.13, "2026-10-11T06:25:00Z", false)]
+    [InlineData(51.51, -0.13, "2026-10-11T17:05:00Z", false)]
+    [InlineData(51.51, -0.13, "2026-10-11T17:20:00Z", true)]
+    // Midnight at midsummer in Tromsø, where the sun doesn't set, and noon at midwinter, when it doesn't rise.
+    [InlineData(69.65, 18.96, "2026-06-21T23:00:00Z", false)]
+    [InlineData(69.65, 18.96, "2026-12-21T11:00:00Z", true)]
+    public void The_sun_is_down_between_sunset_and_sunrise(double latitude, double longitude, string time, bool down) =>
+        Assert.Equal(down, SunPosition.IsDown(latitude, longitude, DateTimeOffset.Parse(time, CultureInfo.InvariantCulture)));
+
     [Fact]
     public void Only_the_moment_matters_not_the_clock_it_was_read_from()
     {

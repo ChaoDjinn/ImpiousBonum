@@ -151,7 +151,7 @@ public partial class App : Application
             _peekUntil = DateTime.UtcNow + Dimming.PeekFor;
             UpdateDimming();
         };
-        _actions = new ActionRunner(SwitchLayoutFromButton);
+        _actions = new ActionRunner(SwitchLayoutFromButton, muted => _sampler?.Store.Set(PrivacyProvider.MicMuted, muted ? 1 : 0));
         _window.ActionRequested += (_, action) => RunAction(action);
         _window.PlacementChanged += (_, rect) => OnWindowMoved(rect);
         _tray = new TrayIcon();

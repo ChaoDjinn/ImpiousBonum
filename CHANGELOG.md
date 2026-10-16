@@ -5,7 +5,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 
 ## Unreleased
 
-Themes for the holidays, eight more layouts in the gallery, and countdowns that come round every year.
+Themes for the holidays, eight more layouts in the gallery, countdowns that come round every year, and a schedule that follows the sun and the calendar.
 
 **Holiday themes**
 - Twelve new built-in themes for the holidays through the year: *Lunar New Year* (gold on lantern red), *Valentine* (rose pinks in a love-letter script), *Shamrock* (emerald and gold for St Patrick's Day), *Easter* (a light theme in lilac and mint), *Eid* (lantern gold on a teal night), *Diwali* (marigold glowing into rangoli pink), *Halloween* (pumpkin orange fading to witch's purple, with a jack-o'-lantern glow), *Day of the Dead* (marigold, magenta and turquoise), *Fireworks* (gold bursting into magenta, for Bonfire Night or New Year's Eve), *Hanukkah* (blue and silver by candlelight), *Christmas* (fairy-light gold and holly red on evergreen) and *Gingerbread* (icing, candy pink and gumdrop green). That's 55 in all.
@@ -28,6 +28,21 @@ Themes for the holidays, eight more layouts in the gallery, and countdowns that 
 - Widgets snap to each other as you drag or resize them: their edges and centres line up with other widgets' edges and centres, and with the canvas's edges and middle, and a thin line shows what they've lined up with. Hold Alt to place freely, as before.
 - Select several widgets at once: Ctrl+click or Shift+click them in the preview or the *Widgets* list, drag a box around them on empty canvas, or press Ctrl+A for all of them. Drag one to move them all, nudge them with the arrow keys, or duplicate or delete them together.
 - *Align* on the toolbar, and in the list's right-click menu, lines up the selected widgets by their left edges, centres, right edges, tops, middles or bottoms, spaces three or more out with equal gaps, or makes them all the same width or height. Each is one undo.
+
+**Microphone and camera**
+- Whether your microphone is muted (`mic.muted`) and its name (`mic.name`), and which apps are using the microphone or the camera (`mic.inuse`, `mic.apps`, `camera.inuse`, `camera.apps`, e.g. *Discord, OBS*). Give a text or icon widget a warning colour on one of them for an *on air* light, or a reminder that you're muted. Windows doesn't ask permission or show its microphone icon for any of it: Impious Bonum never uses the microphone or camera itself.
+- A *Buttons* action, `mic-mute`, mutes and unmutes the microphone. With the new `mic` icon, the button shows `mic-off` while it's muted.
+- `mic` and `mic-off` icons, for buttons and the *Icon and value* widget.
+
+**Countdowns widget**
+- A new *Countdowns* widget, under *Time and calendar*, lists how long it is until the days you're looking forward to, soonest first: birthdays, holidays, a game's release, a trip. Each row shows its label and *69 days*, *Tomorrow* or *Today*, or the days, hours and minutes (*69d 02:13*).
+- A month and day such as `12-25` comes round every year, starting again the day after; a date such as `2026-12-25 18:00` leaves the list once its day is over. The ones that are today are in the accent colour.
+- It can have a heading, and says *Nothing coming up* (or your own words) when there's nothing left to count down to.
+
+**Schedule**
+- Schedule rules can follow the sun: show *Night Watch* from sunset to sunrise, say, or a bright theme from sunrise to sunset. Sunset and sunrise are worked out on your PC for the weather's location, so nothing extra is fetched; without a location these rules never apply, and the dialog and *Pages and schedule* say so.
+- Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.
+- *Holiday themes* on *Pages and schedule* shows the matching new holiday theme on and around each holiday: *Lunar New Year*, *Valentine*, *Shamrock*, *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* for Bonfire Night and New Year's Eve, *Hanukkah*, *Gingerbread* and *Christmas*. Easter is worked out, and Hanukkah, Eid and Lunar New Year come from the Hebrew, Islamic and Chinese calendars that come with the app, so they move with the year; Diwali's dates run to 2035. It's off until you turn it on, and a rule in the schedule or a game that sets a theme still wins.
 
 ## 0.15.0
 
