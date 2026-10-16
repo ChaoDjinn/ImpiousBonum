@@ -3,6 +3,10 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+- Web buttons and alerts that send to this PC itself (`localhost` or `127.0.0.1`, such as a Home Assistant running on it) go straight there, without first asking Windows whether to use a proxy. No proxy could reach them anyway, and with Windows' automatic proxy detection on, as it is by default, asking could hold the request up.
+
 ## 0.16.0
 
 A big one: themes for the holidays and a schedule that puts them on by itself, nine new widgets and readings (countdowns, a photo frame, rain soon, the sun and moon, status checks, energy and cost, the microphone and camera, device batteries and game cover art), a layout for each tablet, snapping and alignment in the editor, themes made from a picture, warnings you can tell apart without colour, and backups of your whole setup.
