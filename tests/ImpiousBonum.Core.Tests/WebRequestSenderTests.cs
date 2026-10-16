@@ -14,6 +14,16 @@ public sealed class WebRequestSenderTests
     public void Only_http_and_https_addresses_are_sent_to(string address, bool usable) =>
         Assert.Equal(usable, WebRequestSender.Address(address) is not null);
 
+    [Theory]
+    [InlineData("http://localhost:8123/api/webhook/pc", true)]
+    [InlineData("http://127.0.0.1:8123/api/webhook/pc", true)]
+    [InlineData("http://[::1]:8123/api/webhook/pc", true)]
+    [InlineData("http://homeassistant.local:8123/api/webhook/pc", false)]
+    [InlineData("http://192.168.1.20/relay/0?turn=toggle", false)]
+    [InlineData("https://ntfy.sh/my-desk", false)]
+    public void Requests_to_this_pc_skip_the_proxy(string address, bool direct) =>
+        Assert.Equal(direct, WebRequestSender.GoesDirect(new Uri(address)));
+
     [Fact]
     public async Task A_server_that_takes_too_long_is_given_up_on()
     {
