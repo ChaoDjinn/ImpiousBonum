@@ -125,6 +125,9 @@ public sealed class WebButtonTests
         Assert.All(logged, line => Assert.DoesNotContain("secret", line));
     }
 
+    // Longer than a press waits for its answer, so a press that gives up gets to say why before the test gives up on it.
+    private static readonly TimeSpan Patience = ActionRunner.WebTimeout * 3;
+
     [Fact]
     public async Task A_real_request_reaches_the_server_with_everything_the_button_sends()
     {
@@ -139,8 +142,12 @@ public sealed class WebButtonTests
         {
             var done = new TaskCompletionSource<bool>();
             Assert.Null(runner.Run(action with { Done = done.SetResult }));
-            var request = await Serve(listener, status);
-            return (await done.Task.WaitAsync(TimeSpan.FromSeconds(10)), request);
+            // The button hears back only once the server has answered, so hearing back first means the request never got here.
+            var connected = listener.AcceptTcpClientAsync();
+            await Task.WhenAny(connected, done.Task).WaitAsync(Patience);
+            Assert.True(connected.IsCompleted, $"The request never reached the server: {string.Join(" / ", logged)}");
+            var request = await Serve(connected, status);
+            return (await done.Task.WaitAsync(Patience), request);
         }
 
         var (worked, request) = await Press("204 No Content");
@@ -155,16 +162,16 @@ public sealed class WebButtonTests
         Assert.Equal("Button (web): 127.0.0.1 answered 401 Unauthorized", Assert.Single(logged));
     }
 
-    /// <summary>Answers one request with <paramref name="status"/> and returns it, headers and body.</summary>
-    private static async Task<string> Serve(TcpListener listener, string status)
+    /// <summary>Answers the request on <paramref name="connection"/> with <paramref name="status"/> and returns it, headers and body.</summary>
+    private static async Task<string> Serve(Task<TcpClient> connection, string status)
     {
-        using var client = await listener.AcceptTcpClientAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        using var client = await connection;
         using var stream = client.GetStream();
         var received = new MemoryStream();
         var buffer = new byte[4096];
         while (true)
         {
-            var read = await stream.ReadAsync(buffer).AsTask().WaitAsync(TimeSpan.FromSeconds(10));
+            var read = await stream.ReadAsync(buffer).AsTask().WaitAsync(Patience);
             received.Write(buffer, 0, read);
             var text = Encoding.UTF8.GetString(received.ToArray());
             var end = text.IndexOf("\r\n\r\n", StringComparison.Ordinal);
