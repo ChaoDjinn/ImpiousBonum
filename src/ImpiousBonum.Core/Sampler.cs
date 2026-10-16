@@ -51,13 +51,16 @@ public sealed class Sampler : IAsyncDisposable
     /// so it adds no loop of its own.
     /// </param>
     /// <param name="statusChecks">Your own servers and services to check; null for none.</param>
+    /// <param name="linkedGame">
+    /// The app in front when it's linked to a layout or theme as a game, for its pictures; null counts only Steam's games.
+    /// </param>
     public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(
         string pingHost = "1.1.1.1", Func<(int ProcessId, string? Name)>? frameRateTarget = null, string? claudeUsagePath = null,
         Func<WeatherRequest?>? weather = null, Func<IReadOnlyList<CustomSource>>? customData = null,
         Func<IReadOnlyList<CalendarLink>>? calendars = null, Func<IReadOnlyList<NewsFeed>>? news = null, Func<string?>? gameInFront = null, Action<SessionRecap>? sessionEnded = null,
         Func<AirQualityRequest?>? airQuality = null, Func<WarningsRequest?>? warnings = null, Func<IReadOnlyList<WeatherRequest>>? weatherPlaces = null,
         Func<EnergySettings>? energy = null, string? energyTotalsPath = null, Func<GridCarbonRequest?>? gridCarbon = null,
-        Func<IReadOnlyList<StatusCheck>>? statusChecks = null) =>
+        Func<IReadOnlyList<StatusCheck>>? statusChecks = null, Func<string?>? linkedGame = null) =>
     [
         new CpuProvider(),
         new MemoryProvider(),
@@ -81,6 +84,7 @@ public sealed class Sampler : IAsyncDisposable
         new StatusProvider(statusChecks ?? (() => [])),
         .. claudeUsagePath is null ? Array.Empty<IMetricProvider>() : [new ClaudeUsageProvider(claudeUsagePath)],
         new EnergyProvider(energy ?? (() => EnergySettings.Default), energyTotalsPath, new GridCarbonProvider(gridCarbon ?? (() => null))),
+        new GameArtProvider(frameRateTarget, linkedGame),
     ];
 
     public void Start()

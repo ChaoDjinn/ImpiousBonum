@@ -63,6 +63,9 @@ public partial class App : Application
 
     /// <summary>The linked game in front, for session recaps; written on the UI thread, read by the sampler's.</summary>
     private volatile string? _trackedGame;
+
+    /// <summary>The app in front when it's linked on the Game layouts page, for its pictures; written on the UI thread, read by the sampler's.</summary>
+    private volatile string? _linkedGame;
     private MetricLogger? _logger;
     private CsvLog? _csvLog;
     private DateTime _prunedOn;
@@ -140,7 +143,7 @@ public partial class App : Application
                 () => _trackedGame, recap => Dispatcher.BeginInvoke(() => OnSessionEnded(recap)),
                 airQuality: () => _settings.AirQualityRequest(), warnings: () => _settings.WeatherWarningsRequest(), weatherPlaces: () => _settings.WeatherPlaceRequests(),
                 energy: () => _settings.EnergySettings(), energyTotalsPath: AppPaths.EnergyFile, gridCarbon: () => _settings.GridCarbonRequest(),
-                statusChecks: () => _settings.StatusChecks));
+                statusChecks: () => _settings.StatusChecks, linkedGame: () => _linkedGame));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -312,6 +315,7 @@ public partial class App : Application
     {
         var store = new MetricStore();
         DemoReadings.Fill(store, DateTime.Now, DemoArtwork.Png());
+        store.SetAttachment(GameArtProvider.Art, DemoArtwork.Game());
         return new Sampler(store, []);
     }
 
@@ -340,6 +344,7 @@ public partial class App : Application
         {
             now = DateTime.Today.AddHours(21).AddMinutes(47);
             DemoReadings.Fill(store, now, DemoArtwork.Png());
+            store.SetAttachment(GameArtProvider.Art, DemoArtwork.Game());
         }
 
         var layout = library.Load(name);

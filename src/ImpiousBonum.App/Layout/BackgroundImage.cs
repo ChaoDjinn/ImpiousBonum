@@ -148,11 +148,33 @@ public static class BackgroundImage
         }
     }
 
+    /// <summary>
+    /// A picture from image bytes, such as a game's art, decoded no bigger than <paramref name="width"/> ×
+    /// <paramref name="height"/> needs; null if they aren't a picture. Not cached: the caller keeps what it shows.
+    /// </summary>
+    public static BitmapSource? Load(byte[] bytes, string fit, double width, double height)
+    {
+        try
+        {
+            using var stream = new MemoryStream(bytes, writable: false);
+            return Decode(stream, fit, width, height);
+        }
+        catch (Exception ex) when (ex is IOException or NotSupportedException or ArgumentException or InvalidOperationException or FileFormatException or ExternalException)
+        {
+            return null;
+        }
+    }
+
     private static BitmapSource Decode(string path, string fit, double width, double height)
+    {
+        using var stream = File.OpenRead(path);
+        return Decode(stream, fit, width, height);
+    }
+
+    private static BitmapSource Decode(Stream stream, string fit, double width, double height)
     {
         // Without caching, WIC pulls pixels through the scaler and crop on demand, so the full-size image is never
         // held in memory; only the result is, at the size the canvas shows.
-        using var stream = File.OpenRead(path);
         BitmapSource source = BitmapDecoder.Create(stream, BitmapCreateOptions.IgnoreColorProfile, BitmapCacheOption.None).Frames[0];
 
         var (scaleX, scaleY) = DecodeScale(fit, source.PixelWidth, source.PixelHeight, width, height);

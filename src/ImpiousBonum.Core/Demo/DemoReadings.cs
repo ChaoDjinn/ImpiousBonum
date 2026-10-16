@@ -335,6 +335,11 @@ public static class DemoReadings
 
         // A photo for a photo frame with no folder, taken on a summer evening.
         store.SetAttachment(Photo, new DemoPhoto("Lakeside at dusk.jpg", new DateTime(2026, 8, 14, 20, 31, 0)));
+
+        // The game in front is from Steam. Its pictures (GameArtProvider.Art) are drawn by the app, like the album cover.
+        new GameArtProvider(() => (0, null)).Initialize(store);
+        store.SetText(GameArtProvider.Name, "Starfall Odyssey");
+        store.SetText(GameArtProvider.AppId, "3141590");
     }
 
     /// <summary>

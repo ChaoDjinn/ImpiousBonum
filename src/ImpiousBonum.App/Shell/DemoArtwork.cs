@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using ImpiousBonum.Core.Games;
 
 namespace ImpiousBonum.App.Shell;
 
@@ -179,5 +181,114 @@ public static class DemoArtwork
             g.LineTo(new Point(foot.X + height * 0.025, foot.Y), false, false);
         }
         dc.DrawGeometry(brush, null, tree);
+    }
+
+    /// <summary>
+    /// The pictures of the demo readings' game, Starfall Odyssey: a ringed planet under a shower of falling stars, as Steam
+    /// would have them. The cover and header have its title on; the hero, like Steam's, doesn't.
+    /// </summary>
+    public static GameArt Game() => new(
+        Jpeg(400, 600, (dc, w, h) => Starfall(dc, w, h, new Point(w * 0.5, h * 0.37), w * 0.27, new Rect(w * 0.06, h * 0.7, w * 0.88, h * 0.22), TextAlignment.Center)),
+        Jpeg(920, 430, (dc, w, h) => Starfall(dc, w, h, new Point(w * 0.76, h * 0.5), h * 0.3, new Rect(w * 0.05, h * 0.3, w * 0.5, h * 0.4), TextAlignment.Left)),
+        Jpeg(1920, 620, (dc, w, h) => Starfall(dc, w, h, new Point(w * 0.7, h * 0.48), h * 0.3, null, TextAlignment.Left)),
+        null);
+
+    private static void Starfall(DrawingContext dc, double w, double h, Point planet, double radius, Rect? title, TextAlignment alignment)
+    {
+        // Deep space, warming to a nebula's glow at the bottom.
+        dc.DrawRectangle(new LinearGradientBrush(
+            [
+                new GradientStop(Color.FromRgb(0x06, 0x0A, 0x24), 0), new GradientStop(Color.FromRgb(0x18, 0x1A, 0x58), 0.45),
+                new GradientStop(Color.FromRgb(0x55, 0x27, 0x80), 0.8), new GradientStop(Color.FromRgb(0xD8, 0x62, 0x7C), 1),
+            ], 90), null, new Rect(0, 0, w, h));
+        dc.DrawEllipse(new RadialGradientBrush(Color.FromArgb(0x60, 0x3F, 0xC8, 0xE0), Color.FromArgb(0, 0x3F, 0xC8, 0xE0)), null,
+            new Point(w * 0.22, h * 0.3), w * 0.45, h * 0.45);
+
+        // The stars, always in the same places.
+        var random = new Random(23);
+        var unit = Math.Min(w, h);
+        var star = new SolidColorBrush(Color.FromArgb(0xC8, 0xFF, 0xFF, 0xFF));
+        for (var i = 0; i < w * h / 2600; i++)
+            dc.DrawEllipse(star, null, new Point(random.NextDouble() * w, random.NextDouble() * h), unit * (0.002 + random.NextDouble() * 0.004), unit * (0.002 + random.NextDouble() * 0.004));
+
+        // The starfall: streaks sloping down to the left, bright at the head and fading along the tail.
+        var slope = new Vector(Math.Cos(Math.PI / 7), -Math.Sin(Math.PI / 7));
+        foreach (var (x, y, length) in new[] { (0.86, 0.12, 0.42), (0.58, 0.2, 0.26), (0.97, 0.42, 0.34), (0.34, 0.08, 0.18), (0.42, 0.56, 0.2), (0.16, 0.38, 0.14) })
+        {
+            var head = new Point(w * x, h * y);
+            var tail = head + slope * Math.Max(w, h) * length;
+            var fade = new LinearGradientBrush(Color.FromArgb(0xF0, 0xFF, 0xF4, 0xD8), Color.FromArgb(0, 0xFF, 0xB8, 0xE8), 0)
+            {
+                MappingMode = BrushMappingMode.Absolute, StartPoint = head, EndPoint = tail,
+            };
+            dc.DrawLine(new Pen(fade, unit * 0.008) { StartLineCap = PenLineCap.Round }, head, tail);
+            dc.DrawEllipse(new RadialGradientBrush(Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF), Color.FromArgb(0, 0xFF, 0xE8, 0xC0)), null, head, unit * 0.022, unit * 0.022);
+        }
+
+        // The planet, lit from the upper left, with its rings: the far side behind it, the near side across it.
+        var tilt = new RotateTransform(-16, planet.X, planet.Y);
+        var ring = new Pen(new LinearGradientBrush(Color.FromRgb(0xFF, 0xD6, 0x8A), Color.FromRgb(0xE8, 0x6A, 0xB0), 0), radius * 0.09);
+        var outer = new Pen(new SolidColorBrush(Color.FromArgb(0x90, 0xFF, 0xE2, 0xB0)), radius * 0.03);
+        void Rings()
+        {
+            dc.DrawEllipse(null, ring, planet, radius * 1.7, radius * 0.42);
+            dc.DrawEllipse(null, outer, planet, radius * 2.0, radius * 0.52);
+        }
+        dc.PushTransform(tilt);
+        Rings();
+        dc.Pop();
+        dc.DrawEllipse(new RadialGradientBrush(
+            [new GradientStop(Color.FromRgb(0x9C, 0xF6, 0xE8), 0), new GradientStop(Color.FromRgb(0x2C, 0x8E, 0xC9), 0.55), new GradientStop(Color.FromRgb(0x1B, 0x1D, 0x5C), 1)])
+        {
+            GradientOrigin = new Point(0.3, 0.28), Center = new Point(0.36, 0.34), RadiusX = 0.75, RadiusY = 0.75,
+        }, null, planet, radius, radius);
+        dc.PushTransform(tilt);
+        dc.PushClip(new RectangleGeometry(new Rect(planet.X - radius * 2.2, planet.Y, radius * 4.4, radius)));
+        Rings();
+        dc.Pop();
+        dc.Pop();
+
+        if (title is not { } area)
+            return;
+
+        // The title: STARFALL large, ODYSSEY spaced out under it, with a shadow so it stands off the stars.
+        var name = Title("STARFALL", area.Height * 0.62, area.Width, alignment, FontWeights.Black,
+            new LinearGradientBrush(Color.FromRgb(0xFF, 0xFF, 0xFF), Color.FromRgb(0xFF, 0xC9, 0x7A), 90));
+        var subtitle = Title(string.Join(' ', "ODYSSEY".ToCharArray()), area.Height * 0.26, area.Width, alignment, FontWeights.SemiBold,
+            new SolidColorBrush(Color.FromRgb(0xB8, 0xF0, 0xFF)));
+        var top = area.Top + (area.Height - name.Height - subtitle.Height) / 2;
+        var shadow = new SolidColorBrush(Color.FromArgb(0xA0, 0x08, 0x06, 0x20));
+        foreach (var (text, y) in new[] { (name, top), (subtitle, top + name.Height) })
+        {
+            dc.DrawGeometry(shadow, null, text.BuildGeometry(new Point(area.Left + unit * 0.006, y + unit * 0.008)));
+            dc.DrawText(text, new Point(area.Left, y));
+        }
+    }
+
+    /// <summary>A line of the title at <paramref name="size"/>, made smaller if it's wider than <paramref name="width"/>.</summary>
+    private static FormattedText Title(string text, double size, double width, TextAlignment alignment, FontWeight weight, Brush brush)
+    {
+        FormattedText At(double em) => new(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+            new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, weight, FontStretches.Normal), em, brush, 1);
+        var natural = At(size).WidthIncludingTrailingWhitespace;
+        var line = At(natural > width ? size * width / natural * 0.98 : size);
+        line.MaxTextWidth = width;
+        line.TextAlignment = alignment;
+        return line;
+    }
+
+    private static byte[] Jpeg(int width, int height, Action<DrawingContext, double, double> draw)
+    {
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+            draw(dc, width, height);
+
+        var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(visual);
+        var encoder = new JpegBitmapEncoder { QualityLevel = 90 };
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var stream = new MemoryStream();
+        encoder.Save(stream);
+        return stream.ToArray();
     }
 }
