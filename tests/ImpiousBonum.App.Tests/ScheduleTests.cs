@@ -235,6 +235,11 @@ public sealed class ScheduleTests : IDisposable
         var loaded = AppSettings.Load();
         Assert.Equal(new[] { Night, DarkMode }, loaded.Schedule);
         Assert.False(loaded.ScheduleEnabled);
+        // Holiday themes are off until turned on.
+        Assert.False(loaded.HolidayThemes);
+        new AppSettings { HolidayThemes = true }.Save();
+        Assert.Contains("\"holidayThemes\": true", File.ReadAllText(AppPaths.SettingsFile));
+        Assert.True(AppSettings.Load().HolidayThemes);
 
         var halloween = new ScheduleRule("18:00", "23:00", null, null, "Grimoire", FromDate: "10-31", ToDate: "10-31");
         new AppSettings { Schedule = [Spooky, AfterDark, halloween] }.Save();

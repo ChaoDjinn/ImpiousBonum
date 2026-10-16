@@ -201,10 +201,12 @@ public partial class App
         UpdateSchedule();
     }
 
-    /// <summary>Checks the schedule (each second, with the game check) and switches when what it wants changes.</summary>
+    /// <summary>Checks the schedule and holiday themes (each second, with the game check) and switches when what they want changes.</summary>
     private void UpdateSchedule()
     {
-        var look = _settings.ScheduleEnabled ? ScheduledLook.From(_settings.Schedule, ScheduleNow.Current(_settings.WeatherLocation)) : null;
+        var now = ScheduleNow.Current(_settings.WeatherLocation);
+        var holiday = _settings.HolidayThemes ? Holidays.On(DateOnly.FromDateTime(now.Time)) : null;
+        var look = ScheduledLook.From(_settings.ScheduleEnabled ? _settings.Schedule : [], now, holiday?.Theme);
         if (look == _scheduled)
             return;
         _scheduled = look;

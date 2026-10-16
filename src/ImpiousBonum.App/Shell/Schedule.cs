@@ -168,19 +168,21 @@ public sealed record ScheduleNow(DateTime Time, bool WindowsDark, bool? SunDown 
 
 /// <summary>
 /// What the schedule wants right now. Rules combine: the layout comes from the first applying rule that names one, the
-/// theme likewise, and the brightness too, so "Night Watch at night" and "30% from 23:00" both take effect.
+/// theme likewise, and the brightness too, so "Night Watch at night" and "30% from 23:00" both take effect. A holiday's
+/// theme comes after them all.
 /// </summary>
 public sealed record ScheduledLook(string? Layout, string? Theme, int? Brightness)
 {
-    /// <summary>The look from every rule that applies now, or null when none does.</summary>
-    public static ScheduledLook? From(IEnumerable<ScheduleRule?> rules, ScheduleNow now)
+    /// <summary>The look from every rule that applies now, or null when none does and it isn't a holiday.</summary>
+    /// <param name="holidayTheme">The theme for today's holiday when Holiday themes is on, used if no rule sets one.</param>
+    public static ScheduledLook? From(IEnumerable<ScheduleRule?> rules, ScheduleNow now, string? holidayTheme = null)
     {
         var active = Active(rules, now);
-        if (active.Count == 0)
+        if (active.Count == 0 && holidayTheme is null)
             return null;
         return new ScheduledLook(
             active.Select(r => r.Layout).FirstOrDefault(l => !string.IsNullOrWhiteSpace(l)),
-            active.Select(r => r.Theme).FirstOrDefault(t => !string.IsNullOrWhiteSpace(t)),
+            active.Select(r => r.Theme).FirstOrDefault(t => !string.IsNullOrWhiteSpace(t)) ?? holidayTheme,
             active.Where(r => r.Dims).Select(r => r.Brightness).FirstOrDefault());
     }
 
