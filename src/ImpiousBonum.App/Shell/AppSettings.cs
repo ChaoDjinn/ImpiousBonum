@@ -7,6 +7,7 @@ using ImpiousBonum.Core.CustomData;
 using ImpiousBonum.Core.Energy;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
+using ImpiousBonum.Core.StatusChecks;
 using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.App.Shell;
@@ -26,6 +27,7 @@ public sealed class AppSettings
     private List<WeatherLocation> _weatherPlaces = [];
     private UsbScreenSettings _usbScreen = UsbScreenSettings.Default;
     private LogSettings _logging = LogSettings.Default;
+    private List<StatusCheck> _statusChecks = [];
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
     public string? MonitorId { get; set; }
@@ -375,6 +377,16 @@ public sealed class AppSettings
     /// <summary>What the grid carbon provider should fetch, or null when it's off.</summary>
     public GridCarbonRequest? GridCarbonRequest() => GridCarbon ? new GridCarbonRequest(CarbonIntensity.Area(GridCarbonArea)) : null;
 
+    /// <summary>
+    /// Your own servers and services to check (the Status checks page). None by default: nothing is checked until one is
+    /// added. Replaced as a whole when edited, never changed in place, since the sampler reads it from another thread.
+    /// </summary>
+    public List<StatusCheck> StatusChecks
+    {
+        get => _statusChecks;
+        set => _statusChecks = value ?? [];
+    }
+
     public static AppSettings Load()
     {
         try
@@ -388,6 +400,7 @@ public sealed class AppSettings
                 settings.CustomData.RemoveAll(source => source is null);
                 settings.Alerts.RemoveAll(rule => rule is null || !rule.IsUsable);
                 settings.WeatherPlaces.RemoveAll(place => place?.Name is null);
+                settings.StatusChecks.RemoveAll(check => check?.Name is null || check.Address is null);
                 return settings;
             }
         }

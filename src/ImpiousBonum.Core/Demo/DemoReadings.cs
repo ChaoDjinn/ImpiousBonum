@@ -313,6 +313,19 @@ public static class DemoReadings
                 null, i == 0 ? "moderate" : null);
         }).ToList();
         GridCarbonProvider.Publish(store, new CarbonForecast(CarbonForecast.GreatBritain, periods), new DateTimeOffset(now), TimeZoneInfo.Local);
+
+        // The servers at home: all up but Plex, which stopped answering twelve minutes ago.
+        new StatusProvider(() => []).Initialize(store);
+        IReadOnlyList<CheckStatus> checks =
+        [
+            new("Router", true, 2, "12 days", null),
+            new("NAS", true, 4, "6 days", null),
+            new("Pi-hole", true, 3, "3 h", null),
+            new("Plex", false, null, "12 min", "No answer"),
+        ];
+        foreach (var check in checks)
+            StatusProvider.Register(store, check.Name);
+        StatusProvider.Publish(store, checks);
     }
 
     /// <summary>

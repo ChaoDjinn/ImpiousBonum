@@ -105,6 +105,17 @@ public partial class App
         AppLog.Info(feeds.Count == 0 ? "News feeds: none" : $"News feeds: {string.Join(", ", feeds.Select(f => f.Name))}");
     }
 
+    /// <summary>The status widget's button in the editor: another check, at the end of the Status checks page's list.</summary>
+    private void AddStatusCheck(Window? owner = null)
+    {
+        if (StatusCheckWindow.Ask(owner, null, [.. _settings.StatusChecks.Select(c => c.Name)]) is not { } check)
+            return;
+        // A new list rather than a change to the old one: the sampler reads it from another thread.
+        _settings.StatusChecks = [.. _settings.StatusChecks, check];
+        _settings.Save();
+        AppLog.Info($"Added status check \"{check.Name}\"");
+    }
+
     /// <summary>The agenda widget's button in the editor.</summary>
     private void EditCalendars(Window? owner = null)
     {
