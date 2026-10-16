@@ -10,7 +10,8 @@ public sealed record TabletFrame(byte[] Image, string ContentType, long Sequence
 
 /// <summary>
 /// The tablet view's web server: a page that shows the dashboard, and the latest <see cref="Frame"/> for it to fetch
-/// once a second. Read-only unless <see cref="Tap"/> is set (an opt-in), answers only local-network addresses that know
+/// once a second. A link can name a saved layout (<c>&amp;layout=</c>) to show that instead, with pictures of its own.
+/// Read-only unless <see cref="Tap"/> is set (an opt-in), answers only local-network addresses that know
 /// the link's secret, and closes every connection after one response. Written on <see cref="TcpListener"/> because HttpListener needs an admin-registered
 /// URL reservation to accept anything but localhost.
 /// </summary>
@@ -21,19 +22,33 @@ public sealed class TabletServer : IDisposable
     /// <summary>How long after a tablet's last frame request it still counts as watching.</summary>
     public static readonly TimeSpan WatchWindow = TimeSpan.FromSeconds(5);
 
+    /// <summary>
+    /// How long a layout a link names is kept after the last tablet showing it stops asking, so one that reloads or
+    /// drops off the Wi-Fi for a moment doesn't start again from nothing. After that it's forgotten and costs nothing.
+    /// </summary>
+    public static readonly TimeSpan LayoutLifetime = TimeSpan.FromMinutes(3);
+
+    /// <summary>How many layouts of their own tablets can show at once, besides the main dashboard: each is a copy of the dashboard in memory.</summary>
+    public const int MaxLayouts = 4;
+
     private const int MaxConnections = 16;
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
 
     private volatile string _token;
     private readonly SemaphoreSlim _connections = new(MaxConnections);
     private readonly CancellationTokenSource _stop = new();
+    private readonly TimeProvider _time;
+    private readonly Feed _main = new();
+    // The layouts links name, by their saved names.
+    private readonly Dictionary<string, Feed> _layouts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Lock _layoutsGate = new();
     private TcpListener? _listener;
-    private long _lastWatchedTicks;
 
-    public TabletServer(int port, string token)
+    public TabletServer(int port, string token, TimeProvider? time = null)
     {
         Port = port;
         _token = token;
+        _time = time ?? TimeProvider.System;
     }
 
     public int Port { get; }
@@ -46,21 +61,58 @@ public sealed class TabletServer : IDisposable
     }
 
     /// <summary>
-    /// Presses whatever is at a point of the picture (0–1 across and down), returning whether there was something to
-    /// press. Null, the default, means tablets can only look: <c>/tap</c> doesn't exist. Called on the thread pool.
+    /// Presses whatever is at a point of a layout's picture (0–1 across and down), returning whether there was something
+    /// to press. The layout is the saved one a link names, or null for the main dashboard. Null, the default, means
+    /// tablets can only look: <c>/tap</c> doesn't exist. Called on the thread pool.
     /// </summary>
-    public Func<double, double, bool>? Tap { get; set; }
+    public Func<string?, double, double, bool>? Tap { get; set; }
 
-    /// <summary>The picture to serve. Set from any thread; read by requests on the thread pool.</summary>
-    public TabletFrame? Frame { get; set; }
+    /// <summary>
+    /// Finds a saved layout by the name a link gives it, returning the name as saved, or null if there's no such layout.
+    /// Null, the default, means links can only show the main dashboard. Called on the thread pool.
+    /// </summary>
+    public Func<string, string?>? FindLayout { get; set; }
 
-    /// <summary>A tablet has asked for a frame within <see cref="WatchWindow"/>, so frames are worth rendering.</summary>
-    public bool IsWatched
+    /// <summary>The main dashboard's picture to serve. Set from any thread; read by requests on the thread pool.</summary>
+    public TabletFrame? Frame
+    {
+        get => _main.Frame;
+        set => _main.Frame = value;
+    }
+
+    /// <summary>A tablet has asked for the main dashboard within <see cref="WatchWindow"/>, so frames are worth rendering.</summary>
+    public bool IsWatched => _main.AskedWithin(WatchWindow, _time);
+
+    /// <summary>The saved layouts tablets have asked for by name, until each is forgotten (see <see cref="LayoutLifetime"/>).</summary>
+    public IReadOnlyList<string> Layouts
     {
         get
         {
-            var last = Interlocked.Read(ref _lastWatchedTicks);
-            return last != 0 && Stopwatch.GetElapsedTime(last) < WatchWindow;
+            lock (_layoutsGate)
+                return [.. _layouts.Keys];
+        }
+    }
+
+    /// <summary>A tablet has asked for the layout <paramref name="name"/> within <see cref="WatchWindow"/>, so frames of it are worth rendering.</summary>
+    public bool IsLayoutWatched(string name) => FeedOf(name)?.AskedWithin(WatchWindow, _time) == true;
+
+    /// <summary>The picture to serve for the layout <paramref name="name"/>. Ignored if it's been forgotten meanwhile.</summary>
+    public void SetFrame(string name, TabletFrame frame)
+    {
+        if (FeedOf(name) is { } feed)
+            feed.Frame = frame;
+    }
+
+    /// <summary>The picture being served for the layout <paramref name="name"/>, if any.</summary>
+    public TabletFrame? FrameOf(string name) => FeedOf(name)?.Frame;
+
+    /// <summary>Forgets the layouts no tablet has asked for within <see cref="LayoutLifetime"/>, and their pictures.</summary>
+    public void ForgetIdleLayouts()
+    {
+        lock (_layoutsGate)
+        {
+            foreach (var name in _layouts.Where(l => !l.Value.AskedWithin(LayoutLifetime, _time)).Select(l => l.Key).ToList())
+                _layouts.Remove(name);
         }
     }
 
@@ -165,14 +217,18 @@ public sealed class TabletServer : IDisposable
         switch (request.Path)
         {
             case "/":
-                return new HttpResponse(200, "text/html; charset=utf-8", Encoding.UTF8.GetBytes(TabletPage.Html))
-                {
-                    ContentSecurityPolicy = TabletPage.ContentSecurityPolicy,
-                };
+                if (!TryLayout(request, out var named))
+                    return HttpResponse.Html(404, TabletPage.NoSuchLayout(request.Query["layout"]), TabletPage.MessagePolicy);
+                // Opening the page counts as watching, so the first picture is ready by the time the page asks for it.
+                if (AskFor(named) is null)
+                    return HttpResponse.Html(503, TabletPage.TooManyLayouts, TabletPage.MessagePolicy);
+                return HttpResponse.Html(200, TabletPage.Html, TabletPage.ContentSecurityPolicy);
 
             case "/frame":
-                Interlocked.Exchange(ref _lastWatchedTicks, Stopwatch.GetTimestamp());
-                if (Frame is not { } frame)
+                // Renamed or deleted while a tablet shows it: the page reloads, and then says so.
+                if (!TryLayout(request, out var layout))
+                    return HttpResponse.Text(410, "Gone");
+                if (AskFor(layout)?.Frame is not { } frame)
                     return HttpResponse.Text(503, "Starting") with { RetryAfterSeconds = 1 };
                 var etag = $"\"{frame.Sequence}\"";
                 if (request.Headers.GetValueOrDefault("If-None-Match") == etag)
@@ -195,13 +251,73 @@ public sealed class TabletServer : IDisposable
         if (request.Headers.GetValueOrDefault("Origin") is { } origin
             && (!Uri.TryCreate(origin, UriKind.Absolute, out var from) || !string.Equals(from.Authority, request.Headers.GetValueOrDefault("Host"), StringComparison.OrdinalIgnoreCase)))
             return HttpResponse.Text(403, "Forbidden");
+        if (!TryLayout(request, out var layout))
+            return HttpResponse.Text(410, "Gone");
         if (!TryFraction(request.Query.GetValueOrDefault("x"), out var x) || !TryFraction(request.Query.GetValueOrDefault("y"), out var y))
             return HttpResponse.Text(400, "Bad Request");
-        return tap(x, y) ? HttpResponse.Text(200, "Pressed") : new HttpResponse(204, null, []);
+        return tap(layout, x, y) ? HttpResponse.Text(200, "Pressed") : new HttpResponse(204, null, []);
+    }
+
+    /// <summary>
+    /// The saved layout a request's link names, as saved, or null for the main dashboard (a link without <c>layout</c>).
+    /// False when it names one there's no layout of.
+    /// </summary>
+    private bool TryLayout(HttpRequestHead request, out string? layout)
+    {
+        layout = null;
+        if (request.Query.GetValueOrDefault("layout") is not { Length: > 0 } name)
+            return true;
+        layout = FindLayout?.Invoke(name);
+        return layout is not null;
+    }
+
+    /// <summary>
+    /// Notes a tablet asking for a layout (null for the main dashboard) and returns what's served for it: made on the
+    /// first ask, or null when tablets are already showing <see cref="MaxLayouts"/> others.
+    /// </summary>
+    private Feed? AskFor(string? layout)
+    {
+        var feed = _main;
+        if (layout is not null)
+        {
+            lock (_layoutsGate)
+            {
+                if (!_layouts.TryGetValue(layout, out feed))
+                {
+                    if (_layouts.Count >= MaxLayouts)
+                        return null;
+                    _layouts[layout] = feed = new Feed();
+                }
+            }
+        }
+        feed.Asked(_time);
+        return feed;
+    }
+
+    private Feed? FeedOf(string layout)
+    {
+        lock (_layoutsGate)
+            return _layouts.GetValueOrDefault(layout);
     }
 
     private static bool TryFraction(string? text, out double value) =>
         double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value) && value is >= 0 and <= 1;
+
+    /// <summary>What's served for one layout: its latest picture, and when a tablet last asked for it.</summary>
+    private sealed class Feed
+    {
+        private long _lastAsked;
+
+        public TabletFrame? Frame { get; set; }
+
+        public void Asked(TimeProvider time) => Interlocked.Exchange(ref _lastAsked, time.GetTimestamp());
+
+        public bool AskedWithin(TimeSpan window, TimeProvider time)
+        {
+            var last = Interlocked.Read(ref _lastAsked);
+            return last != 0 && time.GetElapsedTime(last) < window;
+        }
+    }
 }
 
 public sealed record HttpResponse(int Status, string? ContentType, byte[] Body)
@@ -213,6 +329,9 @@ public sealed record HttpResponse(int Status, string? ContentType, byte[] Body)
     public int? RetryAfterSeconds { get; init; }
 
     public static HttpResponse Text(int status, string text) => new(status, "text/plain; charset=utf-8", Encoding.UTF8.GetBytes(text));
+
+    public static HttpResponse Html(int status, string html, string contentSecurityPolicy) =>
+        new(status, "text/html; charset=utf-8", Encoding.UTF8.GetBytes(html)) { ContentSecurityPolicy = contentSecurityPolicy };
 
     public string Head()
     {
@@ -253,6 +372,7 @@ public sealed record HttpResponse(int Status, string? ContentType, byte[] Body)
         403 => "Forbidden",
         404 => "Not Found",
         405 => "Method Not Allowed",
+        410 => "Gone",
         503 => "Service Unavailable",
         _ => "",
     };

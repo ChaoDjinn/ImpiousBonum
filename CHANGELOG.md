@@ -24,6 +24,12 @@ Themes for the holidays, eight more layouts in the gallery, and countdowns that 
 **Countdowns every year**
 - A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
+**A layout of its own on each tablet**
+- A tablet can show a different saved layout from the main dashboard: pick it under *Layout for the link* on the *Tablet and USB screen* page, then open that link or scan its QR code on the tablet. It keeps to that layout, in its own theme, whatever game layouts and the schedule do to the main dashboard.
+- With *Let tablets press buttons* on, taps press the buttons on the layout that tablet is showing.
+- A layout is only drawn while a tablet is showing it, and let go a few minutes after the last one closes, so it costs nothing the rest of the time.
+- Renaming or deleting a layout stops links to it working: the tablet says there's no layout of that name, and the page gives you a new link.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

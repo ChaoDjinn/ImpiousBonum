@@ -71,9 +71,10 @@ internal interface ISettingsHost
 
     void SetTabletButtons(bool on);
 
-    void ShowTabletLink();
+    /// <summary>The link and its QR code, for the main dashboard or the saved layout <paramref name="layout"/>.</summary>
+    void ShowTabletLink(string? layout);
 
-    void CopyTabletLink();
+    void CopyTabletLink(string? layout);
 
     void NewTabletLink();
 
