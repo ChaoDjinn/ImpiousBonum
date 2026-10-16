@@ -7,7 +7,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
-- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
+- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
 - [Command line](#command-line)
@@ -29,7 +29,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [energy use](#energy-use) (`energyPrice`, `energyCurrency`, `energyOtherWatts`), [grid carbon intensity](#grid-carbon-intensity) (`gridCarbon`, `gridCarbonArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), [status checks](#status-checks) (`statusChecks`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`, `holidayThemes`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`, `tabletReadings`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [energy use](#energy-use) (`energyPrice`, `energyCurrency`, `energyOtherWatts`), [grid carbon intensity](#grid-carbon-intensity) (`gridCarbon`, `gridCarbonArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), [status checks](#status-checks) (`statusChecks`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), `scheduleEnabled`, `holidayThemes`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`, `tabletReadings`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `energy.json`: the energy your PC has used today and this month so far, so a restart carries on from it (see [Energy use](#energy-use)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
@@ -138,9 +138,9 @@ To put a picture behind the widgets, add `"backgroundImage": "C:\\Pictures\\wall
 
 ### Sharing layouts
 
-*Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file, background image and image widgets' pictures inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor's *Layouts ▾*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual.
+*Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file, background image and image widgets' pictures inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor's *Layouts ▾*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual. A [photo frame](#photo-frame)'s folder isn't exported: it stays on your PC, and whoever imports the layout chooses their own.
 
-A layout from someone else could have a harmless-looking button that runs any program, so if it has buttons that open something, the import lists what they'd open and asks whether to keep them or clear them.
+A layout from someone else could have a harmless-looking button that runs any program, or one that sends a web request to something on your network, so if it has buttons that open something or [send web requests](#web-request-buttons), the import lists what they'd open and where they'd send, and asks whether to keep them or clear them. Exporting leaves out web buttons' headers, which are usually a password or token.
 
 An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder. Imports only take the layout and the font (`.ttf`, `.otf`) and images it names, reject a file with `..` or absolute paths in it, and cap sizes (1 MB for the layout, 50 MB per file).
 
@@ -152,9 +152,9 @@ choose *A few big things* (up to 6 widgets) or *Lots at once*: a TV across the r
 things, while a monitor at arm's length can show lots. Pick a layout to see it drawn live with your own readings.
 *Show on* puts it on the screen you picked (*Add a dashboard on* gives a screen without one a dashboard), then *Edit
 it* opens it in the editor; with *Any screen*, *Add to my layouts* only adds it. It's added the same way as importing
-a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open programs.
-Pictures and fonts inside a shared layout show once it's added. In the editor, *Layouts ▾* → *Get one from the
-gallery…* opens it for the screen you're editing.
+a file: you're asked before a layout with the same name is replaced, and before keeping buttons that open programs
+or send web requests. Pictures and fonts inside a shared layout show once it's added. In the editor, *Layouts ▾* →
+*Get one from the gallery…* opens it for the screen you're editing.
 
 So far it has twenty-one, made along with the app, for screens from a 3.5" USB screen (480 × 320), a 7" panel
 (1024 × 600) and a 1280 × 800 tablet through 1920 × 480 and 1920 × 720 bars to 1080p, 1440p and 4K monitors, a TV
@@ -631,8 +631,42 @@ The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a
 | `open` | Opens the *target*: a program (`calc.exe`), a file or folder (`C:\Games`), a web address, or a Windows link such as `ms-settings:sound`. *Arguments* are passed to a program |
 | `keys` | Sends a shortcut such as `Ctrl+Shift+M`, `Win+D` or `F13` to the app you're using. Names are like `A`, `5`, `F1`–`F24`, `Enter`, `Space`, `Esc`, `Tab`, `Home`, `PgUp`, `Up`, `Delete`, `VolumeUp`, `MediaPlayPause` |
 | `layout` | Switches to the layout named in *target* |
+| `web` | Sends a web request to the *target* address, for Home Assistant, smart lights, Node-RED or ntfy (see [Web request buttons](#web-request-buttons)) |
 
-Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything in the tablet view, which is read-only, or while you edit the layout. If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
+Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything while you edit the layout, or in the tablet view unless you [let tablets press them](#tablet-view). If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
+
+#### Web request buttons
+
+A `web` button sends a web request when you tap it: to run a Home Assistant script or scene, switch a smart light or plug that has a web address of its own, start a Node-RED flow, or send a notification to your phone with [ntfy](https://ntfy.sh). As well as its *target*, the address (`http://` or `https://`), each one has:
+
+- **Method:** `POST` (the default), `GET` or `PUT`.
+- **Body:** what a `POST` or `PUT` sends, such as JSON or a message. *Content type* says what it is; left empty, it's `application/json` for a body in `{ }` or `[ ]` and `text/plain` for anything else.
+- **Header:** one header as `Name: value`, usually `Authorization: Bearer` and a token.
+
+The request goes in the background, so the dashboard carries on, and gives up after 10 seconds. The button stays pressed until the answer comes, then lights up for a moment: in the theme's accent colour if it worked, or its critical colour if it didn't, when `dashboard.log` says why (*homeassistant.local answered 401 Unauthorized*, say) but never what's in the header. Taps while it waits don't count, so a slow server doesn't get a queue of requests. With *Let tablets press buttons* on (see [Tablet view](#tablet-view)), a tablet can press it too, and sees it light up.
+
+| To | Set up as |
+|---|---|
+| Run a Home Assistant automation | Give the automation a [webhook trigger](https://www.home-assistant.io/docs/automation/trigger/#webhook-trigger), then target `http://homeassistant.local:8123/api/webhook/<webhook id>` with `POST`. It needs no token: the webhook id is the secret, so make it hard to guess |
+| Run a Home Assistant script or scene | Target `http://homeassistant.local:8123/api/services/script/turn_on`, body `{"entity_id": "script.movie_night"}`, header `Authorization: Bearer <long-lived token>`. Make the token on your Home Assistant profile's *Security* tab, under *Long-lived access tokens*. For a scene it's `scene/turn_on` and `scene.evening`; to switch a light, `light/toggle` and `light.desk_lamp` |
+| A notification on your phone | Target `https://ntfy.sh/<your topic>`, body `Dinner's ready`, and subscribe to the topic in the ntfy app, which shows the body as the notification. A header such as `Title: From the dashboard` gives it a title |
+
+In the layout file, those three look like this:
+
+```json
+{ "type": "buttons", "x": 30, "y": 30, "width": 600, "height": 140,
+  "buttons": [
+    { "label": "Lights off", "icon": "power", "action": "web",
+      "target": "http://homeassistant.local:8123/api/webhook/lights-off-7f3a9c" },
+    { "label": "Movie night", "icon": "moon", "action": "web",
+      "target": "http://homeassistant.local:8123/api/services/script/turn_on",
+      "body": "{\"entity_id\": \"script.movie_night\"}", "header": "Authorization: Bearer <long-lived token>" },
+    { "label": "Dinner", "icon": "chat", "action": "web", "target": "https://ntfy.sh/<your topic>",
+      "body": "Dinner's ready", "header": "Title: From the dashboard" }
+  ] }
+```
+
+The header is kept in the layout as plain text. *Export…* leaves headers out, since they're usually a password or token, and says so: whoever imports the layout adds their own. The address and body go with it, so leave secrets out of those in a layout you share. A layout from someone else could send requests to things on your network, so importing one with web buttons lists where they send and asks first (see [Sharing layouts](#sharing-layouts)).
 
 ### Audio visualiser
 
@@ -655,6 +689,33 @@ The *Shape* widget is a rounded panel, a circle or a divider line, for grouping 
 `track` and `background` work as colour names everywhere, like `foreground`, `secondary`, `accent`, `warning` and `critical`.
 
 Exported layouts carry their image widgets' pictures, like the background image and font.
+
+### Photo frame
+
+The *Photo frame* widget (`photos`) is a slideshow of the pictures in a folder, like a digital photo frame on the
+dashboard. In the editor, choose the folder with *Browse…* beside *Folder*. It shows the PNG, JPG, GIF, BMP and TIFF
+files there, and in the folders inside it unless you turn off *Include subfolders*. Each photo shows for *Seconds per
+photo* (30 to start with) and then fades into the next; tap the frame to move on straight away. *Order* is *shuffle*
+(every photo once, in a random order, before any comes round again), *name* (A to Z, with IMG2 before IMG10, as
+Explorer sorts them) or *date* (oldest first, by when the files last changed).
+
+<p align="center"><img src="images/widgets/photos.png" width="600" alt="A photo of a lake at dusk below hills, with rounded corners and 14 August 2026 along the bottom, beside the time and the date"></p>
+
+*Fit* is *fill*, which covers the frame and crops the edges, or *fit*, which shows the whole photo, with the rounded
+corners and caption on the photo itself. *Caption* puts the photo's file name, or the date it was taken, along the
+bottom over a shade of the theme's background, so it can be read over any photo. The date is the one the camera
+recorded, or else the file's, in the *Date format* you choose. Photos taken with the camera on its side show the right
+way up.
+
+It stays light however big your photos are: only the photo on show and the next one are read, each at about the size
+it's shown. Files that turn out not to be pictures, or can't be read, are passed over. The folder is looked at again
+every five minutes, so photos you add turn up and ones you delete stop showing. A folder with more than 10,000 pictures
+in it shows the first 10,000 found. While the dashboard is hidden (over a fullscreen game, say, or on a page that isn't
+showing) the slideshow waits and reads nothing. The tablet view moves on by itself, without the fade.
+
+The folder is a place on your PC, so it stays there: exported layouts and layouts in the gallery leave it out, and
+whoever adds the layout chooses a folder of their own. Until it has a folder, the frame is empty on the dashboard and
+says *Choose a folder* in the editor.
 
 ## Automatic behaviour
 

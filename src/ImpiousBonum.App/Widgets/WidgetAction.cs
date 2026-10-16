@@ -8,7 +8,7 @@ namespace ImpiousBonum.App.Widgets;
 /// view and the editor's preview don't listen, so nothing happens there.
 /// </summary>
 /// <param name="Kind">One of the constants below.</param>
-/// <param name="Target">For <see cref="Open"/>: a program, file, folder or web address. For <see cref="Keys"/>: a shortcut such as <c>Ctrl+Shift+M</c>. For <see cref="Layout"/>: a layout's name.</param>
+/// <param name="Target">For <see cref="Open"/>: a program, file, folder or web address. For <see cref="Keys"/>: a shortcut such as <c>Ctrl+Shift+M</c>. For <see cref="Layout"/>: a layout's name. For <see cref="Web"/>: the http or https address.</param>
 /// <param name="Arguments">For <see cref="Open"/>: the program's command-line arguments.</param>
 public sealed record WidgetAction(string Kind, string Target = "", string Arguments = "")
 {
@@ -30,10 +30,31 @@ public sealed record WidgetAction(string Kind, string Target = "", string Argume
     public const string Notify = "notify";
 
     /// <summary>Every kind, in the order the editor offers them.</summary>
-    public static readonly IReadOnlyList<string> Kinds = [PlayPause, Next, Previous, Stop, VolumeUp, VolumeDown, Mute, MicMute, Open, Keys, Layout];
+    public static readonly IReadOnlyList<string> Kinds = [PlayPause, Next, Previous, Stop, VolumeUp, VolumeDown, Mute, MicMute, Open, Keys, Layout, Web];
 
     /// <summary>The media and volume kinds, which act like the keyboard's media keys.</summary>
     public static readonly IReadOnlyList<string> MediaKinds = [PlayPause, Next, Previous, Stop, VolumeUp, VolumeDown, Mute];
+
+    /// <summary>Sends a web request to <see cref="Target"/>, for Home Assistant, smart lights, Node-RED or ntfy.</summary>
+    public const string Web = "web";
+
+    /// <summary>The methods a <see cref="Web"/> button can send with.</summary>
+    public static readonly IReadOnlyList<string> WebMethods = ["GET", "POST", "PUT"];
+
+    /// <summary>For <see cref="Web"/>: one of <see cref="WebMethods"/>; empty is POST.</summary>
+    public string Method { get; init; } = "";
+
+    /// <summary>For <see cref="Web"/>: what a POST or PUT sends, e.g. JSON, and its content type (empty works it out).</summary>
+    public string Body { get; init; } = "";
+
+    /// <inheritdoc cref="Body"/>
+    public string ContentType { get; init; } = "";
+
+    /// <summary>For <see cref="Web"/>: one header, such as <c>Authorization: Bearer …</c>. It can hold a password or token, so nothing writes it to the log.</summary>
+    public string Header { get; init; } = "";
+
+    /// <summary>For <see cref="Web"/>: told on the UI thread whether the request worked, so the button can show it.</summary>
+    public Action<bool>? Done { get; init; }
 }
 
 /// <summary>Carries a <see cref="WidgetAction"/> up the visual tree.</summary>

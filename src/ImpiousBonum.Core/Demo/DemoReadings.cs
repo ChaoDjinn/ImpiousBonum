@@ -28,6 +28,12 @@ public static class DemoReadings
     /// </summary>
     public const string Spectrum = "demo.spectrum";
 
+    /// <summary>
+    /// What a photo frame with no folder shows in a snapshot (a <see cref="DemoPhoto"/>), rather than an empty box. The
+    /// picture itself is drawn by the app.
+    /// </summary>
+    public const string Photo = "demo.photo";
+
     /// <summary>Fills <paramref name="store"/> with the demo readings, as they'd be at <paramref name="now"/>.</summary>
     /// <param name="artwork">The album art for what's playing (PNG or JPEG bytes), if any.</param>
     public static void Fill(MetricStore store, DateTime now, byte[]? artwork = null)
@@ -326,6 +332,9 @@ public static class DemoReadings
         foreach (var check in checks)
             StatusProvider.Register(store, check.Name);
         StatusProvider.Publish(store, checks);
+
+        // A photo for a photo frame with no folder, taken on a summer evening.
+        store.SetAttachment(Photo, new DemoPhoto("Lakeside at dusk.jpg", new DateTime(2026, 8, 14, 20, 31, 0)));
     }
 
     /// <summary>
