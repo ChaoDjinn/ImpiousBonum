@@ -87,6 +87,8 @@ internal interface ISettingsHost
 
     void SetScheduleEnabled(bool on);
 
+    void SetHolidayThemes(bool on);
+
     void AddScheduleRule(Window owner);
 
     void RemoveScheduleRule(ScheduleRule rule);
