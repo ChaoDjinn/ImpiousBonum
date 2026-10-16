@@ -50,6 +50,9 @@ public sealed class GaugeElement : FrameworkElement
     /// <summary>The size the label was last drawn at: <see cref="LabelSize"/>, or smaller to fit; for tests.</summary>
     internal double ShownLabelSize { get; private set; }
 
+    // A warning symbol's size and place for the value at full size, measured once when first needed.
+    private (double Size, double Middle, double LineHeight)? _symbol;
+
     /// <summary>0–1, how much of the dial is filled.</summary>
     public double Fraction { get; private set; }
 
@@ -59,16 +62,20 @@ public sealed class GaugeElement : FrameworkElement
 
     public Brush ValueBrush { get; private set; } = Brushes.White;
 
+    /// <summary>The <see cref="WarningSymbol"/> after the value, in the dial's colour, or none.</summary>
+    public ThresholdLevel Symbol { get; private set; }
+
     /// <summary>Updates what the dial shows, redrawing only when something changed.</summary>
-    public void Update(double fraction, string value, Brush fill, Brush valueBrush)
+    public void Update(double fraction, string value, Brush fill, Brush valueBrush, ThresholdLevel symbol = ThresholdLevel.None)
     {
         fraction = double.IsNaN(fraction) ? 0 : Math.Clamp(fraction, 0, 1);
-        if (fraction == Fraction && value == Value && ReferenceEquals(fill, Fill) && ReferenceEquals(valueBrush, ValueBrush))
+        if (fraction == Fraction && value == Value && ReferenceEquals(fill, Fill) && ReferenceEquals(valueBrush, ValueBrush) && symbol == Symbol)
             return;
         Fraction = fraction;
         Value = value;
         Fill = fill;
         ValueBrush = valueBrush;
+        Symbol = symbol;
         InvalidateVisual();
     }
 
@@ -127,18 +134,32 @@ public sealed class GaugeElement : FrameworkElement
         if (Fraction > 0)
             DrawArc(dc, CreatePen(Fill, t, true), centre, radius, start, sweep * Fraction);
 
-        // The value, shrunk if it doesn't fit inside the dial.
+        // The value, shrunk if it doesn't fit inside the dial, with its warning symbol (if any) after it.
         var value = Text(Value, ValueSize, ValueBrush, dpi);
         ShownValueSize = ValueSize;
+        var symbol = Symbol == ThresholdLevel.None ? default : (_symbol ??= WarningSymbol.Measure(Typeface, ValueSize));
+        var symbolWidth = Symbol == ThresholdLevel.None ? 0 : WarningSymbol.WidthFor(symbol.Size) + ValueSize * WarningSymbol.Gap;
         var (roomWidth, roomHeight) = ValueRoom(Shape, radius - t / 2);
         if (ShrinkText)
         {
-            var scale = Math.Min(ShrinkToFit.ScaleFor(value.Width, roomWidth), ShrinkToFit.ScaleFor(value.Extent, roomHeight));
+            var scale = Math.Min(ShrinkToFit.ScaleFor(value.Width + symbolWidth, roomWidth), ShrinkToFit.ScaleFor(value.Extent, roomHeight));
             if (scale < 1)
             {
                 ShownValueSize = Math.Max(6, ValueSize * scale);
                 value = Text(Value, ShownValueSize, ValueBrush, dpi);
             }
+        }
+        var shown = ShownValueSize / ValueSize;
+
+        // The value and its symbol are centred together, the symbol level with the value's capitals.
+        void DrawValue(double top)
+        {
+            var left = cx - (value.Width + symbolWidth * shown) / 2;
+            dc.DrawText(value, new Point(left, top));
+            if (Symbol == ThresholdLevel.None)
+                return;
+            var x = left + value.Width + ValueSize * WarningSymbol.Gap * shown + WarningSymbol.WidthFor(symbol.Size * shown) / 2;
+            WarningSymbol.Draw(dc, Symbol, Fill, new Point(x, top + symbol.Middle * shown), symbol.Size * shown);
         }
 
         switch (Shape)
@@ -151,19 +172,19 @@ public sealed class GaugeElement : FrameworkElement
                 labelHeight = label?.Height ?? 0;
                 var total = value.Height + labelHeight * 0.9;
                 var top = cy - total / 2;
-                dc.DrawText(value, new Point(cx - value.Width / 2, top));
+                DrawValue(top);
                 if (label is not null)
                     dc.DrawText(label, new Point(cx - label.Width / 2, top + value.Height * 0.92));
                 break;
             }
             case GaugeShape.Half:
                 // Sit the value's baseline a little above the flat edge.
-                dc.DrawText(value, new Point(cx - value.Width / 2, cy - value.Baseline - t * 0.15));
+                DrawValue(cy - value.Baseline - t * 0.15);
                 if (label is not null)
                     dc.DrawText(label, new Point(cx - label.Width / 2, cy + t * 0.3));
                 break;
             default:
-                dc.DrawText(value, new Point(cx - value.Width / 2, cy - value.Height / 2));
+                DrawValue(cy - value.Height / 2);
                 if (label is not null)
                 {
                     // In the gap at the bottom, but never over the value.

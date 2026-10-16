@@ -92,6 +92,7 @@ App.Screens.cs           window placement, more dashboards, dimming, the tablet 
 App.Sources.cs           the sensor service, weather, calendars, news, Claude Code and custom data
 App.Automation.cs        alerts, logging, session recaps and hotkeys
 App.Updates.cs           update checks and restarting into an update
+App.Backup.cs            restoring a backup, which starts the app again
 Widgets/                 one class per widget type, each with a WidgetDescriptor listing its settings
 Layout/                  layout and theme files, the built-in themes, backgrounds and the gallery
 Editor/                  the layout editor: session (undo, selection), preview, generated property panel

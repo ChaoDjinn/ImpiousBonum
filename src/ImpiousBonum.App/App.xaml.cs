@@ -169,7 +169,13 @@ public partial class App : Application
             _tray.ShowError("Settings couldn't be read", "Impious Bonum started with its default settings. Click for dashboard.log, which has the details.", TrayIcon.ShowLog);
         }
 
-        _tablet = new TabletView { AllowTaps = _settings.TabletButtons };
+        _tablet = new TabletView
+        {
+            AllowTaps = _settings.TabletButtons,
+            FindLayout = name => _layouts?.Library.Find(name),
+            LoadLayout = LoadTabletLayout,
+            Readings = _settings.TabletReadings ? _sampler.Store : null,
+        };
         _tablet.ActionRequested += (_, action) => RunAction(action);
         _usb = new UsbScreenView();
         _layouts = new LayoutStore(_settings);
@@ -306,6 +312,8 @@ public partial class App : Application
         _openWait?.Unregister(null);
         _openSignal?.Dispose();
         _singleInstance?.ReleaseMutex();
+        // Closed, not just released, so a copy started again after a restore isn't taken for a second one.
+        _singleInstance?.Dispose();
         _singleInstance = null;
         return true;
     }

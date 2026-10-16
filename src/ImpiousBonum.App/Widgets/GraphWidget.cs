@@ -31,6 +31,7 @@ public sealed class GraphWidget : Widget
     private readonly string _metric;
     private readonly ValueTemplate _template;
     private readonly TextBlock _value;
+    private readonly WarningSymbol? _symbol;
     private readonly GraphElement _graph;
     private readonly double? _configuredMax;
     private readonly ThresholdColors _thresholds;
@@ -53,7 +54,8 @@ public sealed class GraphWidget : Widget
         label.Text = settings.String("label");
         _value = CreateText(fontSize * 0.9, theme.Secondary, HorizontalAlignment.Right);
         _value.VerticalAlignment = VerticalAlignment.Center;
-        Children.Add(LabelAndValue(label, _value));
+        _symbol = CreateSymbol(_value);
+        Children.Add(LabelAndValue(label, _value, _symbol));
 
         _graph = new GraphElement
         {
@@ -75,8 +77,9 @@ public sealed class GraphWidget : Widget
     public override void Refresh(MetricStore store, DateTime now)
     {
         _value.Text = _template.Render(store);
-        var color = _thresholds.Pick(store, _metric, Theme.Accent);
+        var color = _thresholds.Pick(store, _metric, Theme.Accent, out var level);
         _value.Foreground = ReferenceEquals(color, Theme.Accent) ? Theme.Secondary : color;
+        _symbol?.Show(level, color);
         _graph.Stroke = color;
         _graph.Fill = AreaFill(color);
         if (_configuredMax is null && store.TryGet(_metric, out var sample))

@@ -134,18 +134,72 @@ public abstract class Widget : Grid
     /// A label on the left and a value on the right of one line. With shrink to fit they sit side by side, with a little
     /// gap, and get smaller together rather than run into each other or off the edge.
     /// </summary>
-    protected FrameworkElement LabelAndValue(TextBlock label, TextBlock value)
+    /// <param name="symbol">The value's warning symbol (see <see cref="CreateSymbol"/>), if it has one, which goes between them.</param>
+    protected FrameworkElement LabelAndValue(TextBlock label, TextBlock value, WarningSymbol? symbol = null)
     {
         var line = new Grid();
         line.Children.Add(label);
-        line.Children.Add(value);
         if (!Settings.Bool(Setting.ShrinkToFitKey))
+        {
+            line.Children.Add(Beside(value, symbol));
             return line;
+        }
         line.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         line.ColumnDefinitions.Add(new ColumnDefinition());
         SetColumn(value, 1);
         value.Margin = new Thickness(value.FontSize * 0.25, 0, 0, 0);
+        line.Children.Add(Beside(value, symbol));
         return Fit(line, FitDirection.Width);
+    }
+
+    /// <summary>
+    /// With the theme's warning symbols on, the <see cref="WarningSymbol"/> for <paramref name="value"/>, which
+    /// <see cref="Beside"/> puts next to it; null with them off, so the widget is built exactly as it was.
+    /// </summary>
+    protected WarningSymbol? CreateSymbol(TextBlock value) =>
+        Theme.WarningSymbols ? new WarningSymbol(new Typeface(value.FontFamily, value.FontStyle, value.FontWeight, value.FontStretch), value.FontSize) : null;
+
+    /// <summary>
+    /// <paramref name="value"/> with <paramref name="symbol"/> beside it, on the side away from the way it's aligned so the
+    /// text stays where it is when the symbol shows. The pair takes over the value's margin, minimum width, alignment and
+    /// grid cell. With no symbol, the value is returned as it is.
+    /// </summary>
+    protected static FrameworkElement Beside(TextBlock value, WarningSymbol? symbol)
+    {
+        if (symbol is null)
+            return value;
+        var pair = new DockPanel
+        {
+            Margin = value.Margin,
+            MinWidth = value.MinWidth,
+            HorizontalAlignment = value.HorizontalAlignment,
+            VerticalAlignment = value.VerticalAlignment,
+        };
+        SetColumn(pair, GetColumn(value));
+        SetColumnSpan(pair, GetColumnSpan(value));
+        SetRow(pair, GetRow(value));
+        SetRowSpan(pair, GetRowSpan(value));
+        value.Margin = default;
+        value.MinWidth = 0;
+        var gap = value.FontSize * WarningSymbol.Gap;
+        if (value.HorizontalAlignment == HorizontalAlignment.Right)
+        {
+            // Just before the value, however much room the pair has.
+            DockPanel.SetDock(value, Dock.Right);
+            symbol.HorizontalAlignment = HorizontalAlignment.Right;
+            symbol.Margin = new Thickness(0, 0, gap, 0);
+            pair.Children.Add(value);
+            pair.Children.Add(symbol);
+        }
+        else
+        {
+            // Just after it, with the value filling what's left so text that ends with … still does.
+            DockPanel.SetDock(symbol, Dock.Right);
+            symbol.Margin = new Thickness(gap, 0, 0, 0);
+            pair.Children.Add(symbol);
+            pair.Children.Add(value);
+        }
+        return pair;
     }
 
     /// <summary>

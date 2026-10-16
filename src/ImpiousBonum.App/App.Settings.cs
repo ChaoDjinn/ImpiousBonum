@@ -85,7 +85,7 @@ public partial class App : ISettingsHost
                 return;
             if (descriptor.Type == BarsWidget.ClaudeDescriptor.Type)
                 OfferClaudeCodeConnection(owner);
-            else if (descriptor.Type == WeatherWidget.Descriptor.Type && _settings.WeatherLocation is null)
+            else if ((descriptor.Type == WeatherWidget.Descriptor.Type || descriptor.Type == RainWidget.Descriptor.Type) && _settings.WeatherLocation is null)
                 SetWeatherLocation(owner);
         };
         EditedWindow()?.BeginEdit(session);
@@ -159,9 +159,18 @@ public partial class App : ISettingsHost
         AppLog.Info($"Tablets {(on ? "can" : "can't")} press buttons");
     }
 
-    void ISettingsHost.ShowTabletLink() => ShowTabletLink();
+    void ISettingsHost.SetTabletReadings(bool on)
+    {
+        _settings.TabletReadings = on;
+        _settings.Save();
+        if (_tablet is not null)
+            _tablet.Readings = on ? _sampler?.Store : null;
+        AppLog.Info($"Readings {(on ? "shared" : "not shared")} with other apps");
+    }
 
-    void ISettingsHost.CopyTabletLink() => CopyTabletLink();
+    void ISettingsHost.ShowTabletLink(string? layout) => ShowTabletLink(layout);
+
+    void ISettingsHost.CopyTabletLink(string? layout) => CopyTabletLink(layout);
 
     void ISettingsHost.NewTabletLink() => NewTabletLink();
 
@@ -417,4 +426,6 @@ public partial class App : ISettingsHost
         _settings.Save();
         AppLog.Info($"Hardware rendering {(on ? "on" : "off")} from the next start");
     }
+
+    Task ISettingsHost.RestoreBackupAsync(string path) => RestoreBackupAsync(path);
 }

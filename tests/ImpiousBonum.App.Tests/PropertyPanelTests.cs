@@ -60,6 +60,28 @@ public sealed class PropertyPanelTests
     }
 
     [Fact]
+    public void A_theme_box_to_tick_shows_the_named_themes_value_until_the_layout_sets_its_own()
+    {
+        Sta.Run(() =>
+        {
+            var session = new LayoutSession(new LayoutDocument { Theme = new JsonObject { ["base"] = "Clear Sight" } });
+            var (panel, window) = Show(session);
+            session.Select(-1);
+            Pump();
+            var box = Descendants<CheckBox>(SettingRow(panel, "Warning symbols")).Single();
+            Assert.True(box.IsChecked);
+            Assert.False(session.IsDirty);
+
+            Toggle(box);
+            window.Close();
+
+            Assert.False(box.IsChecked);
+            Assert.False(session.ResolvedTheme.WarningSymbols);
+            Assert.False((bool)session.Document.Theme["warningSymbols"]!);
+        });
+    }
+
+    [Fact]
     public void Several_widgets_selected_say_how_many_and_one_shows_its_settings_as_before()
     {
         Sta.Run(() =>

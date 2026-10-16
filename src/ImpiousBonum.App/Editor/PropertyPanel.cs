@@ -561,13 +561,15 @@ public sealed partial class PropertyPanel : StackPanel
     private (FrameworkElement, Action) ToggleEditor(SettingTarget target, SettingDescriptor setting)
     {
         var box = new CheckBox { VerticalAlignment = VerticalAlignment.Center };
-        box.Click += (_, _) => Write(target, setting.Key, JsonValue.Create(box.IsChecked == true));
+        // Checked and Unchecked rather than Click, so ticking it with Narrator counts too.
+        box.Checked += (_, _) => Write(target, setting.Key, JsonValue.Create(true));
+        box.Unchecked += (_, _) => Write(target, setting.Key, JsonValue.Create(false));
         return (box, Refresh);
 
         void Refresh()
         {
             var current = _session.GetValue(target, setting.Key);
-            box.IsChecked = current is JsonValue v && v.TryGetValue<bool>(out var b) ? b : setting.Default is true;
+            box.IsChecked = current is JsonValue v && v.TryGetValue<bool>(out var b) ? b : DefaultOf(target, setting) is true;
         }
     }
 
@@ -943,6 +945,8 @@ public sealed partial class PropertyPanel : StackPanel
             return setting.Default;
         if (value.TryGetValue<string>(out var text))
             return text;
+        if (value.TryGetValue<bool>(out var on))
+            return on;
         return JsonDefaults.TryGetNumber(value, out var number) ? number : setting.Default;
     }
 
