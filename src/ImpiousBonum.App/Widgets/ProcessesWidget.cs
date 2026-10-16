@@ -68,15 +68,17 @@ public sealed class ProcessesWidget : Widget
             memory.VerticalAlignment = VerticalAlignment.Center;
             Grid.SetColumn(cpu, 1);
             Grid.SetColumn(memory, 2);
-            cpu.Visibility = _showCpu ? Visibility.Visible : Visibility.Collapsed;
+            var symbol = CreateSymbol(cpu);
+            var cpuCell = Beside(cpu, symbol);
+            cpuCell.Visibility = _showCpu ? Visibility.Visible : Visibility.Collapsed;
             memory.Visibility = _showMemory ? Visibility.Visible : Visibility.Collapsed;
 
             // A name makes do with what the numbers leave, down to a few letters.
             grid.Children.Add(Squeezed(name, fontSize * 3));
-            grid.Children.Add(cpu);
+            grid.Children.Add(cpuCell);
             grid.Children.Add(memory);
             panel.Children.Add(grid);
-            _rows.Add(new Row(grid, name, cpu, memory));
+            _rows.Add(new Row(grid, name, cpu, symbol, memory));
         }
         // Names end with … when they're too long; the rows get smaller when they don't all fit, or the numbers don't.
         Children.Add(Fit(panel, FitDirection.Both));
@@ -98,7 +100,8 @@ public sealed class ProcessesWidget : Widget
             row.Grid.Visibility = Visibility.Visible;
             row.Name.Text = app.Processes > 1 ? $"{app.Name} ({app.Processes})" : app.Name;
             row.Cpu.Text = MetricFormatter.Format(new MetricSample(CpuFormat, app.Cpu, null));
-            row.Cpu.Foreground = _thresholds.Pick(store, app.Cpu, Theme.Secondary);
+            row.Cpu.Foreground = _thresholds.Pick(store, app.Cpu, Theme.Secondary, out var level);
+            row.Symbol?.Show(level, row.Cpu.Foreground);
             row.Memory.Text = MetricFormatter.Format(new MetricSample(MemoryFormat, app.Memory, null));
         }
     }
@@ -113,5 +116,5 @@ public sealed class ProcessesWidget : Widget
                 .Take(count)
                 .ToList();
 
-    private sealed record Row(Grid Grid, TextBlock Name, TextBlock Cpu, TextBlock Memory);
+    private sealed record Row(Grid Grid, TextBlock Name, TextBlock Cpu, WarningSymbol? Symbol, TextBlock Memory);
 }

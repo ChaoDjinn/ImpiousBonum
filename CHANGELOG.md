@@ -49,6 +49,11 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - It's counted while Impious Bonum runs, needs the sensor service, and is kept across restarts. Today's total starts again at midnight, and the month's on the 1st.
 - Turn on *Energy* → *Grid carbon intensity* for how clean Great Britain's electricity is now (`grid.carbon`, `grid.carbon.index`) and when it'll be cleanest in the next 24 hours (`grid.carbon.best`, such as *Lowest around 03:30*), from NESO's Carbon Intensity API every 30 minutes. Give the first half of your postcode for your region's figures. It's off until you turn it on, and nothing about you is sent but that half.
 
+**Warnings you can tell apart without colour**
+- A new theme setting, *Warning symbols*: a value in the theme's warning colour gets a ▲ beside it too, and one in its critical colour a ◆, so warning and critical don't rely on colour alone. Text, icon and value, stat tiles, graphs, gauges, bars, drives and *Top apps* show it; *CPU threads* keeps to colour. It's off unless you turn it on, and text that only just fits shrinks a little to make room for it.
+- A new built-in theme, *Clear Sight*, for colour blindness: a sky blue accent, gold warnings and deep pink-red critical ones that stay apart with every common kind of colour blindness, with warning symbols on. That's 56 in all.
+- Ticking a box in the editor's settings with Narrator now changes the setting, as clicking it does.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

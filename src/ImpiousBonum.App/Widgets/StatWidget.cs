@@ -34,6 +34,7 @@ public sealed class StatWidget : Widget
     private readonly ValueTemplate _template;
     private readonly int _points;
     private readonly TextBlock _value;
+    private readonly WarningSymbol? _symbol;
     private readonly TextBlock? _range;
     private readonly GraphElement? _trend;
     private readonly ThresholdColors _thresholds;
@@ -65,7 +66,8 @@ public sealed class StatWidget : Widget
         _value = CreateText(settings.Number("fontSize"));
         _value.TextTrimming = TextTrimming.CharacterEllipsis;
         SetRow(_value, 1);
-        Children.Add(Fit(_value, FitDirection.Width));
+        _symbol = CreateSymbol(_value);
+        Children.Add(Fit(Beside(_value, _symbol), FitDirection.Width));
 
         var style = settings.String("style");
         if (style != "none")
@@ -89,8 +91,9 @@ public sealed class StatWidget : Widget
     public override void Refresh(MetricStore store, DateTime now)
     {
         _value.Text = _template.Render(store);
-        var color = _thresholds.Pick(store, _metric, Theme.Accent);
+        var color = _thresholds.Pick(store, _metric, Theme.Accent, out var level);
         _value.Foreground = ReferenceEquals(color, Theme.Accent) ? Theme.Foreground : color;
+        _symbol?.Show(level, color);
 
         var history = store.GetHistory(_metric, _points);
         var known = store.TryGet(_metric, out var sample);
