@@ -18,8 +18,9 @@ using WinForms = System.Windows.Forms;
 namespace ImpiousBonum.App.Editor;
 
 /// <summary>
-/// Shows the settings of the current selection (a widget, or the canvas and theme when nothing is selected),
-/// generated from descriptors. Each row has an editor that suits the setting's kind and a reset-to-default button.
+/// Shows the settings of the current selection (a widget, or the canvas and theme when nothing is selected, or just how
+/// many when several widgets are), generated from descriptors. Each row has an editor that suits the setting's kind and
+/// a reset-to-default button.
 /// </summary>
 public sealed partial class PropertyPanel : StackPanel
 {
@@ -77,7 +78,13 @@ public sealed partial class PropertyPanel : StackPanel
         _liveRefreshers.Clear();
         _itemCards.Clear();
 
-        if (_session.SelectedWidget is not { } widget)
+        if (_session.Selection.Count > 1)
+        {
+            // Settings differ from widget to widget, so there's no one value to show for most; one at a time instead.
+            AddHeading($"{_session.Selection.Count} widgets selected",
+                "Drag one to move them all, or use Align to line them up, space them out or make them the same size. Select just one to change its settings.");
+        }
+        else if (_session.SelectedWidget is not { } widget)
         {
             AddHeading("Canvas and theme", "Select a widget in the preview or the list to edit it.");
             var canvas = AddGroup("Canvas");

@@ -290,6 +290,12 @@ public static class DemoReadings
             spectrum[i] = Math.Clamp(0.8 - 0.5 * i / spectrum.Length + 0.12 * Math.Sin(i * 0.9) + (random.NextDouble() - 0.5) * 0.2, 0.05, 1);
         store.SetAttachment(Spectrum, spectrum);
 
+        // A headset microphone, live, with Discord using it; the camera's off.
+        using var privacy = new PrivacyProvider(() => null, _ => null);
+        privacy.Publish(store, new MicrophoneState("Headset microphone", Muted: false),
+            [new ConsentEntry(@"C:#Users#Sam#AppData#Local#Discord#app-1.0.9260#Discord.exe", Packaged: false, Start: 2, Stop: 0)],
+            [new ConsentEntry("Microsoft.WindowsCamera_8wekyb3d8bbwe", Packaged: true, Start: 1, Stop: 2)]);
+
         // A photo for a photo frame with no folder, taken on a summer evening.
         store.SetAttachment(Photo, new DemoPhoto("Lakeside at dusk.jpg", new DateTime(2026, 8, 14, 20, 31, 0)));
     }

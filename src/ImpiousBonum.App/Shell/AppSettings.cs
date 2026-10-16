@@ -97,6 +97,12 @@ public sealed class AppSettings
     public bool ScheduleEnabled { get; set; } = true;
 
     /// <summary>
+    /// Show the built-in holiday theme on and around each holiday (see <see cref="Holidays"/>), unless a rule in the
+    /// schedule or a game's link sets the theme. Off by default.
+    /// </summary>
+    public bool HolidayThemes { get; set; }
+
+    /// <summary>
     /// Your own metrics from web addresses and commands (the Custom data page). Replaced as a whole when edited, never
     /// changed in place, since the sampler reads it from another thread.
     /// </summary>

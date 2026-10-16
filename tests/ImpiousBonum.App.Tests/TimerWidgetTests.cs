@@ -29,32 +29,32 @@ public sealed class TimerWidgetTests
     [Fact]
     public void A_time_of_day_is_its_next_occurrence()
     {
-        Assert.Equal(Noon.Date.AddHours(18), TimerWidget.ParseTarget("18:00", Noon));
-        Assert.Equal(Noon.Date.AddDays(1).AddHours(9), TimerWidget.ParseTarget("09:00", Noon));
+        Assert.Equal(Noon.Date.AddHours(18), TargetDate.Parse("18:00", Noon));
+        Assert.Equal(Noon.Date.AddDays(1).AddHours(9), TargetDate.Parse("09:00", Noon));
     }
 
     [Fact]
     public void Dates_read_with_or_without_a_time()
     {
-        Assert.Equal(new DateTime(2026, 12, 25), TimerWidget.ParseTarget("2026-12-25", Noon));
-        Assert.Equal(new DateTime(2026, 12, 25, 9, 30, 0), TimerWidget.ParseTarget("2026-12-25 09:30", Noon));
-        Assert.Null(TimerWidget.ParseTarget("whenever", Noon));
+        Assert.Equal(new DateTime(2026, 12, 25), TargetDate.Parse("2026-12-25", Noon));
+        Assert.Equal(new DateTime(2026, 12, 25, 9, 30, 0), TargetDate.Parse("2026-12-25 09:30", Noon));
+        Assert.Null(TargetDate.Parse("whenever", Noon));
     }
 
     [Fact]
     public void A_month_and_day_comes_round_every_year()
     {
-        Assert.Equal(new DateTime(2026, 12, 25), TimerWidget.ParseTarget("12-25", Noon));
-        Assert.Equal(new DateTime(2026, 10, 31, 18, 0, 0), TimerWidget.ParseTarget("10-31 18:00", Noon));
+        Assert.Equal(new DateTime(2026, 12, 25), TargetDate.Parse("12-25", Noon));
+        Assert.Equal(new DateTime(2026, 10, 31, 18, 0, 0), TargetDate.Parse("10-31 18:00", Noon));
         // Still today's while today lasts, so the day itself can show it's here; then next year's.
-        Assert.Equal(new DateTime(2026, 10, 11), TimerWidget.ParseTarget("10-11", Noon));
-        Assert.Equal(new DateTime(2027, 1, 1), TimerWidget.ParseTarget("1-1", Noon));
-        Assert.Equal(new DateTime(2027, 10, 11), TimerWidget.ParseTarget("10-11", Noon.Date.AddDays(1)));
+        Assert.Equal(new DateTime(2026, 10, 11), TargetDate.Parse("10-11", Noon));
+        Assert.Equal(new DateTime(2027, 1, 1), TargetDate.Parse("1-1", Noon));
+        Assert.Equal(new DateTime(2027, 10, 11), TargetDate.Parse("10-11", Noon.Date.AddDays(1)));
         // 29 February waits for a leap year.
-        Assert.Equal(new DateTime(2028, 2, 29), TimerWidget.ParseTarget("02-29", Noon));
-        Assert.Null(TimerWidget.ParseTarget("12-32", Noon));
-        Assert.Null(TimerWidget.ParseTarget("02-30", Noon));
-        Assert.Null(TimerWidget.ParseTarget("12-25 24:00", Noon));
+        Assert.Equal(new DateTime(2028, 2, 29), TargetDate.Parse("02-29", Noon));
+        Assert.Null(TargetDate.Parse("12-32", Noon));
+        Assert.Null(TargetDate.Parse("02-30", Noon));
+        Assert.Null(TargetDate.Parse("12-25 24:00", Noon));
     }
 
     [Theory]

@@ -76,7 +76,7 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 - A gallery of ready-made layouts to try with your own readings and import, and export to share yours. [More](<docs/guide.md#layout-gallery>)
 
 **It fits around you**
-- Different layouts for different games, a schedule for times of day or dark mode, pages to swipe between, and global hotkeys. [More](<docs/guide.md#automatic-behaviour>)
+- Different layouts for different games, a schedule for times of day, sunset, dates or dark mode, pages to swipe between, and global hotkeys. [More](<docs/guide.md#automatic-behaviour>)
 - Dims or blacks out when you're away. [More](<docs/guide.md#dimming>)
 - On a spare monitor (or several, each with its own layout), as a window, or on a tablet or phone in its browser. Support for small 3.5" USB screens is there too, but hasn't been tried on a real one yet. [More](<docs/guide.md#more-screens>)
 - Light: about 50 MB of memory and a fraction of a percent of the CPU. A per-user installer with no admin prompt, and small automatic updates.

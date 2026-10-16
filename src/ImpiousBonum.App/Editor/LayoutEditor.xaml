@@ -70,6 +70,14 @@
                         <TextBlock Text="Delete" />
                     </StackPanel>
                 </Button>
+                <Button x:Name="AlignButton" Click="OnAlign" Margin="6,0,0,0" ToolTipService.ShowOnDisabled="True"
+                        ToolTip="Line up the selected widgets, space them out evenly or make them the same size. Ctrl+click widgets, or drag a box around them, to select more than one.">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{DynamicResource ButtonGlyph}" Text="&#xE8E4;" />
+                        <TextBlock Text="Align" />
+                        <TextBlock Style="{DynamicResource Glyph}" Text="&#xE70D;" FontSize="10" Margin="8,1,0,0" />
+                    </StackPanel>
+                </Button>
                 <Border Style="{StaticResource ToolbarSeparator}" />
                 <Button x:Name="UndoButton" Click="OnUndo" ToolTip="Undo (Ctrl+Z)">
                     <TextBlock Style="{DynamicResource Glyph}" Text="&#xE7A7;" />
@@ -80,7 +88,8 @@
                 <Border Style="{StaticResource ToolbarSeparator}" />
                 <TextBlock Style="{DynamicResource Glyph}" Text="&#xE80A;" Margin="0,0,8,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                            ToolTip="Snap to a grid" />
-                <ComboBox x:Name="SnapBox" Width="96" SelectionChanged="OnSnapChanged" ToolTip="Grid size for moving and resizing. Hold Alt while dragging to place freely." />
+                <ComboBox x:Name="SnapBox" Width="96" SelectionChanged="OnSnapChanged"
+                          ToolTip="Grid size for moving and resizing. Edges and centres also snap to other widgets' and the canvas's. Hold Alt while dragging to place freely." />
             </StackPanel>
         </Border>
 
@@ -106,8 +115,8 @@
             <DockPanel Grid.Column="0" Margin="12,14,6,12">
                 <TextBlock DockPanel.Dock="Top" Text="Widgets" Style="{DynamicResource SectionHeading}" Margin="4,0,0,8" />
                 <TextBlock DockPanel.Dock="Bottom" Style="{DynamicResource NoteText}" Margin="4,10,0,0"
-                           Text="Lower in the list draws on top: drag a widget up or down to change the order. Click empty canvas (or press Esc) for canvas and theme settings." />
-                <ListBox x:Name="WidgetList" SelectionChanged="OnListSelectionChanged" ContextMenuOpening="OnListMenuOpening"
+                           Text="Lower in the list draws on top: drag a widget up or down to change the order. Ctrl+click or Shift+click to select more than one. Click empty canvas (or press Esc) for canvas and theme settings." />
+                <ListBox x:Name="WidgetList" SelectionMode="Extended" SelectionChanged="OnListSelectionChanged" ContextMenuOpening="OnListMenuOpening"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemTemplate>
                         <DataTemplate>

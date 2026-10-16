@@ -193,6 +193,14 @@ public partial class App : ISettingsHost
         UpdateSchedule();
     }
 
+    void ISettingsHost.SetHolidayThemes(bool on)
+    {
+        _settings.HolidayThemes = on;
+        _settings.Save();
+        AppLog.Info($"Holiday themes {(on ? "on" : "off")}");
+        UpdateSchedule();
+    }
+
     void ISettingsHost.AddScheduleRule(Window owner) => AddScheduleRule(owner);
 
     void ISettingsHost.RemoveScheduleRule(ScheduleRule rule)
