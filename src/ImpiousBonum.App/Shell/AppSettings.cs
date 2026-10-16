@@ -200,6 +200,12 @@ public sealed class AppSettings
     /// <summary>Let tablets press the layout's buttons and media controls (the Tablet and USB screen page). Off by default.</summary>
     public bool TabletButtons { get; set; }
 
+    /// <summary>
+    /// Serve every reading as JSON to other apps with the tablet link's secret, while the tablet view is on (the Tablet
+    /// and USB screen page). Off by default.
+    /// </summary>
+    public bool TabletReadings { get; set; }
+
     /// <summary>The secret in the tablet link. Created when the tablet view is first turned on; replaced by "New link".</summary>
     public string? TabletToken { get; set; }
 

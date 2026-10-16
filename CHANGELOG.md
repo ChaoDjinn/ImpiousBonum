@@ -30,6 +30,10 @@ Themes for the holidays, eight more layouts in the gallery, and countdowns that 
 - A layout is only drawn while a tablet is showing it, and let go a few minutes after the last one closes, so it costs nothing the rest of the time.
 - Renaming or deleting a layout stops links to it working: the tablet says there's no layout of that name, and the page gives you a new link.
 
+**Readings for other apps**
+- *Share readings with other apps* on the *Tablet and USB screen* page (off by default) lets Home Assistant, Rainmeter or a script of your own read every reading as JSON while the tablet view is on: its name, unit, value and the value as the dashboard shows it. They need the tablet link's secret, and *New link* stops old ones working.
+- The [guide](docs/guide.md#readings-for-other-apps) has a Home Assistant sensor and a Rainmeter skin to start from.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

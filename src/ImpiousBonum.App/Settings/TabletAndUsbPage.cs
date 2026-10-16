@@ -32,6 +32,12 @@ internal sealed class TabletAndUsbPage(ISettingsHost host) : CardPage("Tablet an
             Ui.Switch(Settings.TabletButtons, "Let tablets press buttons", host.SetTabletButtons)));
         buttons.IsEnabled = on;
 
+        var readings = Add(Ui.Card("", "Share readings with other apps",
+            "Apps on your network such as Home Assistant or Rainmeter can read every reading as JSON with the link's secret, "
+            + "including the text ones: what's playing, your next event, your IP address. Anyone with the link could read them.",
+            Ui.Switch(Settings.TabletReadings, "Share readings with other apps", host.SetTabletReadings)));
+        readings.IsEnabled = on;
+
         var saved = host.Layouts.List();
         _linkLayout = saved.FirstOrDefault(l => string.Equals(l, _linkLayout, StringComparison.OrdinalIgnoreCase));
         var linkLayouts = saved.Select(l => ((string?)l, l)).Prepend(((string?)null, "Same as the main dashboard"));

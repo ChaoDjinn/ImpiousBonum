@@ -28,6 +28,7 @@ public sealed class TabletView : IDisposable
 
     private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
     private bool _allowTaps;
+    private MetricStore? _readings;
 
     public TabletView() => _main = new Picture(OnPressed);
 
@@ -57,6 +58,21 @@ public sealed class TabletView : IDisposable
 
     /// <summary>Reads a saved layout a link names, with the theme to draw it in.</summary>
     public Func<string, (LayoutDocument Layout, ThemeSettings Theme)>? LoadLayout { get; set; }
+
+    /// <summary>
+    /// The readings other apps can fetch as JSON while the tablet view is on, with the link's secret. Null, the
+    /// default, means sharing is off. Anyone with the link could read every one of them.
+    /// </summary>
+    public MetricStore? Readings
+    {
+        get => _readings;
+        set
+        {
+            _readings = value;
+            if (_server is not null)
+                _server.Readings = value;
+        }
+    }
 
     /// <summary>The saved layouts links name that are drawn for tablets now.</summary>
     internal IReadOnlyCollection<string> Layouts => _named.Keys;
@@ -108,6 +124,7 @@ public sealed class TabletView : IDisposable
     {
         server.Tap = _allowTaps ? TapFromServer : null;
         server.FindLayout = name => FindLayout?.Invoke(name);
+        server.Readings = _readings;
         _server = server;
     }
 
