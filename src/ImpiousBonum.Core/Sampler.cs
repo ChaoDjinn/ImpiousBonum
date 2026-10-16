@@ -66,6 +66,7 @@ public sealed class Sampler : IAsyncDisposable
         new CalendarProvider(calendars ?? (() => [])),
         new NewsProvider(news ?? (() => [])),
         new SessionProvider(gameInFront ?? (() => null), sessionEnded),
+        new PrivacyProvider(),
         .. claudeUsagePath is null ? Array.Empty<IMetricProvider>() : [new ClaudeUsageProvider(claudeUsagePath)],
     ];
 

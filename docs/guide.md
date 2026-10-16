@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
@@ -205,6 +205,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
+| `mic.muted` (1 when muted, 0 when not), `mic.name`, `mic.inuse`, `mic.apps`, `camera.inuse`, `camera.apps` | The microphone Windows uses for calls, and the apps using it or the camera, every 2 seconds (see [Microphone and camera](#microphone-and-camera)). The microphone's appear on PCs with a microphone, the camera's once an app has used a camera |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
 | `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; *Sensors* → *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
@@ -420,6 +421,41 @@ and set `"refreshInterval": 15` on your `statusLine` so the widget knows Claude 
 
 The `bars` widget is the same widget for any metrics, e.g. CPU and RAM load. Its *Hide without a reading* setting works the same way.
 
+### Microphone and camera
+
+Whether your microphone is muted, and which apps are using it or your camera: for a light that goes red while you're live, or a reminder that you're muted.
+
+| Metric | |
+|---|---|
+| `mic.muted` | 1 while the microphone is muted, 0 while it isn't |
+| `mic.name` | The microphone's name, as Windows' sound settings show it |
+| `mic.inuse`, `camera.inuse` | 1 while any app is using the microphone (or the camera), 0 while none is |
+| `mic.apps`, `camera.apps` | The apps using it, e.g. *Discord, OBS*. No reading while none is |
+
+- **Which microphone:** the one Windows uses for calls. That's your default microphone, unless you've picked a different *Default Communication Device* in the Sound control panel's *Recording* tab.
+- **Muted** means Windows' own mute, the one in the sound settings, which a [`mic-mute` button](#now-playing-and-buttons) turns on and off. An app's own mute (Discord's, say) or a mute switch on a headset doesn't change it, so it doesn't show here.
+- **The apps** using them are read from the record Windows keeps for its privacy settings (*Settings* → *Privacy & security* → *Microphone* → *Recent activity*) and its microphone and camera icons. Reading it needs no permission, and Impious Bonum never uses the microphone or camera itself, so Windows doesn't ask or show its icons for it. Desktop apps go by their program's name (*Discord*, *Chrome*, *OBS*), Store apps by the end of their package name (*WindowsCamera*).
+- The microphone's metrics appear on PCs with a microphone, or where an app has used one; the camera's once an app has used a camera.
+
+<p align="center"><img src="images/widgets/microphone.png" width="600" alt="MIC lit up red while Discord is using the microphone, CAMERA dim because the camera's off, the microphone's name, In use by Discord, and a Mute button with a microphone icon"></p>
+
+To make a widget go red, give it a warning colour on one of these metrics (see [editing layouts by hand](#editing-layouts-by-hand)). The picture's widgets: *MIC* lights up while an app is using the microphone and *CAMERA* while one is using the camera (`track` is the theme's dim bar colour, so they're barely there until then), the microphone's name turns red while it's muted, the apps using it show underneath only while there are some, and the button mutes and unmutes it, its icon crossed out while muted:
+
+```json
+{ "type": "text", "x": 30, "y": 20, "width": 200, "height": 70, "fontSize": 48, "text": "● MIC", "color": "track",
+  "thresholds": [{ "metric": "mic.inuse", "above": 0, "color": "critical" }] },
+{ "type": "text", "x": 250, "y": 20, "width": 300, "height": 70, "fontSize": 48, "text": "● CAMERA", "color": "track",
+  "thresholds": [{ "metric": "camera.inuse", "above": 0, "color": "critical" }] },
+{ "type": "icon", "x": 30, "y": 115, "width": 520, "height": 56, "icon": "mic", "text": "{mic.name}", "fontSize": 34,
+  "iconSize": 48, "gap": 20, "thresholds": [{ "metric": "mic.muted", "above": 0, "color": "critical" }] },
+{ "type": "text", "x": 98, "y": 176, "width": 452, "height": 40, "fontSize": 26, "text": "In use by {mic.apps}",
+  "color": "secondary", "hideUnavailable": true },
+{ "type": "buttons", "x": 590, "y": 20, "width": 180, "height": 200, "iconSize": 64,
+  "buttons": [{ "label": "Mute", "icon": "mic", "action": "mic-mute" }] }
+```
+
+In the editor, the same rules are each widget's *Warning colours*: pick the metric, set *Above* to 0, and choose a colour.
+
 ## Widgets in depth
 
 ### Top apps
@@ -505,6 +541,7 @@ The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a
 |---|---|
 | `play-pause`, `next`, `previous`, `stop` | Like the keyboard's media keys: they act on what *Now playing* shows |
 | `volume-up`, `volume-down`, `mute` | Like the keyboard's volume keys |
+| `mic-mute` | Mutes the microphone Windows uses for calls, or unmutes it (see [Microphone and camera](#microphone-and-camera)). With the `mic` icon, the button shows `mic-off` while it's muted, whatever muted it |
 | `open` | Opens the *target*: a program (`calc.exe`), a file or folder (`C:\Games`), a web address, or a Windows link such as `ms-settings:sound`. *Arguments* are passed to a program |
 | `keys` | Sends a shortcut such as `Ctrl+Shift+M`, `Win+D` or `F13` to the app you're using. Names are like `A`, `5`, `F1`–`F24`, `Enter`, `Space`, `Esc`, `Tab`, `Home`, `PgUp`, `Up`, `Delete`, `VolumeUp`, `MediaPlayPause` |
 | `layout` | Switches to the layout named in *target* |
