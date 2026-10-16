@@ -31,7 +31,7 @@ mean the widget's own.
 
 ## Widgets
 
-- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
+- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Device batteries](#device-batteries-batteries) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [Sun and moon](#sun-and-moon-sun) · [News](#news-news) · [Claude usage](#claude-usage-claude)
@@ -288,6 +288,32 @@ One row per drive with free space and a bar showing how full it is. Follows driv
 | `labelColor` | color | `foreground` | Label colour |
 | `valueColor` | color | `secondary` | Value colour |
 | `thresholds` | list | — | Warning colours. Changes each drive's bar. An empty metric uses that drive's used percentage (disk.C.usedPct for C:). When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
+
+## Device batteries (`batteries`)
+
+One row per wireless device, such as a Bluetooth headset, mouse, keyboard or game controller, with how much charge it has left and a bar, which turns the critical colour under 20 %. Follows devices as they connect and disconnect, and shows nothing while there are none.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `devices` | `all`, or names in order, separated by commas | `all` | Devices. All devices, or just the ones chosen, in the order they're listed. Only those connected now show. |
+| `fontSize` | number (6–200) | `25` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `barHeight` | number (1–100) | `5` | Bar height |
+| `spacing` | number (0–200) | `12` | Row spacing |
+| `color` | color | `accent` | Bar colour |
+| `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
+| `labelColor` | color | `foreground` | Label colour |
+| `valueColor` | color | `secondary` | Value colour |
+| `thresholds` | list | 1 entry | Warning colours. Changes each device's bar and charge. An empty metric uses that device's charge (battery.headset for one called Headset). Starts with one: under 20, the critical colour. When several rules match, the last one wins, so list them mildest first. |
 
 Each entry in `thresholds`:
 

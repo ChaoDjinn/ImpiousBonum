@@ -1,0 +1,11 @@
+// Wireless devices' batteries, and a warning that shows only while one is low, for the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 300,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "batteries", "x": 30, "y": 35, "width": 460, "height": 240, "fontSize": 30, "barHeight": 8, "spacing": 22 },
+    { "type": "text", "x": 530, "y": 115, "width": 250, "height": 60, "fontSize": 40, "text": "{battery.low} is low", "color": "critical",
+      "hideUnavailable": true }
+  ]
+}
