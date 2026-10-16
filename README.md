@@ -75,7 +75,7 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 
 **Make it yours**
 - A layout editor with live preview, drag and resize with snapping and alignment, a searchable picker for every metric, fonts you can see before you pick, and text that shrinks to fit, plus touch editing on the dashboard itself. [More](<docs/guide.md#layout-editor>)
-- 56 built-in themes, from clean to retro to neon to the holidays (Halloween, Christmas, Diwali and more), with gradients, glow, and picture, GIF or video backgrounds; or make one from your wallpaper, any picture or Windows' accent colour. Warning symbols and the Clear Sight theme help with colour blindness. [More](<docs/guide.md#layout-editor>)
+- 56 built-in themes, from clean to retro to neon to the holidays (Halloween, Christmas, Diwali and more), with gradients, glow, falling snow or leaves, and picture, GIF or video backgrounds; or make one from your wallpaper, any picture or Windows' accent colour. Warning symbols and the Clear Sight theme help with colour blindness. [More](<docs/guide.md#layout-editor>)
 - A gallery of ready-made layouts and themes to try with your own readings and import, and export to share yours. [More](<docs/guide.md#layout-gallery>)
 
 **It fits around you**
@@ -169,7 +169,7 @@ Impious Bonum is young: it's at version 0.15, first released at the end of Septe
 - [x] Tablet view: the dashboard in a browser over the local network
 - [x] Bars, and Claude plan usage from Claude Code
 - [x] More widget types: 28 so far
-- [x] Themes: 56 built in, holidays too, with gradients, glow and moving backgrounds, plus themes made from a picture
+- [x] Themes: 56 built in, holidays too, with gradients, glow, moving backgrounds and falling snow, plus themes made from a picture
 - [x] Screenshots of the real dashboard, the editor and the widgets, here and in the guide
 - [x] A window with a page for every setting, and a gallery of 21 ready-made layouts for screens from 3.5" to 4K, and themes
 - [x] Weather: longer forecasts, more readings, more places, air quality and pollen, severe weather warnings, rain in the next two hours, and the sun and moon
