@@ -220,6 +220,7 @@ public partial class App
         _trackedGame = _settings.SessionRecaps && GameLayoutSwitcher.Match(_settings.GameLayouts, app) is { } game
             ? game.Layout ?? GameLayoutRule.Normalize(game.Process)
             : null;
+        _linkedGame = GameLayoutSwitcher.Match(_settings.GameLayouts, app) is null ? null : app;
 
         if (_settings.GameLayoutsEnabled && _gameSwitcher.Update(_settings.GameLayouts, app, DateTime.UtcNow))
             ApplyGameLayout();

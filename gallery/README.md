@@ -12,7 +12,7 @@ layout of yours would be the first from someone else. See [Layout gallery](../do
 | Pocket | 1024 × 600 | 5 | The time, the weather, and CPU, GPU and memory dials |
 | Streamer | 1024 × 600 | 6 | Touch buttons for scenes and your mic, an on-air stopwatch, FPS, upload, CPU and GPU |
 | Trick or Treat | 1280 × 800 | 6 | Halloween: the time, a countdown to trick-or-treating, tonight's weather and your playlist |
-| Gaming HUD | 1920 × 480 | 10 | Frame rate, frame times, 1% lows, temperatures and the session so far |
+| Gaming HUD | 1920 × 480 | 11 | Frame rate, frame times, 1% lows, temperatures, the game's banner and the session so far |
 | Desk Companion | 1920 × 480 | 4 | World clocks, today's calendar, the weather and what's playing |
 | System Monitor | 1920 × 480 | 8 | Load and network lines, every CPU thread, the busiest apps, drives and memory |
 | Focus | 1920 × 480 | 4 | A 25-minute focus timer, today's agenda, the time and your music |
