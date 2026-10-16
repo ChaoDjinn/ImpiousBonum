@@ -144,7 +144,7 @@ public sealed class LayoutLibrary
     }
 
     /// <summary>Marks a folder <see cref="Import"/> made, so only those are ever cleaned up.</summary>
-    private const string ImportMarker = "imported.txt";
+    internal const string ImportMarker = "imported.txt";
 
     private static string? Place(string folder, string baseName, PackagedFile? file)
     {
@@ -251,10 +251,13 @@ public sealed class LayoutLibrary
             return $"The name can't contain {name[bad]}.";
         if (name.EndsWith('.'))
             return "The name can't end with a full stop.";
-        if (ReservedNames.Contains(name.Split('.')[0], StringComparer.OrdinalIgnoreCase))
+        if (IsReservedName(name))
             return $"\"{name}\" is reserved by Windows.";
         return null;
     }
+
+    /// <summary>A name Windows keeps for a device (CON, LPT1.txt and the like), which can't be used for a file.</summary>
+    public static bool IsReservedName(string name) => ReservedNames.Contains(name.Split('.')[0], StringComparer.OrdinalIgnoreCase);
 
     public static LayoutDocument LoadDefault() =>
         JsonSerializer.Deserialize<LayoutDocument>(ReadDefaultJson(), JsonDefaults.Options)!;

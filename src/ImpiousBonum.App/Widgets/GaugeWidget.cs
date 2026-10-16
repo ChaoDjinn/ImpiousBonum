@@ -70,8 +70,8 @@ public sealed class GaugeWidget : Widget
     public override void Refresh(MetricStore store, DateTime now)
     {
         var fraction = store.TryGet(_metric, out var sample) ? Fraction(sample, _min, _max) : 0;
-        var color = _thresholds.Pick(store, _metric, _color);
-        _gauge.Update(fraction, _template.Render(store), color, ReferenceEquals(color, _color) ? Theme.Foreground : color);
+        var color = _thresholds.Pick(store, _metric, _color, out var level);
+        _gauge.Update(fraction, _template.Render(store), color, ReferenceEquals(color, _color) ? Theme.Foreground : color, Theme.WarningSymbols ? level : ThresholdLevel.None);
     }
 
     /// <summary>How full the dial is, 0–1: the value between the minimum and the gauge's maximum, the metric's, or 100.</summary>

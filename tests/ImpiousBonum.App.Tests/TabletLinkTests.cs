@@ -1,5 +1,6 @@
 using System.IO;
 using System.Reflection;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -82,6 +83,37 @@ public sealed class TabletLinkTests : IDisposable
         });
     }
 
+    [Fact]
+    public void Sharing_readings_is_off_until_turned_on_and_needs_the_tablet_view()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            var host = DispatchProxy.Create<ISettingsHost, LinkHost>();
+            var links = (LinkHost)(object)host;
+            links.Layouts = store;
+            var page = new TabletAndUsbPage(host);
+            page.Load();
+
+            var card = Card(page, "Share readings with other apps");
+            Assert.True(card.IsEnabled);
+            // It says what's shared, and with whom.
+            Assert.Contains("every reading", card.Description);
+            Assert.Contains("Anyone with the link", card.Description);
+            var toggle = Logical<CheckBox>(page).Single(b => AutomationProperties.GetName(b) == "Share readings with other apps");
+            Assert.False(toggle.IsChecked);
+            toggle.IsChecked = true;
+            toggle.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+            Assert.Equal([true], links.Shared);
+
+            links.Running = false;
+            page.Load();
+            Assert.False(Card(page, "Share readings with other apps").IsEnabled);
+            Assert.Contains("\"tabletReadings\": false", JsonSerializer.Serialize(new AppSettings(), JsonDefaults.Options));
+        });
+    }
+
     /// <summary>A settings host with the tablet view on, noting which links it was asked to show or copy.</summary>
     public class LinkHost : DispatchProxy
     {
@@ -93,10 +125,15 @@ public sealed class TabletLinkTests : IDisposable
 
         public List<(string, string?)> Asked { get; } = [];
 
+        public List<bool> Shared { get; } = [];
+
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
         {
             switch (targetMethod?.Name)
             {
+                case nameof(ISettingsHost.SetTabletReadings):
+                    Shared.Add((bool)args![0]!);
+                    return null;
                 case "get_Settings":
                     return Settings;
                 case "get_Layouts":

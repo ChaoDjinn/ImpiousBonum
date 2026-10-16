@@ -120,6 +120,99 @@ public sealed class ThemeTests : IDisposable
         }
     }
 
+    [Fact]
+    public void Clear_Sight_keeps_warning_and_critical_apart_from_each_other_and_the_normal_colours_in_colour_blindness()
+    {
+        var theme = Library().Resolve(new JsonObject { ["base"] = "Clear Sight" });
+        Assert.True(theme.WarningSymbols);
+
+        foreach (var (vision, matrix) in Visions)
+        {
+            (string Name, (double L, double A, double B) Lab)[] colours =
+                [.. new[] { ("warning", theme.Warning), ("critical", theme.Critical), ("accent", theme.Accent), ("foreground", theme.Foreground) }
+                    .Select(c => (c.Item1, Lab(Simulate(c.Item2, matrix))))];
+            // Warning and critical against each other and against the normal colours of graphs and text. A CIEDE2000
+            // difference of 20 is plainly two different colours.
+            foreach (var (first, second) in new[] { (0, 1), (0, 2), (0, 3), (1, 2), (1, 3) })
+            {
+                var difference = DeltaE(colours[first].Lab, colours[second].Lab);
+                Assert.True(difference >= 20, $"With {vision}, {colours[first].Name} and {colours[second].Name} look alike ({difference:0.0}).");
+            }
+            // One much lighter than the other too, which holds on a dim screen or with no colour at all.
+            Assert.True(Math.Abs(colours[0].Lab.L - colours[1].Lab.L) >= 20, $"With {vision}, warning and critical are as light as each other.");
+        }
+    }
+
+    [Theory]
+    // Examples from Sharma, Wu and Dalal's notes on CIEDE2000 (2005).
+    [InlineData(50, 2.6772, -79.7751, 50, 0, -82.7485, 2.0425)]
+    [InlineData(50, 2.5, 0, 73, 25, -18, 27.1492)]
+    [InlineData(50, 2.5, 0, 50, 0, -2.5, 4.3065)]
+    [InlineData(60.2574, -34.0099, 36.2677, 60.4626, -34.1751, 39.4387, 1.2644)]
+    public void The_colour_difference_matches_its_published_examples(double l1, double a1, double b1, double l2, double a2, double b2, double expected) =>
+        Assert.Equal(expected, DeltaE((l1, a1, b1), (l2, a2, b2)), 4);
+
+    /// <summary>
+    /// How colours look with each kind of colour blindness, as matrices on linear RGB: Machado, Oliveira and Fernandes
+    /// (2009), at full strength, for people with no red (protanopia), green (deuteranopia) or blue (tritanopia) cones.
+    /// </summary>
+    private static readonly (string Vision, double[,] Matrix)[] Visions =
+    [
+        ("normal vision", new double[,] { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } }),
+        ("protanopia", new[,] { { 0.152286, 1.052583, -0.204868 }, { 0.114503, 0.786281, 0.099216 }, { -0.003882, -0.048116, 1.051998 } }),
+        ("deuteranopia", new[,] { { 0.367322, 0.860646, -0.227968 }, { 0.280085, 0.672501, 0.047413 }, { -0.011820, 0.042940, 0.968881 } }),
+        ("tritanopia", new[,] { { 1.255528, -0.076749, -0.178779 }, { -0.078411, 0.930809, 0.147602 }, { 0.004733, 0.691367, 0.303900 } }),
+    ];
+
+    /// <summary>A colour as someone with <paramref name="vision"/>'s matrix sees it, in linear RGB.</summary>
+    private static double[] Simulate(string color, double[,] vision)
+    {
+        var parsed = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color);
+        static double Linear(byte channel)
+        {
+            var c = channel / 255.0;
+            return c <= 0.04045 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
+        }
+
+        double[] rgb = [Linear(parsed.R), Linear(parsed.G), Linear(parsed.B)];
+        return [.. Enumerable.Range(0, 3).Select(row => Math.Clamp(vision[row, 0] * rgb[0] + vision[row, 1] * rgb[1] + vision[row, 2] * rgb[2], 0, 1))];
+    }
+
+    /// <summary>Linear RGB in CIELAB, under daylight (D65).</summary>
+    private static (double L, double A, double B) Lab(double[] rgb)
+    {
+        var x = (0.4124 * rgb[0] + 0.3576 * rgb[1] + 0.1805 * rgb[2]) / 0.95047;
+        var y = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+        var z = (0.0193 * rgb[0] + 0.1192 * rgb[1] + 0.9505 * rgb[2]) / 1.08883;
+        static double F(double t) => t > Math.Pow(6.0 / 29, 3) ? Math.Cbrt(t) : t / (3 * Math.Pow(6.0 / 29, 2)) + 4.0 / 29;
+        return (116 * F(y) - 16, 500 * (F(x) - F(y)), 200 * (F(y) - F(z)));
+    }
+
+    /// <summary>The CIEDE2000 difference between two colours: about 1 is just noticeable, 20 or more plainly different.</summary>
+    private static double DeltaE((double L, double A, double B) first, (double L, double A, double B) second)
+    {
+        static double Radians(double degrees) => degrees * Math.PI / 180;
+        static double Hue(double b, double a) => a == 0 && b == 0 ? 0 : (Math.Atan2(b, a) * 180 / Math.PI + 360) % 360;
+        static double Seventh(double c) => Math.Sqrt(Math.Pow(c, 7) / (Math.Pow(c, 7) + Math.Pow(25, 7)));
+
+        var g = 0.5 * (1 - Seventh((Math.Sqrt(first.A * first.A + first.B * first.B) + Math.Sqrt(second.A * second.A + second.B * second.B)) / 2));
+        var (a1, a2) = (first.A * (1 + g), second.A * (1 + g));
+        var (c1, c2) = (Math.Sqrt(a1 * a1 + first.B * first.B), Math.Sqrt(a2 * a2 + second.B * second.B));
+        var (h1, h2) = (Hue(first.B, a1), Hue(second.B, a2));
+
+        var dh = c1 * c2 == 0 ? 0 : h2 - h1 > 180 ? h2 - h1 - 360 : h2 - h1 < -180 ? h2 - h1 + 360 : h2 - h1;
+        var (dL, dC, dH) = (second.L - first.L, c2 - c1, 2 * Math.Sqrt(c1 * c2) * Math.Sin(Radians(dh / 2)));
+        var (l, c) = ((first.L + second.L) / 2, (c1 + c2) / 2);
+        var h = c1 * c2 == 0 ? h1 + h2 : Math.Abs(h1 - h2) <= 180 ? (h1 + h2) / 2 : h1 + h2 < 360 ? (h1 + h2 + 360) / 2 : (h1 + h2 - 360) / 2;
+
+        var t = 1 - 0.17 * Math.Cos(Radians(h - 30)) + 0.24 * Math.Cos(Radians(2 * h)) + 0.32 * Math.Cos(Radians(3 * h + 6)) - 0.20 * Math.Cos(Radians(4 * h - 63));
+        var sL = 1 + 0.015 * Math.Pow(l - 50, 2) / Math.Sqrt(20 + Math.Pow(l - 50, 2));
+        var sC = 1 + 0.045 * c;
+        var sH = 1 + 0.015 * c * t;
+        var rT = -2 * Seventh(c) * Math.Sin(Radians(60 * Math.Exp(-Math.Pow((h - 275) / 25, 2))));
+        return Math.Sqrt(Math.Pow(dL / sL, 2) + Math.Pow(dC / sC, 2) + Math.Pow(dH / sH, 2) + rT * (dC / sC) * (dH / sH));
+    }
+
     /// <summary>The WCAG contrast ratio of a colour (blended over the background if translucent) against the background.</summary>
     private static double Contrast(string color, string background)
     {

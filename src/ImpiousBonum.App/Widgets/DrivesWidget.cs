@@ -84,7 +84,8 @@ public sealed class DrivesWidget : Widget
             var used = store.TryGet(DriveProvider.UsedPercent(row.Letter), out var pct) && pct.Value is double v ? Math.Clamp(v, 0, 100) : 0;
             row.Bar.ColumnDefinitions[0].Width = new GridLength(used, GridUnitType.Star);
             row.Bar.ColumnDefinitions[1].Width = new GridLength(100 - used, GridUnitType.Star);
-            row.Fill.Background = _thresholds.Pick(store, DriveProvider.UsedPercent(row.Letter), _fill);
+            row.Fill.Background = _thresholds.Pick(store, DriveProvider.UsedPercent(row.Letter), _fill, out var level);
+            row.Symbol?.Show(level, row.Fill.Background);
         }
     }
 
@@ -98,7 +99,8 @@ public sealed class DrivesWidget : Widget
             var label = CreateText(_fontSize, _label);
             var value = CreateText(_fontSize * 0.9, _value, HorizontalAlignment.Right);
             value.VerticalAlignment = VerticalAlignment.Center;
-            var header = LabelAndValue(label, value);
+            var symbol = CreateSymbol(value);
+            var header = LabelAndValue(label, value, symbol);
 
             var bar = new Grid { Height = _barHeight, Background = _track, Margin = new Thickness(0, 2, 0, 0) };
             bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) });
@@ -114,10 +116,10 @@ public sealed class DrivesWidget : Widget
             _current.Add(new Row(
                 letter,
                 ValueTemplate.Parse(DriveTemplate.Expand(_labelFormat, letter)), label,
-                ValueTemplate.Parse(DriveTemplate.Expand(_textFormat, letter)), value,
+                ValueTemplate.Parse(DriveTemplate.Expand(_textFormat, letter)), value, symbol,
                 bar, fill));
         }
     }
 
-    private sealed record Row(string Letter, ValueTemplate Label, TextBlock LabelText, ValueTemplate Template, TextBlock Value, Grid Bar, Border Fill);
+    private sealed record Row(string Letter, ValueTemplate Label, TextBlock LabelText, ValueTemplate Template, TextBlock Value, WarningSymbol? Symbol, Grid Bar, Border Fill);
 }

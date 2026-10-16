@@ -34,7 +34,7 @@ mean the widget's own.
 - **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
-- **Weather, news and Claude:** [Weather](#weather-weather) · [News](#news-news) · [Claude usage](#claude-usage-claude)
+- **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [News](#news-news) · [Claude usage](#claude-usage-claude)
 - **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape) · [Photo frame](#photo-frame-photos)
 
 ## Text (`text`)
@@ -523,6 +523,20 @@ The weather now and the days or hours ahead, from Open-Meteo.com, and severe wea
 | `textColor` | color | `foreground` | Text colour. The temperatures, and the conditions when they have the larger line (first in Details to show). |
 | `detailColor` | color | `secondary` | Detail colour. The smaller details beside the temperature, the forecast's lows, times and days, and what's under each day or hour. |
 
+## Rain soon (`rain`)
+
+The rain in the next two hours at your location, from Open-Meteo.com: a bar for each quarter of an hour, taller the heavier the rain, under a line such as Rain from 14:30. Set your location in the editor (select the widget) or on the Weather page.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `showSummary` | true/false | `true` | Summary. The line above the bars: Dry for the next 2 hours, Rain from 14:30, Rain stopping around 15:15, or Light rain for the next 2 hours (moderate or heavy when it is). It says snow instead when the forecast is for snow. |
+| `fontSize` | number (6–200) | `22` | Font size. The summary's; the times under the bars are a little smaller. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `barColor` | color | `accent` | Bar colour |
+| `textColor` | color | `foreground` | Text colour. The summary. |
+| `timeColor` | color | `secondary` | Time colour. The times under the bars. |
+| `trackColor` | color | `track` | Baseline colour. The line the bars stand on, which is all there is while it's dry. |
+
 ## News (`news`)
 
 Headlines from your news feeds (set them in the editor, or on the News feeds page), newest first, as a list, one at a time, or one at a time from each feed. Tap a headline to open it in your browser.
@@ -632,7 +646,7 @@ A `backgroundImage` is drawn over the `background` colour and behind the widgets
 
 Instead of its own values, a layout can use a saved theme by name: `"theme": "Ice"`. To change a few of the theme's
 values for one layout, name it as `base` and add the ones to change: `"theme": { "base": "Ice", "accent": "#FF4081" }`.
-Built-in themes: `8-Bit`, `Amber`, `Aurora`, `Bauhaus`, `Blue Screen`, `Blueprint`, `Catppuccin`, `Chalkboard`, `Christmas`, `Cockpit`, `Cyberpunk`, `Day of the Dead`, `Desktop 95`, `Diwali`, `Dracula`, `Dune`, `Easter`, `Eid`, `Espresso`, `Fireworks`, `Forest`, `Gatsby`, `Gingerbread`, `Glacier`, `Grimoire`, `Gruvbox`, `Halloween`, `Handheld`, `Hanukkah`, `High Contrast`, `Ice`, `Lunar New Year`, `Magma`, `Monokai`, `Night Watch`, `Noir`, `Nord`, `Notebook`, `Orange`, `Outrun`, `Rose Pine`, `Sakura`, `Shamrock`, `Solarized`, `Solarized Light`, `Stadium`, `Swiss`, `Tactical`, `Terminal`, `Tokyo Night`, `Toxic`, `Tropical`, `Typewriter`, `Valentine`, `Vaporwave`. Your own are in `themes\<name>.json` in the
+Built-in themes: `8-Bit`, `Amber`, `Aurora`, `Bauhaus`, `Blue Screen`, `Blueprint`, `Catppuccin`, `Chalkboard`, `Christmas`, `Clear Sight`, `Cockpit`, `Cyberpunk`, `Day of the Dead`, `Desktop 95`, `Diwali`, `Dracula`, `Dune`, `Easter`, `Eid`, `Espresso`, `Fireworks`, `Forest`, `Gatsby`, `Gingerbread`, `Glacier`, `Grimoire`, `Gruvbox`, `Halloween`, `Handheld`, `Hanukkah`, `High Contrast`, `Ice`, `Lunar New Year`, `Magma`, `Monokai`, `Night Watch`, `Noir`, `Nord`, `Notebook`, `Orange`, `Outrun`, `Rose Pine`, `Sakura`, `Shamrock`, `Solarized`, `Solarized Light`, `Stadium`, `Swiss`, `Tactical`, `Terminal`, `Tokyo Night`, `Toxic`, `Tropical`, `Typewriter`, `Valentine`, `Vaporwave`. Your own are in `themes\<name>.json` in the
 settings folder, each holding the settings below; changing one restyles every layout that uses it.
 
 | Setting | Type | Default | Description |
@@ -647,6 +661,7 @@ settings folder, each holding the settings below; changing one restyles every la
 | `track` | color | `#1A1A1A` | Bar track. The unfilled part of bars. |
 | `warning` | color | `#FFC107` | Warning. Used by warning colour rules that say "warning". |
 | `critical` | color | `#F44336` | Critical. Used by warning colour rules that say "critical". |
+| `warningSymbols` | true/false | `false` | Warning symbols. A value in the warning colour gets a ▲ beside it too, and one in the critical colour a ◆, so you can tell them apart without seeing colour. |
 | `backgroundImage` | imagefile | — | Image. A picture drawn behind the widgets, over the background colour. An animated GIF or a video (MP4, WMV) moves. |
 | `backgroundFit` | `fill` / `fit` / `stretch` / `center` / `tile` | `fill` | Fit. fill covers the canvas (cropping), fit shows it all, stretch distorts to fit, center and tile keep its size. |
 | `backgroundOpacity` | number (0–1) | `1` | Opacity. Below 1 the background colour shows through, e.g. 0.4 to dim a busy picture on black. |
