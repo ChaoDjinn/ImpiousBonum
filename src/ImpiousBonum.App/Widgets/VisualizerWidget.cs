@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using ImpiousBonum.App.Audio;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.Core.Audio;
+using ImpiousBonum.Core.Demo;
 using ImpiousBonum.Core.Metrics;
 
 namespace ImpiousBonum.App.Widgets;
@@ -69,6 +70,9 @@ public sealed class VisualizerWidget : Widget
 
     public override void Refresh(MetricStore store, DateTime now)
     {
+        // A snapshot with the demo readings can't listen, so it shows the demo's moment of music instead.
+        if (!_listening && store.GetAttachment(DemoReadings.Spectrum) is double[] levels)
+            _bars.ShowStill(levels);
     }
 
     private void Listen(bool on)
@@ -128,6 +132,17 @@ public sealed class VisualizerWidget : Widget
             Spectrum.Smooth(_levels, target, fall);
             // Peaks hold the highest point and drift down at a third of the speed.
             Spectrum.Smooth(_peaks, _levels, fall / 3);
+            InvalidateVisual();
+        }
+
+        /// <summary>Shows <paramref name="levels"/> (stretched or squeezed to the bars) at once, with the peaks just above.</summary>
+        public void ShowStill(IReadOnlyList<double> levels)
+        {
+            for (var i = 0; i < _levels.Length; i++)
+            {
+                _levels[i] = levels.Count == 0 ? 0 : Math.Clamp(levels[i * levels.Count / _levels.Length], 0, 1);
+                _peaks[i] = Math.Min(1, _levels[i] + 0.06);
+            }
             InvalidateVisual();
         }
 

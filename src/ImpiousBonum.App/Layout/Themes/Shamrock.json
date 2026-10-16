@@ -1,0 +1,13 @@
+// Emerald green with a pot of gold at the end, for St Patrick's Day.
+{
+  "fontFamily": "Trebuchet MS",
+  "fontWeight": "Bold",
+  "foreground": "#EFFFF4",
+  "secondary": "#BFBFF5D0",
+  "accent": "#2BD96B",
+  "background": "#052315",
+  "track": "#0E3B24",
+  "warning": "#FFB020",
+  "critical": "#FF5A5F",
+  "accent2": "#FFD447"
+}

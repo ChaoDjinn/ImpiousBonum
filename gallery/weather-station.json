@@ -1,0 +1,36 @@
+// Weather station: the weather now in detail, every three hours ahead and the week, the UV, humidity, air quality and
+// wind as dials, and the sun and pressure. Set your location on the Weather page. The air quality dial and the pollen
+// need Weather → Air quality and pollen turned on, and with Severe weather warnings on, any warning shows along the
+// bottom of the weather now.
+{
+  "width": 1920,
+  "height": 1080,
+  "theme": "Ice",
+  "widgets": [
+    { "type": "weather", "x": 40, "y": 40, "width": 720, "height": 420, "forecast": "none", "showLocation": true, "fontSize": 120,
+      "iconStyle": "colour", "details": "conditions, high and low, feels like, wind, gusts, humidity, chance of rain, UV" },
+    { "type": "clock", "x": 40, "y": 490, "width": 720, "height": 200, "timeSize": 110, "dateSize": 26, "align": "left" },
+    { "type": "weather", "x": 800, "y": 40, "width": 1080, "height": 300, "showCurrent": false, "forecast": "hours", "count": 8, "hourStep": 3,
+      "forecastSize": 24, "iconStyle": "colour", "forecastDetails": "chance of rain, wind" },
+    { "type": "weather", "x": 800, "y": 370, "width": 1080, "height": 320, "showCurrent": false, "forecast": "days", "count": 7,
+      "forecastSize": 24, "iconStyle": "colour", "forecastDetails": "chance of rain, rainfall, UV", "rainFrom": 0 },
+
+    { "type": "gauge", "x": 40, "y": 740, "width": 300, "height": 300, "label": "UV index", "metric": "weather.uv", "max": 11, "fontSize": 64,
+      "thresholds": [{ "above": 5.5, "color": "warning" }, { "above": 7.5, "color": "critical" }] },
+    { "type": "gauge", "x": 370, "y": 740, "width": 300, "height": 300, "label": "Humidity", "metric": "weather.humidity", "fontSize": 64 },
+    { "type": "gauge", "x": 700, "y": 740, "width": 300, "height": 300, "label": "Air quality", "metric": "weather.aqi", "max": 100, "fontSize": 64,
+      "thresholds": [{ "above": 40, "color": "warning" }, { "above": 80, "color": "critical" }] },
+    { "type": "gauge", "x": 1030, "y": 740, "width": 300, "height": 300, "label": "Wind", "metric": "weather.wind",
+      "text": "{weather.wind:0 nounit} {weather.wind.direction}", "max": 80, "fontSize": 56,
+      "thresholds": [{ "above": 50, "color": "warning" }, { "above": 75, "color": "critical" }] },
+    { "type": "rows", "x": 1380, "y": 750, "width": 500, "height": 290, "fontSize": 28,
+      "rows": [
+        { "label": "Sunrise", "text": "{weather.sunrise}" },
+        { "label": "Sunset", "text": "{weather.sunset}" },
+        { "label": "Daylight", "text": "{weather.daylight}" },
+        { "label": "Pressure", "text": "{weather.pressure} {weather.pressure.trend}" },
+        { "label": "Dew point", "text": "{weather.dewpoint}" },
+        { "label": "Pollen", "text": "{weather.pollen}" }
+      ] }
+  ]
+}

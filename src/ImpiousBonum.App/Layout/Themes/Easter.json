@@ -1,0 +1,13 @@
+// Lilac and mint on a cream eggshell: a light theme for spring.
+{
+  "fontFamily": "Candara",
+  "fontWeight": "Normal",
+  "foreground": "#3B2B57",
+  "secondary": "#B33B2B57",
+  "accent": "#8A5CC7",
+  "background": "#FBF6EC",
+  "track": "#EADFF2",
+  "warning": "#B86E00",
+  "critical": "#D7263D",
+  "accent2": "#24897C"
+}

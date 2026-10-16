@@ -1,0 +1,15 @@
+// Rose pinks and a little gold on dark cherry, in a love-letter script.
+{
+  "fontFamily": "Segoe Script",
+  "fontWeight": "Normal",
+  "foreground": "#FFE8EF",
+  "secondary": "#CCFFB3C6",
+  "accent": "#FF4D85",
+  "background": "#1F0710",
+  "track": "#3D1124",
+  "warning": "#FFD166",
+  "critical": "#FF2E2E",
+  "accent2": "#FFB3C9",
+  "backgroundGradient": "#33091B",
+  "glow": 0.3
+}

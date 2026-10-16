@@ -1,0 +1,14 @@
+// Lantern gold under a crescent moon on a deep teal night.
+{
+  "fontFamily": "Sitka Display",
+  "fontWeight": "Normal",
+  "foreground": "#F2FBF8",
+  "secondary": "#BFBFE7DF",
+  "accent": "#E6B655",
+  "background": "#071A2B",
+  "track": "#163247",
+  "warning": "#FF9F45",
+  "critical": "#FF5A6E",
+  "backgroundGradient": "#0D2B3A",
+  "glow": 0.25
+}

@@ -1,0 +1,14 @@
+// Lucky gold on lantern red, for the Spring Festival.
+{
+  "fontFamily": "Microsoft YaHei UI",
+  "fontWeight": "Normal",
+  "foreground": "#FFF1D6",
+  "secondary": "#CCFFD98A",
+  "accent": "#FFC93C",
+  "background": "#3D0508",
+  "track": "#5C1014",
+  "warning": "#FF9A4D",
+  "critical": "#FF7AA2",
+  "backgroundGradient": "#26030A",
+  "glow": 0.25
+}

@@ -1,0 +1,29 @@
+// Network: download and upload over time, the Wi-Fi signal and network name, the ping with its trend, and the IP
+// address and how much has gone each way. The Wi-Fi dial and name only show on a PC with Wi-Fi.
+{
+  "width": 1920,
+  "height": 480,
+  "theme": "Terminal",
+  "widgets": [
+    { "type": "lines", "x": 40, "y": 30, "width": 860, "height": 420, "fontSize": 26,
+      "lines": [
+        { "label": "Download", "metric": "net.down", "color": "accent" },
+        { "label": "Upload", "metric": "net.up", "color": "warning" }
+      ] },
+    { "type": "gauge", "x": 950, "y": 30, "width": 290, "height": 290, "label": "Wi-Fi", "metric": "wifi.signal", "text": "{wifi.signal:0 nounit}%", "fontSize": 56,
+      "thresholds": [{ "below": 50, "color": "warning" }, { "below": 30, "color": "critical" }] },
+    { "type": "text", "x": 950, "y": 340, "width": 290, "height": 50, "text": "{wifi.ssid}", "fontSize": 28, "align": "center", "color": "secondary",
+      "hideUnavailable": true },
+    { "type": "text", "x": 950, "y": 395, "width": 290, "height": 50, "text": "{wifi.rssi} dBm", "fontSize": 24, "align": "center", "color": "secondary",
+      "hideUnavailable": true },
+    { "type": "stat", "x": 1290, "y": 30, "width": 590, "height": 200, "label": "Ping", "metric": "net.ping", "fontSize": 64,
+      "thresholds": [{ "above": 60, "color": "warning" }, { "above": 120, "color": "critical" }] },
+    { "type": "rows", "x": 1290, "y": 260, "width": 590, "height": 190, "fontSize": 28,
+      "rows": [
+        { "label": "IP address", "text": "{net.ip}" },
+        { "label": "Adapter", "text": "{net.adapter}" },
+        { "label": "Downloaded", "text": "{net.down.total}" },
+        { "label": "Uploaded", "text": "{net.up.total}" }
+      ] }
+  ]
+}

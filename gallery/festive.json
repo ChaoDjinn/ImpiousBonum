@@ -1,0 +1,16 @@
+// Festive: the time, the days left until Christmas (it says so on the day, then starts on next year's), the weather
+// and your Christmas music, in the Christmas theme. Change the countdown's Until to 12-24 18:00 for Christmas Eve, or
+// 01-01 for New Year.
+{
+  "width": 1920,
+  "height": 480,
+  "theme": "Christmas",
+  "widgets": [
+    { "type": "clock", "x": 40, "y": 20, "width": 620, "height": 440, "timeSize": 160, "dateSize": 28 },
+    { "type": "timer", "x": 700, "y": 30, "width": 560, "height": 260, "mode": "until", "target": "12-25", "label": "Christmas Day",
+      "doneText": "Merry Christmas!", "fontSize": 84, "labelSize": 30 },
+    { "type": "media", "x": 700, "y": 320, "width": 560, "height": 140, "fontSize": 28, "controlSize": 40 },
+    { "type": "weather", "x": 1300, "y": 30, "width": 580, "height": 230, "forecast": "none", "fontSize": 96, "iconStyle": "colour" },
+    { "type": "weather", "x": 1300, "y": 280, "width": 580, "height": 180, "showCurrent": false, "count": 4, "forecastSize": 26, "iconStyle": "colour" }
+  ]
+}

@@ -1,0 +1,15 @@
+// Marigold and diya gold glowing into rangoli pink, for the festival of lights.
+{
+  "fontFamily": "Nirmala UI",
+  "fontWeight": "SemiLight",
+  "foreground": "#FFF3DD",
+  "secondary": "#CCFFD9A0",
+  "accent": "#FFB627",
+  "background": "#2B0838",
+  "track": "#46164F",
+  "warning": "#FF7B3A",
+  "critical": "#FF3355",
+  "accent2": "#FF66C4",
+  "backgroundGradient": "#170420",
+  "glow": 0.45
+}
