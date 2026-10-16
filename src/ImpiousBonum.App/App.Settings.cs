@@ -159,9 +159,9 @@ public partial class App : ISettingsHost
         AppLog.Info($"Tablets {(on ? "can" : "can't")} press buttons");
     }
 
-    void ISettingsHost.ShowTabletLink() => ShowTabletLink();
+    void ISettingsHost.ShowTabletLink(string? layout) => ShowTabletLink(layout);
 
-    void ISettingsHost.CopyTabletLink() => CopyTabletLink();
+    void ISettingsHost.CopyTabletLink(string? layout) => CopyTabletLink(layout);
 
     void ISettingsHost.NewTabletLink() => NewTabletLink();
 

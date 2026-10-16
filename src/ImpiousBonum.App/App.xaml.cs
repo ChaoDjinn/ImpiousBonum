@@ -166,7 +166,12 @@ public partial class App : Application
             _tray.ShowError("Settings couldn't be read", "Impious Bonum started with its default settings. Click for dashboard.log, which has the details.", TrayIcon.ShowLog);
         }
 
-        _tablet = new TabletView { AllowTaps = _settings.TabletButtons };
+        _tablet = new TabletView
+        {
+            AllowTaps = _settings.TabletButtons,
+            FindLayout = name => _layouts?.Library.Find(name),
+            LoadLayout = LoadTabletLayout,
+        };
         _tablet.ActionRequested += (_, action) => RunAction(action);
         _usb = new UsbScreenView();
         _layouts = new LayoutStore(_settings);

@@ -374,6 +374,7 @@ public partial class App
             }
             foreach (var extra in ExtrasShowing(name))
                 extra.Dashboard.SetGeometry(index, r.X, r.Y, r.Width, r.Height);
+            _tablet?.SetGeometry(name, index, r.X, r.Y, r.Width, r.Height);
             return;
         }
 
@@ -398,6 +399,7 @@ public partial class App
                 extra.Background = background;
                 extra.Dashboard.Build(session.Document, session.ResolvedTheme);
             }
+            _tablet?.Build(name, session.Document, session.ResolvedTheme);
             Refresh();
         }, DispatcherPriority.Background);
     }
@@ -418,6 +420,7 @@ public partial class App
         if (_layouts is null || _window is null)
             return;
         ApplyExtraDashboards();
+        _tablet?.ReloadLayouts();
 
         LayoutDocument layout;
         try
