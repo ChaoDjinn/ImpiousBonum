@@ -21,6 +21,12 @@ public static class DemoReadings
 
     private const long GiB = 1L << 30;
 
+    /// <summary>
+    /// A frozen moment of music for the audio visualiser (<c>double[]</c> levels from 0 to 1, bass first), since a
+    /// snapshot can't listen to anything.
+    /// </summary>
+    public const string Spectrum = "demo.spectrum";
+
     /// <summary>Fills <paramref name="store"/> with the demo readings, as they'd be at <paramref name="now"/>.</summary>
     /// <param name="artwork">The album art for what's playing (PNG or JPEG bytes), if any.</param>
     public static void Fill(MetricStore store, DateTime now, byte[]? artwork = null)
@@ -236,6 +242,47 @@ public static class DemoReadings
         store.Set(ClaudeUsageProvider.Week, 61);
         store.SetText(ClaudeUsageProvider.WeekResets, "Thursday");
         store.SetText(ClaudeUsageProvider.Status, ClaudeUsageProvider.Connected);
+
+        // Added later than the rest, so the readings above keep their made-up values from screenshot to screenshot.
+
+        // The PC is on Wi-Fi.
+        foreach (var definition in new MetricDefinition[]
+        {
+            new(NetworkProvider.Adapter, "Network adapter", "Network", MetricUnit.Text),
+            new(NetworkProvider.Address, "Local IP address", "Network", MetricUnit.Text),
+            new(NetworkProvider.DownloadTotal, "Downloaded since the adapter connected", "Network", MetricUnit.Bytes),
+            new(NetworkProvider.UploadTotal, "Uploaded since the adapter connected", "Network", MetricUnit.Bytes),
+            new(NetworkProvider.IdFor("Wi-Fi", NetworkProvider.AdapterDown)!, "Wi-Fi: download", "Network: Wi-Fi", MetricUnit.BytesPerSecond),
+            new(NetworkProvider.IdFor("Wi-Fi", NetworkProvider.AdapterUp)!, "Wi-Fi: upload", "Network: Wi-Fi", MetricUnit.BytesPerSecond),
+            new(NetworkProvider.IdFor("Wi-Fi", NetworkProvider.AdapterSpeed)!, "Wi-Fi: link speed", "Network: Wi-Fi", MetricUnit.Text),
+            new(NetworkProvider.IdFor("Wi-Fi", NetworkProvider.AdapterAddress)!, "Wi-Fi: IP address", "Network: Wi-Fi", MetricUnit.Text),
+            new(WifiProvider.Signal, "Wi-Fi signal", "Network", MetricUnit.Percent, 100),
+            new(WifiProvider.Rssi, "Wi-Fi signal strength in dBm", "Network", MetricUnit.None, Format: "0"),
+            new(WifiProvider.Network, "Wi-Fi network", "Network", MetricUnit.Text),
+        })
+        {
+            store.Register(definition);
+        }
+        store.SetText(NetworkProvider.Adapter, "Wi-Fi");
+        store.SetText(NetworkProvider.Address, "192.168.1.42");
+        store.SetText(NetworkProvider.IdFor("Wi-Fi", NetworkProvider.AdapterAddress)!, "192.168.1.42");
+        store.SetText(NetworkProvider.IdFor("Wi-Fi", NetworkProvider.AdapterSpeed)!, "1.2 Gbps");
+        store.Set(NetworkProvider.DownloadTotal, 14.2 * GiB);
+        store.Set(NetworkProvider.UploadTotal, 1.3 * GiB);
+        foreach (var value in store.GetHistory(NetworkProvider.Download, History))
+            store.Set(NetworkProvider.IdFor("Wi-Fi", NetworkProvider.AdapterDown)!, value);
+        foreach (var value in store.GetHistory(NetworkProvider.Upload, History))
+            store.Set(NetworkProvider.IdFor("Wi-Fi", NetworkProvider.AdapterUp)!, value);
+        var signal = Series(store, WifiProvider.Signal, random, 82, 4, 0.2);
+        foreach (var percent in signal)
+            store.Set(WifiProvider.Rssi, Math.Round(percent / 2 - 100));
+        store.SetText(WifiProvider.Network, "Harbourton-5G");
+
+        // A moment of the music for the audio visualiser, which a snapshot can't hear: strong bass, tailing off to the treble.
+        var spectrum = new double[64];
+        for (var i = 0; i < spectrum.Length; i++)
+            spectrum[i] = Math.Clamp(0.8 - 0.5 * i / spectrum.Length + 0.12 * Math.Sin(i * 0.9) + (random.NextDouble() - 0.5) * 0.2, 0.05, 1);
+        store.SetAttachment(Spectrum, spectrum);
     }
 
     /// <summary>

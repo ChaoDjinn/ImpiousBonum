@@ -49,4 +49,30 @@ public sealed class VisualizerTests
             }
         });
     }
+
+    [Fact]
+    public void A_snapshot_with_the_demo_readings_shows_their_music()
+    {
+        Sta.Run(() =>
+        {
+            int Drawn(MetricStore store)
+            {
+                var widget = WidgetFactory.Create(new JsonObject { ["type"] = "visualizer", ["bands"] = 16 }, Theme.From(new ThemeSettings()));
+                widget.Measure(new System.Windows.Size(320, 100));
+                widget.Arrange(new System.Windows.Rect(0, 0, 320, 100));
+                widget.Refresh(store, DateTime.Now);
+                widget.UpdateLayout();
+                var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap(320, 100, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+                bitmap.Render(widget);
+                var pixels = new byte[320 * 100 * 4];
+                bitmap.CopyPixels(pixels, 320 * 4, 0);
+                return pixels.Where((_, i) => i % 4 == 3).Count(alpha => alpha > 0);
+            }
+
+            var demo = new MetricStore();
+            Core.Demo.DemoReadings.Fill(demo, DateTime.Now);
+            Assert.True(Drawn(demo) > 320 * 100 / 4);
+            Assert.Equal(0, Drawn(new MetricStore()));
+        });
+    }
 }

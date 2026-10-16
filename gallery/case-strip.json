@@ -1,0 +1,31 @@
+// Case strip: for the tall 480 × 1920 screens that go inside a PC case. The time, temperatures and frame rate with
+// icons, CPU and GPU dials, every CPU thread, loads over time, memory, and bars that move with whatever's playing.
+// Needs the sensor service for temperatures and FPS.
+{
+  "width": 480,
+  "height": 1920,
+  "theme": "Cyberpunk",
+  "widgets": [
+    { "type": "clock", "x": 20, "y": 30, "width": 440, "height": 220, "timeSize": 130, "dateSize": 24, "dateFormat": "ddd d MMM" },
+    { "type": "icon", "x": 40, "y": 280, "width": 400, "height": 100, "icon": "cpu", "text": "{cpu.temp:0 nounit} °C", "fontSize": 64, "iconSize": 64, "gap": 36,
+      "thresholds": [{ "above": 80, "color": "warning" }, { "above": 90, "color": "critical" }] },
+    { "type": "icon", "x": 40, "y": 390, "width": 400, "height": 100, "icon": "gpu", "text": "{gpu.temp:0 nounit} °C", "fontSize": 64, "iconSize": 64, "gap": 36,
+      "thresholds": [{ "above": 80, "color": "warning" }, { "above": 88, "color": "critical" }] },
+    { "type": "icon", "x": 40, "y": 500, "width": 400, "height": 100, "icon": "fps", "text": "{fps:0 nounit} FPS", "fontSize": 64, "iconSize": 64, "gap": 36,
+      "thresholds": [{ "below": 50, "color": "warning" }, { "below": 30, "color": "critical" }] },
+    { "type": "gauge", "x": 20, "y": 640, "width": 210, "height": 210, "label": "CPU", "metric": "cpu.load", "style": "ring", "fontSize": 40, "labelSize": 20, "thickness": 12 },
+    { "type": "gauge", "x": 250, "y": 640, "width": 210, "height": 210, "label": "GPU", "metric": "gpu.load", "style": "ring", "fontSize": 40, "labelSize": 20, "thickness": 12 },
+    { "type": "cores", "x": 40, "y": 890, "width": 400, "height": 280, "style": "heatmap", "gap": 6, "cornerRadius": 4 },
+    { "type": "lines", "x": 30, "y": 1210, "width": 420, "height": 240, "fontSize": 20,
+      "lines": [
+        { "label": "CPU", "metric": "cpu.load", "color": "accent" },
+        { "label": "GPU", "metric": "gpu.load", "color": "secondary" }
+      ] },
+    { "type": "bars", "x": 40, "y": 1490, "width": 400, "height": 130, "fontSize": 24,
+      "bars": [
+        { "label": "RAM", "metric": "mem.load", "text": "{mem.used:GB}" },
+        { "label": "VRAM", "metric": "gpu.vram.usedPct", "text": "{gpu.vram.used:GB}" }
+      ] },
+    { "type": "visualizer", "x": 30, "y": 1660, "width": 420, "height": 230, "bands": 24, "gap": 5, "cornerRadius": 3 }
+  ]
+}

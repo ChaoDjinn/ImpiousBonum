@@ -1,0 +1,14 @@
+// Marigold, magenta and turquoise on deep violet, as bright as a Día de Muertos altar.
+{
+  "fontFamily": "MV Boli",
+  "fontWeight": "Normal",
+  "foreground": "#FFF4E0",
+  "secondary": "#D92EE6D6",
+  "accent": "#FF2E93",
+  "background": "#1A0B2E",
+  "track": "#33184F",
+  "warning": "#FFB000",
+  "critical": "#FF4040",
+  "accent2": "#FFB000",
+  "backgroundGradient": "#2A0F3F"
+}

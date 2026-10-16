@@ -41,6 +41,22 @@ public sealed class TimerWidgetTests
         Assert.Null(TimerWidget.ParseTarget("whenever", Noon));
     }
 
+    [Fact]
+    public void A_month_and_day_comes_round_every_year()
+    {
+        Assert.Equal(new DateTime(2026, 12, 25), TimerWidget.ParseTarget("12-25", Noon));
+        Assert.Equal(new DateTime(2026, 10, 31, 18, 0, 0), TimerWidget.ParseTarget("10-31 18:00", Noon));
+        // Still today's while today lasts, so the day itself can show it's here; then next year's.
+        Assert.Equal(new DateTime(2026, 10, 11), TimerWidget.ParseTarget("10-11", Noon));
+        Assert.Equal(new DateTime(2027, 1, 1), TimerWidget.ParseTarget("1-1", Noon));
+        Assert.Equal(new DateTime(2027, 10, 11), TimerWidget.ParseTarget("10-11", Noon.Date.AddDays(1)));
+        // 29 February waits for a leap year.
+        Assert.Equal(new DateTime(2028, 2, 29), TimerWidget.ParseTarget("02-29", Noon));
+        Assert.Null(TimerWidget.ParseTarget("12-32", Noon));
+        Assert.Null(TimerWidget.ParseTarget("02-30", Noon));
+        Assert.Null(TimerWidget.ParseTarget("12-25 24:00", Noon));
+    }
+
     [Theory]
     [InlineData(0, true, "0:00")]
     [InlineData(0.2, true, "0:01")]
@@ -122,6 +138,22 @@ public sealed class TimerWidgetTests
             Assert.Equal("1d 00:00:05", widget.ShownText);
             widget.Refresh(new MetricStore(), new DateTime(2026, 10, 12, 12, 0, 1));
             Assert.Equal("Time's up", widget.ShownText);
+        });
+    }
+
+    [Fact]
+    public void Until_a_yearly_day_shows_done_all_that_day_then_counts_to_next_year()
+    {
+        Sta.Run(() =>
+        {
+            var widget = Create(new JsonObject { ["mode"] = "until", ["target"] = "12-25", ["doneText"] = "Merry Christmas", ["label"] = Guid.NewGuid().ToString() });
+            var store = new MetricStore();
+            widget.Refresh(store, new DateTime(2026, 12, 24, 12, 0, 0));
+            Assert.Equal("12:00:00", widget.ShownText);
+            widget.Refresh(store, new DateTime(2026, 12, 25, 23, 59, 0));
+            Assert.Equal("Merry Christmas", widget.ShownText);
+            widget.Refresh(store, new DateTime(2026, 12, 26, 0, 0, 1));
+            Assert.Equal("363d 23:59:59", widget.ShownText);
         });
     }
 

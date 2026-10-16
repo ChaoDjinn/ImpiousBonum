@@ -1,0 +1,14 @@
+// Icing white, candy pink and gumdrop green on a freshly baked gingerbread house.
+{
+  "fontFamily": "Ink Free",
+  "fontWeight": "Bold",
+  "foreground": "#FFF8F0",
+  "secondary": "#CCFFE4C4",
+  "accent": "#FF7A90",
+  "background": "#3A2215",
+  "track": "#55351F",
+  "warning": "#FFC857",
+  "critical": "#FF4A3D",
+  "accent2": "#8FE3A8",
+  "backgroundGradient": "#2A170D"
+}

@@ -1,0 +1,15 @@
+// Sparkler gold bursting into magenta over a midnight sky, for New Year's Eve or Bonfire Night.
+{
+  "fontFamily": "Bahnschrift",
+  "fontWeight": "SemiBold",
+  "foreground": "#FFF7E6",
+  "secondary": "#CCC9C3FF",
+  "accent": "#FFD166",
+  "background": "#05050F",
+  "track": "#1D1A33",
+  "warning": "#FF9F1C",
+  "critical": "#FF3B3B",
+  "accent2": "#FF4FD8",
+  "backgroundGradient": "#140A2E",
+  "glow": 0.5
+}

@@ -1,0 +1,14 @@
+// Fairy-light gold and holly red on evergreen, with snow-white text.
+{
+  "fontFamily": "Cambria",
+  "fontWeight": "Bold",
+  "foreground": "#FFF8EE",
+  "secondary": "#FF9A9A",
+  "accent": "#F4C64E",
+  "background": "#0B2A1A",
+  "track": "#1B4430",
+  "warning": "#FF9F43",
+  "critical": "#FF4D5E",
+  "backgroundGradient": "#05170D",
+  "glow": 0.3
+}
