@@ -23,8 +23,21 @@
                 <TextBlock Text="and" VerticalAlignment="Center" Margin="8,0,8,0" />
                 <TextBox x:Name="ToBox" Text="07:00" Width="70" TextChanged="OnChanged" />
             </StackPanel>
-            <RadioButton x:Name="Dark" Content="While Windows is in dark mode" GroupName="When" Margin="0,8,0,0" Checked="OnChanged" />
+            <RadioButton x:Name="Night" Content="From sunset to sunrise" GroupName="When" Margin="0,8,0,0" Checked="OnChanged" />
+            <RadioButton x:Name="Daytime" Content="From sunrise to sunset" GroupName="When" Margin="0,4,0,0" Checked="OnChanged" />
+            <RadioButton x:Name="Dark" Content="While Windows is in dark mode" GroupName="When" Margin="0,4,0,0" Checked="OnChanged" />
             <RadioButton x:Name="Light" Content="While Windows is in light mode" GroupName="When" Margin="0,4,0,0" Checked="OnChanged" />
+            <RadioButton x:Name="AllDay" Content="All day, on the dates below" GroupName="When" Margin="0,4,0,0" Checked="OnChanged" />
+            <TextBlock x:Name="SunNote" Style="{DynamicResource NoteText}" Margin="0,8,0,0" Visibility="Collapsed"
+                       Text="There's no weather location yet, and sunset and sunrise are worked out from it: set one on the Weather page, or this never applies." />
+
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <CheckBox x:Name="OnDates" Content="Only from" VerticalAlignment="Center" Checked="OnChanged" Unchecked="OnChanged" />
+                <TextBox x:Name="FromDateBox" Text="12-01" Width="70" Margin="8,0,0,0" TextChanged="OnChanged" />
+                <TextBlock Text="to" VerticalAlignment="Center" Margin="8,0,8,0" />
+                <TextBox x:Name="ToDateBox" Text="12-31" Width="70" TextChanged="OnChanged" />
+            </StackPanel>
+            <TextBlock x:Name="DatesNote" Style="{DynamicResource NoteText}" Margin="0,4,0,0" />
 
             <TextBlock Text="Show" Style="{DynamicResource SectionHeading}" Margin="0,18,0,6" />
             <Grid>

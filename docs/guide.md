@@ -8,7 +8,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
-- [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [dimming](#dimming), [logging](#logging)
+- [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
 - [Command line](#command-line)
 
@@ -29,7 +29,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`, `holidayThemes`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
 
@@ -97,7 +97,7 @@ The editor is the *Layouts* page of the window, which opens on your main screen:
 - **Setting a widget up:** the weather, agenda, news and Claude usage widgets need something set up outside the layout. Select one and *Set up*, at the top of its properties, says what's set up now and has a button for it: *Set location…*, *Calendars…*, *News feeds…* or *Connect Claude Code…*. They do the same as the window's own pages.
 - **Widgets:** add, duplicate (Ctrl+D) and delete. The *Widgets* list is the drawing order, and lower in the list draws on top: drag a widget up or down it to change the order, or press Ctrl+] to bring the selected widget forward and Ctrl+[ to send it back. Right-click a widget in the list for *Bring forward*, *Send back*, *Duplicate* and *Delete*.
 - **On the dashboard itself:** while the editor is open, the dashboard shows outlines and finger-sized handles. Tap a widget to select it, drag to move, drag a handle to resize; the editor follows along (and vice versa), with the same snapping and undo.
-- **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout, each shown with a sample of its colours. *Orange* (the default look) and 54 others are built in: clean ones like *High Contrast*, *Swiss* and *Glacier*, retro ones like *Amber*, *8-Bit*, *Desktop 95* and *Blue Screen*, moods like *Outrun*, *Cyberpunk*, *Grimoire*, *Aurora* and *Gatsby*, a *Night Watch* theme in dim reds for a screen you keep on at night, well-known editor palettes such as *Dracula*, *Nord*, *Gruvbox*, *Solarized* and *Catppuccin*, and ones for the holidays through the year: *Lunar New Year*, *Valentine*, *Shamrock* (St Patrick's Day), *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* (Bonfire Night or New Year's Eve), *Hanukkah*, *Christmas* and *Gingerbread*. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
+- **Themes:** with the canvas selected, *Theme* picks a saved theme for the layout, each shown with a sample of its colours. *Orange* (the default look) and 54 others are built in: clean ones like *High Contrast*, *Swiss* and *Glacier*, retro ones like *Amber*, *8-Bit*, *Desktop 95* and *Blue Screen*, moods like *Outrun*, *Cyberpunk*, *Grimoire*, *Aurora* and *Gatsby*, a *Night Watch* theme in dim reds for a screen you keep on at night, well-known editor palettes such as *Dracula*, *Nord*, *Gruvbox*, *Solarized* and *Catppuccin*, and ones for the holidays through the year: *Lunar New Year*, *Valentine*, *Shamrock* (St Patrick's Day), *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* (Bonfire Night or New Year's Eve), *Hanukkah*, *Christmas* and *Gingerbread*, which [Holiday themes](#holiday-themes) can show on their days. Colours and fonts you change below it apply to this layout only (↺ goes back to the theme's value). *Save theme as…* keeps the current look as a new theme for other layouts, *Update theme* writes your changes into a theme of your own (restyling every layout that uses it), and *Detach* copies the theme's values into the layout so later changes to the theme don't affect it. Built-in themes can't be changed; *Save theme as…* makes your own copy.
 - **Moving backgrounds:** the theme's background *Image* can be an animated GIF or a video (MP4, M4V or WMV), which plays muted and on a loop behind the widgets, with the same fit and opacity settings as a picture. GIF frames are prepared once at the size the canvas shows them and kept under 48 MB in all (a long GIF is made smaller, then thinned), and fast GIFs are held to 20 frames a second. A moving background stops while the dashboard is hidden. The tablet view and USB screens show a still frame. Moving backgrounds cost more CPU than a still picture, a video most of all, since the dashboard draws without the graphics card unless you turn hardware rendering on. Exported layouts carry a video up to 50 MB.
 - **A widget's own look:** every widget has *Widget theme* settings (font, weight and the theme's colours) that override the layout's theme for that widget alone; leave them empty to follow the theme. Named colours in its other settings, like `accent`, then mean the widget's own. Many widgets also have colours of their own, such as a bar's track or *Now playing*'s progress bar, so changing the theme's bar track doesn't change everything that happens to use it.
 - **Text that fits:** a big font size, or a font that's wider or taller than the theme's, can make text too big for its widget. Widgets with text have *Shrink to fit*, on by default: text that would be cut off gets smaller, evenly, until it fits, and a label and its value on one line get smaller together rather than run into each other. Text that fits keeps exactly the size you set; turn it off to keep your sizes whatever happens. Names that end with … when they're too long, as in *Top apps*, still do, down to their first few letters. *Agenda* and *News* end long lines with … too, and rather than shrink the whole list, they leave out the rows at the bottom that would be cut off; a first row too tall for the widget on its own gets smaller.
@@ -596,21 +596,58 @@ This works whether or not *Switch automatically* is on.
 
 ### Schedule
 
-The dashboard can change with the time of day: the dim red *Night Watch* theme from 22:00 to 07:00, say, a calmer layout during working hours, or the screen at 30% overnight. It can also follow Windows' dark and light mode, e.g. *Nord* while Windows is dark and *Glacier* while it's light.
+The dashboard can change with the time of day: the dim red *Night Watch* theme from 22:00 to 07:00, say, a calmer layout during working hours, or the screen at 30% overnight. It can also follow the sun, Windows' dark and light mode, or the time of year: *Night Watch* from sunset to sunrise, *Nord* while Windows is dark and *Glacier* while it's light, or a spooky theme from 24 October to 1 November.
 
-*Pages and schedule* → *Add to the schedule* picks when (between two times, which may cross midnight, or while Windows is in dark or light mode) and what to do: show a layout, a theme, dim the screen (see [Dimming](#dimming)), or any mix. The page lists the rules, marking the ones that apply now, and *Follow the schedule* turns them all off and on. Rules combine: when several apply, the layout comes from the first of them that names a layout, the theme from the first that names a theme, and the brightness likewise.
+*Pages and schedule* → *Add to the schedule* picks when and what to do. When is one of:
+
+- **Between two times**, which may cross midnight.
+- **From sunset to sunrise**, or **from sunrise to sunset**. The sun's times are worked out on your PC for the weather's location (see [Weather](#weather)), so nothing is fetched for them, but without a location these rules never apply: the dialog and the page say so.
+- **While Windows is in dark mode**, or in light mode.
+- **All day**, on the dates below.
+
+*Only from … to …* limits any of them to the same dates every year, written month then day: `10-24` to `11-01`, or `12-20` to `01-06`, which crosses New Year. Both days are included, and the same date twice is a single day. The dialog spells the dates out (*Every year from 24 Oct to 1 Nov*) so a day written first shows up. A night belongs to the evening it starts: 01:00 on 1 November is still the night of 31 October, so a Halloween rule from 18:00 to 02:00 on `10-31` lasts into the small hours, and so does one from sunset to sunrise.
+
+What to do is show a layout, a theme, dim the screen (see [Dimming](#dimming)), or any mix. The page lists the rules, marking the ones that apply now, and *Follow the schedule* turns them all off and on. Rules combine: when several apply, the layout comes from the first of them that names a layout, the theme from the first that names a theme, and the brightness likewise. So put a rule for some dates above an everyday one for its theme to win on those dates.
 
 A game linked under *Game layouts* still wins while it's in front, and the schedule fills in what its link doesn't set: a game linked to a layout gets the night theme at night. Like game layouts, scheduled ones are temporary: picking a layout from the tray makes it your choice, and renaming a layout updates the rules. The schedule is in `settings.json` too:
 
 ```json
 "schedule": [
+  { "fromDate": "10-24", "toDate": "11-01", "theme": "Grimoire" },
+  { "when": "night", "fromDate": "12-01", "toDate": "12-31", "theme": "Ice" },
   { "from": "22:00", "to": "07:00", "theme": "Night Watch" },
   { "when": "dark", "theme": "Nord" },
   { "from": "09:00", "to": "17:30", "layout": "Work" },
   { "from": "00:00", "to": "06:00", "brightness": 0 }
 ],
-"scheduleEnabled": true
+"scheduleEnabled": true,
+"holidayThemes": false
 ```
+
+`when` is `dark` or `light` for Windows' mode, or `night` (sunset to sunrise) or `day` (sunrise to sunset). `fromDate` and `toDate` go with any rule, or make one on their own for the whole of those days.
+
+#### Holiday themes
+
+*Pages and schedule* → *Holiday themes* (off until you turn it on) shows the built-in holiday theme on and around each holiday, and says which it's showing or which comes next:
+
+| Theme | When |
+|---|---|
+| *Lunar New Year* | From the eve, for a week |
+| *Valentine* | 13 and 14 February |
+| *Shamrock* | 16 and 17 March, for St Patrick's Day |
+| *Easter* | Good Friday to Easter Monday |
+| *Eid* | Eid al-Fitr from the eve for three days, and Eid al-Adha from the eve for four |
+| *Diwali* | Its five days, from two before Lakshmi Puja to two after |
+| *Halloween* | 24 to 31 October |
+| *Day of the Dead* | 1 and 2 November |
+| *Fireworks* | Bonfire Night (5 November), and New Year's Eve to New Year's Day |
+| *Hanukkah* | From the eve, for the eight days |
+| *Gingerbread* | 1 to 17 December |
+| *Christmas* | 18 to 30 December |
+
+Easter is worked out, and Hanukkah, Eid and Lunar New Year come from the Hebrew, Um al-Qura (Saudi Arabia's, which most printed calendars follow) and Chinese calendars that come with Impious Bonum, so they keep coming round. Eid starts when the new moon is seen, so where you are it may begin a day later. Diwali's dates are in a table that runs to 2035. When two holidays overlap, the shorter one shows: Christmas Day over Hanukkah, Hanukkah over the run-up to Christmas, and Diwali over Halloween.
+
+A holiday's theme comes after everything else: a rule above that sets a theme (while *Follow the schedule* is on) wins, and so does a game's link, but a rule that only sets a layout or brightness still gets the holiday's theme. It's stored as `holidayThemes` in `settings.json`.
 
 #### Dimming
 
