@@ -127,6 +127,9 @@ A big one: themes for the holidays and a schedule that puts them on by itself, n
 - *Restore…* shows what's in a backup (when it was made, by which version, how many layouts and themes) and asks before replacing anything. It saves your setup as it is first, in `%AppData%\ImpiousBonum backups`, so you can go back, then Impious Bonum starts again with the backup's. A backup from a newer version says so first.
 - Logs and the list of game sessions aren't in a backup, and restoring leaves yours as they are.
 
+**Safer shared layouts**
+- A layout from someone else can no longer fetch a font from another PC. Its theme, or one of its widgets, could name a font by an address such as `file://server/fonts/#Name`, which would have Windows reach out to that PC as soon as the layout was drawn, and send it your sign-in. Importing a layout, or picking one in the gallery, now leaves such a font out and says so, and one already in a saved layout is drawn in the theme's font (or Segoe UI) instead and listed as a problem in the editor.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

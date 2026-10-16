@@ -232,6 +232,33 @@ public sealed class LayoutPackageTests : IDisposable
     }
 
     [Fact]
+    public void Font_names_that_are_addresses_are_left_out()
+    {
+        // WPF would fetch these fonts from another PC as soon as the layout is drawn, sending your sign-in to it. The
+        // second "FontFamily" is the one a theme is drawn with: keys match ignoring case, and the last one wins.
+        const string layout = """
+            { "theme": { "base": "Ice", "fontFamily": "Bahnschrift", "FontFamily": "file://nas/share/#Evil", "accent": "#123456" },
+              "widgets": [
+                { "type": "clock", "x": 0, "y": 0, "width": 100, "height": 50, "fontFamily": "\\\\nas\\share\\#Evil" },
+                { "type": "clock", "x": 0, "y": 50, "width": 100, "height": 50, "fontFamily": "Cascadia Mono, Consolas" }
+              ] }
+            """;
+        using var package = Zip(("layout.json", layout));
+
+        var contents = LayoutPackage.Read(package, "x");
+
+        Assert.Equal("Bahnschrift", Resolved(contents.Layout).FontFamily);
+        Assert.Equal("Ice", ThemeLibrary.BaseName(contents.Layout.Theme));
+        Assert.Equal("#123456", Resolved(contents.Layout).Accent);
+        Assert.Null(contents.Layout.Widgets[0]["fontFamily"]);
+        Assert.Equal("Cascadia Mono, Consolas", (string?)contents.Layout.Widgets[1]["fontFamily"]);
+        Assert.Equal(
+            ["The theme's font isn't the name of a font: file://nas/share/#Evil", "Widget 1 (clock): its font isn't the name of a font: \\\\nas\\share\\#Evil"],
+            contents.Skipped);
+        Assert.Empty(LayoutValidator.Validate(contents.Layout));
+    }
+
+    [Fact]
     public void Oversized_entries_are_rejected_by_their_real_size()
     {
         // Compresses to almost nothing, like a zip bomb would.

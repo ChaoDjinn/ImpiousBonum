@@ -35,7 +35,8 @@ public sealed class LayoutPackageContents
 /// the theme's font file and background image under <c>assets/</c>, referenced by those relative paths so the
 /// package works on another PC. Packages come from other people, so reading one trusts nothing in it: entry names
 /// with <c>..</c> or absolute paths reject the whole package, only the layout and a font and image it references are
-/// read, and sizes are capped by counting the bytes actually decompressed.
+/// read, sizes are capped by counting the bytes actually decompressed, and font names that are really addresses are
+/// left out.
 /// </summary>
 public static class LayoutPackage
 {
@@ -172,6 +173,7 @@ public static class LayoutPackage
                 widget.Remove(ImageFileKey);
             }
             DropPhotoFolders(layout);
+            DropFontAddresses(layout, skipped);
 
             skipped.AddRange(entries.Keys.Where(key => !used.Contains(key)).Order(StringComparer.OrdinalIgnoreCase).Select(key => $"{key}: not used by the layout"));
             return new LayoutPackageContents { Name = name, Layout = layout, Font = font, Background = background, Images = images, Skipped = skipped };
@@ -180,7 +182,8 @@ public static class LayoutPackage
 
     /// <summary>
     /// A bare layout file (no package around it), as the gallery can list: it carries no fonts or pictures, so any
-    /// the theme or image widgets point at, which would be paths on someone else's PC, are dropped, as are photo frames' folders.
+    /// the theme or image widgets point at, which would be paths on someone else's PC, are dropped, as are photo frames'
+    /// folders. Font names that are really addresses are dropped as in a package, and named in <see cref="LayoutPackageContents.Skipped"/>.
     /// </summary>
     public static LayoutPackageContents FromLayoutJson(byte[] json, string name)
     {
@@ -192,7 +195,9 @@ public static class LayoutPackage
         foreach (var (widget, _) in ImageWidgets(layout))
             widget.Remove(ImageFileKey);
         DropPhotoFolders(layout);
-        return new LayoutPackageContents { Name = ValidName(name), Layout = layout };
+        var skipped = new List<string>();
+        DropFontAddresses(layout, skipped);
+        return new LayoutPackageContents { Name = ValidName(name), Layout = layout, Skipped = skipped };
     }
 
     public static LayoutPackageContents Read(string path)
@@ -354,6 +359,39 @@ public static class LayoutPackage
     {
         foreach (var widget in layout.Widgets.Where(w => string.Equals(w.GetString("type"), "photos", StringComparison.OrdinalIgnoreCase)))
             widget.Remove(PhotoFolderKey);
+    }
+
+    /// <summary>The key a layout's theme, and a widget with a font of its own, name the font with.</summary>
+    private const string FontKey = "fontFamily";
+
+    /// <summary>
+    /// Leaves out fonts in the theme and in widgets given by an address rather than a name, such as
+    /// <c>file://server/fonts/#Name</c>: drawing with one would have Windows reach out to that PC (see
+    /// <see cref="Theme.IsFontAddress"/>). Without it the theme's font, or the default, is used.
+    /// </summary>
+    private static void DropFontAddresses(LayoutDocument layout, List<string> skipped)
+    {
+        foreach (var font in RemoveFontAddresses(layout.Theme))
+            skipped.Add($"The theme's font isn't the name of a font: {font}");
+        for (var i = 0; i < layout.Widgets.Count; i++)
+        {
+            var widget = layout.Widgets[i];
+            foreach (var font in RemoveFontAddresses(widget))
+                skipped.Add($"Widget {i + 1} ({widget.GetString("type") ?? "no type"}): its font isn't the name of a font: {font}");
+        }
+    }
+
+    /// <summary>Removes the fonts given by an address, under the key in any case, and returns them.</summary>
+    private static List<string> RemoveFontAddresses(JsonObject values)
+    {
+        var addresses = values
+            .Where(p => string.Equals(p.Key, FontKey, StringComparison.OrdinalIgnoreCase))
+            .Select(p => (p.Key, Font: p.Value is JsonValue value && value.TryGetValue<string>(out var font) ? font : null))
+            .Where(p => Theme.IsFontAddress(p.Font))
+            .ToList();
+        foreach (var (key, _) in addresses)
+            values.Remove(key);
+        return [.. addresses.Select(p => p.Font!)];
     }
 
     private static LayoutDocument Clone(LayoutDocument layout) =>

@@ -60,6 +60,35 @@ public sealed class GalleryTests
     }
 
     [Fact]
+    public void A_gallery_layout_leaves_out_font_names_that_are_addresses()
+    {
+        // Left out as it opens, since the gallery shows a layout as soon as it's picked, before it's added.
+        var json = """
+            { "theme": { "fontFamily": "\\\\nas\\fonts\\#Evil" },
+              "widgets": [ { "type": "clock", "fontFamily": "file://nas/fonts/#Evil" }, { "type": "clock", "fontFamily": "Consolas" } ] }
+            """;
+        var bare = Gallery.Open(new GalleryEntry("Shared", "shared.json", null, null, 0, 0), Encoding.UTF8.GetBytes(json));
+
+        Assert.Null(ThemeLibrary.GetString(bare.Layout.Theme, "fontFamily"));
+        Assert.Null(bare.Layout.Widgets[0]["fontFamily"]);
+        Assert.Equal("Consolas", bare.Layout.Widgets[1].GetString("fontFamily"));
+        Assert.Equal(2, bare.Skipped.Count);
+
+        // A package from the gallery too.
+        using var stream = new MemoryStream();
+        LayoutPackage.Write(new LayoutDocument
+        {
+            Theme = new JsonObject { ["fontFamily"] = "file://nas/fonts/#Evil" },
+            Widgets = [new JsonObject { ["type"] = "clock", ["fontFamily"] = "\\\\nas\\fonts\\#Evil" }],
+        }, "Shared", stream);
+        var package = Gallery.Open(new GalleryEntry("Shared", "shared.ibl", null, null, 0, 0), stream.ToArray());
+
+        Assert.Equal("Segoe UI", new ThemeLibrary(null).Resolve(package.Layout.Theme).FontFamily);
+        Assert.Null(package.Layout.Widgets[0]["fontFamily"]);
+        Assert.Equal(2, package.Skipped.Count(s => s.Contains("isn't the name of a font")));
+    }
+
+    [Fact]
     public void A_package_is_named_after_its_gallery_entry()
     {
         using var stream = new MemoryStream();
