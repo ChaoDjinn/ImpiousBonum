@@ -214,29 +214,7 @@ public sealed class ThemeTests : IDisposable
     }
 
     /// <summary>The WCAG contrast ratio of a colour (blended over the background if translucent) against the background.</summary>
-    private static double Contrast(string color, string background)
-    {
-        var fore = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color);
-        var back = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(background);
-        var alpha = fore.A / 255.0;
-        double Blend(byte f, byte b) => f * alpha + b * (1 - alpha);
-        var lighter = Luminance(Blend(fore.R, back.R), Blend(fore.G, back.G), Blend(fore.B, back.B));
-        var darker = Luminance(back.R, back.G, back.B);
-        if (lighter < darker)
-            (lighter, darker) = (darker, lighter);
-        return (lighter + 0.05) / (darker + 0.05);
-    }
-
-    private static double Luminance(double r, double g, double b)
-    {
-        static double Linear(double channel)
-        {
-            channel /= 255;
-            return channel <= 0.03928 ? channel / 12.92 : Math.Pow((channel + 0.055) / 1.055, 2.4);
-        }
-
-        return 0.2126 * Linear(r) + 0.7152 * Linear(g) + 0.0722 * Linear(b);
-    }
+    private static double Contrast(string color, string background) => ColourContrast.Ratio(color, background);
 
     [Fact]
     public void A_file_named_like_a_built_in_theme_is_ignored()
