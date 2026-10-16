@@ -5,16 +5,36 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 
 ## Unreleased
 
-Themes for the holidays, eight more layouts in the gallery, countdowns that come round every year, and a schedule that follows the sun and the calendar.
+A big one: themes for the holidays and a schedule that puts them on by itself, nine new widgets and readings (countdowns, a photo frame, rain soon, the sun and moon, status checks, energy and cost, the microphone and camera, device batteries and game cover art), a layout for each tablet, snapping and alignment in the editor, themes made from a picture, warnings you can tell apart without colour, and backups of your whole setup.
 
 **Holiday themes**
 - Twelve new built-in themes for the holidays through the year: *Lunar New Year* (gold on lantern red), *Valentine* (rose pinks in a love-letter script), *Shamrock* (emerald and gold for St Patrick's Day), *Easter* (a light theme in lilac and mint), *Eid* (lantern gold on a teal night), *Diwali* (marigold glowing into rangoli pink), *Halloween* (pumpkin orange fading to witch's purple, with a jack-o'-lantern glow), *Day of the Dead* (marigold, magenta and turquoise), *Fireworks* (gold bursting into magenta, for Bonfire Night or New Year's Eve), *Hanukkah* (blue and silver by candlelight), *Christmas* (fairy-light gold and holly red on evergreen) and *Gingerbread* (icing, candy pink and gumdrop green). That's 55 in all.
+
+**Schedule**
+- Schedule rules can follow the sun: show *Night Watch* from sunset to sunrise, say, or a bright theme from sunrise to sunset. Sunset and sunrise are worked out on your PC for the weather's location, so nothing extra is fetched; without a location these rules never apply, and the dialog and *Pages and schedule* say so.
+- Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.
+- *Holiday themes* on *Pages and schedule* shows the matching new holiday theme on and around each holiday: *Lunar New Year*, *Valentine*, *Shamrock*, *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* for Bonfire Night and New Year's Eve, *Hanukkah*, *Gingerbread* and *Christmas*. Easter is worked out, and Hanukkah, Eid and Lunar New Year come from the Hebrew, Islamic and Chinese calendars that come with the app, so they move with the year; Diwali's dates run to 2035. It's off until you turn it on, and a rule in the schedule or a game that sets a theme still wins.
+
+**Snow, leaves and more**
+- A new theme setting, *Particles*: snow, autumn leaves, cherry-blossom petals or confetti falling behind the widgets, or embers rising from the bottom. Snow sways as it falls, leaves tumble, petals flutter, and embers drift up and fade. *Amount* sets how many, and *Colour* makes them all one colour; otherwise snow is white, leaves are autumn colours, petals pink and embers orange and gold, and confetti comes in the theme's colours.
+- The built-in themes leave them off, since they cost CPU. They're cheap on a small screen with no glow, but with a theme's glow, or on a 4K dashboard, they take most of a CPU core unless you turn on *Draw with the graphics card*. The guide has the numbers, and suggests snow with *Christmas* and leaves or embers with *Halloween*, with their glow turned off.
+- They stop while the dashboard is hidden or minimised, and the tablet view, USB screens and snapshots show them still. Moving backgrounds now stop while it's minimised too.
 
 **Themes from a picture**
 - *Colours from ▾* in the editor's theme settings makes the layout's colours from your Windows wallpaper, the layout's background image, a picture you choose, or Windows' accent colour. It shows in the preview straight away, one undo puts your colours back, and *Save theme as…* keeps it as a theme of your own.
 - The background comes from a dark colour that covers much of the picture, or a light one for a mostly light picture, which makes a light theme. The accents come from its most vivid colours, and the text, bar track, warning and critical colours are made to go with them.
 - However dark, light, dull or garish the picture, the text stays easy to read and the accents, warnings and critical colours stand out from the background as much as in the built-in themes. Warnings stay amber and critical red where they can, turning towards yellow, orange or pink when the picture's own colours are close to them.
 - With Windows' accent colour, the theme is dark or light to match your apps in Windows. A wallpaper slideshow or Windows Spotlight gives the picture showing at the moment, and a solid colour wallpaper works too.
+
+**Warnings you can tell apart without colour**
+- A new theme setting, *Warning symbols*: a value in the theme's warning colour gets a ▲ beside it too, and one in its critical colour a ◆, so warning and critical don't rely on colour alone. Text, icon and value, stat tiles, graphs, gauges, bars, drives and *Top apps* show it; *CPU threads* keeps to colour. It's off unless you turn it on, and text that only just fits shrinks a little to make room for it.
+- A new built-in theme, *Clear Sight*, for colour blindness: a sky blue accent, gold warnings and deep pink-red critical ones that stay apart with every common kind of colour blindness, with warning symbols on. That's 56 in all.
+- Ticking a box in the editor's settings with Narrator now changes the setting, as clicking it does.
+
+**Themes in the gallery**
+- The *Gallery* page has a *Themes* tab: themes other people have made, each shown on the default layout with your own readings. *Add to my themes* keeps one with your saved themes, for any layout to use, asking before it replaces a theme of yours with the same name.
+- Five to start with: *Deep Sea* (bioluminescent teal glowing on abyss blue), *Nebula* (violet fading into blue, with a pink glow), *Copper* (copper and brass on dark gunmetal), and two light ones, *Matcha* (soft greens on a pale foam) and *Paper* (e-ink greys).
+- To share a theme of your own, see [Sharing a theme](gallery/README.md#sharing-a-theme).
 
 **More layouts in the gallery**
 - *Listening Room* (1920 × 480): what's playing with its album art, volume buttons, the time, and an audio visualiser right across the bottom.
@@ -27,56 +47,18 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - *Case Strip* (480 × 1920): for the tall screens inside a PC case, with temperatures and FPS, CPU and GPU dials, every CPU thread, memory and an audio visualiser.
 - That's 21 in all. The gallery's pictures now show the audio visualiser moving, as it would with music on.
 
-**Themes in the gallery**
-- The *Gallery* page has a *Themes* tab: themes other people have made, each shown on the default layout with your own readings. *Add to my themes* keeps one with your saved themes, for any layout to use, asking before it replaces a theme of yours with the same name.
-- Five to start with: *Deep Sea* (bioluminescent teal glowing on abyss blue), *Nebula* (violet fading into blue, with a pink glow), *Copper* (copper and brass on dark gunmetal), and two light ones, *Matcha* (soft greens on a pale foam) and *Paper* (e-ink greys).
-- To share a theme of your own, see [Sharing a theme](gallery/README.md#sharing-a-theme).
-
-**Countdowns every year**
-- A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
-
-**Status checks**
-- A *Status checks* page and a `status` widget for your own servers and services: a NAS, Pi-hole, Plex, the router or a website. Each check pings a host name or IP address, or asks a web address for its page (which can have to say a word, such as *Plex*), every 60 seconds or as often as you like. The widget lists them, or puts them in a grid, each with a dot in the accent colour while it's up and the critical colour while it's down, and how fast it answered.
-- A check that fails is checked again 10 seconds later, and only counts as down if that fails too, so one lost answer doesn't.
-- Each check has readings any widget can show, such as `status.nas.up`, `status.nas.ms` and `status.nas.since` (*3 h*), and `status.summary` says *All up* or which are down (*1 down: Plex*). *Alert…* beside a check sets up an alert for when it goes down.
-- Nothing is checked until you add a check, and only the addresses you add are contacted.
-
 **Lining widgets up in the editor**
 - Widgets snap to each other as you drag or resize them: their edges and centres line up with other widgets' edges and centres, and with the canvas's edges and middle, and a thin line shows what they've lined up with. Hold Alt to place freely, as before.
 - Select several widgets at once: Ctrl+click or Shift+click them in the preview or the *Widgets* list, drag a box around them on empty canvas, or press Ctrl+A for all of them. Drag one to move them all, nudge them with the arrow keys, or duplicate or delete them together.
 - *Align* on the toolbar, and in the list's right-click menu, lines up the selected widgets by their left edges, centres, right edges, tops, middles or bottoms, spaces three or more out with equal gaps, or makes them all the same width or height. Each is one undo.
 
-**Microphone and camera**
-- Whether your microphone is muted (`mic.muted`) and its name (`mic.name`), and which apps are using the microphone or the camera (`mic.inuse`, `mic.apps`, `camera.inuse`, `camera.apps`, e.g. *Discord, OBS*). Give a text or icon widget a warning colour on one of them for an *on air* light, or a reminder that you're muted. Windows doesn't ask permission or show its microphone icon for any of it: Impious Bonum never uses the microphone or camera itself.
-- A *Buttons* action, `mic-mute`, mutes and unmutes the microphone. With the new `mic` icon, the button shows `mic-off` while it's muted.
-- `mic` and `mic-off` icons, for buttons and the *Icon and value* widget.
+**Countdowns every year**
+- A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
 **Countdowns widget**
 - A new *Countdowns* widget, under *Time and calendar*, lists how long it is until the days you're looking forward to, soonest first: birthdays, holidays, a game's release, a trip. Each row shows its label and *69 days*, *Tomorrow* or *Today*, or the days, hours and minutes (*69d 02:13*).
 - A month and day such as `12-25` comes round every year, starting again the day after; a date such as `2026-12-25 18:00` leaves the list once its day is over. The ones that are today are in the accent colour.
 - It can have a heading, and says *Nothing coming up* (or your own words) when there's nothing left to count down to.
-
-**Schedule**
-- Schedule rules can follow the sun: show *Night Watch* from sunset to sunrise, say, or a bright theme from sunrise to sunset. Sunset and sunrise are worked out on your PC for the weather's location, so nothing extra is fetched; without a location these rules never apply, and the dialog and *Pages and schedule* say so.
-- Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.
-- *Holiday themes* on *Pages and schedule* shows the matching new holiday theme on and around each holiday: *Lunar New Year*, *Valentine*, *Shamrock*, *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* for Bonfire Night and New Year's Eve, *Hanukkah*, *Gingerbread* and *Christmas*. Easter is worked out, and Hanukkah, Eid and Lunar New Year come from the Hebrew, Islamic and Chinese calendars that come with the app, so they move with the year; Diwali's dates run to 2035. It's off until you turn it on, and a rule in the schedule or a game that sets a theme still wins.
-
-**Sun and moon**
-- A new *Sun and moon* widget, under *Weather, news and Claude*: the day as an arc from sunrise to sunset with the sun on its way across and how long it's light, and beside it the moon as it looks tonight, with its phase, how much of it is lit, the next full moon, and when it rises and sets. It can show just the sun or just the moon too.
-- The moon is drawn the way up it looks from where you are: lit on the right as it grows in the northern hemisphere, on the left in the southern.
-- New readings for any widget: the moon's phase (`moon.phase`, e.g. *Waxing gibbous*), how much of it is lit (`moon.illumination`), how many days since the new moon (`moon.age`), the next full and new moons (`moon.next.full`, `moon.next.new`, e.g. *Sat 24 Oct*), and moonrise and moonset (`moon.rise`, `moon.set`).
-- It's all worked out on your PC from the date and the weather's location, so nothing is sent. The moon's phase works without a location; the sun, moonrise and moonset need one.
-
-**Backing up your settings**
-- *General* → *Back up…* saves your whole setup as one `.ibbackup` file: your settings, every saved layout with its fonts and pictures, and your saved themes. Keep it somewhere safe, or take it to another PC. It has private things in it, such as your calendar links and the tablet link, so keep it to yourself.
-- *Restore…* shows what's in a backup (when it was made, by which version, how many layouts and themes) and asks before replacing anything. It saves your setup as it is first, in `%AppData%\ImpiousBonum backups`, so you can go back, then Impious Bonum starts again with the backup's. A backup from a newer version says so first.
-- Logs and the list of game sessions aren't in a backup, and restoring leaves yours as they are.
-
-**Rain soon**
-- A new *Rain soon* widget, under *Weather, news and Claude*, shows the rain in the next two hours at your location: a bar for each quarter of an hour, taller the heavier the rain, with the time every half hour under them. A drizzle still shows, and two dry hours are just a line.
-- A line above the bars says what's coming: *Dry for the next 2 hours*, *Rain from 14:30*, *Rain stopping around 15:15* or *Light rain for the next 2 hours*, and snow when the forecast is for snow.
-- The same as readings for any widget: `weather.rain.soon` for that line, and `weather.rain.next` for the minutes until it rains (0 while it is). An alert on it below 30 is a reminder to bring the washing in.
-- It's most precise in central Europe and North America, where Open-Meteo's forecast is worked out a quarter of an hour at a time; elsewhere it's filled in from the hourly forecast. It comes in the same request as the rest of the forecast, so nothing more is sent.
 
 **Photo frame**
 - A new *Photo frame* widget, under *Pictures and shapes*: a slideshow of the pictures in a folder, like a digital photo frame. Choose the folder in the editor, how long each photo shows, and whether they're shuffled or go by name or date. Tap it for the next one.
@@ -84,10 +66,51 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - It stays light with big photos: only the photo on show and the next one are read, at about the size they're shown, and nothing is read while the dashboard is hidden. Photos added to the folder turn up within a few minutes, and pictures that can't be read are passed over.
 - The folder stays on your PC: exported layouts and layouts in the gallery leave it out.
 
+**The cover art of the game you're playing**
+- An *Image* widget can show the game you're playing instead of a picture from a file: set *Show* to *game* and pick its *Game picture*. For a Steam game that's Steam's own art: the tall *cover*, the wide *header* banner or the big *hero* picture from its library page. Other games show their own icon.
+- The pictures come from Steam's cache on your PC, so nothing is downloaded. A game counts when Steam installed it, or when you've linked it to a layout or theme on the *Game layouts* page, which is how games from other stores get their icon.
+- The widget is empty while no game is in front, or with *Hide when there's no game*, hidden. A quick alt-tab doesn't blank it.
+- Two new readings for any widget: `game.name` (Steam's name for the game, or the one in its exe) and `game.appid` (its Steam app id).
+- The *Gaming HUD* in the gallery shows the game's banner beside the session so far.
+- An *Image* widget set to *fill* now crops its picture to the widget's own shape, rather than sometimes cutting off more than it needed to.
+
+**Rain soon**
+- A new *Rain soon* widget, under *Weather, news and Claude*, shows the rain in the next two hours at your location: a bar for each quarter of an hour, taller the heavier the rain, with the time every half hour under them. A drizzle still shows, and two dry hours are just a line.
+- A line above the bars says what's coming: *Dry for the next 2 hours*, *Rain from 14:30*, *Rain stopping around 15:15* or *Light rain for the next 2 hours*, and snow when the forecast is for snow.
+- The same as readings for any widget: `weather.rain.soon` for that line, and `weather.rain.next` for the minutes until it rains (0 while it is). An alert on it below 30 is a reminder to bring the washing in.
+- It's most precise in central Europe and North America, where Open-Meteo's forecast is worked out a quarter of an hour at a time; elsewhere it's filled in from the hourly forecast. It comes in the same request as the rest of the forecast, so nothing more is sent.
+
+**Sun and moon**
+- A new *Sun and moon* widget, under *Weather, news and Claude*: the day as an arc from sunrise to sunset with the sun on its way across and how long it's light, and beside it the moon as it looks tonight, with its phase, how much of it is lit, the next full moon, and when it rises and sets. It can show just the sun or just the moon too.
+- The moon is drawn the way up it looks from where you are: lit on the right as it grows in the northern hemisphere, on the left in the southern.
+- New readings for any widget: the moon's phase (`moon.phase`, e.g. *Waxing gibbous*), how much of it is lit (`moon.illumination`), how many days since the new moon (`moon.age`), the next full and new moons (`moon.next.full`, `moon.next.new`, e.g. *Sat 24 Oct*), and moonrise and moonset (`moon.rise`, `moon.set`).
+- It's all worked out on your PC from the date and the weather's location, so nothing is sent. The moon's phase works without a location; the sun, moonrise and moonset need one.
+
+**Status checks**
+- A *Status checks* page and a `status` widget for your own servers and services: a NAS, Pi-hole, Plex, the router or a website. Each check pings a host name or IP address, or asks a web address for its page (which can have to say a word, such as *Plex*), every 60 seconds or as often as you like. The widget lists them, or puts them in a grid, each with a dot in the accent colour while it's up and the critical colour while it's down, and how fast it answered.
+- A check that fails is checked again 10 seconds later, and only counts as down if that fails too, so one lost answer doesn't.
+- Each check has readings any widget can show, such as `status.nas.up`, `status.nas.ms` and `status.nas.since` (*3 h*), and `status.summary` says *All up* or which are down (*1 down: Plex*). *Alert…* beside a check sets up an alert for when it goes down.
+- Nothing is checked until you add a check, and only the addresses you add are contacted.
+
 **Energy use and cost**
 - A new *Energy* page, and readings for any widget: your whole PC's power now (`power.total`: the CPU's and graphics card's from the sensor service, and 50 W for the rest, which you can change), the energy it's used today and this month (`energy.today`, `energy.month`), and what that costs at your price per kWh (`energy.cost.today`, `energy.cost.month`, such as *£0.48*).
 - It's counted while Impious Bonum runs, needs the sensor service, and is kept across restarts. Today's total starts again at midnight, and the month's on the 1st.
 - Turn on *Energy* → *Grid carbon intensity* for how clean Great Britain's electricity is now (`grid.carbon`, `grid.carbon.index`) and when it'll be cleanest in the next 24 hours (`grid.carbon.best`, such as *Lowest around 03:30*), from NESO's Carbon Intensity API every 30 minutes. Give the first half of your postcode for your region's figures. It's off until you turn it on, and nothing about you is sent but that half.
+
+**Microphone and camera**
+- Whether your microphone is muted (`mic.muted`) and its name (`mic.name`), and which apps are using the microphone or the camera (`mic.inuse`, `mic.apps`, `camera.inuse`, `camera.apps`, e.g. *Discord, OBS*). Give a text or icon widget a warning colour on one of them for an *on air* light, or a reminder that you're muted. Windows doesn't ask permission or show its microphone icon for any of it: Impious Bonum never uses the microphone or camera itself.
+- A *Buttons* action, `mic-mute`, mutes and unmutes the microphone. With the new `mic` icon, the button shows `mic-off` while it's muted.
+- `mic` and `mic-off` icons, for buttons and the *Icon and value* widget.
+
+**Device batteries**
+- A `batteries` widget for how much charge your wireless devices have left, as Windows' Bluetooth settings show it: a Bluetooth headset, mouse, keyboard or game controller, or an Xbox controller on its wireless adapter or a cable. Each has a bar, which turns the critical colour under 20 % (with a ◆ too, with *Warning symbols* on), and the widget follows devices as they connect and disconnect.
+- Readings any widget can show, such as `battery.headset` (*72 %*), and `battery.low`, the name of the one running low (*Mouse*). That has no reading while none is, so a warning can show only when it's needed.
+- Read every minute from what Windows already knows: Impious Bonum never connects to a device itself. Nothing shows on PCs without such devices.
+
+**Buttons that send web requests**
+- A *Buttons* action, `web`, sends a web request when you tap it: run a Home Assistant script or scene, switch a smart light, start a Node-RED flow or send a notification to your phone with ntfy. Each button has its address, a method (`GET`, `POST` or `PUT`), and if it needs them a body, such as JSON, and a header, such as `Authorization: Bearer` and a token. The guide has examples for Home Assistant and ntfy.
+- The button lights up for a moment in the accent colour when the request worked, or the critical colour when it didn't, and `dashboard.log` says why. A tablet allowed to press buttons can press these too.
+- Importing a layout, from a file or the gallery, lists where its web buttons send and asks before keeping them, as it does for buttons that open programs. Exporting one leaves their headers out, since they're usually a password or token.
 
 **A layout of its own on each tablet**
 - A tablet can show a different saved layout from the main dashboard: pick it under *Layout for the link* on the *Tablet and USB screen* page, then open that link or scan its QR code on the tablet. It keeps to that layout, in its own theme, whatever game layouts and the schedule do to the main dashboard.
@@ -99,34 +122,10 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - *Share readings with other apps* on the *Tablet and USB screen* page (off by default) lets Home Assistant, Rainmeter or a script of your own read every reading as JSON while the tablet view is on: its name, unit, value and the value as the dashboard shows it. They need the tablet link's secret, and *New link* stops old ones working.
 - The [guide](docs/guide.md#readings-for-other-apps) has a Home Assistant sensor and a Rainmeter skin to start from.
 
-
-**Buttons that send web requests**
-- A *Buttons* action, `web`, sends a web request when you tap it: run a Home Assistant script or scene, switch a smart light, start a Node-RED flow or send a notification to your phone with ntfy. Each button has its address, a method (`GET`, `POST` or `PUT`), and if it needs them a body, such as JSON, and a header, such as `Authorization: Bearer` and a token. The guide has examples for Home Assistant and ntfy.
-- The button lights up for a moment in the accent colour when the request worked, or the critical colour when it didn't, and `dashboard.log` says why. A tablet allowed to press buttons can press these too.
-- Importing a layout, from a file or the gallery, lists where its web buttons send and asks before keeping them, as it does for buttons that open programs. Exporting one leaves their headers out, since they're usually a password or token.
-
-**Warnings you can tell apart without colour**
-- A new theme setting, *Warning symbols*: a value in the theme's warning colour gets a ▲ beside it too, and one in its critical colour a ◆, so warning and critical don't rely on colour alone. Text, icon and value, stat tiles, graphs, gauges, bars, drives and *Top apps* show it; *CPU threads* keeps to colour. It's off unless you turn it on, and text that only just fits shrinks a little to make room for it.
-- A new built-in theme, *Clear Sight*, for colour blindness: a sky blue accent, gold warnings and deep pink-red critical ones that stay apart with every common kind of colour blindness, with warning symbols on. That's 56 in all.
-- Ticking a box in the editor's settings with Narrator now changes the setting, as clicking it does.
-
-**The cover art of the game you're playing**
-- An *Image* widget can show the game you're playing instead of a picture from a file: set *Show* to *game* and pick its *Game picture*. For a Steam game that's Steam's own art: the tall *cover*, the wide *header* banner or the big *hero* picture from its library page. Other games show their own icon.
-- The pictures come from Steam's cache on your PC, so nothing is downloaded. A game counts when Steam installed it, or when you've linked it to a layout or theme on the *Game layouts* page, which is how games from other stores get their icon.
-- The widget is empty while no game is in front, or with *Hide when there's no game*, hidden. A quick alt-tab doesn't blank it.
-- Two new readings for any widget: `game.name` (Steam's name for the game, or the one in its exe) and `game.appid` (its Steam app id).
-- The *Gaming HUD* in the gallery shows the game's banner beside the session so far.
-- An *Image* widget set to *fill* now crops its picture to the widget's own shape, rather than sometimes cutting off more than it needed to.
-
-**Device batteries**
-- A `batteries` widget for how much charge your wireless devices have left, as Windows' Bluetooth settings show it: a Bluetooth headset, mouse, keyboard or game controller, or an Xbox controller on its wireless adapter or a cable. Each has a bar, which turns the critical colour under 20 % (with a ◆ too, with *Warning symbols* on), and the widget follows devices as they connect and disconnect.
-- Readings any widget can show, such as `battery.headset` (*72 %*), and `battery.low`, the name of the one running low (*Mouse*). That has no reading while none is, so a warning can show only when it's needed.
-- Read every minute from what Windows already knows: Impious Bonum never connects to a device itself. Nothing shows on PCs without such devices.
-
-**Snow, leaves and more**
-- A new theme setting, *Particles*: snow, autumn leaves, cherry-blossom petals or confetti falling behind the widgets, or embers rising from the bottom. Snow sways as it falls, leaves tumble, petals flutter, and embers drift up and fade. *Amount* sets how many, and *Colour* makes them all one colour; otherwise snow is white, leaves are autumn colours, petals pink and embers orange and gold, and confetti comes in the theme's colours.
-- The built-in themes leave them off, since they cost CPU. They're cheap on a small screen with no glow, but with a theme's glow, or on a 4K dashboard, they take most of a CPU core unless you turn on *Draw with the graphics card*. The guide has the numbers, and suggests snow with *Christmas* and leaves or embers with *Halloween*, with their glow turned off.
-- They stop while the dashboard is hidden or minimised, and the tablet view, USB screens and snapshots show them still. Moving backgrounds now stop while it's minimised too.
+**Backing up your settings**
+- *General* → *Back up…* saves your whole setup as one `.ibbackup` file: your settings, every saved layout with its fonts and pictures, and your saved themes. Keep it somewhere safe, or take it to another PC. It has private things in it, such as your calendar links and the tablet link, so keep it to yourself.
+- *Restore…* shows what's in a backup (when it was made, by which version, how many layouts and themes) and asks before replacing anything. It saves your setup as it is first, in `%AppData%\ImpiousBonum backups`, so you can go back, then Impious Bonum starts again with the backup's. A backup from a newer version says so first.
+- Logs and the list of game sessions aren't in a backup, and restoring leaves yours as they are.
 
 ## 0.15.0
 
