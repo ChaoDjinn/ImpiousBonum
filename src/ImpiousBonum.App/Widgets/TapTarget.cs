@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace ImpiousBonum.App.Widgets;
 
@@ -12,6 +13,12 @@ namespace ImpiousBonum.App.Widgets;
 public sealed class TapTarget : Border
 {
     private const double PressedOpacity = 0.55;
+
+    /// <summary>How strongly <see cref="Light"/> shows through, so an icon in the same colour stays visible on it.</summary>
+    private const double LightOpacity = 0.5;
+
+    private bool _waiting;
+    private Brush? _light;
 
     public TapTarget()
     {
@@ -53,11 +60,47 @@ public sealed class TapTarget : Border
     }
 
     /// <summary>Does what a tap does.</summary>
-    internal void Tap() => Tapped?.Invoke(this, EventArgs.Empty);
+    internal void Tap()
+    {
+        if (!_waiting)
+            Tapped?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Stays dimmed as if still pressed, and ignores taps: for a button waiting to hear how its action went.</summary>
+    internal bool Waiting
+    {
+        get => _waiting;
+        set
+        {
+            _waiting = value;
+            Opacity = value ? PressedOpacity : 1;
+        }
+    }
+
+    /// <summary>A colour to light the button up in, behind its icon and label; null for none.</summary>
+    internal Brush? Light
+    {
+        get => _light;
+        set
+        {
+            _light = value;
+            InvalidateVisual();
+        }
+    }
+
+    protected override void OnRender(DrawingContext dc)
+    {
+        base.OnRender(dc);
+        if (_light is null)
+            return;
+        dc.PushOpacity(LightOpacity);
+        dc.DrawRoundedRectangle(_light, null, new Rect(RenderSize), CornerRadius.TopLeft, CornerRadius.TopLeft);
+        dc.Pop();
+    }
 
     protected override void OnLostMouseCapture(MouseEventArgs e)
     {
         base.OnLostMouseCapture(e);
-        Opacity = 1;
+        Opacity = _waiting ? PressedOpacity : 1;
     }
 }

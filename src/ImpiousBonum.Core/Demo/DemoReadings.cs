@@ -1,4 +1,5 @@
 using ImpiousBonum.Core.Calendar;
+using ImpiousBonum.Core.Energy;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Native;
 using ImpiousBonum.Core.News;
@@ -26,6 +27,12 @@ public static class DemoReadings
     /// snapshot can't listen to anything.
     /// </summary>
     public const string Spectrum = "demo.spectrum";
+
+    /// <summary>
+    /// What a photo frame with no folder shows in a snapshot (a <see cref="DemoPhoto"/>), rather than an empty box. The
+    /// picture itself is drawn by the app.
+    /// </summary>
+    public const string Photo = "demo.photo";
 
     /// <summary>Fills <paramref name="store"/> with the demo readings, as they'd be at <paramref name="now"/>.</summary>
     /// <param name="artwork">The album art for what's playing (PNG or JPEG bytes), if any.</param>
@@ -293,6 +300,45 @@ public static class DemoReadings
         privacy.Publish(store, new MicrophoneState("Headset microphone", Muted: false),
             [new ConsentEntry(@"C:#Users#Sam#AppData#Local#Discord#app-1.0.9260#Discord.exe", Packaged: false, Start: 2, Stop: 0)],
             [new ConsentEntry("Microsoft.WindowsCamera_8wekyb3d8bbwe", Packaged: true, Start: 1, Stop: 2)]);
+
+        // The whole PC's power (the CPU's and graphics card's above, and 50 W for the rest), what it's used at 25p a kWh,
+        // and Great Britain's grid: moderate now, and cleanest at half past three in the morning, when the wind's up.
+        var energy = new EnergyProvider(() => EnergySettings.Default);
+        energy.Initialize(store);
+        var cpuPower = store.GetHistory(SensorAliases.CpuPower, History);
+        var gpuPower = store.GetHistory(SensorAliases.GpuPower, History);
+        for (var i = 0; i < History - 1; i++)
+            store.Set(EnergyProvider.Power, EnergyProvider.TotalPower(cpuPower[i], gpuPower[i], EnergySettings.DefaultOtherWatts));
+        energy.Publish(store, EnergyProvider.TotalPower(cpuPower[^1], gpuPower[^1], EnergySettings.DefaultOtherWatts),
+            new EnergyTotals(DateOnly.FromDateTime(now), 1.92, 38.6), new EnergySettings(EnergySettings.DefaultOtherWatts, 0.25, "£"));
+
+        new GridCarbonProvider(() => null).Initialize(store);
+        var halfHour = now.Date.AddHours(now.Hour).AddMinutes(now.Minute < 30 ? 0 : 30);
+        var periods = Enumerable.Range(0, 48).Select(i =>
+        {
+            var from = halfHour.AddMinutes(30 * i);
+            var sinceLowest = (from.TimeOfDay.TotalHours - 3.5 + 24) % 24;
+            // Only the half-hour now shows its level.
+            return new CarbonPeriod(new DateTimeOffset(from), new DateTimeOffset(from.AddMinutes(30)), Math.Round(142 - 60 * Math.Cos(sinceLowest / 24 * 2 * Math.PI)),
+                null, i == 0 ? "moderate" : null);
+        }).ToList();
+        GridCarbonProvider.Publish(store, new CarbonForecast(CarbonForecast.GreatBritain, periods), new DateTimeOffset(now), TimeZoneInfo.Local);
+
+        // The servers at home: all up but Plex, which stopped answering twelve minutes ago.
+        new StatusProvider(() => []).Initialize(store);
+        IReadOnlyList<CheckStatus> checks =
+        [
+            new("Router", true, 2, "12 days", null),
+            new("NAS", true, 4, "6 days", null),
+            new("Pi-hole", true, 3, "3 h", null),
+            new("Plex", false, null, "12 min", "No answer"),
+        ];
+        foreach (var check in checks)
+            StatusProvider.Register(store, check.Name);
+        StatusProvider.Publish(store, checks);
+
+        // A photo for a photo frame with no folder, taken on a summer evening.
+        store.SetAttachment(Photo, new DemoPhoto("Lakeside at dusk.jpg", new DateTime(2026, 8, 14, 20, 31, 0)));
     }
 
     /// <summary>

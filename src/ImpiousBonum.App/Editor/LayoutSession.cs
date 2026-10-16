@@ -62,6 +62,7 @@ public sealed class LayoutSession
     private long _lastEditTimestamp;
     private ThemeSettings? _resolvedTheme;
     private PreviewState? _preview;
+    private List<int> _selection = [];
 
     /// <param name="themes">Themes the layout can name; null for only the built-in ones.</param>
     /// <param name="clock">For how close together edits are; the system's unless testing.</param>
@@ -86,8 +87,11 @@ public sealed class LayoutSession
     /// <summary>The layout's own theme values that differ from its named theme's (ignoring <c>base</c>).</summary>
     public bool HasThemeOverrides => Document.Theme.Any(p => !string.Equals(p.Key, ThemeLibrary.BaseKey, StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>The selected widget, or -1 for the canvas and theme.</summary>
-    public int SelectedIndex { get; private set; } = -1;
+    /// <summary>The selected widgets, in the order they were picked; empty for the canvas and theme.</summary>
+    public IReadOnlyList<int> Selection => _selection;
+
+    /// <summary>The selected widget, or -1 for the canvas and theme. With several selected, the first one picked.</summary>
+    public int SelectedIndex => _selection.Count > 0 ? _selection[0] : -1;
 
     public JsonObject? SelectedWidget => SelectedIndex >= 0 ? Document.Widgets[SelectedIndex] : null;
 
@@ -108,14 +112,24 @@ public sealed class LayoutSession
 
     public event EventHandler? SelectionChanged;
 
-    public void Select(int index)
+    /// <summary>Selects one widget on its own, or with -1 none (the canvas and theme).</summary>
+    public void Select(int index) => Select(index < 0 ? [] : [index]);
+
+    /// <summary>Selects these widgets, the first being the one picked first. Ones that don't exist are left out.</summary>
+    public void Select(IEnumerable<int> indices)
     {
-        index = index < 0 || index >= Document.Widgets.Count ? -1 : index;
-        if (index == SelectedIndex)
+        var selection = indices.Where(i => i >= 0 && i < Document.Widgets.Count).Distinct().ToList();
+        if (selection.SequenceEqual(_selection))
             return;
-        SelectedIndex = index;
+        _selection = selection;
         SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    /// <summary>Adds a widget to the selection, or takes it out if it's already in (Ctrl+click).</summary>
+    public void ToggleSelected(int index) =>
+        Select(_selection.Contains(index) ? _selection.Where(i => i != index) : _selection.Append(index));
+
+    public bool IsSelected(int index) => _selection.Contains(index);
 
     // ---- Settings -------------------------------------------------------------------------------
 
@@ -271,18 +285,46 @@ public sealed class LayoutSession
         _ => Resolve(target),
     };
 
-    public void SetGeometry(int index, Rect rect, string mergeKey, object? origin)
+    public void SetGeometry(int index, Rect rect, string mergeKey, object? origin) => SetGeometry([(index, rect)], mergeKey, origin);
+
+    /// <summary>
+    /// Moves or resizes several widgets as one edit, so one undo step (or part of one, with <paramref name="mergeKey"/>).
+    /// Views hear about each widget that changed, as a <see cref="ChangeKind.Geometry"/> change of its own, so they can
+    /// move just those.
+    /// </summary>
+    public void SetGeometry(IReadOnlyList<(int Index, Rect Rect)> changes, string? mergeKey, object? origin)
     {
-        if (GeometryOf(Document.Widgets[index]) == rect)
+        var changed = changes.Where(c => c.Index >= 0 && c.Index < Document.Widgets.Count && GeometryOf(Document.Widgets[c.Index]) != c.Rect).ToList();
+        if (changed.Count == 0)
             return;
-        Edit(ChangeKind.Geometry, index, mergeKey, origin, document =>
+        Record(mergeKey, MergeWindow, origin);
+        foreach (var (index, rect) in changed)
         {
-            var widget = document.Widgets[index];
+            var widget = Document.Widgets[index];
             widget["x"] = Number(rect.X);
             widget["y"] = Number(rect.Y);
             widget["width"] = Number(Math.Max(1, rect.Width));
             widget["height"] = Number(Math.Max(1, rect.Height));
-        });
+        }
+        foreach (var (index, _) in changed)
+            Changed?.Invoke(this, new LayoutChange(ChangeKind.Geometry, index, origin));
+    }
+
+    /// <summary>Moves the selected widgets by an offset, as the arrow keys do. A run of nudges to the same widgets is one undo step.</summary>
+    public void NudgeSelected(double dx, double dy)
+    {
+        var changes = _selection.Select(i => (i, Rect.Offset(GeometryOf(Document.Widgets[i]), dx, dy))).ToList();
+        SetGeometry(changes, $"nudge:{string.Join(",", _selection)}", null);
+    }
+
+    /// <summary>
+    /// Lines up, spaces out or sizes the selected widgets (see <see cref="ArrangeGeometry"/>), as one undo step. Nothing
+    /// with fewer selected than it needs.
+    /// </summary>
+    public void ArrangeSelected(Arrangement arrangement)
+    {
+        var placed = ArrangeGeometry.Apply(arrangement, [.. _selection.Select(i => GeometryOf(Document.Widgets[i]))]);
+        SetGeometry([.. _selection.Select((index, n) => (index, placed[n]))], null, null);
     }
 
     public static Rect GeometryOf(JsonObject widget) => new(
@@ -363,32 +405,52 @@ public sealed class LayoutSession
         Select(Document.Widgets.Count - 1);
     }
 
+    /// <summary>
+    /// Copies the selected widgets, each a little down and to the right of the one it copies and drawn just above it,
+    /// as one undo step, and selects the copies.
+    /// </summary>
     public void DuplicateSelected()
     {
-        if (SelectedWidget is not { } source)
+        if (_selection.Count == 0)
             return;
-        var copy = source.DeepClone().AsObject();
-        copy["x"] = Number(source.GetDouble("x", 0) + 20);
-        copy["y"] = Number(source.GetDouble("y", 0) + 20);
-        var index = SelectedIndex + 1;
-        Edit(ChangeKind.Structure, null, null, null, document => document.Widgets.Insert(index, copy));
-        Select(index);
+        var sources = _selection.Order().ToList();
+        var copies = sources.Select(i =>
+        {
+            var source = Document.Widgets[i];
+            var copy = source.DeepClone().AsObject();
+            copy["x"] = Number(source.GetDouble("x", 0) + 20);
+            copy["y"] = Number(source.GetDouble("y", 0) + 20);
+            return copy;
+        }).ToList();
+        Edit(ChangeKind.Structure, null, null, null, document =>
+        {
+            // From the end, so the places of the ones still to copy don't move.
+            for (var n = sources.Count - 1; n >= 0; n--)
+                document.Widgets.Insert(sources[n] + 1, copies[n]);
+        });
+        // Each copy is a place further on for every copy put in before it.
+        Select(_selection.Select(i => i + sources.IndexOf(i) + 1));
     }
 
+    /// <summary>Deletes the selected widgets, as one undo step.</summary>
     public void DeleteSelected()
     {
-        if (SelectedIndex < 0)
+        if (_selection.Count == 0)
             return;
-        var index = SelectedIndex;
-        SelectedIndex = -1;
-        Edit(ChangeKind.Structure, null, null, null, document => document.Widgets.RemoveAt(index));
+        var doomed = _selection.OrderDescending().ToList();
+        _selection = [];
+        Edit(ChangeKind.Structure, null, null, null, document =>
+        {
+            foreach (var index in doomed)
+                document.Widgets.RemoveAt(index);
+        });
         SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>Moves the selected widget up (+1, drawn later, so on top) or down (-1) the stacking order.</summary>
+    /// <summary>Moves the selected widget up (+1, drawn later, so on top) or down (-1) the stacking order. Not with several selected.</summary>
     public void MoveSelected(int delta)
     {
-        if (SelectedIndex >= 0)
+        if (_selection.Count == 1)
             MoveWidget(SelectedIndex, SelectedIndex + delta);
     }
 
@@ -402,7 +464,7 @@ public sealed class LayoutSession
         if (from == to || from < 0 || from >= count || to < 0 || to >= count)
             return;
         // Selected before the change, so views rebuilding for it already see the moved widget as the selected one.
-        SelectedIndex = to;
+        _selection = [to];
         Edit(ChangeKind.Structure, null, null, null, document =>
         {
             var widget = document.Widgets[from];
@@ -458,7 +520,7 @@ public sealed class LayoutSession
         _lastMergeKey = null;
         Document = Clone(document);
         _resolvedTheme = null;
-        SelectedIndex = -1;
+        _selection = [];
         Changed?.Invoke(this, new LayoutChange(ChangeKind.Reset, null, null));
         SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -473,7 +535,7 @@ public sealed class LayoutSession
         Document = Clone(document);
         _resolvedTheme = null;
         _saved = Serialize(Document);
-        SelectedIndex = -1;
+        _selection = [];
         Changed?.Invoke(this, new LayoutChange(ChangeKind.Reset, null, null));
         SelectionChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -495,6 +557,15 @@ public sealed class LayoutSession
 
     private void Edit(ChangeKind kind, int? widgetIndex, string? mergeKey, TimeSpan mergeWindow, object? origin, Action<LayoutDocument> change)
     {
+        Record(mergeKey, mergeWindow, origin);
+        change(Document);
+        _resolvedTheme = null;
+        Changed?.Invoke(this, new LayoutChange(kind, widgetIndex, origin));
+    }
+
+    /// <summary>Gets ready for an edit: an undo step from before it, unless it carries on the last edit with the same merge key.</summary>
+    private void Record(string? mergeKey, TimeSpan mergeWindow, object? origin)
+    {
         // A preview showing becomes an edit of its own first, so it's neither lost nor mixed into this one.
         EndPreview(keep: true, origin);
 
@@ -506,10 +577,6 @@ public sealed class LayoutSession
         _lastMergeKey = mergeKey;
         _lastEditTimestamp = now;
         _redo.Clear();
-
-        change(Document);
-        _resolvedTheme = null;
-        Changed?.Invoke(this, new LayoutChange(kind, widgetIndex, origin));
     }
 
     private void PushUndo()
@@ -535,8 +602,8 @@ public sealed class LayoutSession
         Document = Deserialize(from.Pop());
         _resolvedTheme = null;
         _lastMergeKey = null;
-        if (SelectedIndex >= Document.Widgets.Count)
-            SelectedIndex = -1;
+        // Selected widgets the layout no longer has (one added since, say) aren't selected any more.
+        _selection = [.. _selection.Where(i => i < Document.Widgets.Count)];
         Changed?.Invoke(this, new LayoutChange(ChangeKind.Reset, null, null));
         SelectionChanged?.Invoke(this, EventArgs.Empty);
     }

@@ -2,6 +2,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using ImpiousBonum.App.Widgets;
 
 namespace ImpiousBonum.App.Layout;
 
@@ -60,7 +61,8 @@ public static class LayoutPackage
     /// Writes <paramref name="layout"/> and the files its theme points at to <paramref name="destination"/>.
     /// A font or image that can't be found is left out and named in the returned warnings. A layout using one of your
     /// saved themes has that theme's values copied in (as the editor's Detach does), since the other PC won't have it;
-    /// built-in themes stay as names.
+    /// built-in themes stay as names. Web buttons' headers are left out, with a warning: they're often a password or
+    /// token, and whoever imports the layout adds their own.
     /// </summary>
     /// <param name="themes">The saved themes the layout may name; null for only the built-in ones.</param>
     public static IReadOnlyList<string> Write(LayoutDocument layout, string name, Stream destination, ThemeLibrary? themes = null)
@@ -71,6 +73,10 @@ public static class LayoutPackage
         if (ThemeLibrary.BaseName(copy.Theme) is { } themeName && !ThemeLibrary.IsBuiltIn(themeName))
             copy.Theme = themes.Resolve(copy.Theme).ToJson();
         var theme = themes.Resolve(copy.Theme);
+        if (ButtonsWidget.RemoveHeaders(copy) is > 0 and var headers)
+            warnings.Add(headers == 1
+                ? "Left out a web button's header, which can hold a password or token."
+                : $"Left out {headers} web buttons' headers, which can hold a password or token.");
 
         using var zip = new ZipArchive(destination, ZipArchiveMode.Create, leaveOpen: true);
         ThemeLibrary.SetString(copy.Theme, "fontFile", Pack(zip, theme.FontFile, "font", FontExtensions, "font file", warnings));
@@ -82,6 +88,7 @@ public static class LayoutPackage
             else
                 widget.Remove(ImageFileKey);
         }
+        DropPhotoFolders(copy);
 
         WriteText(zip, ManifestEntry, new JsonObject
         {
@@ -164,6 +171,7 @@ public static class LayoutPackage
                     images[index] = image;
                 widget.Remove(ImageFileKey);
             }
+            DropPhotoFolders(layout);
 
             skipped.AddRange(entries.Keys.Where(key => !used.Contains(key)).Order(StringComparer.OrdinalIgnoreCase).Select(key => $"{key}: not used by the layout"));
             return new LayoutPackageContents { Name = name, Layout = layout, Font = font, Background = background, Images = images, Skipped = skipped };
@@ -172,7 +180,7 @@ public static class LayoutPackage
 
     /// <summary>
     /// A bare layout file (no package around it), as the gallery can list: it carries no fonts or pictures, so any
-    /// the theme or image widgets point at, which would be paths on someone else's PC, are dropped.
+    /// the theme or image widgets point at, which would be paths on someone else's PC, are dropped, as are photo frames' folders.
     /// </summary>
     public static LayoutPackageContents FromLayoutJson(byte[] json, string name)
     {
@@ -183,6 +191,7 @@ public static class LayoutPackage
         ThemeLibrary.SetString(layout.Theme, "backgroundImage", null);
         foreach (var (widget, _) in ImageWidgets(layout))
             widget.Remove(ImageFileKey);
+        DropPhotoFolders(layout);
         return new LayoutPackageContents { Name = ValidName(name), Layout = layout };
     }
 
@@ -333,6 +342,19 @@ public static class LayoutPackage
             .Select((widget, index) => (widget, index))
             .Where(w => string.Equals(w.widget.GetString("type"), "image", StringComparison.OrdinalIgnoreCase)
                 && !string.IsNullOrWhiteSpace(w.widget.GetString(ImageFileKey)));
+
+    /// <summary>The key in a photo frame widget that names its folder.</summary>
+    public const string PhotoFolderKey = "folder";
+
+    /// <summary>
+    /// Leaves out the folders photo frames show. A folder is a place on this PC, with your own photos in it, not something
+    /// a layout can carry; and one in a layout from someone else could point anywhere, such as another PC on the network.
+    /// </summary>
+    private static void DropPhotoFolders(LayoutDocument layout)
+    {
+        foreach (var widget in layout.Widgets.Where(w => string.Equals(w.GetString("type"), "photos", StringComparison.OrdinalIgnoreCase)))
+            widget.Remove(PhotoFolderKey);
+    }
 
     private static LayoutDocument Clone(LayoutDocument layout) =>
         JsonSerializer.Deserialize<LayoutDocument>(JsonSerializer.Serialize(layout, JsonDefaults.Options), JsonDefaults.Options)!;
