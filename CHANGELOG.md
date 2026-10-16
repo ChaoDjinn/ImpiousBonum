@@ -24,6 +24,12 @@ Themes for the holidays, eight more layouts in the gallery, and countdowns that 
 **Countdowns every year**
 - A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
+**Photo frame**
+- A new *Photo frame* widget, under *Pictures and shapes*: a slideshow of the pictures in a folder, like a digital photo frame. Choose the folder in the editor, how long each photo shows, and whether they're shuffled or go by name or date. Tap it for the next one.
+- Photos fade into one another, fill the frame or fit inside it, and can have rounded corners and their file name or the date they were taken along the bottom. Photos taken with the camera on its side show the right way up.
+- It stays light with big photos: only the photo on show and the next one are read, at about the size they're shown, and nothing is read while the dashboard is hidden. Photos added to the folder turn up within a few minutes, and pictures that can't be read are passed over.
+- The folder stays on your PC: exported layouts and layouts in the gallery leave it out.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

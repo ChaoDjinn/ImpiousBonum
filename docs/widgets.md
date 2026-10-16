@@ -35,7 +35,7 @@ mean the widget's own.
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [News](#news-news) · [Claude usage](#claude-usage-claude)
-- **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape)
+- **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape) · [Photo frame](#photo-frame-photos)
 
 ## Text (`text`)
 
@@ -560,6 +560,26 @@ A rounded panel, a circle or a line, to group widgets or divide them. It's added
 | `borderThickness` | number (0–100) | `0` | Outline. 0 has no outline. |
 | `thickness` | number (0.5–100) | `2` | Line thickness. For a line. |
 | `opacity` | number (0–1) | `1` | Opacity |
+
+## Photo frame (`photos`)
+
+A slideshow of the pictures in a folder, like a digital photo frame; tap it for the next one. The folder is on this PC, so exported and shared layouts leave it out.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `folder` | folder | — | Folder. The folder of pictures to show: PNG, JPG, GIF, BMP and TIFF files. It stays on this PC: exported and shared layouts leave it out. |
+| `subfolders` | true/false | `true` | Include subfolders. The pictures in the folders inside it too. |
+| `seconds` | number (3–86400) | `30` | Seconds per photo. How long each photo shows. A tap moves on straight away. |
+| `order` | `shuffle` / `name` / `date` | `shuffle` | Order. shuffle shows every photo, in a random order, before any comes round again; name goes from A to Z; date goes from oldest to newest, by when the files last changed. |
+| `caption` | `none` / `name` / `date` | `none` | Caption. Along the bottom of the photo: its file name, or the date it was taken (or else the file's date). |
+| `dateFormat` | text | `d MMMM yyyy` | Date format. For a date caption: a .NET date format, e.g. d MMMM yyyy (14 August 2026) or d MMM yyyy, HH:mm (14 Aug 2026, 20:31). |
+| `fontSize` | number (6–200) | `18` | Caption size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `fit` | `fill` / `fit` | `fill` | Fit. fill covers the box, cropping the edges; fit shows the whole photo. |
+| `fade` | number (0–5) | `1` | Fade. How many seconds one photo takes to fade into the next; 0 changes straight away. |
+| `cornerRadius` | number (0–1000) | `0` | Corner radius |
+| `opacity` | number (0–1) | `1` | Opacity |
+| `captionColor` | color | `foreground` | Caption colour. Over a shade of the theme's background, so it can be read over any photo. |
 
 ## Theme
 
