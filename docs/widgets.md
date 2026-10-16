@@ -32,7 +32,7 @@ mean the widget's own.
 ## Widgets
 
 - **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Top apps](#top-apps-processes)
-- **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda)
+- **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [News](#news-news) · [Claude usage](#claude-usage-claude)
 - **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape)
@@ -385,6 +385,30 @@ What's coming up in your calendars (set them in the editor, or on the Calendars 
 | `shrinkToFit` | true/false | `true` | Shrink to fit. Rows that would be cut off at the bottom, say in a bigger font, are left out, and a first row too tall for the widget gets smaller to fit. |
 | `spacing` | number (0–100) | `6` | Event spacing |
 | `nowColor` | color | `accent` | What's on now. The colour of events that are happening now. |
+
+## Countdowns (`countdowns`)
+
+How long until the days you add, soonest first: birthdays, holidays, a release, a trip. On the day, it says Today in the accent colour.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `events` | list | 4 entries | Events. Each with a label and a date. One that comes round every year starts again the day after; one that happens once leaves the list. |
+| `count` | number (1–50) | `5` | Rows. The most it lists, soonest first. |
+| `style` | `days` / `time` | `days` | How long. days says 69 days, Tomorrow or Today; time gives the days, hours and minutes, e.g. 69d 02:13. |
+| `heading` | text | — | Heading. Shown above the list, e.g. Coming up. Empty shows none. |
+| `emptyText` | text | `Nothing coming up` | When there's nothing. Empty shows nothing. |
+| `fontSize` | number (6–200) | `22` | Font size |
+| `headingSize` | number (6–200) | — | Heading size. Empty uses 75% of the font size. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Rows that would be cut off at the bottom, say in a bigger font, are left out, and a first row too tall for the widget gets smaller to fit. |
+| `spacing` | number (0–100) | `6` | Row spacing |
+| `todayColor` | color | `accent` | Today's colour. The colour of the events that are today. |
+
+Each entry in `events`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `Christmas` | Label |
+| `date` | text | `12-25` | Date. A month and day that comes round every year, e.g. 12-25 or 03-14 09:00, or a date that happens once, e.g. 2026-12-25 or 2026-12-25 18:00. |
 
 ## Now playing (`media`)
 

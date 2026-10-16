@@ -24,6 +24,11 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 **Countdowns every year**
 - A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
+**Countdowns widget**
+- A new *Countdowns* widget, under *Time and calendar*, lists how long it is until the days you're looking forward to, soonest first: birthdays, holidays, a game's release, a trip. Each row shows its label and *69 days*, *Tomorrow* or *Today*, or the days, hours and minutes (*69d 02:13*).
+- A month and day such as `12-25` comes round every year, starting again the day after; a date such as `2026-12-25 18:00` leaves the list once its day is over. The ones that are today are in the accent colour.
+- It can have a heading, and says *Nothing coming up* (or your own words) when there's nothing left to count down to.
+
 **Schedule**
 - Schedule rules can follow the sun: show *Night Watch* from sunset to sunrise, say, or a bright theme from sunrise to sunset. Sunset and sunrise are worked out on your PC for the weather's location, so nothing extra is fetched; without a location these rules never apply, and the dialog and *Pages and schedule* say so.
 - Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.
