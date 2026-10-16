@@ -1,0 +1,13 @@
+// Whisked matcha green on a pale foam: a calm light theme.
+{
+  "fontFamily": "Yu Gothic UI",
+  "fontWeight": "Light",
+  "foreground": "#22311A",
+  "secondary": "#B822311A",
+  "accent": "#4A8530",
+  "background": "#F2F6E8",
+  "track": "#D7E3C3",
+  "warning": "#995800",
+  "critical": "#BF3329",
+  "backgroundGradient": "#E3EBD0"
+}

@@ -38,6 +38,26 @@ public sealed class SunPositionTests
     public void The_sun_is_down_between_sunset_and_sunrise(double latitude, double longitude, string time, bool down) =>
         Assert.Equal(down, SunPosition.IsDown(latitude, longitude, DateTimeOffset.Parse(time, CultureInfo.InvariantCulture)));
 
+    [Theory]
+    // The US Naval Observatory's times, in UTC: London on 16 and 26 October 2026, and Sydney on 10 March 2026.
+    [InlineData(51.51, -0.13, "2026-10-16T00:00Z", "2026-10-16T06:26Z", "2026-10-16T17:05Z")]
+    [InlineData(51.51, -0.13, "2026-10-26T00:00Z", "2026-10-26T06:43Z", "2026-10-26T16:45Z")]
+    [InlineData(-33.87, 151.21, "2026-03-09T14:00Z", "2026-03-09T19:50Z", "2026-03-10T08:20Z")]
+    public void It_rises_and_sets_when_the_almanac_says(double latitude, double longitude, string day, string rise, string set)
+    {
+        var start = Time(day);
+        var (rose, went) = SunPosition.RiseAndSet(latitude, longitude, start, start.AddDays(1));
+        Assert.Equal(Time(rise), rose!.Value, TimeSpan.FromMinutes(2));
+        Assert.Equal(Time(set), went!.Value, TimeSpan.FromMinutes(2));
+    }
+
+    [Fact]
+    public void In_the_far_north_it_can_stay_up_or_down_all_day()
+    {
+        Assert.Equal((null, null), SunPosition.RiseAndSet(69.65, 18.96, Time("2026-06-21T00:00Z"), Time("2026-06-22T00:00Z")));
+        Assert.Equal((null, null), SunPosition.RiseAndSet(69.65, 18.96, Time("2026-12-21T00:00Z"), Time("2026-12-22T00:00Z")));
+    }
+
     [Fact]
     public void Only_the_moment_matters_not_the_clock_it_was_read_from()
     {
@@ -45,4 +65,6 @@ public sealed class SunPositionTests
         var summerTime = SunPosition.Elevation(51.51, -0.13, new DateTimeOffset(2026, 10, 12, 10, 0, 0, TimeSpan.FromHours(1)));
         Assert.Equal(utc, summerTime, 1e-9);
     }
+
+    private static DateTimeOffset Time(string text) => DateTimeOffset.Parse(text, CultureInfo.InvariantCulture);
 }

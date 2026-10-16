@@ -133,6 +133,27 @@ public sealed class DemoReadingsTests
     }
 
     [Fact]
+    public void Every_moon_reading_has_a_made_up_value_that_fits_the_evening()
+    {
+        var store = new MetricStore();
+        DemoReadings.Fill(store, Evening);
+
+        var moon = store.Definitions.Where(d => d.Category == "Moon").ToList();
+        Assert.Contains(moon, d => d.Id == MoonProvider.Rise);
+        Assert.All(moon, d => Assert.True(store.TryGet(d.Id, out var sample) && sample.HasValue, d.Id));
+        store.TryGet(MoonProvider.Phase, out var phase);
+        Assert.Equal("Waxing gibbous", phase.Text);
+
+        // At 21:47 the sun has set, at the weather's sunset, and the moon is up.
+        var sky = (SkyReport)store.GetAttachment(MoonProvider.Sky)!;
+        var now = new DateTimeOffset(Evening);
+        var forecast = (WeatherReport)store.GetAttachment(WeatherProvider.Forecast)!;
+        Assert.Equal(new DateTimeOffset(forecast.Sunset!.Value), sky.Sun!.Set);
+        Assert.True(sky.Sun.Set < now && sky.Moon.Rise < now && now < sky.Moon.Set);
+        Assert.True(sky.Moon.Waxing && sky.Moon.NextFull > now);
+    }
+
+    [Fact]
     public void They_are_the_same_every_time()
     {
         var (first, second) = (new MetricStore(), new MetricStore());

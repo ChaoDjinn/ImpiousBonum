@@ -1,7 +1,7 @@
 # Layout gallery
 
-Ready-made layouts to start from, and a place to share yours. Browse them on the *Gallery* page of the Impious Bonum
-window: pick one of your screens to see the layouts that suit its shape, and choose simple or busy ones. Each is drawn
+Ready-made layouts and [themes](#themes) to start from, and a place to share yours. Browse them on the *Gallery* page
+of the Impious Bonum window: pick one of your screens to see the layouts that suit its shape, and choose simple or busy ones. Each is drawn
 live with your own readings, and *Show on* puts it on that screen. The twenty-one so far were made along with the app; a
 layout of yours would be the first from someone else. See [Layout gallery](../docs/guide.md#layout-gallery) in the user guide.
 
@@ -103,3 +103,45 @@ These are drawn with made-up readings by `build/screenshots.ps1`; in the app, th
    pictures).
 3. Open a pull request. The tests check that every gallery layout opens and is valid. If you can, run
    `pwsh build/screenshots.ps1` to add a picture of it to `gallery/images`.
+
+## Themes
+
+Themes to use with any of your layouts: a font and colours, and sometimes gradients and a glow. On the *Gallery* page,
+pick *Themes* to see each one on the default layout, drawn live with your own readings, and *Add to my themes* to keep
+it. Then pick it for a layout in the editor, under *Theme*. If you already have a theme with the same name, you're asked
+before it's replaced.
+
+| Theme | What it's like |
+|---|---|
+| Deep Sea | Bioluminescent teal glowing out of the abyss, fading from black to deep blue |
+| Nebula | Violet fading into deep blue, with pink and starlight blue and a pink glow |
+| Copper | Polished copper and brass on dark gunmetal |
+| Matcha | A calm light theme: matcha green on a pale foam |
+| Paper | A light theme in ink greys on paper, like an e-reader |
+
+### Deep Sea
+![Deep Sea](images/themes/deep-sea.png)
+
+### Nebula
+![Nebula](images/themes/nebula.png)
+
+### Copper
+![Copper](images/themes/copper.png)
+
+### Matcha
+![Matcha](images/themes/matcha.png)
+
+### Paper
+![Paper](images/themes/paper.png)
+
+## Sharing a theme
+
+1. In the layout editor, click empty canvas, set the font and colours under *Theme*, then *Save theme as…*. Your theme
+   is saved as `themes\<name>.json` in the settings folder (*General* → *Settings folder*).
+2. Copy that file into [`themes`](themes), with a short lower-case name such as `deep-sea.json`, and add an entry for
+   it under `themes` in [`index.json`](index.json): its `name`, `file`, `author` and a one-line `description`.
+3. Open a pull request. A shared theme is one plain file, so it can't carry a font file or a background picture: use a
+   font that comes with Windows, and leave out `fontFile` and `backgroundImage` (the gallery drops them). Its name
+   can't be one a built-in theme already has. The tests check that every gallery theme opens, sets every colour, and
+   that text and graphs stand out from its background as well as the built-in themes' do. If you can, run
+   `pwsh build/screenshots.ps1` to add a picture of it to `gallery/images/themes`.

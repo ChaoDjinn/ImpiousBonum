@@ -1,11 +1,38 @@
 <UserControl x:Class="ImpiousBonum.App.Settings.GalleryPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <!-- Layouts or themes: a tab whose name is underlined in the accent colour while it's picked, as in Windows 11. -->
+        <Style x:Key="KindTab" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Back" CornerRadius="4" />
+                            <ContentPresenter Margin="12,5,12,9" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Border x:Name="Bar" Width="16" Height="3" CornerRadius="1.5" VerticalAlignment="Bottom" Margin="0,0,0,1"
+                                    Background="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Hidden" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Back" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <DockPanel Margin="40,28,40,24">
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Style="{DynamicResource PageTitle}" Text="Gallery" />
-            <TextBlock Style="{DynamicResource PageIntro}" Margin="0,0,0,16"
-                       Text="Ready-made layouts to start from. Pick the screen you want one for to see those that suit its shape. The previews show your own readings." />
+            <TextBlock x:Name="IntroText" Style="{DynamicResource PageIntro}" Margin="0,0,0,16" />
             <DockPanel Margin="0,0,0,14">
                 <Button DockPanel.Dock="Right" Click="OnRefresh" ToolTip="Fetch the gallery again">
                     <StackPanel Orientation="Horizontal">
@@ -14,12 +41,18 @@
                     </StackPanel>
                 </Button>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="For" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    <ComboBox x:Name="ScreenBox" Width="320" SelectionChanged="OnFilterChanged" AutomationProperties.Name="For"
-                              ToolTip="The screen you want a layout for: only layouts its shape suits are shown, closest in size first" />
-                    <TextBlock Text="Showing" VerticalAlignment="Center" Margin="20,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    <ComboBox x:Name="DetailBox" Width="230" SelectionChanged="OnFilterChanged" AutomationProperties.Name="Showing"
-                              ToolTip="How much a layout shows at once. A big screen across the room suits a few large widgets as much as a small one does." />
+                    <RadioButton x:Name="LayoutsTab" Content="Layouts" GroupName="Kind" IsChecked="True" Style="{StaticResource KindTab}"
+                                 Checked="OnKindChanged" ToolTip="Ready-made layouts to start from" />
+                    <RadioButton x:Name="ThemesTab" Content="Themes" GroupName="Kind" Style="{StaticResource KindTab}" Margin="2,0,24,0"
+                                 Checked="OnKindChanged" ToolTip="Fonts and colours other people have made, for any of your layouts" />
+                    <StackPanel x:Name="LayoutFilters" Orientation="Horizontal">
+                        <TextBlock Text="For" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <ComboBox x:Name="ScreenBox" Width="320" SelectionChanged="OnFilterChanged" AutomationProperties.Name="For"
+                                  ToolTip="The screen you want a layout for: only layouts its shape suits are shown, closest in size first" />
+                        <TextBlock Text="Showing" VerticalAlignment="Center" Margin="20,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <ComboBox x:Name="DetailBox" Width="230" SelectionChanged="OnFilterChanged" AutomationProperties.Name="Showing"
+                                  ToolTip="How much a layout shows at once. A big screen across the room suits a few large widgets as much as a small one does." />
+                    </StackPanel>
                 </StackPanel>
             </DockPanel>
         </StackPanel>
@@ -30,6 +63,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
+            <!-- Layouts and themes both have a name, details and a description. -->
             <ListBox x:Name="EntryList" SelectionChanged="OnSelected" HorizontalContentAlignment="Stretch"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Layouts">
                 <ListBox.ItemTemplate>
@@ -57,8 +91,7 @@
                             <TextBlock Text="Edit it" />
                         </StackPanel>
                     </Button>
-                    <TextBlock x:Name="StatusText" VerticalAlignment="Center" Style="{DynamicResource NoteText}" Margin="0,0,12,0"
-                               Text="Pictures and fonts in a layout show once it's added." />
+                    <TextBlock x:Name="StatusText" VerticalAlignment="Center" Style="{DynamicResource NoteText}" Margin="0,0,12,0" />
                 </DockPanel>
                 <Border Style="{DynamicResource Card}" Padding="12">
                     <Grid>
