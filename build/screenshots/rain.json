@@ -1,0 +1,11 @@
+// The weather now, and the rain soon under it with the demo's shower due at half past ten, for the guide
+// (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 400,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "weather", "x": 30, "y": 24, "width": 740, "height": 120, "fontSize": 72, "forecast": "none", "iconStyle": "colour", "showWarnings": false },
+    { "type": "rain", "x": 30, "y": 172, "width": 740, "height": 200, "fontSize": 30 }
+  ]
+}

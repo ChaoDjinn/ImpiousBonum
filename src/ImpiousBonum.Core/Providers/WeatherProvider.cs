@@ -62,6 +62,8 @@ public sealed class WeatherProvider(
     public const string UvLevel = "weather.uv.level";
     public const string SunElevation = "weather.sun.elevation";
     public const string Daylight = "weather.daylight";
+    public const string RainSoon = "weather.rain.soon";
+    public const string RainNext = "weather.rain.next";
 
     /// <summary>The latest <see cref="WeatherReport"/>, as a <see cref="MetricStore"/> attachment.</summary>
     public const string Forecast = "weather.forecast";
@@ -146,6 +148,8 @@ public sealed class WeatherProvider(
         store.Register(new MetricDefinition(UvLevel, "Weather: UV level now, e.g. Moderate", "Weather", MetricUnit.Text));
         store.Register(new MetricDefinition(SunElevation, "Weather: how high the sun is (below 0 at night)", "Weather", MetricUnit.Degrees, 90));
         store.Register(new MetricDefinition(Daylight, "Weather: today's daylight, e.g. 10 h 49 min", "Weather", MetricUnit.Text));
+        store.Register(new MetricDefinition(RainSoon, "Weather: rain in the next 2 hours, e.g. Rain from 14:30", "Weather", MetricUnit.Text));
+        store.Register(new MetricDefinition(RainNext, "Weather: minutes until it rains (0 while it is)", "Weather", MetricUnit.None, Format: "0"));
     }
 
     public async ValueTask SampleAsync(MetricStore store, CancellationToken cancellationToken)
@@ -272,7 +276,7 @@ public sealed class WeatherProvider(
         ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or FormatException or KeyNotFoundException or InvalidOperationException;
 
     /// <param name="place">Where the forecast is for: its name, and where the sun is seen from.</param>
-    /// <param name="now">For the readings that move on between forecasts: the sun, and which hour it is at the place.</param>
+    /// <param name="now">For the readings that move on between forecasts: the sun, and which hour and quarter-hour it is at the place.</param>
     internal void Publish(MetricStore store, WeatherReport? report, WeatherRequest? place, DateTimeOffset now)
     {
         if (report is not null)
@@ -309,6 +313,10 @@ public sealed class WeatherProvider(
         store.SetText(UvLevel, WeatherReadings.UvLevel(report?.Uv));
         store.Set(SunElevation, report is not null && place is not null ? SunPosition.Elevation(place.Latitude, place.Longitude, now) : null);
         store.SetText(Daylight, report?.Today?.Daylight is { } daylight ? WeatherReadings.Daylight(daylight) : null);
+        // From the quarter-hour it is at the place now, so it moves on between forecasts.
+        var rain = report is null ? null : RainAhead.For(report, report.LocalTime(now));
+        store.SetText(RainSoon, rain?.Summary);
+        store.Set(RainNext, rain?.MinutesToRain);
         store.SetAttachment(Forecast, report);
     }
 

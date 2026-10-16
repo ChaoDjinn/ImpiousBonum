@@ -86,8 +86,9 @@ public sealed class BatteriesWidget : Widget
             var level = has && sample.Value is double v ? Math.Clamp(v, 0, 100) : 0;
             row.Bar.ColumnDefinitions[0].Width = new GridLength(level, GridUnitType.Star);
             row.Bar.ColumnDefinitions[1].Width = new GridLength(100 - level, GridUnitType.Star);
-            row.Fill.Background = _thresholds.Pick(store, id, _fill);
+            row.Fill.Background = _thresholds.Pick(store, id, _fill, out var warning);
             row.Value.Foreground = _thresholds.Pick(store, id, _value);
+            row.Symbol?.Show(warning, row.Fill.Background);
         }
     }
 
@@ -113,7 +114,8 @@ public sealed class BatteriesWidget : Widget
             label.TextTrimming = TextTrimming.CharacterEllipsis;
             var value = CreateText(_fontSize * 0.9, _value, HorizontalAlignment.Right);
             value.VerticalAlignment = VerticalAlignment.Center;
-            var header = LabelAndValue(label, value);
+            var symbol = CreateSymbol(value);
+            var header = LabelAndValue(label, value, symbol);
 
             var bar = new Grid { Height = _barHeight, Background = _track, Margin = new Thickness(0, 2, 0, 0) };
             bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) });
@@ -126,9 +128,9 @@ public sealed class BatteriesWidget : Widget
             row.Children.Add(bar);
             _rows.Children.Add(row);
 
-            _current.Add(new Row(device.Slug, value, bar, fill));
+            _current.Add(new Row(device.Slug, value, symbol, bar, fill));
         }
     }
 
-    private sealed record Row(string Slug, TextBlock Value, Grid Bar, Border Fill);
+    private sealed record Row(string Slug, TextBlock Value, WarningSymbol? Symbol, Grid Bar, Border Fill);
 }

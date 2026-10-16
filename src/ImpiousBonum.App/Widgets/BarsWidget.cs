@@ -90,7 +90,8 @@ public sealed class BarsWidget : Widget
             label.Text = bar.String("label");
             var value = CreateText(valueFontSize, valueBrush, HorizontalAlignment.Right);
             value.VerticalAlignment = VerticalAlignment.Center;
-            var header = LabelAndValue(label, value);
+            var symbol = CreateSymbol(value);
+            var header = LabelAndValue(label, value, symbol);
 
             var track = new Grid { Height = barHeight, Background = trackBrush, Margin = new Thickness(0, 2, 0, 0) };
             track.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0, GridUnitType.Star) });
@@ -104,7 +105,7 @@ public sealed class BarsWidget : Widget
             stack.Children.Add(row);
 
             var text = bar.OptionalString("text") is { Length: > 0 } t ? t : $"{{{metric}}}";
-            _rows.Add(new Row(metric, bar.OptionalNumber("max"), ValueTemplate.Parse(text), row, value, track, fill));
+            _rows.Add(new Row(metric, bar.OptionalNumber("max"), ValueTemplate.Parse(text), row, value, symbol, track, fill));
         }
 
         Children.Add(Fit(stack, FitDirection.Height));
@@ -122,7 +123,8 @@ public sealed class BarsWidget : Widget
             var fraction = available[i] && store.TryGet(row.Metric, out var sample) ? Fraction(sample, row.Max) : 0;
             row.Track.ColumnDefinitions[0].Width = new GridLength(fraction, GridUnitType.Star);
             row.Track.ColumnDefinitions[1].Width = new GridLength(1 - fraction, GridUnitType.Star);
-            row.Fill.Background = _thresholds.Pick(store, row.Metric, _fill);
+            row.Fill.Background = _thresholds.Pick(store, row.Metric, _fill, out var level);
+            row.Symbol?.Show(level, row.Fill.Background);
 
             // While editing, an unreadable bar fades rather than disappears (unless the whole widget is already faded).
             var hidden = _hideUnavailable && !available[i];
@@ -140,5 +142,5 @@ public sealed class BarsWidget : Widget
         return sample.Value is double value && full > 0 ? Math.Clamp(value / full, 0, 1) : 0;
     }
 
-    private sealed record Row(string Metric, double? Max, ValueTemplate Template, StackPanel Panel, TextBlock Value, Grid Track, Border Fill);
+    private sealed record Row(string Metric, double? Max, ValueTemplate Template, StackPanel Panel, TextBlock Value, WarningSymbol? Symbol, Grid Track, Border Fill);
 }

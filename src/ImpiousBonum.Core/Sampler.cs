@@ -74,6 +74,7 @@ public sealed class Sampler : IAsyncDisposable
         new MediaProvider(),
         new WeatherProvider(weather ?? (() => null), airQuality: new AirQualityProvider(airQuality ?? (() => null)),
             warnings: new WeatherWarningsProvider(warnings ?? (() => null)), places: weatherPlaces),
+        new MoonProvider(weather ?? (() => null)),
         new CustomDataProvider(customData ?? (() => [])),
         new CalendarProvider(calendars ?? (() => [])),
         new NewsProvider(news ?? (() => [])),

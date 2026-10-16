@@ -288,9 +288,12 @@ internal sealed class ClaudeUsagePage(ISettingsHost host) : CardPage("Claude usa
     }
 }
 
-/// <summary>General: starting with Windows, how the dashboard draws, and where its files are.</summary>
+/// <summary>General: starting with Windows, how the dashboard draws, where its files are, and backing them up.</summary>
 internal sealed class GeneralPage(ISettingsHost host) : CardPage("General", "How Impious Bonum starts and draws, and where it keeps its files.")
 {
+    /// <summary>Back up… and Restore…, with their dialogs.</summary>
+    internal BackupDialogs Backups { get; } = new(host);
+
     protected override void Build()
     {
         Add(Ui.Card("", "Start with Windows", "Start Impious Bonum when you sign in",
@@ -301,6 +304,11 @@ internal sealed class GeneralPage(ISettingsHost host) : CardPage("General", "How
 
         Add(Ui.Heading("Files"));
         Add(Ui.Card("", "Settings folder", AppPaths.DataDirectory, Ui.Button("Open", () => Ui.Open(AppPaths.DataDirectory))));
+        Add(Ui.Card("", "Back up and restore", "Your settings, layouts and saved themes in one file, to keep safe or to move to another PC",
+            Ui.Row(
+                Ui.Button("Back up…", () => Backups.BackUp(Window.GetWindow(this))),
+                Ui.Button("Restore…", () => _ = Backups.RestoreAsync(Window.GetWindow(this))))));
+        Add(Ui.Note(BackupDialogs.PrivateNote));
         Add(Ui.Card("", "Dashboard log", "What Impious Bonum has been doing, and any problems. Attach it to a problem report.",
             Ui.Button("Show", TrayIcon.ShowLog)));
     }

@@ -63,9 +63,9 @@ public static class LayoutTransfer
     }
 
     /// <summary>
-    /// Adds a package's layout to the saved layouts (from a file or the gallery): checks buttons that open things,
-    /// and asks before replacing a layout with the same name. Returns the saved name, or null if cancelled or it
-    /// couldn't be saved (the user has been told).
+    /// Adds a package's layout to the saved layouts (from a file or the gallery): checks buttons that open things or
+    /// send web requests, and asks before replacing a layout with the same name. Returns the saved name, or null if
+    /// cancelled or it couldn't be saved (the user has been told).
     /// </summary>
     public static string? ImportPackage(Window? owner, LayoutStore layouts, LayoutPackageContents package)
     {
@@ -110,12 +110,13 @@ public static class LayoutTransfer
     }
 
     /// <summary>
-    /// A layout from someone else can have a harmless-looking button that runs any program. If it has buttons that open
-    /// something, lists what and asks: keep them, clear what they open, or cancel the import. False means cancel.
+    /// A layout from someone else can have a harmless-looking button that runs any program, or one that sends a web
+    /// request to a device on your network. If it has buttons that open something or send a request, lists what and
+    /// asks: keep them, clear what they open and where they send, or cancel the import. False means cancel.
     /// </summary>
     private static bool ConfirmOpenTargets(Window? owner, LayoutDocument layout)
     {
-        var targets = ButtonsWidget.OpenTargets(layout);
+        var targets = ButtonsWidget.OpenTargets(layout).Concat(ButtonsWidget.WebTargets(layout)).ToList();
         if (targets.Count == 0)
             return true;
 
@@ -123,12 +124,15 @@ public static class LayoutTransfer
         if (targets.Count > 10)
             list += Environment.NewLine + $"• and {targets.Count - 10} more";
         var answer = Show(owner,
-            $"This layout has buttons that open programs, files or web addresses:{Environment.NewLine}{Environment.NewLine}{list}{Environment.NewLine}{Environment.NewLine}" +
+            $"This layout has buttons that open programs, files or web addresses, or send web requests:{Environment.NewLine}{Environment.NewLine}{list}{Environment.NewLine}{Environment.NewLine}" +
             $"Only keep them if you trust where the layout came from.{Environment.NewLine}{Environment.NewLine}" +
-            "Yes keeps them. No keeps the buttons but clears what they open.",
+            "Yes keeps them. No keeps the buttons but clears what they open and where they send.",
             MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
         if (answer == MessageBoxResult.No)
+        {
             ButtonsWidget.ClearOpenTargets(layout);
+            ButtonsWidget.ClearWebTargets(layout);
+        }
         return answer != MessageBoxResult.Cancel;
     }
 

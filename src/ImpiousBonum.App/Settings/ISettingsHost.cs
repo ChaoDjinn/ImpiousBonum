@@ -71,9 +71,13 @@ internal interface ISettingsHost
 
     void SetTabletButtons(bool on);
 
-    void ShowTabletLink();
+    /// <summary>Share every reading as JSON with other apps that have the link's secret.</summary>
+    void SetTabletReadings(bool on);
 
-    void CopyTabletLink();
+    /// <summary>The link and its QR code, for the main dashboard or the saved layout <paramref name="layout"/>.</summary>
+    void ShowTabletLink(string? layout);
+
+    void CopyTabletLink(string? layout);
 
     void NewTabletLink();
 
@@ -208,6 +212,12 @@ internal interface ISettingsHost
     Task RestartToUpdateAsync();
 
     void SetHardwareRendering(bool on);
+
+    /// <summary>
+    /// Closes everything, replaces the settings, layouts and saved themes with a backup's (saving the ones there are
+    /// first) and starts again. Does nothing if the layout editor's unsaved changes are kept instead.
+    /// </summary>
+    Task RestoreBackupAsync(string path);
 }
 
 /// <summary>Where updating has got to, for the About page.</summary>

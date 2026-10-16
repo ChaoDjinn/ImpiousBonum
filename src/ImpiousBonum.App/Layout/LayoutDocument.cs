@@ -65,6 +65,12 @@ public sealed class ThemeSettings
     /// <summary>Named by warning colour rules as <c>critical</c>.</summary>
     public string Critical { get; set; } = "#F44336";
 
+    /// <summary>
+    /// Marks a value in the warning or critical colour with a symbol too, so the two can be told apart without seeing
+    /// colour. Off by default.
+    /// </summary>
+    public bool WarningSymbols { get; set; }
+
     /// <summary>Optional: the accent fades from <see cref="Accent"/> to this, left to right, wherever it's drawn.</summary>
     public string? Accent2 { get; set; }
 

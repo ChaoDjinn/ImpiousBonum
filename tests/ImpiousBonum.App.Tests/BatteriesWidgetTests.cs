@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Metrics;
@@ -95,6 +96,18 @@ public sealed class BatteriesWidgetTests
         });
     }
 
+    [Fact]
+    public void A_low_device_has_a_symbol_with_warning_symbols_on()
+    {
+        Sta.Run(() =>
+        {
+            var (store, _) = Devices(new("Headset", 72), new("Mouse", 18));
+            var widget = WidgetFactory.Create(new JsonObject { ["type"] = "batteries" }, Theme.From(new ThemeSettings { WarningSymbols = true }));
+            widget.Refresh(store, DateTime.Now);
+            Assert.Equal([ThresholdLevel.None, ThresholdLevel.Critical], Descendants<WarningSymbol>(widget).Select(s => s.Level));
+        });
+    }
+
     /// <summary>A store with these devices' batteries in it, as the provider writes them, and a way to change them.</summary>
     private static (MetricStore Store, FakeDevices Devices) Devices(params DeviceBattery[] devices)
     {
@@ -120,6 +133,18 @@ public sealed class BatteriesWidgetTests
     private static Grid Bar(StackPanel row) => (Grid)row.Children[1];
 
     private static Border Fill(StackPanel row) => (Border)Bar(row).Children[0];
+
+    private static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T match)
+                yield return match;
+            foreach (var deeper in Descendants<T>(child))
+                yield return deeper;
+        }
+    }
 
     private sealed class FakeDevices
     {

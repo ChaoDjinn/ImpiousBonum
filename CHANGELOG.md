@@ -50,13 +50,57 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.
 - *Holiday themes* on *Pages and schedule* shows the matching new holiday theme on and around each holiday: *Lunar New Year*, *Valentine*, *Shamrock*, *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* for Bonfire Night and New Year's Eve, *Hanukkah*, *Gingerbread* and *Christmas*. Easter is worked out, and Hanukkah, Eid and Lunar New Year come from the Hebrew, Islamic and Chinese calendars that come with the app, so they move with the year; Diwali's dates run to 2035. It's off until you turn it on, and a rule in the schedule or a game that sets a theme still wins.
 
+**Sun and moon**
+- A new *Sun and moon* widget, under *Weather, news and Claude*: the day as an arc from sunrise to sunset with the sun on its way across and how long it's light, and beside it the moon as it looks tonight, with its phase, how much of it is lit, the next full moon, and when it rises and sets. It can show just the sun or just the moon too.
+- The moon is drawn the way up it looks from where you are: lit on the right as it grows in the northern hemisphere, on the left in the southern.
+- New readings for any widget: the moon's phase (`moon.phase`, e.g. *Waxing gibbous*), how much of it is lit (`moon.illumination`), how many days since the new moon (`moon.age`), the next full and new moons (`moon.next.full`, `moon.next.new`, e.g. *Sat 24 Oct*), and moonrise and moonset (`moon.rise`, `moon.set`).
+- It's all worked out on your PC from the date and the weather's location, so nothing is sent. The moon's phase works without a location; the sun, moonrise and moonset need one.
+
+**Backing up your settings**
+- *General* → *Back up…* saves your whole setup as one `.ibbackup` file: your settings, every saved layout with its fonts and pictures, and your saved themes. Keep it somewhere safe, or take it to another PC. It has private things in it, such as your calendar links and the tablet link, so keep it to yourself.
+- *Restore…* shows what's in a backup (when it was made, by which version, how many layouts and themes) and asks before replacing anything. It saves your setup as it is first, in `%AppData%\ImpiousBonum backups`, so you can go back, then Impious Bonum starts again with the backup's. A backup from a newer version says so first.
+- Logs and the list of game sessions aren't in a backup, and restoring leaves yours as they are.
+
+**Rain soon**
+- A new *Rain soon* widget, under *Weather, news and Claude*, shows the rain in the next two hours at your location: a bar for each quarter of an hour, taller the heavier the rain, with the time every half hour under them. A drizzle still shows, and two dry hours are just a line.
+- A line above the bars says what's coming: *Dry for the next 2 hours*, *Rain from 14:30*, *Rain stopping around 15:15* or *Light rain for the next 2 hours*, and snow when the forecast is for snow.
+- The same as readings for any widget: `weather.rain.soon` for that line, and `weather.rain.next` for the minutes until it rains (0 while it is). An alert on it below 30 is a reminder to bring the washing in.
+- It's most precise in central Europe and North America, where Open-Meteo's forecast is worked out a quarter of an hour at a time; elsewhere it's filled in from the hourly forecast. It comes in the same request as the rest of the forecast, so nothing more is sent.
+
+**Photo frame**
+- A new *Photo frame* widget, under *Pictures and shapes*: a slideshow of the pictures in a folder, like a digital photo frame. Choose the folder in the editor, how long each photo shows, and whether they're shuffled or go by name or date. Tap it for the next one.
+- Photos fade into one another, fill the frame or fit inside it, and can have rounded corners and their file name or the date they were taken along the bottom. Photos taken with the camera on its side show the right way up.
+- It stays light with big photos: only the photo on show and the next one are read, at about the size they're shown, and nothing is read while the dashboard is hidden. Photos added to the folder turn up within a few minutes, and pictures that can't be read are passed over.
+- The folder stays on your PC: exported layouts and layouts in the gallery leave it out.
+
 **Energy use and cost**
 - A new *Energy* page, and readings for any widget: your whole PC's power now (`power.total`: the CPU's and graphics card's from the sensor service, and 50 W for the rest, which you can change), the energy it's used today and this month (`energy.today`, `energy.month`), and what that costs at your price per kWh (`energy.cost.today`, `energy.cost.month`, such as *£0.48*).
 - It's counted while Impious Bonum runs, needs the sensor service, and is kept across restarts. Today's total starts again at midnight, and the month's on the 1st.
 - Turn on *Energy* → *Grid carbon intensity* for how clean Great Britain's electricity is now (`grid.carbon`, `grid.carbon.index`) and when it'll be cleanest in the next 24 hours (`grid.carbon.best`, such as *Lowest around 03:30*), from NESO's Carbon Intensity API every 30 minutes. Give the first half of your postcode for your region's figures. It's off until you turn it on, and nothing about you is sent but that half.
 
+**A layout of its own on each tablet**
+- A tablet can show a different saved layout from the main dashboard: pick it under *Layout for the link* on the *Tablet and USB screen* page, then open that link or scan its QR code on the tablet. It keeps to that layout, in its own theme, whatever game layouts and the schedule do to the main dashboard.
+- With *Let tablets press buttons* on, taps press the buttons on the layout that tablet is showing.
+- A layout is only drawn while a tablet is showing it, and let go a few minutes after the last one closes, so it costs nothing the rest of the time.
+- Renaming or deleting a layout stops links to it working: the tablet says there's no layout of that name, and the page gives you a new link.
+
+**Readings for other apps**
+- *Share readings with other apps* on the *Tablet and USB screen* page (off by default) lets Home Assistant, Rainmeter or a script of your own read every reading as JSON while the tablet view is on: its name, unit, value and the value as the dashboard shows it. They need the tablet link's secret, and *New link* stops old ones working.
+- The [guide](docs/guide.md#readings-for-other-apps) has a Home Assistant sensor and a Rainmeter skin to start from.
+
+
+**Buttons that send web requests**
+- A *Buttons* action, `web`, sends a web request when you tap it: run a Home Assistant script or scene, switch a smart light, start a Node-RED flow or send a notification to your phone with ntfy. Each button has its address, a method (`GET`, `POST` or `PUT`), and if it needs them a body, such as JSON, and a header, such as `Authorization: Bearer` and a token. The guide has examples for Home Assistant and ntfy.
+- The button lights up for a moment in the accent colour when the request worked, or the critical colour when it didn't, and `dashboard.log` says why. A tablet allowed to press buttons can press these too.
+- Importing a layout, from a file or the gallery, lists where its web buttons send and asks before keeping them, as it does for buttons that open programs. Exporting one leaves their headers out, since they're usually a password or token.
+
+**Warnings you can tell apart without colour**
+- A new theme setting, *Warning symbols*: a value in the theme's warning colour gets a ▲ beside it too, and one in its critical colour a ◆, so warning and critical don't rely on colour alone. Text, icon and value, stat tiles, graphs, gauges, bars, drives and *Top apps* show it; *CPU threads* keeps to colour. It's off unless you turn it on, and text that only just fits shrinks a little to make room for it.
+- A new built-in theme, *Clear Sight*, for colour blindness: a sky blue accent, gold warnings and deep pink-red critical ones that stay apart with every common kind of colour blindness, with warning symbols on. That's 56 in all.
+- Ticking a box in the editor's settings with Narrator now changes the setting, as clicking it does.
+
 **Device batteries**
-- A `batteries` widget for how much charge your wireless devices have left, as Windows' Bluetooth settings show it: a Bluetooth headset, mouse, keyboard or game controller, or an Xbox controller on its wireless adapter or a cable. Each has a bar, which turns the critical colour under 20 %, and the widget follows devices as they connect and disconnect.
+- A `batteries` widget for how much charge your wireless devices have left, as Windows' Bluetooth settings show it: a Bluetooth headset, mouse, keyboard or game controller, or an Xbox controller on its wireless adapter or a cable. Each has a bar, which turns the critical colour under 20 % (with a ◆ too, with *Warning symbols* on), and the widget follows devices as they connect and disconnect.
 - Readings any widget can show, such as `battery.headset` (*72 %*), and `battery.low`, the name of the one running low (*Mouse*). That has no reading while none is, so a warning can show only when it's needed.
 - Read every minute from what Windows already knows: Impious Bonum never connects to a device itself. Nothing shows on PCs without such devices.
 

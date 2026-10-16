@@ -31,6 +31,7 @@ public sealed class TextWidget : Widget
     private readonly bool _hideUnavailable;
     private readonly Brush _color;
     private readonly ThresholdColors _thresholds;
+    private readonly WarningSymbol? _symbol;
 
     public TextWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
@@ -41,14 +42,16 @@ public sealed class TextWidget : Widget
         _thresholds = new ThresholdColors(settings, theme);
         _text = CreateText(settings.Number("fontSize"), _color, ParseAlignment(settings.String("align")));
         _text.VerticalAlignment = VerticalAlignment.Center;
-        Children.Add(Fit(_text, FitDirection.Both));
+        _symbol = CreateSymbol(_text);
+        Children.Add(Fit(Beside(_text, _symbol), FitDirection.Both));
     }
 
     public override void Refresh(MetricStore store, DateTime now)
     {
         var text = _template.Render(store);
         _text.Text = _uppercase ? text.ToUpper() : text;
-        _text.Foreground = _thresholds.Pick(store, _template.MetricIds.FirstOrDefault(), _color);
+        _text.Foreground = _thresholds.Pick(store, _template.MetricIds.FirstOrDefault(), _color, out var level);
+        _symbol?.Show(level, _text.Foreground);
         SetUnavailable(_hideUnavailable && !_template.HasReading(store));
     }
 }

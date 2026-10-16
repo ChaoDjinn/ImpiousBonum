@@ -28,6 +28,12 @@ public static class DemoReadings
     /// </summary>
     public const string Spectrum = "demo.spectrum";
 
+    /// <summary>
+    /// What a photo frame with no folder shows in a snapshot (a <see cref="DemoPhoto"/>), rather than an empty box. The
+    /// picture itself is drawn by the app.
+    /// </summary>
+    public const string Photo = "demo.photo";
+
     /// <summary>Fills <paramref name="store"/> with the demo readings, as they'd be at <paramref name="now"/>.</summary>
     /// <param name="artwork">The album art for what's playing (PNG or JPEG bytes), if any.</param>
     public static void Fill(MetricStore store, DateTime now, byte[]? artwork = null)
@@ -166,10 +172,14 @@ public static class DemoReadings
         {
             Precipitation = d == 1 ? 6.2 : 0.4, Wind = 14 + d % 4, Gusts = 30 + d % 6, Uv = 3, Daylight = TimeSpan.FromMinutes(649 - 4 * d),
         }).ToList();
+        // A shower in about 40 minutes, a quarter of an hour at a time from the one that ended last, as Open-Meteo gives them.
+        var quarter = now.Date.AddMinutes(Math.Floor(now.TimeOfDay.TotalMinutes / 15) * 15);
+        double[] shower = [0, 0, 0, 0, 0.2, 0.7, 1.4, 0.6, 0.1, 0, 0, 0];
         var report = new WeatherReport(WeatherUnits.Metric, now, 14, 13, 72, 11, 225, 2, now.Hour is >= 7 and < 20,
             hours, days, now.Date.AddHours(7.2), now.Date.AddHours(18.6))
         {
             Gusts = 24, Uv = now.Hour is >= 7 and < 20 ? 2 : 0, Pressure = 1016, DewPoint = 9, Visibility = 18000, Clouds = 45, Precipitation = 0,
+            QuarterHours = [.. shower.Select((amount, i) => new QuarterHour(quarter.AddMinutes(15 * i), amount))],
         };
         weather.Publish(store, report, new WeatherRequest("Harbourton", 50.6, -2.0, WeatherUnits.Metric), now);
 
@@ -326,6 +336,20 @@ public static class DemoReadings
         foreach (var check in checks)
             StatusProvider.Register(store, check.Name);
         StatusProvider.Publish(store, checks);
+
+        // A photo for a photo frame with no folder, taken on a summer evening.
+        store.SetAttachment(Photo, new DemoPhoto("Lakeside at dusk.jpg", new DateTime(2026, 8, 14, 20, 31, 0)));
+
+        // The sun went down at 18:36, and a waxing gibbous moon is high in the south: up since the afternoon, it sets in
+        // the small hours, and it's full in five days.
+        var moon = new MoonProvider(() => null);
+        moon.Initialize(store);
+        DateTimeOffset At(int days, double hours) => new(now.Date.AddDays(days).AddHours(hours));
+        var sunrise = new DateTimeOffset(report.Sunrise!.Value);
+        var sunset = new DateTimeOffset(report.Sunset!.Value);
+        moon.Publish(store, new SkyReport(new DateTimeOffset(now),
+            new MoonReport(0.79, true, 10.4, "Waxing gibbous", At(5, 6.6), At(20, 1.1)) { Rise = At(0, 15.4), Set = At(1, 2.6) },
+            new SunDay(At(0, 0), At(1, 0), sunrise, sunset, sunset - sunrise), 50.6));
 
         // A wireless headset, a mouse that wants charging and a controller.
         using var batteries = new BatteryProvider(() => []);

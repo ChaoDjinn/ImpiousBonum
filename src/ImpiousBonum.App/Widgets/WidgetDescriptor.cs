@@ -74,6 +74,9 @@ public enum SettingKind
     /// (<see cref="SettingDescriptor.OptionsSource"/>).
     /// </summary>
     Picks,
+
+    /// <summary>A path to a folder on this PC.</summary>
+    Folder,
 }
 
 /// <summary>One setting of a widget type. Create these with the <see cref="Setting"/> helpers.</summary>
