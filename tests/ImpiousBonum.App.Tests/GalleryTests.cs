@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Text.Json.Nodes;
+using ImpiousBonum.App.Editor;
 using ImpiousBonum.App.Layout;
 
 namespace ImpiousBonum.App.Tests;
@@ -130,8 +131,138 @@ public sealed class GalleryTests
         });
     }
 
+    [Fact]
+    public void The_index_lists_themes_and_skips_unsafe_or_unusable_ones()
+    {
+        var json = """
+            { "layouts": [ { "name": "Strip", "file": "strip.json" } ],
+              "themes": [
+                { "name": "Deep Sea", "file": "deep-sea.json", "author": "Sam", "description": "Teal" },
+                { "name": "Bare", "file": "bare.json" },
+                { "name": "Escape", "file": "../secrets.json" },
+                { "name": "Package", "file": "theme.ibl" },
+                { "name": "CON", "file": "con.json" },
+                { "name": "Half/way", "file": "half.json" },
+                { "file": "nameless.json" },
+              ] }
+            """;
+
+        var themes = Gallery.ParseThemes(json);
+
+        Assert.Equal(["Deep Sea", "Bare"], themes.Select(t => t.Name));
+        Assert.Equal(new GalleryTheme("Deep Sea", "deep-sea.json", "Sam", "Teal"), themes[0]);
+        Assert.Equal("by Sam", themes[0].Details);
+        Assert.Equal("", themes[1].Details);
+        // The layouts beside them are read as ever.
+        Assert.Equal(["Strip"], Gallery.ParseIndex(json).Select(e => e.Name));
+    }
+
+    [Fact]
+    public void An_index_from_before_themes_has_none()
+    {
+        var old = """{ "layouts": [ { "name": "Strip", "file": "strip.json" } ] }""";
+
+        Assert.Empty(Gallery.ParseThemes(old));
+        Assert.Single(Gallery.ParseIndex(old));
+        Assert.Empty(Gallery.ParseThemes("""{ "themes": "not a list" }"""));
+    }
+
+    [Fact]
+    public void A_shared_theme_leaves_out_files_its_base_and_settings_it_doesnt_know()
+    {
+        var theme = Gallery.OpenTheme(Encoding.UTF8.GetBytes("""
+            // A theme from someone else.
+            { "base": "Ice", "Accent": "#2EF2D0", "background": "#020A18", "glow": 0.5,
+              "fontFile": "C:\\Users\\sam\\font.ttf", "backgroundImage": "\\\\nas\\pictures\\sea.png", "cornerRadius": 8, }
+            """));
+
+        Assert.Equal(["accent", "background", "glow"], theme.Select(p => p.Key));
+        Assert.Equal("#2EF2D0", ThemeLibrary.GetString(theme, "accent"));
+
+        // Notepad's byte order mark is fine too.
+        Assert.Single(Gallery.OpenTheme([.. "\uFEFF"u8, .. """{ "accent": "#2EF2D0" }"""u8]));
+    }
+
+    [Theory]
+    [InlineData("""{ "accent": "teal-ish" }""", "'accent' should be a colour")]
+    [InlineData("""{ "accent2": "#12" }""", "'accent2' should be a colour")]
+    [InlineData("""{ "glow": 3 }""", "'glow' should be between 0 and 1")]
+    [InlineData("""{ "glow": "lots" }""", "'glow' should be a number")]
+    [InlineData("""{ "foreground": 255 }""", "'foreground' should be text")]
+    [InlineData("""{ "backgroundFit": "zoom" }""", "'backgroundFit' should be one of")]
+    [InlineData("""{ "fontFamily": "file://nas/fonts/#Evil" }""", "'fontFamily' should be the name of a font")]
+    [InlineData("""[ "accent", "#FF9800" ]""", "should be a { … } object")]
+    [InlineData("""{ "accent": """, "can't be read")]
+    public void A_shared_theme_with_a_value_that_wont_work_is_refused(string json, string why)
+    {
+        var problem = Assert.Throws<InvalidDataException>(() => Gallery.OpenTheme(Encoding.UTF8.GetBytes(json)));
+        Assert.Contains(why, problem.Message);
+    }
+
+    [Fact]
+    public void Every_theme_in_the_repository_gallery_opens_unchanged_and_has_a_picture()
+    {
+        var folder = RepositoryGallery();
+        var themes = Gallery.ParseThemes(File.ReadAllText(Path.Combine(folder, Gallery.IndexFile)));
+        Assert.NotEmpty(themes);
+        Assert.Equal(themes.Count, themes.Select(t => t.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count());
+
+        foreach (var theme in themes)
+        {
+            Assert.False(ThemeLibrary.IsBuiltIn(theme.Name), $"{theme.Name} has a built-in theme's name.");
+            Assert.True(theme.Description is { Length: > 0 }, $"{theme.Name} has no description.");
+            var path = Path.Combine(folder, "themes", theme.File);
+            Assert.True(File.Exists(path), $"{theme.Name}: {theme.File} isn't in the gallery's themes folder.");
+
+            // Nothing in it is left out: no files, no settings the app doesn't know.
+            var values = Gallery.OpenTheme(File.ReadAllBytes(path));
+            var written = (JsonObject)JsonNode.Parse(File.ReadAllText(path), documentOptions: new System.Text.Json.JsonDocumentOptions { CommentHandling = System.Text.Json.JsonCommentHandling.Skip })!;
+            Assert.Equal(written.ToJsonString(), values.ToJsonString());
+
+            var picture = Path.Combine(folder, "images", "themes", Path.ChangeExtension(theme.File, ".png"));
+            Assert.True(File.Exists(picture), $"{theme.Name} has no picture in images/themes.");
+        }
+    }
+
+    [Fact]
+    public void A_gallery_theme_named_like_one_of_yours_or_a_built_in_one_gets_a_name_of_its_own()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "ImpiousBonum.Tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var themes = new ThemeLibrary(directory);
+            var deepSea = new JsonObject { ["accent"] = "#2EF2D0" };
+            themes.Save("Deep Sea", deepSea);
+
+            // A built-in theme can't be replaced, so its name is taken; one of yours can be, or kept beside it.
+            Assert.True(ThemeLibrary.IsBuiltIn(themes.Find("ice")));
+            Assert.Throws<ArgumentException>(() => themes.Save("Ice", deepSea));
+            Assert.Equal("Ice (2)", LayoutTransfer.SuggestName(themes, "Ice"));
+            Assert.Equal("Deep Sea", themes.Find("deep sea"));
+            Assert.False(ThemeLibrary.IsBuiltIn(themes.Find("deep sea")));
+            Assert.Equal("Deep Sea (2)", LayoutTransfer.SuggestName(themes, "Deep Sea"));
+
+            themes.Save("deep sea", new JsonObject { ["accent"] = "#3E8BFF" });
+            Assert.Equal(["Deep Sea"], themes.ListSaved());
+            Assert.Equal("#3E8BFF", ThemeLibrary.GetString(themes.Load("Deep Sea"), "accent"));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>The themes in the repository's gallery, by name, as the gallery opens them.</summary>
+    internal static IEnumerable<(string Name, JsonObject Values)> RepositoryThemes()
+    {
+        var folder = RepositoryGallery();
+        return Gallery.ParseThemes(File.ReadAllText(Path.Combine(folder, Gallery.IndexFile)))
+            .Select(t => (t.Name, Gallery.OpenTheme(File.ReadAllBytes(Path.Combine(folder, "themes", t.File)))));
+    }
+
     /// <summary>The repository's gallery folder, found by walking up from the test's output folder.</summary>
-    private static string RepositoryGallery()
+    internal static string RepositoryGallery()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {
