@@ -10,14 +10,15 @@ namespace ImpiousBonum.App.Widgets;
 
 /// <summary>
 /// Buttons to tap on the dashboard: media and volume keys, opening programs, files and web addresses, keyboard
-/// shortcuts, or switching layout. The dashboard never takes focus, so a shortcut goes to the app you're using.
+/// shortcuts, switching layout, or sending a web request. The dashboard never takes focus, so a shortcut goes to the
+/// app you're using.
 /// </summary>
 public sealed class ButtonsWidget : Widget
 {
     public static WidgetDescriptor Descriptor { get; } = new(
         "buttons", "Buttons",
         "Buttons to tap: play/pause, skip and volume, open a program, file or web address, send a keyboard shortcut to "
-        + "the app you're using, or switch layout.",
+        + "the app you're using, switch layout, or send a web request to Home Assistant, smart lights or ntfy.",
         480, 110,
         [
             Setting.Items("buttons", "Buttons",
@@ -28,8 +29,17 @@ public sealed class ButtonsWidget : Widget
                     help: "Media and volume actions work like the keyboard's media keys. open, keys and layout use the target below."),
                 Setting.PlainText("target", "Target", null,
                     help: "open: a program, file, folder or web address, e.g. calc.exe, C:\\Games or https://… · "
-                        + "keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name."),
+                        + "keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · "
+                        + "web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/…"),
                 Setting.PlainText("arguments", "Arguments", null, help: "open: command-line arguments for a program."),
+                Setting.Choice("method", "Method", "POST", WidgetAction.WebMethods, group: Setting.Content,
+                    help: "web: how to send it. Webhooks, Home Assistant's services and ntfy want POST."),
+                Setting.PlainText("body", "Body", null,
+                    help: "web: what a POST or PUT sends, e.g. {\"entity_id\": \"script.movie_night\"}, or the message for ntfy."),
+                Setting.PlainText("contentType", "Content type", null,
+                    help: "web: the body's type. Empty sends application/json for a body in { } or [ ], and text/plain for anything else."),
+                Setting.PlainText("header", "Header", null,
+                    help: "web: one header as Name: value, e.g. Authorization: Bearer and a token. Left out when you export the layout."),
             ],
             defaults:
             [
@@ -98,7 +108,10 @@ public sealed class ButtonsWidget : Widget
                 Padding = new Thickness(spacing / 2),
                 ToolTip = Describe(action),
             };
-            target.Tapped += (_, _) => RequestAction(action);
+            if (action.Kind.Equals(WidgetAction.Web, StringComparison.OrdinalIgnoreCase))
+                ConnectWeb(target, WebAction(action, button), theme);
+            else
+                target.Tapped += (_, _) => RequestAction(action);
             grid.Children.Add(target);
         }
         Children.Add(grid);
@@ -114,6 +127,7 @@ public sealed class ButtonsWidget : Widget
         WidgetAction.Open => action.Target.Length == 0 ? "Opens nothing yet: set a target" : $"Opens {action.Target} {action.Arguments}".TrimEnd(),
         WidgetAction.Keys => action.Target.Length == 0 ? "Sends no keys yet: set a target" : $"Sends {action.Target}",
         WidgetAction.Layout => action.Target.Length == 0 ? "Switches to no layout yet: set a target" : $"Switches to the \"{action.Target}\" layout",
+        WidgetAction.Web => Core.WebRequestSender.Address(action.Target) is { } address ? $"Sends a web request to {address.Host}" : "Sends nothing yet: set a web address as its target",
         WidgetAction.PlayPause => "Play or pause",
         WidgetAction.VolumeUp => "Volume up",
         WidgetAction.VolumeDown => "Volume down",
@@ -141,9 +155,92 @@ public sealed class ButtonsWidget : Widget
         }
     }
 
-    private static IEnumerable<JsonObject> OpenButtons(LayoutDocument layout) =>
+    private static IEnumerable<JsonObject> OpenButtons(LayoutDocument layout) => Buttons(layout, WidgetAction.Open);
+
+    /// <summary>
+    /// Where the layout's web buttons send to, and how ("POST http://homeassistant.local:8123/api/webhook/…"), noting
+    /// those with a header but never its value. A layout from someone else could switch things in your home or carry
+    /// their token, so imports show this list with <see cref="OpenTargets"/> and ask first.
+    /// </summary>
+    public static IReadOnlyList<string> WebTargets(LayoutDocument layout) =>
+        Buttons(layout, WidgetAction.Web)
+            .Where(b => !string.IsNullOrWhiteSpace(b.GetString("target")))
+            .Select(b => $"{(b.GetString("method") is { Length: > 0 } method ? method.ToUpperInvariant() : "POST")} {b.GetString("target")!.Trim()}"
+                + (string.IsNullOrWhiteSpace(b.GetString("header")) ? "" : " (with a header)"))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    /// <summary>Clears where the layout's web buttons send to, and their headers, keeping the buttons (they then send nothing).</summary>
+    public static void ClearWebTargets(LayoutDocument layout)
+    {
+        foreach (var button in Buttons(layout, WidgetAction.Web))
+        {
+            button.Remove("target");
+            button.Remove("header");
+        }
+    }
+
+    /// <summary>
+    /// Takes the headers off the layout's web buttons, for exporting: a header is often a password or token, such as
+    /// Home Assistant's. Returns how many it took off.
+    /// </summary>
+    public static int RemoveHeaders(LayoutDocument layout)
+    {
+        var removed = 0;
+        foreach (var button in Buttons(layout, WidgetAction.Web).Where(b => !string.IsNullOrWhiteSpace(b.GetString("header"))))
+        {
+            button.Remove("header");
+            removed++;
+        }
+        return removed;
+    }
+
+    private static IEnumerable<JsonObject> Buttons(LayoutDocument layout, string action) =>
         layout.Widgets
             .Where(w => string.Equals(w.GetString("type"), Descriptor.Type, StringComparison.OrdinalIgnoreCase))
             .SelectMany(w => (w["buttons"] as JsonArray)?.OfType<JsonObject>() ?? [])
-            .Where(b => string.Equals(b.GetString("action") ?? WidgetAction.PlayPause, WidgetAction.Open, StringComparison.OrdinalIgnoreCase));
+            .Where(b => string.Equals(b.GetString("action") ?? WidgetAction.PlayPause, action, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>How long a web button stays lit to show how its request went.</summary>
+    internal static readonly TimeSpan AnsweredFor = TimeSpan.FromSeconds(1.5);
+
+    /// <summary>A web button's action, with its request's settings.</summary>
+    private static WidgetAction WebAction(WidgetAction action, WidgetSettings button) => action with
+    {
+        Method = button.String("method"),
+        Body = button.String("body"),
+        ContentType = button.String("contentType").Trim(),
+        Header = button.String("header").Trim(),
+    };
+
+    /// <summary>
+    /// A web button's request goes in the background. The button stays pressed until the answer, ignoring taps so they
+    /// don't stack up, then lights up for a moment: in the accent colour if it worked, the critical colour if it didn't.
+    /// </summary>
+    private void ConnectWeb(TapTarget target, WidgetAction action, Theme theme)
+    {
+        var timer = new System.Windows.Threading.DispatcherTimer { Interval = AnsweredFor };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            target.Light = null;
+        };
+        action = action with
+        {
+            Done = worked =>
+            {
+                target.Waiting = false;
+                target.Light = worked ? theme.Accent : theme.Critical;
+                timer.Stop();
+                timer.Start();
+            },
+        };
+        target.Tapped += (_, _) =>
+        {
+            target.Waiting = true;
+            // Nothing takes it in the editor's preview or a snapshot, so there's no answer to wait for.
+            if (!RequestAction(action))
+                target.Waiting = false;
+        };
+    }
 }

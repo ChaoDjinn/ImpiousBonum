@@ -2,6 +2,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using ImpiousBonum.App.Widgets;
 
 namespace ImpiousBonum.App.Layout;
 
@@ -60,7 +61,8 @@ public static class LayoutPackage
     /// Writes <paramref name="layout"/> and the files its theme points at to <paramref name="destination"/>.
     /// A font or image that can't be found is left out and named in the returned warnings. A layout using one of your
     /// saved themes has that theme's values copied in (as the editor's Detach does), since the other PC won't have it;
-    /// built-in themes stay as names.
+    /// built-in themes stay as names. Web buttons' headers are left out, with a warning: they're often a password or
+    /// token, and whoever imports the layout adds their own.
     /// </summary>
     /// <param name="themes">The saved themes the layout may name; null for only the built-in ones.</param>
     public static IReadOnlyList<string> Write(LayoutDocument layout, string name, Stream destination, ThemeLibrary? themes = null)
@@ -71,6 +73,10 @@ public static class LayoutPackage
         if (ThemeLibrary.BaseName(copy.Theme) is { } themeName && !ThemeLibrary.IsBuiltIn(themeName))
             copy.Theme = themes.Resolve(copy.Theme).ToJson();
         var theme = themes.Resolve(copy.Theme);
+        if (ButtonsWidget.RemoveHeaders(copy) is > 0 and var headers)
+            warnings.Add(headers == 1
+                ? "Left out a web button's header, which can hold a password or token."
+                : $"Left out {headers} web buttons' headers, which can hold a password or token.");
 
         using var zip = new ZipArchive(destination, ZipArchiveMode.Create, leaveOpen: true);
         ThemeLibrary.SetString(copy.Theme, "fontFile", Pack(zip, theme.FontFile, "font", FontExtensions, "font file", warnings));
