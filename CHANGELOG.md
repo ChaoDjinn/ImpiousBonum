@@ -24,6 +24,11 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 **Countdowns every year**
 - A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
+**Lining widgets up in the editor**
+- Widgets snap to each other as you drag or resize them: their edges and centres line up with other widgets' edges and centres, and with the canvas's edges and middle, and a thin line shows what they've lined up with. Hold Alt to place freely, as before.
+- Select several widgets at once: Ctrl+click or Shift+click them in the preview or the *Widgets* list, drag a box around them on empty canvas, or press Ctrl+A for all of them. Drag one to move them all, nudge them with the arrow keys, or duplicate or delete them together.
+- *Align* on the toolbar, and in the list's right-click menu, lines up the selected widgets by their left edges, centres, right edges, tops, middles or bottoms, spaces three or more out with equal gaps, or makes them all the same width or height. Each is one undo.
+
 **Microphone and camera**
 - Whether your microphone is muted (`mic.muted`) and its name (`mic.name`), and which apps are using the microphone or the camera (`mic.inuse`, `mic.apps`, `camera.inuse`, `camera.apps`, e.g. *Discord, OBS*). Give a text or icon widget a warning colour on one of them for an *on air* light, or a reminder that you're muted. Windows doesn't ask permission or show its microphone icon for any of it: Impious Bonum never uses the microphone or camera itself.
 - A *Buttons* action, `mic-mute`, mutes and unmutes the microphone. With the new `mic` icon, the button shows `mic-off` while it's muted.
