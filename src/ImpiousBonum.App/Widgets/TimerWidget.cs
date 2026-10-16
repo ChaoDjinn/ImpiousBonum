@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -12,7 +11,7 @@ namespace ImpiousBonum.App.Widgets;
 /// A stopwatch, a countdown (tap to start and pause) or a count down to a time of day or a date. Running timers keep
 /// going while the dashboard is rebuilt: their state lives in <see cref="TimerClock"/>, not the widget.
 /// </summary>
-public sealed partial class TimerWidget : Widget
+public sealed class TimerWidget : Widget
 {
     public static WidgetDescriptor Descriptor { get; } = new(
         "timer", "Timer",
@@ -123,14 +122,14 @@ public sealed partial class TimerWidget : Widget
                 return (_state.Elapsed(now), false);
             case "until":
             {
-                if (ParseTarget(_target, _state.Anchor(now)) is not { } target)
+                if (TargetDate.Parse(_target, _state.Anchor(now)) is not { } target)
                     return (TimeSpan.Zero, false);
                 var left = target - now;
                 if (left > TimeSpan.Zero)
                     return (left, false);
                 // A daily time that has just passed stays "done" for a minute, and a yearly day for the rest of that
                 // day, then they count to the next one. A date stays done.
-                DateTime? over = IsTimeOfDay(_target) ? target.AddMinutes(1) : ParseYearly(_target) is not null ? target.Date.AddDays(1) : null;
+                DateTime? over = TargetDate.IsTimeOfDay(_target) ? target.AddMinutes(1) : TargetDate.ParseYearly(_target) is not null ? target.Date.AddDays(1) : null;
                 if (over is not { } until || now < until)
                     return (TimeSpan.Zero, true);
                 _state.Reset(now);
@@ -183,57 +182,6 @@ public sealed partial class TimerWidget : Widget
             : new TimeSpan(numbers[0], numbers[1], numbers[2]);
         return span > TimeSpan.Zero ? span : null;
     }
-
-    /// <summary>
-    /// The moment <paramref name="text"/> names, as seen from <paramref name="from"/>: a time of day is its next
-    /// occurrence (today if it's still to come); a month and day is this year's until that day is over, then next
-    /// year's; a date with no time is its midnight. Null when it can't be read.
-    /// </summary>
-    internal static DateTime? ParseTarget(string text, DateTime from)
-    {
-        text = text.Trim();
-        if (TimeOnly.TryParse(text, CultureInfo.InvariantCulture, out var time) || TimeOnly.TryParse(text, CultureInfo.CurrentCulture, out time))
-        {
-            var today = from.Date + time.ToTimeSpan();
-            return today > from ? today : today.AddDays(1);
-        }
-        if (ParseYearly(text) is { } yearly)
-        {
-            // 29 February only comes round in a leap year.
-            for (var year = from.Year; year <= from.Year + 8; year++)
-            {
-                if (yearly.Day > DateTime.DaysInMonth(year, yearly.Month))
-                    continue;
-                var day = new DateTime(year, yearly.Month, yearly.Day);
-                if (from < day.AddDays(1))
-                    return day + yearly.Time;
-            }
-            return null;
-        }
-        string[] formats = ["yyyy-MM-dd", "yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-ddTHH:mm", "yyyy-MM-ddTHH:mm:ss"];
-        if (DateTime.TryParseExact(text, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var exact))
-            return exact;
-        return DateTime.TryParse(text, CultureInfo.CurrentCulture, DateTimeStyles.None, out var date) ? date : null;
-    }
-
-    private static bool IsTimeOfDay(string text) =>
-        TimeOnly.TryParse(text.Trim(), CultureInfo.InvariantCulture, out _) || TimeOnly.TryParse(text.Trim(), CultureInfo.CurrentCulture, out _);
-
-    /// <summary>A month and day with no year, which comes round every year: 12-25, or 12-25 09:00. Null for anything else.</summary>
-    private static (int Month, int Day, TimeSpan Time)? ParseYearly(string text)
-    {
-        var match = YearlyPattern().Match(text.Trim());
-        if (!match.Success)
-            return null;
-        int Number(int group) => match.Groups[group].Success ? int.Parse(match.Groups[group].Value, CultureInfo.InvariantCulture) : 0;
-        var (month, day, hours, minutes) = (Number(1), Number(2), Number(3), Number(4));
-        if (month is < 1 or > 12 || day < 1 || day > DateTime.DaysInMonth(2028, month) || hours > 23 || minutes > 59)
-            return null;
-        return (month, day, new TimeSpan(hours, minutes, 0));
-    }
-
-    [GeneratedRegex(@"^(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?$")]
-    private static partial Regex YearlyPattern();
 
     /// <summary>4:05, 1:04:05, or 3d 01:04:05, in whole seconds. Counting down rounds up, so 0:00 only shows once it's done.</summary>
     internal static string Format(TimeSpan span, bool roundUp)

@@ -58,6 +58,8 @@ public static class MetricFormatter
                     MetricUnit.Degrees => ("0", "°"),
                     MetricUnit.MicrogramsPerCubicMetre => ("0", "µg/m³"),
                     MetricUnit.GrainsPerCubicMetre => ("0", "grains/m³"),
+                    MetricUnit.KilowattHours => ("0.00", "kWh"),
+                    MetricUnit.GramsOfCo2PerKilowattHour => ("0", "gCO₂/kWh"),
                     _ => ("0.##", ""),
                 };
                 var number = value.ToString(spec.NumberFormat ?? sample.Definition.Format ?? defaultFormat, culture);

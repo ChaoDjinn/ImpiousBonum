@@ -43,8 +43,8 @@ public sealed class LayoutEditorTests : IDisposable
 
             Assert.Null(editor.FindName("ForwardButton"));
             Assert.Null(editor.FindName("BackwardButton"));
-            Assert.Equal(["Bring forward", "Send back", "Duplicate", "Delete"], menu.Select(m => (string)m.Header));
-            Assert.Equal(["Ctrl+]", "Ctrl+[", "Ctrl+D", "Del"], menu.Select(m => m.InputGestureText));
+            Assert.Equal(["Bring forward", "Send back", "Duplicate", "Delete", "Align"], menu.Select(m => (string)m.Header));
+            Assert.Equal(["Ctrl+]", "Ctrl+[", "Ctrl+D", "Del", ""], menu.Select(m => m.InputGestureText));
             Assert.Equal((true, false), atTheBack);
             Assert.Equal("BAC", Order(session));
             Assert.Equal(1, session.SelectedIndex);
@@ -153,6 +153,140 @@ public sealed class LayoutEditorTests : IDisposable
             Assert.True(focused);
         });
     }
+
+    [Fact]
+    public void The_list_and_the_session_keep_several_selected_widgets_in_step()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            var session = new LayoutSession(ThreeWidgets());
+            var (editor, window) = Show(session, store);
+            var list = editor.WidgetList;
+
+            // Selected in the preview (or by Ctrl+A), shown in the list.
+            session.Select([2, 0]);
+            var shown = Selected(list);
+            var status = editor.StatusText.Text;
+            // Ctrl+click in the list, which adds to what it has selected.
+            list.SelectedItems.Add(list.Items[1]);
+            var fromList = session.Selection.ToList();
+            // Back to one: the status bar says what it is as before.
+            session.Select(1);
+            var one = Selected(list);
+            var oneStatus = editor.StatusText.Text;
+            window.Close();
+
+            Assert.Equal([2, 0], shown);
+            Assert.StartsWith("2 widgets selected", status);
+            Assert.Equal([2, 0, 1], fromList);
+            Assert.Equal([1], one);
+            Assert.StartsWith("Text: B · position 0, 0", oneStatus);
+        });
+    }
+
+    [Fact]
+    public void Widgets_that_read_the_same_are_told_apart_in_the_list()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            // A and its copy have the same row in the list.
+            var session = new LayoutSession(ThreeWidgets());
+            session.Select(0);
+            session.DuplicateSelected();
+            var (editor, window) = Show(session, store);
+            var list = editor.WidgetList;
+
+            var copy = Selected(list);
+            list.SelectedItems.Add(list.Items[0]);
+            var both = session.Selection.ToList();
+            window.Close();
+
+            Assert.Equal([1], copy);
+            Assert.Equal([1, 0], both);
+        });
+    }
+
+    [Fact]
+    public void Align_is_offered_once_two_or_more_are_selected_and_each_is_one_undo_step()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            var document = ThreeWidgets();
+            for (var i = 0; i < 3; i++)
+            {
+                document.Widgets[i]["x"] = i * 100;
+                document.Widgets[i]["y"] = i * 20;
+            }
+            var session = new LayoutSession(document);
+            var (editor, window) = Show(session, store);
+            var toolbar = editor.AlignButton.ContextMenu.Items.OfType<MenuItem>().ToList();
+            var listMenu = editor.WidgetList.ContextMenu.Items.OfType<MenuItem>().Last();
+
+            session.Select(0);
+            var withOne = (editor.AlignButton.IsEnabled, listMenu.IsEnabled);
+            session.Select([0, 1]);
+            var withTwo = (editor.AlignButton.IsEnabled, listMenu.IsEnabled, Enabled: toolbar.Where(i => i.IsEnabled).Select(i => (string)i.Header).ToList());
+            session.Select([0, 1, 2]);
+            var withThree = toolbar.Count(i => i.IsEnabled);
+            toolbar.Single(i => (string)i.Header == "Align top").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            var tops = session.Document.Widgets.Select(w => w.GetDouble("y", -1)).ToList();
+            window.Close();
+
+            string[] headers =
+            [
+                "Align left", "Align centres", "Align right", "Align top", "Align middles", "Align bottom",
+                "Distribute horizontally", "Distribute vertically", "Same width", "Same height",
+            ];
+            Assert.Equal(headers, toolbar.Select(i => (string)i.Header));
+            Assert.Equal(headers, listMenu.Items.OfType<MenuItem>().Select(i => (string)i.Header));
+            Assert.Equal((false, false), withOne);
+            Assert.True(withTwo.Item1 && withTwo.Item2);
+            Assert.Equal(headers.Where(h => !h.StartsWith("Distribute")), withTwo.Enabled);
+            Assert.Equal(10, withThree);
+            Assert.Equal([0.0, 0, 0], tops);
+            session.Undo();
+            Assert.Equal([0.0, 20, 40], session.Document.Widgets.Select(w => w.GetDouble("y", -1)));
+            Assert.False(session.CanUndo);
+        });
+    }
+
+    [Fact]
+    public void Keys_act_on_every_selected_widget()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            var session = new LayoutSession(ThreeWidgets());
+            var (editor, window) = Show(session, store);
+
+            editor.HandleKey(Key.A, ModifierKeys.Control);
+            var all = session.Selection.ToList();
+            editor.HandleKey(Key.Right, ModifierKeys.Shift);
+            editor.HandleKey(Key.Down, ModifierKeys.None);
+            var moved = session.Document.Widgets.Select(w => (w.GetDouble("x", 0), w.GetDouble("y", 0))).ToList();
+            editor.HandleKey(Key.Delete, ModifierKeys.None);
+            var left = session.Document.Widgets.Count;
+            window.Close();
+
+            Assert.Equal([0, 1, 2], all);
+            Assert.All(moved, at => Assert.Equal((10.0, 1.0), at));
+            Assert.Equal(0, left);
+            session.Undo();
+            Assert.Equal("ABC", Order(session));
+            // The nudges were one step.
+            session.Undo();
+            Assert.False(session.CanUndo);
+        });
+    }
+
+    private static List<int> Selected(ListBox list) => [.. list.SelectedItems.Cast<object>().Select(list.Items.IndexOf)];
 
     /// <summary>Text widgets A, B and C, drawn in that order.</summary>
     private static LayoutDocument ThreeWidgets() => new()
