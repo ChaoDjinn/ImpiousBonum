@@ -12,6 +12,7 @@
     docs/images/widgets/<name>.png  the widgets close up, each from a small layout in build/screenshots
     docs/images/social-preview.png  the picture shown when the repository's link is shared (build/social-preview.json)
     gallery/images/<layout>.png     each layout in the gallery
+    gallery/images/themes/<theme>.png  the default layout in each of the gallery's themes
 
   The editor's screenshot (docs/images/editor.png) is taken by hand, since it's a window rather than a layout: run
     ImpiousBonum.exe --data-dir <an empty folder> --demo
@@ -56,6 +57,14 @@ try {
         Set-Content (Join-Path $layouts "Theme $theme.json") $ownTheme.Replace($default, "`"theme`": `"$theme`"", 1) -NoNewline
     }
 
+    # And with each of the gallery's themes, saved as the gallery's "Add to my themes" would.
+    $galleryThemes = (Get-Content (Join-Path $root 'gallery/index.json') -Raw | ConvertFrom-Json).themes
+    $savedThemes = New-Item -ItemType Directory -Force (Join-Path $data 'themes')
+    foreach ($entry in $galleryThemes) {
+        Copy-Item (Join-Path $root "gallery/themes/$($entry.file)") (Join-Path $savedThemes "$($entry.name).json")
+        Set-Content (Join-Path $layouts "Gallery theme $($entry.name).json") $ownTheme.Replace($default, "`"theme`": `"$($entry.name)`"", 1) -NoNewline
+    }
+
     function Snapshot([string] $layout, [string] $file) {
         New-Item -ItemType Directory -Force (Split-Path $file) | Out-Null
         # A Windows app: PowerShell doesn't wait for it unless asked.
@@ -69,6 +78,10 @@ try {
     foreach ($entry in $gallery) {
         $name = [System.IO.Path]::GetFileNameWithoutExtension($entry.file)
         Snapshot $name (Join-Path $root "gallery/images/$name.png")
+    }
+    foreach ($entry in $galleryThemes) {
+        $name = [System.IO.Path]::GetFileNameWithoutExtension($entry.file)
+        Snapshot "Gallery theme $($entry.name)" (Join-Path $root "gallery/images/themes/$name.png")
     }
     foreach ($file in $widgets) {
         Snapshot "Widgets $($file.BaseName)" (Join-Path $root "docs/images/widgets/$($file.BaseName).png")

@@ -1,0 +1,16 @@
+// Bioluminescent teal glowing out of the abyss, a long way below the waves.
+{
+  "fontFamily": "Segoe UI",
+  "fontWeight": "SemiLight",
+  "foreground": "#DDFFF9",
+  "secondary": "#B88FE6DC",
+  "accent": "#2EF2D0",
+  "background": "#020A18",
+  "track": "#0B2233",
+  "warning": "#FFC857",
+  "critical": "#FF5C7A",
+  "accent2": "#3E8BFF",
+  "backgroundGradient": "#04203A",
+  "glow": 0.5,
+  "glowColor": "#14E0C8"
+}

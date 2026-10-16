@@ -41,7 +41,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | Page | |
 |---|---|
 | *Layouts* | The layout editor, on the screen you pick (see [Layout editor](#layout-editor)) |
-| *Gallery* | Ready-made layouts for screens like yours, to put straight on one (see [Layout gallery](#layout-gallery)) |
+| *Gallery* | Ready-made layouts for screens like yours, to put straight on one, and themes to add to yours (see [Layout gallery](#layout-gallery)) |
 | *Screens* | Your monitors as Windows arranges them: which shows the main dashboard and how its window behaves, the dashboards on the others, and dimming when you're away (see [Windowed mode](#windowed-mode), [More dashboards](#more-dashboards) and [Dimming](#dimming)) |
 | *Tablet and USB screen* | The dashboard in a browser on a tablet or phone, and on a small USB screen (see [Tablet view](#tablet-view) and [USB screens](#usb-screens)) |
 | *Pages and schedule* | Swiping and turning between layouts, and what shows when (see [Pages](#pages) and [Schedule](#schedule)) |
@@ -162,11 +162,24 @@ across the room, a monitor turned on its side and a tall strip inside a PC case.
 audio visualiser, the weather in detail, the news, your network, streaming, or counting down to Christmas or
 Halloween. Yours could be next.
 
+The gallery has themes too: pick *Themes* at the top of the page to see each one on the default layout, drawn live
+with your own readings. *Add to my themes* keeps it with your saved themes, for any layout to use: click empty canvas
+in the editor and pick it under *Theme*. You're asked before a theme of yours with the same name is replaced; a
+built-in theme can't be, so one named like a built-in theme is added under a name you choose. So far there are five:
+*Deep Sea* (bioluminescent teal on abyss blue, with a glow), *Nebula* (violet fading into blue, with a pink glow),
+*Copper* (copper and brass on gunmetal), and two light ones, *Matcha* (soft greens) and *Paper* (e-ink greys).
+
 The gallery is the [`gallery`](../gallery) folder of this repository. To share a layout, export it (*Layouts ▾ →
 Export…* in the editor), add the `.ibl` file and an entry in [`gallery/index.json`](../gallery/index.json), and open a
 pull request. A plain layout `.json` works too if it has no pictures or fonts. The tests check every gallery layout
 opens and is valid, and that its widget count is right. To use a gallery of your own instead, set `"galleryAddress"`
 in `settings.json` to a web folder, or a folder on this PC, with an `index.json` in it.
+
+To share a theme, save it in the editor (*Save theme as…*), copy its file from `themes` in the settings folder into
+the gallery's `themes` folder, add an entry under `themes` in `index.json`, and open a pull request: see [Sharing a
+theme](../gallery/README.md#sharing-a-theme). A shared theme is one plain file, so it uses a font that comes with
+Windows and has no background picture; the gallery leaves out a `fontFile` or `backgroundImage`, and won't add a theme
+with a value it can't use. The tests check each gallery theme is as easy to read as the built-in ones.
 
 ### Pages
 
