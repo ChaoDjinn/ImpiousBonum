@@ -39,6 +39,12 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.
 - *Holiday themes* on *Pages and schedule* shows the matching new holiday theme on and around each holiday: *Lunar New Year*, *Valentine*, *Shamrock*, *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* for Bonfire Night and New Year's Eve, *Hanukkah*, *Gingerbread* and *Christmas*. Easter is worked out, and Hanukkah, Eid and Lunar New Year come from the Hebrew, Islamic and Chinese calendars that come with the app, so they move with the year; Diwali's dates run to 2035. It's off until you turn it on, and a rule in the schedule or a game that sets a theme still wins.
 
+**Sun and moon**
+- A new *Sun and moon* widget, under *Weather, news and Claude*: the day as an arc from sunrise to sunset with the sun on its way across and how long it's light, and beside it the moon as it looks tonight, with its phase, how much of it is lit, the next full moon, and when it rises and sets. It can show just the sun or just the moon too.
+- The moon is drawn the way up it looks from where you are: lit on the right as it grows in the northern hemisphere, on the left in the southern.
+- New readings for any widget: the moon's phase (`moon.phase`, e.g. *Waxing gibbous*), how much of it is lit (`moon.illumination`), how many days since the new moon (`moon.age`), the next full and new moons (`moon.next.full`, `moon.next.new`, e.g. *Sat 24 Oct*), and moonrise and moonset (`moon.rise`, `moon.set`).
+- It's all worked out on your PC from the date and the weather's location, so nothing is sent. The moon's phase works without a location; the sun, moonrise and moonset need one.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

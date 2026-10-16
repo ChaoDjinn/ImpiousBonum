@@ -24,17 +24,8 @@ public static class SunPosition
     /// </summary>
     public static double Elevation(double latitude, double longitude, DateTimeOffset time)
     {
-        // Julian centuries since noon on 1 January 2000.
-        var t = (time.UtcDateTime - J2000).TotalDays / 36525;
-
-        var meanLongitude = 280.46646 + t * (36000.76983 + t * 0.0003032);
-        var meanAnomaly = 357.52911 + t * (35999.05029 - 0.0001537 * t);
-        var eccentricity = 0.016708634 - t * (0.000042037 + 0.0000001267 * t);
-        var centre = Sin(meanAnomaly) * (1.914602 - t * (0.004817 + 0.000014 * t))
-            + Sin(2 * meanAnomaly) * (0.019993 - 0.000101 * t)
-            + Sin(3 * meanAnomaly) * 0.000289;
-        var omega = 125.04 - 1934.136 * t;
-        var apparentLongitude = meanLongitude + centre - 0.00569 - 0.00478 * Sin(omega);
+        var t = Centuries(time);
+        var (meanLongitude, meanAnomaly, eccentricity, omega, apparentLongitude) = Orbit(t);
         var meanObliquity = 23 + (26 + (21.448 - t * (46.815 + t * (0.00059 - t * 0.001813))) / 60) / 60;
         var obliquity = meanObliquity + 0.00256 * Cos(omega);
         var declination = Degrees(Math.Asin(Sin(obliquity) * Sin(apparentLongitude)));
@@ -53,6 +44,37 @@ public static class SunPosition
         var hourAngle = solarMinutes / 4 - 180;
         var cosZenith = Sin(latitude) * Sin(declination) + Cos(latitude) * Cos(declination) * Cos(hourAngle);
         return 90 - Degrees(Math.Acos(Math.Clamp(cosZenith, -1, 1)));
+    }
+
+    /// <summary>
+    /// The first sunrise and the first sunset at a place between <paramref name="from"/> and <paramref name="to"/>, such
+    /// as a day's, to within a minute of the almanacs'. Either is null when it doesn't happen then: in summer in the far
+    /// north the sun can stay up all day, and in winter stay down.
+    /// </summary>
+    public static (DateTimeOffset? Rise, DateTimeOffset? Set) RiseAndSet(double latitude, double longitude, DateTimeOffset from, DateTimeOffset to) =>
+        Horizon.FirstRiseAndSet(time => Elevation(latitude, longitude, time) - SunsetElevation, from, to);
+
+    /// <summary>
+    /// The sun's apparent longitude along the ecliptic, in degrees: how far round the sky it is from where it is at the
+    /// March equinox. The moon's phase is how far ahead of it the moon is (see <see cref="Moon"/>).
+    /// </summary>
+    internal static double Longitude(DateTimeOffset time) => Orbit(Centuries(time)).ApparentLongitude;
+
+    /// <summary>Julian centuries since noon on 1 January 2000.</summary>
+    internal static double Centuries(DateTimeOffset time) => (time.UtcDateTime - J2000).TotalDays / 36525;
+
+    /// <summary>The Earth's orbit at <paramref name="t"/> Julian centuries since 2000, and where that puts the sun along the ecliptic.</summary>
+    private static (double MeanLongitude, double MeanAnomaly, double Eccentricity, double Omega, double ApparentLongitude) Orbit(double t)
+    {
+        var meanLongitude = 280.46646 + t * (36000.76983 + t * 0.0003032);
+        var meanAnomaly = 357.52911 + t * (35999.05029 - 0.0001537 * t);
+        var eccentricity = 0.016708634 - t * (0.000042037 + 0.0000001267 * t);
+        var centre = Sin(meanAnomaly) * (1.914602 - t * (0.004817 + 0.000014 * t))
+            + Sin(2 * meanAnomaly) * (0.019993 - 0.000101 * t)
+            + Sin(3 * meanAnomaly) * 0.000289;
+        var omega = 125.04 - 1934.136 * t;
+        var apparentLongitude = meanLongitude + centre - 0.00569 - 0.00478 * Sin(omega);
+        return (meanLongitude, meanAnomaly, eccentricity, omega, apparentLongitude);
     }
 
     private static double Sin(double degrees) => Math.Sin(Radians(degrees));
