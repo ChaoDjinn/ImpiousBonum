@@ -118,11 +118,16 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - The *Gaming HUD* in the gallery shows the game's banner beside the session so far.
 - An *Image* widget set to *fill* now crops its picture to the widget's own shape, rather than sometimes cutting off more than it needed to.
 
-
 **Device batteries**
 - A `batteries` widget for how much charge your wireless devices have left, as Windows' Bluetooth settings show it: a Bluetooth headset, mouse, keyboard or game controller, or an Xbox controller on its wireless adapter or a cable. Each has a bar, which turns the critical colour under 20 % (with a ◆ too, with *Warning symbols* on), and the widget follows devices as they connect and disconnect.
 - Readings any widget can show, such as `battery.headset` (*72 %*), and `battery.low`, the name of the one running low (*Mouse*). That has no reading while none is, so a warning can show only when it's needed.
 - Read every minute from what Windows already knows: Impious Bonum never connects to a device itself. Nothing shows on PCs without such devices.
+
+**Snow, leaves and more**
+- A new theme setting, *Particles*: snow, autumn leaves, cherry-blossom petals or confetti falling behind the widgets, or embers rising from the bottom. Snow sways as it falls, leaves tumble, petals flutter, and embers drift up and fade. *Amount* sets how many, and *Colour* makes them all one colour; otherwise snow is white, leaves are autumn colours, petals pink and embers orange and gold, and confetti comes in the theme's colours.
+- The built-in themes leave them off, since they cost CPU. They're cheap on a small screen with no glow, but with a theme's glow, or on a 4K dashboard, they take most of a CPU core unless you turn on *Draw with the graphics card*. The guide has the numbers, and suggests snow with *Christmas* and leaves or embers with *Halloween*, with their glow turned off.
+- They stop while the dashboard is hidden or minimised, and the tablet view, USB screens and snapshots show them still. Moving backgrounds now stop while it's minimised too.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

@@ -83,6 +83,15 @@ public sealed class ThemeSettings
     /// <summary>The glow's colour; unset glows in the accent colour.</summary>
     public string? GlowColor { get; set; }
 
+    /// <summary>Snow, leaves, petals or confetti falling over the background, or embers rising: one of <see cref="ParticleLayer.Kinds"/>.</summary>
+    public string Particles { get; set; } = "none";
+
+    /// <summary>0–1: how many particles, from a few to a flurry.</summary>
+    public double ParticleAmount { get; set; } = 0.5;
+
+    /// <summary>Optional: one colour for every particle, in a few shades. Unset, each kind has its own colours.</summary>
+    public string? ParticleColor { get; set; }
+
     /// <summary>A separate copy, to change without touching this one.</summary>
     public ThemeSettings Copy() => (ThemeSettings)MemberwiseClone();
 

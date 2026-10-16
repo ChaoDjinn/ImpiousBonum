@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Controls;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Widgets;
@@ -12,6 +13,8 @@ public sealed class DashboardView : Canvas
     private bool _editing;
 
     private BackgroundPlayer? _background;
+    private ParticleLayer? _particles;
+    private Window? _window;
 
     public DashboardView()
     {
@@ -24,11 +27,13 @@ public sealed class DashboardView : Canvas
         {
             _background?.Dispose();
             _background = null;
+            Watch(null);
         };
         Loaded += (_, _) =>
         {
             if (_background is null && _backgroundTheme is not null)
                 Background = _backgroundTheme.CanvasBackground(Width, Height, AnimateBackground, out _background);
+            Watch(Window.GetWindow(this));
             PlayBackground();
         };
     }
@@ -37,25 +42,44 @@ public sealed class DashboardView : Canvas
     private Theme? _backgroundTheme;
 
     /// <summary>
-    /// Whether an animated GIF or video background moves. Off for copies that are never on screen (the tablet view,
-    /// a USB screen, the gallery's preview), which show a still frame instead and don't hold a GIF's frames or a video player.
+    /// Whether an animated GIF or video background, and the theme's particles, move. Off for copies that are never on
+    /// screen (the tablet view, a USB screen, the gallery's preview), which show a still frame instead and don't hold a
+    /// GIF's frames, a video player or a timer.
     /// </summary>
     public bool AnimateBackground { get; init; } = true;
 
     private void PlayBackground()
     {
-        if (_background is null)
-            return;
-        if (IsVisible)
-            _background.Play();
+        // Hidden or minimised: nothing is spent on what can't be seen.
+        if (IsVisible && _window?.WindowState != WindowState.Minimized)
+        {
+            _background?.Play();
+            _particles?.Play();
+        }
         else
-            _background.Pause();
+        {
+            _background?.Pause();
+            _particles?.Pause();
+        }
     }
+
+    /// <summary>Follows the window the view is in, to stop moving while it's minimised.</summary>
+    private void Watch(Window? window)
+    {
+        if (_window is not null)
+            _window.StateChanged -= OnWindowStateChanged;
+        _window = window;
+        if (_window is not null)
+            _window.StateChanged += OnWindowStateChanged;
+    }
+
+    private void OnWindowStateChanged(object? sender, EventArgs e) => PlayBackground();
 
     /// <param name="themeSettings">The layout's theme once resolved (see <see cref="ThemeLibrary.Resolve"/>).</param>
     public void Build(LayoutDocument layout, ThemeSettings themeSettings)
     {
         var theme = Theme.From(themeSettings);
+        _particles?.Pause();
         Children.Clear();
         _widgets.Clear();
         Width = layout.Width;
@@ -63,6 +87,10 @@ public sealed class DashboardView : Canvas
         _background?.Dispose();
         _backgroundTheme = theme;
         Background = theme.CanvasBackground(layout.Width, layout.Height, AnimateBackground, out _background);
+        // Over the background, behind the widgets.
+        _particles = ParticleLayer.Create(themeSettings, layout.Width, layout.Height, AnimateBackground);
+        if (_particles is not null)
+            Children.Add(_particles);
         PlayBackground();
 
         foreach (var definition in layout.Widgets)
