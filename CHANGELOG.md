@@ -24,6 +24,12 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 **Countdowns every year**
 - A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
+**Status checks**
+- A *Status checks* page and a `status` widget for your own servers and services: a NAS, Pi-hole, Plex, the router or a website. Each check pings a host name or IP address, or asks a web address for its page (which can have to say a word, such as *Plex*), every 60 seconds or as often as you like. The widget lists them, or puts them in a grid, each with a dot in the accent colour while it's up and the critical colour while it's down, and how fast it answered.
+- A check that fails is checked again 10 seconds later, and only counts as down if that fails too, so one lost answer doesn't.
+- Each check has readings any widget can show, such as `status.nas.up`, `status.nas.ms` and `status.nas.since` (*3 h*), and `status.summary` says *All up* or which are down (*1 down: Plex*). *Alert…* beside a check sets up an alert for when it goes down.
+- Nothing is checked until you add a check, and only the addresses you add are contacted.
+
 **Lining widgets up in the editor**
 - Widgets snap to each other as you drag or resize them: their edges and centres line up with other widgets' edges and centres, and with the canvas's edges and middle, and a thin line shows what they've lined up with. Hold Alt to place freely, as before.
 - Select several widgets at once: Ctrl+click or Shift+click them in the preview or the *Widgets* list, drag a box around them on empty canvas, or press Ctrl+A for all of them. Drag one to move them all, nudge them with the arrow keys, or duplicate or delete them together.
@@ -43,6 +49,12 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - Schedule rules can follow the sun: show *Night Watch* from sunset to sunrise, say, or a bright theme from sunrise to sunset. Sunset and sunrise are worked out on your PC for the weather's location, so nothing extra is fetched; without a location these rules never apply, and the dialog and *Pages and schedule* say so.
 - Rules can be limited to the same dates every year, such as 24 October to 1 November or 20 December to 6 January (across New Year), on their own for the whole day or along with times, sunset and sunrise, or Windows' dark and light mode. A night belongs to the evening it starts, so a Halloween rule until 02:00 lasts into the small hours of 1 November.
 - *Holiday themes* on *Pages and schedule* shows the matching new holiday theme on and around each holiday: *Lunar New Year*, *Valentine*, *Shamrock*, *Easter*, *Eid*, *Diwali*, *Halloween*, *Day of the Dead*, *Fireworks* for Bonfire Night and New Year's Eve, *Hanukkah*, *Gingerbread* and *Christmas*. Easter is worked out, and Hanukkah, Eid and Lunar New Year come from the Hebrew, Islamic and Chinese calendars that come with the app, so they move with the year; Diwali's dates run to 2035. It's off until you turn it on, and a rule in the schedule or a game that sets a theme still wins.
+
+**Photo frame**
+- A new *Photo frame* widget, under *Pictures and shapes*: a slideshow of the pictures in a folder, like a digital photo frame. Choose the folder in the editor, how long each photo shows, and whether they're shuffled or go by name or date. Tap it for the next one.
+- Photos fade into one another, fill the frame or fit inside it, and can have rounded corners and their file name or the date they were taken along the bottom. Photos taken with the camera on its side show the right way up.
+- It stays light with big photos: only the photo on show and the next one are read, at about the size they're shown, and nothing is read while the dashboard is hidden. Photos added to the folder turn up within a few minutes, and pictures that can't be read are passed over.
+- The folder stays on your PC: exported layouts and layouts in the gallery leave it out.
 
 **Energy use and cost**
 - A new *Energy* page, and readings for any widget: your whole PC's power now (`power.total`: the CPU's and graphics card's from the sensor service, and 50 W for the rest, which you can change), the energy it's used today and this month (`energy.today`, `energy.month`), and what that costs at your price per kWh (`energy.cost.today`, `energy.cost.month`, such as *£0.48*).
