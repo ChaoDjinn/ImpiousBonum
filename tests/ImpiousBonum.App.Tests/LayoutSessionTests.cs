@@ -210,6 +210,196 @@ public sealed class LayoutSessionTests
         Assert.Equal(2, session.SelectedIndex);
     }
 
+    // ---- Selecting several -------------------------------------------------------------------------
+
+    /// <summary>Text widgets A, B, C and D of different sizes in different places.</summary>
+    private static LayoutSession Scattered() => new(new LayoutDocument
+    {
+        Widgets =
+        [
+            Text("A", 10, 10, 100, 50),
+            Text("B", 200, 40, 60, 20),
+            Text("C", 120, 100, 30, 90),
+            Text("D", 400, 300, 50, 50),
+        ],
+    });
+
+    private static JsonObject Text(string text, double x, double y, double width, double height) =>
+        new() { ["type"] = "text", ["x"] = x, ["y"] = y, ["width"] = width, ["height"] = height, ["text"] = text };
+
+    private static Rect Geometry(LayoutSession session, int index) => LayoutSession.GeometryOf(session.Document.Widgets[index]);
+
+    [Fact]
+    public void Several_widgets_can_be_selected_in_the_order_they_were_picked()
+    {
+        var session = FourWidgets();
+        var changes = 0;
+        session.SelectionChanged += (_, _) => changes++;
+
+        session.Select([2, 0]);
+        Assert.Equal([2, 0], session.Selection);
+        Assert.Equal(2, session.SelectedIndex);
+
+        session.ToggleSelected(1);
+        Assert.Equal([2, 0, 1], session.Selection);
+        session.ToggleSelected(2);
+        Assert.Equal([0, 1], session.Selection);
+        Assert.Equal(0, session.SelectedIndex);
+        Assert.True(session.IsSelected(1));
+        Assert.False(session.IsSelected(2));
+
+        // Ones that don't exist, and repeats, are left out; selecting what's selected already isn't a change.
+        session.Select([7, -1, 3, 3]);
+        Assert.Equal([3], session.Selection);
+        session.Select(3);
+        Assert.Equal(4, changes);
+
+        session.Select(-1);
+        Assert.Empty(session.Selection);
+        Assert.Equal(-1, session.SelectedIndex);
+    }
+
+    [Fact]
+    public void Several_widgets_move_as_one_undo_step_and_views_hear_about_each()
+    {
+        var session = Scattered();
+        var changes = new List<(ChangeKind, int?)>();
+        session.Changed += (_, change) => changes.Add((change.Kind, change.WidgetIndex));
+
+        // A drag of two widgets, as the editor's preview does it: the same merge key all the way.
+        for (var moved = 1; moved <= 3; moved++)
+            session.SetGeometry([(0, new Rect(10 + moved, 10, 100, 50)), (2, new Rect(120 + moved, 100, 30, 90))], "drag:1", null);
+
+        (ChangeKind, int?)[] step = [(ChangeKind.Geometry, 0), (ChangeKind.Geometry, 2)];
+        Assert.Equal([.. step, .. step, .. step], changes);
+        Assert.Equal((13.0, 123.0), (Geometry(session, 0).X, Geometry(session, 2).X));
+        session.Undo();
+        Assert.Equal((10.0, 120.0), (Geometry(session, 0).X, Geometry(session, 2).X));
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void Nudging_several_moves_them_all_and_a_run_of_nudges_is_one_undo_step()
+    {
+        var session = Scattered();
+        session.Select([1, 3]);
+        session.NudgeSelected(1, 0);
+        session.NudgeSelected(1, 0);
+        session.NudgeSelected(0, -10);
+
+        Assert.Equal(new Rect(202, 30, 60, 20), Geometry(session, 1));
+        Assert.Equal(new Rect(402, 290, 50, 50), Geometry(session, 3));
+        Assert.Equal(new Rect(10, 10, 100, 50), Geometry(session, 0));
+        session.Undo();
+        Assert.Equal(new Rect(200, 40, 60, 20), Geometry(session, 1));
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void Duplicating_several_copies_each_just_above_itself_and_selects_the_copies()
+    {
+        var session = FourWidgets();
+        session.Select([2, 0]);
+        session.DuplicateSelected();
+
+        Assert.Equal("AABCCD", Order(session));
+        // The first picked's copy first, still.
+        Assert.Equal([4, 1], session.Selection);
+        Assert.All(session.Selection, i => Assert.Equal(new Rect(20, 20, 10, 10), Geometry(session, i)));
+        session.Undo();
+        Assert.Equal("ABCD", Order(session));
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void Deleting_several_is_one_undo_step()
+    {
+        var session = FourWidgets();
+        session.Select([3, 1]);
+        session.DeleteSelected();
+
+        Assert.Equal("AC", Order(session));
+        Assert.Empty(session.Selection);
+        session.Undo();
+        Assert.Equal("ABCD", Order(session));
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void Bringing_forward_needs_just_one_widget_selected()
+    {
+        var session = FourWidgets();
+        session.Select([0, 1]);
+        session.MoveSelected(+1);
+
+        Assert.Equal("ABCD", Order(session));
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void Aligning_the_selected_widgets_is_one_undo_step()
+    {
+        var session = Scattered();
+        session.Select([0, 1, 2]);
+        var changes = 0;
+        session.Changed += (_, _) => changes++;
+
+        session.ArrangeSelected(Arrangement.AlignLeft);
+
+        Assert.All([0, 1, 2], i => Assert.Equal(10, Geometry(session, i).X));
+        // The one not selected stays where it was.
+        Assert.Equal(400, Geometry(session, 3).X);
+        // A view hears of each that moved: the first was already there.
+        Assert.Equal(2, changes);
+        Assert.Equal([0, 1, 2], session.Selection);
+
+        session.Undo();
+        Assert.Equal([10.0, 200, 120], new[] { 0, 1, 2 }.Select(i => Geometry(session, i).X));
+        Assert.False(session.CanUndo);
+        session.Redo();
+        Assert.Equal(10, Geometry(session, 1).X);
+    }
+
+    [Fact]
+    public void Same_width_matches_the_widget_picked_first()
+    {
+        var session = Scattered();
+        session.Select([2, 0, 1]);
+        session.ArrangeSelected(Arrangement.SameWidth);
+
+        Assert.Equal([30.0, 30, 30], new[] { 0, 1, 2 }.Select(i => Geometry(session, i).Width));
+    }
+
+    [Fact]
+    public void Arranging_too_few_widgets_changes_nothing()
+    {
+        var session = Scattered();
+        var changes = 0;
+        session.Changed += (_, _) => changes++;
+
+        session.Select(1);
+        session.ArrangeSelected(Arrangement.AlignLeft);
+        session.ArrangeSelected(Arrangement.SameHeight);
+        session.Select([0, 1]);
+        session.ArrangeSelected(Arrangement.DistributeHorizontally);
+        session.Select(-1);
+        session.ArrangeSelected(Arrangement.AlignTop);
+
+        Assert.Equal(0, changes);
+        Assert.False(session.CanUndo);
+    }
+
+    [Fact]
+    public void Undo_keeps_the_selected_widgets_the_layout_still_has()
+    {
+        var session = FourWidgets();
+        session.AddWidget(TextWidget.Descriptor);
+        session.Select([4, 1]);
+
+        session.Undo();
+        Assert.Equal([1], session.Selection);
+    }
+
     private static LayoutSession RowsSession(params string[] labels) => new(new LayoutDocument
     {
         Widgets =

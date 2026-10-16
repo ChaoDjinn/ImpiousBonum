@@ -60,6 +60,33 @@ public sealed class PropertyPanelTests
     }
 
     [Fact]
+    public void Several_widgets_selected_say_how_many_and_one_shows_its_settings_as_before()
+    {
+        Sta.Run(() =>
+        {
+            var session = new LayoutSession(new LayoutDocument { Widgets = [Widget("text"), Widget("clock")] });
+            var (panel, window) = Show(session);
+
+            session.Select(0);
+            Pump();
+            var one = (Heading(panel), Boxes: Descendants<TextBox>(panel).Count());
+            session.Select([0, 1]);
+            Pump();
+            var both = (Heading(panel), Boxes: Descendants<TextBox>(panel).Count());
+            session.Select(1);
+            Pump();
+            var other = Heading(panel);
+            window.Close();
+
+            Assert.Equal("Text", one.Item1);
+            Assert.True(one.Boxes > 0);
+            Assert.Equal(("2 widgets selected", 0), both);
+            Assert.Equal("Clock", other);
+            Assert.False(session.IsDirty);
+        });
+    }
+
+    [Fact]
     public void Typing_a_colour_still_sets_it()
     {
         Sta.Run(() =>
@@ -416,6 +443,9 @@ public sealed class PropertyPanelTests
     }
 
     private static JsonObject Widget(string type) => new() { ["type"] = type, ["x"] = 10, ["y"] = 10, ["width"] = 400, ["height"] = 200 };
+
+    /// <summary>The panel's heading: the widget type's name, or what's selected.</summary>
+    private static string Heading(PropertyPanel panel) => ((TextBlock)panel.Children[0]).Text;
 
     /// <summary>A rows widget with a row for each label.</summary>
     private static JsonObject Rows(params string[] labels)

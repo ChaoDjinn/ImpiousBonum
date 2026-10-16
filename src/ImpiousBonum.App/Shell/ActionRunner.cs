@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using ImpiousBonum.App.Widgets;
+using ImpiousBonum.Core.Native;
 
 namespace ImpiousBonum.App.Shell;
 
@@ -12,7 +13,11 @@ namespace ImpiousBonum.App.Shell;
 /// they reach whatever app is in front: the dashboard never takes focus. Returns a message for the user when something
 /// couldn't be done, or null.
 /// </summary>
-public sealed class ActionRunner(Func<string, string?> switchLayout)
+/// <param name="microphoneMuted">
+/// Hears whether the microphone is muted after a mic-mute button, so the dashboard can show it straight away rather than
+/// at the next reading.
+/// </param>
+public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool>? microphoneMuted = null)
 {
     private const ushort VolumeMute = 0xAD, VolumeDown = 0xAE, VolumeUp = 0xAF;
     private const ushort MediaNext = 0xB0, MediaPrevious = 0xB1, MediaStop = 0xB2, MediaPlayPause = 0xB3;
@@ -37,6 +42,7 @@ public sealed class ActionRunner(Func<string, string?> switchLayout)
             case WidgetAction.VolumeUp: return Press(VolumeUp);
             case WidgetAction.VolumeDown: return Press(VolumeDown);
             case WidgetAction.Mute: return Press(VolumeMute);
+            case WidgetAction.MicMute: return ToggleMicrophone();
             case WidgetAction.Open: return Open(action.Target, action.Arguments);
             case WidgetAction.Layout:
                 return action.Target.Length == 0 ? "This button has no layout to switch to. Set its target in the editor." : switchLayout(action.Target);
@@ -67,6 +73,14 @@ public sealed class ActionRunner(Func<string, string?> switchLayout)
         {
             return $"Couldn't open {target}: {ex.Message}";
         }
+    }
+
+    private string? ToggleMicrophone()
+    {
+        if (Microphone.ToggleMute() is not { } muted)
+            return "There's no microphone to mute. Plug one in, or pick one in Windows' sound settings.";
+        microphoneMuted?.Invoke(muted);
+        return null;
     }
 
     private static string? Press(ushort key) => Send(new KeyChord([], key));

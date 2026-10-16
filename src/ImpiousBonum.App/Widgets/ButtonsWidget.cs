@@ -3,8 +3,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.Core.Metrics;
+using ImpiousBonum.Core.Providers;
 
 namespace ImpiousBonum.App.Widgets;
 
@@ -26,7 +28,8 @@ public sealed class ButtonsWidget : Widget
                 Setting.PlainText("label", "Label", "Play/pause", help: "Empty shows just the icon."),
                 Setting.Icon("icon", "Icon", "play-pause", allowNone: true),
                 Setting.Choice("action", "Action", WidgetAction.PlayPause, WidgetAction.Kinds, group: Setting.Content,
-                    help: "Media and volume actions work like the keyboard's media keys. open, keys and layout use the target below."),
+                    help: "Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. "
+                        + "mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted."),
                 Setting.PlainText("target", "Target", null,
                     help: "open: a program, file, folder or web address, e.g. calc.exe, C:\\Games or https://… · "
                         + "keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · "
@@ -64,6 +67,9 @@ public sealed class ButtonsWidget : Widget
     private static JsonObject Button(string label, string icon, string action) =>
         new() { ["label"] = label, ["icon"] = icon, ["action"] = action };
 
+    /// <summary>The icons of mic-mute buttons that follow the microphone's mute.</summary>
+    private readonly List<Path> _micIcons = [];
+
     public ButtonsWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
         var buttons = settings.Items("buttons");
@@ -87,7 +93,12 @@ public sealed class ButtonsWidget : Widget
             var action = new WidgetAction(button.String("action"), button.String("target").Trim(), button.String("arguments").Trim());
             var content = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
             if (iconSize > 0 && Icons.Get(button.String("icon")) is not null)
-                content.Children.Add(Icons.Create(button.String("icon"), iconBrush, iconSize, filled: WidgetAction.MediaKinds.Contains(action.Kind)));
+            {
+                var icon = Icons.Create(button.String("icon"), iconBrush, iconSize, filled: WidgetAction.MediaKinds.Contains(action.Kind));
+                content.Children.Add(icon);
+                if (action.Kind == WidgetAction.MicMute && IsMicIcon(button.String("icon")) && icon is Viewbox { Child: Path path })
+                    _micIcons.Add(path);
+            }
             if (button.String("label") is { Length: > 0 } label)
             {
                 var text = CreateText(fontSize, labelBrush, HorizontalAlignment.Center);
@@ -119,7 +130,18 @@ public sealed class ButtonsWidget : Widget
 
     public override void Refresh(MetricStore store, DateTime now)
     {
+        // Mic-mute buttons with a mic icon show whether the microphone is muted.
+        if (_micIcons.Count == 0 || !store.TryGet(PrivacyProvider.MicMuted, out var sample) || sample.Value is not { } muted)
+            return;
+        var icon = Icons.Get(muted > 0 ? MicOffIcon : MicIcon);
+        foreach (var path in _micIcons)
+            path.Data = icon;
     }
+
+    private const string MicIcon = "mic", MicOffIcon = "mic-off";
+
+    private static bool IsMicIcon(string name) =>
+        name.Equals(MicIcon, StringComparison.OrdinalIgnoreCase) || name.Equals(MicOffIcon, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>What a button does, in words, e.g. for its tooltip.</summary>
     internal static string Describe(WidgetAction action) => action.Kind switch
@@ -131,6 +153,7 @@ public sealed class ButtonsWidget : Widget
         WidgetAction.PlayPause => "Play or pause",
         WidgetAction.VolumeUp => "Volume up",
         WidgetAction.VolumeDown => "Volume down",
+        WidgetAction.MicMute => "Mute or unmute the microphone",
         _ => char.ToUpperInvariant(action.Kind[0]) + action.Kind[1..],
     };
 

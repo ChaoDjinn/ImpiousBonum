@@ -167,6 +167,7 @@ public partial class SettingsWindow : Window
             SettingsPage.PagesAndSchedule => new PagesAndSchedulePage(_host),
             SettingsPage.GameLayouts => new GameLayoutsPage(_host),
             SettingsPage.Sensors => new SensorsPage(_host),
+            SettingsPage.Energy => new EnergyPage(_host),
             SettingsPage.Weather => new WeatherPage(_host),
             SettingsPage.Calendars => LinkListPage.ForCalendars(_host),
             SettingsPage.NewsFeeds => LinkListPage.ForNewsFeeds(_host),
