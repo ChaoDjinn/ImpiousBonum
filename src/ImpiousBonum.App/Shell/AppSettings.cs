@@ -4,8 +4,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using ImpiousBonum.Core.Alerts;
 using ImpiousBonum.Core.CustomData;
+using ImpiousBonum.Core.Energy;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
+using ImpiousBonum.Core.StatusChecks;
 using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.App.Shell;
@@ -25,6 +27,7 @@ public sealed class AppSettings
     private List<WeatherLocation> _weatherPlaces = [];
     private UsbScreenSettings _usbScreen = UsbScreenSettings.Default;
     private LogSettings _logging = LogSettings.Default;
+    private List<StatusCheck> _statusChecks = [];
 
     /// <summary>Stable monitor interface path (survives reboots and display renumbering).</summary>
     public string? MonitorId { get; set; }
@@ -95,6 +98,12 @@ public sealed class AppSettings
 
     /// <summary>Follow <see cref="Schedule"/>. Off leaves the rules in place but unused.</summary>
     public bool ScheduleEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Show the built-in holiday theme on and around each holiday (see <see cref="Holidays"/>), unless a rule in the
+    /// schedule or a game's link sets the theme. Off by default.
+    /// </summary>
+    public bool HolidayThemes { get; set; }
 
     /// <summary>
     /// Your own metrics from web addresses and commands (the Custom data page). Replaced as a whole when edited, never
@@ -344,6 +353,40 @@ public sealed class AppSettings
     public WarningsRequest? WeatherWarningsRequest() =>
         WeatherWarnings && WeatherWarningsPlace() is { Source: not WarningSource.None } place ? place : null;
 
+    /// <summary>What a kWh costs (the Energy page), or null: then there are no cost readings.</summary>
+    public double? EnergyPrice { get; set; }
+
+    /// <summary>The currency symbol the costs show, or null for the one of the region Windows is set to.</summary>
+    public string? EnergyCurrency { get; set; }
+
+    /// <summary>Watts added to the CPU's and graphics card's for the parts nothing measures: the motherboard, memory, drives and fans.</summary>
+    public int EnergyOtherWatts { get; set; } = (int)Core.Energy.EnergySettings.DefaultOtherWatts;
+
+    /// <summary>What the energy readings need, with hand edits that make no sense (a negative price, say) left out.</summary>
+    public EnergySettings EnergySettings() => new(
+        Math.Clamp(EnergyOtherWatts, 0, 2000),
+        EnergyPrice is > 0 and < 1000 ? EnergyPrice : null,
+        string.IsNullOrWhiteSpace(EnergyCurrency) ? EnergyCost.DefaultSymbol : EnergyCurrency.Trim());
+
+    /// <summary>Great Britain's grid carbon intensity (the Energy page). Off by default: nothing is fetched until it's on.</summary>
+    public bool GridCarbon { get; set; }
+
+    /// <summary>The first half of a postcode for a region's carbon intensity, e.g. LS1, or null for Great Britain as a whole.</summary>
+    public string? GridCarbonArea { get; set; }
+
+    /// <summary>What the grid carbon provider should fetch, or null when it's off.</summary>
+    public GridCarbonRequest? GridCarbonRequest() => GridCarbon ? new GridCarbonRequest(CarbonIntensity.Area(GridCarbonArea)) : null;
+
+    /// <summary>
+    /// Your own servers and services to check (the Status checks page). None by default: nothing is checked until one is
+    /// added. Replaced as a whole when edited, never changed in place, since the sampler reads it from another thread.
+    /// </summary>
+    public List<StatusCheck> StatusChecks
+    {
+        get => _statusChecks;
+        set => _statusChecks = value ?? [];
+    }
+
     public static AppSettings Load()
     {
         try
@@ -357,6 +400,7 @@ public sealed class AppSettings
                 settings.CustomData.RemoveAll(source => source is null);
                 settings.Alerts.RemoveAll(rule => rule is null || !rule.IsUsable);
                 settings.WeatherPlaces.RemoveAll(place => place?.Name is null);
+                settings.StatusChecks.RemoveAll(check => check?.Name is null || check.Address is null);
                 return settings;
             }
         }

@@ -117,6 +117,15 @@ public partial class App
             return [new("Calendars…", () => Count(_settings.Calendars.Count, "calendar", "No calendars yet, so the agenda is empty."), EditCalendars)];
         if (descriptor.Type == NewsWidget.Descriptor.Type)
             return [new("News feeds…", () => Count(_settings.NewsFeeds.Count, "news feed", "No news feeds yet, so there are no headlines."), EditNews)];
+        if (descriptor.Type == StatusWidget.Descriptor.Type)
+        {
+            return [new("Add a check…", () => _settings.StatusChecks.Count switch
+            {
+                0 => "No status checks yet, so there's nothing to show.",
+                1 => "1 status check. Change it on the Status checks page.",
+                var count => $"{count} status checks. Change them on the Status checks page.",
+            }, AddStatusCheck)];
+        }
         if (descriptor.Type == BarsWidget.ClaudeDescriptor.Type)
         {
             return [new(IsClaudeCodeConnected() ? "Reconnect Claude Code" : "Connect Claude Code…",
@@ -134,13 +143,15 @@ public partial class App
     }
 
     /// <summary>
-    /// The names a widget setting can pick from that the app keeps: the news feeds, in the News feeds page's order, or the
-    /// weather's places, the location first and then the Weather page's more places (none without a location).
+    /// The names a widget setting can pick from that the app keeps: the news feeds, in the News feeds page's order, the
+    /// weather's places, the location first and then the Weather page's more places (none without a location), or the
+    /// status checks, in the Status checks page's order.
     /// </summary>
     internal IReadOnlyList<string> PickOptions(string source) => source switch
     {
         NewsWidget.FeedNames => [.. _settings.NewsFeeds.Select(f => f.Name)],
         WeatherWidget.PlaceNames => WeatherWidget.ShortNames(WeatherPlaceNames()),
+        StatusWidget.CheckNames => [.. _settings.StatusChecks.Select(c => c.Name.Trim())],
         _ => [],
     };
 
@@ -201,10 +212,12 @@ public partial class App
         UpdateSchedule();
     }
 
-    /// <summary>Checks the schedule (each second, with the game check) and switches when what it wants changes.</summary>
+    /// <summary>Checks the schedule and holiday themes (each second, with the game check) and switches when what they want changes.</summary>
     private void UpdateSchedule()
     {
-        var look = _settings.ScheduleEnabled ? ScheduledLook.From(_settings.Schedule, TimeOnly.FromDateTime(DateTime.Now), WindowsColourMode.IsDark()) : null;
+        var now = ScheduleNow.Current(_settings.WeatherLocation);
+        var holiday = _settings.HolidayThemes ? Holidays.On(DateOnly.FromDateTime(now.Time)) : null;
+        var look = ScheduledLook.From(_settings.ScheduleEnabled ? _settings.Schedule : [], now, holiday?.Theme);
         if (look == _scheduled)
             return;
         _scheduled = look;
@@ -243,7 +256,7 @@ public partial class App
     {
         if (_layouts is null)
             return;
-        if (ScheduleRuleWindow.Ask(owner, _layouts.List(), _layouts.Themes.List(), "Night Watch") is not { } rule)
+        if (ScheduleRuleWindow.Ask(owner, _layouts.List(), _layouts.Themes.List(), "Night Watch", _settings.WeatherLocation is not null) is not { } rule)
             return;
         _settings.Schedule.Add(rule);
         _settings.Save();

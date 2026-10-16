@@ -92,6 +92,41 @@ public sealed class ButtonsAndMediaTests
     }
 
     [Fact]
+    public void A_mic_mute_button_shows_whether_the_microphone_is_muted()
+    {
+        Sta.Run(() =>
+        {
+            var widget = WidgetFactory.Create(new JsonObject
+            {
+                ["type"] = "buttons",
+                ["buttons"] = new JsonArray(
+                    new JsonObject { ["icon"] = "mic", ["action"] = "mic-mute" },
+                    new JsonObject { ["icon"] = "star", ["action"] = "mic-mute" }),
+            }, Theme.From(new ThemeSettings()));
+            var icons = Descendants<System.Windows.Shapes.Path>(widget).ToList();
+            Assert.Equal(2, icons.Count);
+            Assert.NotNull(Icons.Get("mic-off"));
+            var store = new MetricStore();
+
+            // No microphone: it keeps the icon it was given.
+            widget.Refresh(store, DateTime.Now);
+            Assert.Same(Icons.Get("mic"), icons[0].Data);
+
+            store.Register(new MetricDefinition(PrivacyProvider.MicMuted, "Microphone muted", "Microphone and camera", MetricUnit.None));
+            store.Set(PrivacyProvider.MicMuted, 1);
+            widget.Refresh(store, DateTime.Now);
+            Assert.Same(Icons.Get("mic-off"), icons[0].Data);
+            // A button with an icon of its own keeps it.
+            Assert.Same(Icons.Get("star"), icons[1].Data);
+
+            store.Set(PrivacyProvider.MicMuted, 0);
+            widget.Refresh(store, DateTime.Now);
+            Assert.Same(Icons.Get("mic"), icons[0].Data);
+            Assert.Equal("Mute or unmute the microphone", ButtonsWidget.Describe(new WidgetAction(WidgetAction.MicMute)));
+        });
+    }
+
+    [Fact]
     public void Imports_can_list_and_clear_what_buttons_open()
     {
         var layout = new LayoutDocument

@@ -78,6 +78,9 @@ public static class Icons
         ["wind"] = Parse("M3,9 H14.5 A2.75,2.75 0 1 0 11.75,6.25 M3,13 H18.5 A2.75,2.75 0 1 1 15.75,15.75 M3,17 H10"),
         // A warning sign, for weather warnings.
         ["warning"] = Parse("M10.3,4.1 L2.1,18.2 A2,2 0 0 0 3.8,21 H20.2 A2,2 0 0 0 21.9,18.2 L13.7,4.1 A2,2 0 0 0 10.3,4.1 Z M12,9 V13.5 M12,17 H12.01"),
+        // The microphone, live and muted.
+        ["mic"] = Parse(Mic),
+        ["mic-off"] = Parse(Mic + " M4,3 L20,21"),
     };
 
     /// <summary>A cloud in the lower right, in front of a sun or moon.</summary>
@@ -88,6 +91,9 @@ public static class Icons
 
     /// <summary>A loudspeaker, for the volume icons to add waves or a cross to.</summary>
     private const string Speaker = "M3.5,9.5 H7.5 L12.5,5.5 V18.5 L7.5,14.5 H3.5 Z";
+
+    /// <summary>A microphone in its stand, for mic-off to cross out.</summary>
+    private const string Mic = "M9,5.5 A3,3 0 0 1 15,5.5 V11.5 A3,3 0 0 1 9,11.5 Z M5.5,11.5 A6.5,6.5 0 0 0 18.5,11.5 M12,18 V21.5 M8.5,21.5 H15.5";
 
     /// <summary>The value for "no icon" where a widget lets you leave it out, e.g. a text-only button.</summary>
     public const string None = "none";

@@ -136,6 +136,7 @@ public sealed class ShrinkToFitTests
     [InlineData("""{ "type": "weather", "forecastDetails": "chance of rain, rainfall, wind, gusts, UV", "rainFrom": 0, "details": "conditions, high and low, feels like, wind, gusts, humidity, pressure, UV, chance of rain, rainfall, sunrise, sunset, daylight, dew point, visibility, cloud cover, air quality, pollen" }""", 900, 180)]
     [InlineData("""{ "type": "media", "fontSize": 90 }""", 640, 160)]
     [InlineData("""{ "type": "news", "style": "ticker", "fontSize": 60 }""", 600, 60)]
+    [InlineData("""{ "type": "countdowns", "fontSize": 200 }""", 420, 220)]
     public void Text_too_big_for_its_widget_shrinks_to_fit_inside_it(string json, double width, double height)
     {
         Sta.Run(() =>
@@ -242,6 +243,7 @@ public sealed class ShrinkToFitTests
     [Theory]
     [InlineData("agenda")]
     [InlineData("news")]
+    [InlineData("countdowns")]
     public void A_list_leaves_out_rows_that_would_be_cut_off(string type)
     {
         Sta.Run(() =>
