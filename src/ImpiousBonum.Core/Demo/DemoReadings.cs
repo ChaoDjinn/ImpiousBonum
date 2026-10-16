@@ -326,6 +326,10 @@ public static class DemoReadings
         foreach (var check in checks)
             StatusProvider.Register(store, check.Name);
         StatusProvider.Publish(store, checks);
+
+        // A wireless headset, a mouse that wants charging and a controller.
+        using var batteries = new BatteryProvider(() => []);
+        batteries.Publish(store, [new DeviceBattery("Headset", 72), new DeviceBattery("Mouse", 18), new DeviceBattery("Controller", 55)]);
     }
 
     /// <summary>

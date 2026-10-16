@@ -193,7 +193,8 @@ public static class Setting
     ];
 
     /// <summary>The <c>thresholds</c> list read by <see cref="ThresholdColors"/>. <paramref name="help"/> says what it colours and what "own metric" means.</summary>
-    public static SettingDescriptor Thresholds(string help) =>
+    /// <param name="defaults">Rules a new widget starts with; a layout that leaves the list out gets them too.</param>
+    public static SettingDescriptor Thresholds(string help, IReadOnlyList<JsonObject>? defaults = null) =>
         Items(ThresholdsKey, "Warning colours",
         [
             Metric("metric", "Metric", null, help: "Empty uses the widget's own metric."),
@@ -202,5 +203,6 @@ public static class Setting
             Color("color", "Colour", "critical"),
         ],
         group: "Warning colours",
-        help: help + " When several rules match, the last one wins, so list them mildest first.");
+        help: help + " When several rules match, the last one wins, so list them mildest first.",
+        defaults: defaults);
 }

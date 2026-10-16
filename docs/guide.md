@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
@@ -212,6 +212,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
 | `media.title`, `media.artist`, `media.album`, `media.app`, `media.status`, `media.position`, `media.duration`, `media.progress` | What's playing, from Windows' media sessions (the media controls in the volume flyout): Spotify, browsers, Media Player and so on. No reading while nothing is playing |
 | `mic.muted` (1 when muted, 0 when not), `mic.name`, `mic.inuse`, `mic.apps`, `camera.inuse`, `camera.apps` | The microphone Windows uses for calls, and the apps using it or the camera, every 2 seconds (see [Microphone and camera](#microphone-and-camera)). The microphone's appear on PCs with a microphone, the camera's once an app has used a camera |
+| `battery.<name>` (%), `battery.<name>.name`, `battery.low` | Your wireless headset's, mouse's, keyboard's and game controller's batteries, as Windows' Bluetooth settings show them, every minute (see [Device batteries](#device-batteries)). Only on PCs with such devices |
 | `cpu.temp`, `cpu.power`, `gpu.temp`, `gpu.hotspot`, `gpu.power`, `gpu.fan` | Sensor service (below) |
 | `fps`, `fps.app` | Sensor service counts frames per app (like PresentMon/HWiNFO): DirectX, Vulkan and OpenGL, without hooking into the game; *Sensors* → *FPS from* picks the foreground app or the top app on a chosen monitor |
 | `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
@@ -541,6 +542,51 @@ To make a widget go red, give it a warning colour on one of these metrics (see [
 ```
 
 In the editor, the same rules are each widget's *Warning colours*: pick the metric, set *Above* to 0, and choose a colour.
+
+### Device batteries
+
+How much charge your wireless devices have left, as Windows' Bluetooth settings show it: a Bluetooth headset, mouse,
+keyboard or game controller, or an Xbox controller. The `batteries` widget lists them, each with a bar, and turns one
+the critical colour once it's under 20 %.
+
+<p align="center"><img src="images/widgets/batteries.png" width="600" alt="Three devices with bars: a controller at 55 %, a headset at 72 % and a mouse at 18 %, its bar and charge in red; beside them, Mouse is low"></p>
+
+- **Which devices:** the ones *Settings* → *Bluetooth & devices* shows a battery level for. Headsets send it over
+  Bluetooth's hands-free connection, and Bluetooth LE mice, keyboards, controllers and earbuds have a battery Windows
+  reads itself. Xbox controllers on the Xbox Wireless Adapter or a cable come from Windows' game controller support
+  instead. A mouse, keyboard or headset with a USB receiver of its own usually tells only its maker's app, so it
+  doesn't show here.
+- **When:** every minute. A device shows once it connects, and goes once it's switched off or out of range, within a
+  minute or so of either.
+- Impious Bonum only reads what Windows already knows: it never connects to a device itself, and needs no permission.
+  Nothing shows on PCs without such devices.
+
+Each device's readings appear when it first connects, listed in the metric picker under *Device batteries*. The name
+in the id is the device's, in lower case with a hyphen for spaces and punctuation (*WH-1000XM4* is
+`battery.wh-1000xm4`, *Xbox Wireless Controller* `battery.xbox-wireless-controller`). Two devices with the same name
+are told apart by a number: *Controller* and *Controller 2*.
+
+| Reading | |
+|---|---|
+| `battery.<name>` | How much charge it has left, e.g. *72 %*. No reading while it's away |
+| `battery.<name>.name` | Its name, as Bluetooth settings show it |
+| `battery.low` | The name of the one with the least charge, once it's under 20 %, e.g. *Mouse*. No reading while none is |
+
+The widget shows every connected device by name, or just the ones you choose: *Devices* works like the
+[news widget's feeds](#news), and offers every device that has connected since Impious Bonum started. It hides while
+none of them is connected (and shows faded while you edit the layout, so you can still place it). Its *Warning
+colours* start with one rule, under 20 in the critical colour, for each device's bar and charge; change it, or add
+milder ones before it.
+
+The picture's warning shows only while a device is low, as `battery.low` has no reading otherwise:
+
+```json
+{ "type": "batteries", "x": 30, "y": 35, "width": 460, "height": 240, "fontSize": 30, "barHeight": 8, "spacing": 22 },
+{ "type": "text", "x": 530, "y": 115, "width": 250, "height": 60, "fontSize": 40, "text": "{battery.low} is low",
+  "color": "critical", "hideUnavailable": true }
+```
+
+To be told, add an [alert](#alerts) on `battery.<name>` below 20, say.
 
 ## Widgets in depth
 
