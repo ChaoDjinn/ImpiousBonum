@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
@@ -29,7 +29,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), [status checks](#status-checks) (`statusChecks`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
 
@@ -50,6 +50,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | *Calendars*, *News feeds* | The links the agenda and news widgets read (see [Calendar](#calendar) and [News](#news)) |
 | *Claude usage* | Whether Claude Code is reporting, and connecting it (see [Claude usage](#claude-usage)) |
 | *Custom data* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
+| *Status checks* | Whether your own servers and services are up (see [Status checks](#status-checks)) |
 | *Alerts*, *Hotkeys*, *Logging* | See [Alerts](#alerts), [Hotkeys](#hotkeys) and [Logging](#logging) |
 | *General* | *Start with Windows*, drawing with the graphics card, and the settings folder and `dashboard.log` |
 | *About and updates* | The version, checking for and installing updates, what's new, this guide and the widget reference for your version, *Report a problem*, and *Details* to copy into a problem report |
@@ -77,7 +78,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="images/default-layout.svg" alt="Map of the default layout: CPU, GPU and memory graphs, CPU and GPU temperatures and the frame rate, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Twenty-two widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `weather` ([Weather](#weather)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Twenty-three widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `weather` ([Weather](#weather)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
 
 <table>
   <tr>
@@ -396,6 +397,57 @@ Some examples:
 
 Sources are stored in `settings.json` (`customData`) on this PC and never in a layout, so a layout from someone else can't add a command to run. Headers, tokens included, are stored there as plain text.
 
+### Status checks
+
+The `status` widget shows whether your own servers and services are up: a NAS, Pi-hole, Plex, the router, a website.
+Each has a dot in the accent colour while it's up and the critical colour while it's down, its name, and how fast it
+answered, as a list or a grid.
+
+<p align="center"><img src="images/widgets/status.png" width="600" alt="Four status checks: the router, the NAS and Pi-hole up with orange dots, answering in 2, 4 and 3 ms and up for 12 days, 6 days and 3 hours, and Plex down in red for 12 minutes; beside them, 1 down: Plex, and 3 of 4 up"></p>
+
+Add them on the *Status checks* page (or select the widget in the editor → *Add a check…*). Each has:
+
+- **Name:** what the dashboard calls it, such as *NAS*.
+- **Address:** a host name or IP address (`nas.local`, `192.168.1.10`), which is pinged, or a web address
+  (`http://pi.hole/admin`, `https://nas.local:5001`), whose page is asked for. A page counts as up when it loads (an
+  answer in the 200s or 300s); *401 Unauthorized* and the like count as down, so for a service behind a sign-in, use a
+  page that doesn't need one. To check a port, give its web address (`http://nas:8080`).
+- **Page must say:** for a web address, a word the page has to contain, in any case, to count as up, so a page that
+  loads but shows an error doesn't. A move to another page of the same server is followed (from `/` to
+  `/web/index.html`, say); a move to another site isn't, and then there's no page to find the word on.
+- **Accept its own certificate:** for an https address whose certificate Windows doesn't trust, as home servers often
+  have their own.
+- **Every:** how often to check it: every 60 seconds unless you say otherwise, and 10 at the least.
+
+*Check now* checks it once and says what it found. A ping waits 2 seconds for its reply and a page 10. One that fails
+is checked again 10 seconds later, and only counts as down if that fails too, so one lost answer doesn't.
+
+Each check has readings any widget can show, listed in the metric picker under *Status: NAS* and so on. The name in
+the id is the check's, in lower case with a hyphen for spaces and punctuation (*Pi-hole* is `status.pi-hole.…`), so
+renaming a check changes its readings.
+
+| Reading | |
+|---|---|
+| `status.<name>.up` | 1 while it's up, 0 while it's down |
+| `status.<name>.ms` | How long it took to answer, while it's up |
+| `status.<name>.since` | How long it's been up or down, e.g. *3 h* or *12 min*, counted from when Impious Bonum first checked it |
+| `status.up`, `status.down` | How many are up, and how many down |
+| `status.summary` | *All up*, or which are down: *1 down: Plex* |
+
+A widget can show some checks and not others: *Checks* works like the [news widget's feeds](#news), so a check's
+name can't have a comma in it or be `all`. *Columns* makes a grid, and *Show response time* and *Show how long* say
+what's beside each name. A check that's down says *Down* in words as well as colour.
+
+**To be told when one goes down,** add an [alert](#alerts) on `status.<name>.up` below 1. *Alert…* beside the check
+sets one up, with a notification saying *NAS is down*; it needn't wait any seconds, as a check is only down once it
+has failed twice. With *Flash a banner on the dashboard*, the banner stays until the check is back. To be told when
+it's back as well, add a second alert on `status.<name>.up` above 0; that one also goes off soon after Impious Bonum
+starts, when it first finds the check up.
+
+Nothing is checked until you add a check, and only the addresses you add are contacted: a ping, or a request for the
+page, as often as you say. Checks are kept in `settings.json` (`statusChecks`) on this PC and never in a layout, so a
+layout from someone else can't make the dashboard contact anything.
+
 ### Claude usage
 
 The *Claude usage* widget shows your Claude plan's session (5-hour) and weekly limits as two bars, e.g. *Session 24 % · resets in 2h 14m*. It's only on screen while Claude Code is open and reporting, and shows faded while you edit the layout so you can still place it.
@@ -518,7 +570,7 @@ Exported layouts carry their image widgets' pictures, like the background image 
 
 ### Alerts
 
-Warning colours only help if you're looking. An alert tells you when a reading stays out of bounds: the GPU hot spot above 95 °C for 10 seconds, a drive over 95% full, a frame rate below 30, a [custom data](#custom-data) source reporting an error.
+Warning colours only help if you're looking. An alert tells you when a reading stays out of bounds: the GPU hot spot above 95 °C for 10 seconds, a drive over 95% full, a frame rate below 30, a [custom data](#custom-data) source reporting an error, one of your [servers](#status-checks) going down.
 
 *Alerts* → *Add…* picks the metric (the window shows its reading now), *Above* and/or *Below* a number, for how many seconds (so a brief spike doesn't count), an optional message (a template, so `GPU is cooking: {gpu.hotspot}` shows the reading), and what happens:
 

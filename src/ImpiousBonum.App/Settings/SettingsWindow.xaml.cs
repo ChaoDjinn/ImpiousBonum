@@ -172,6 +172,7 @@ public partial class SettingsWindow : Window
             SettingsPage.NewsFeeds => LinkListPage.ForNewsFeeds(_host),
             SettingsPage.ClaudeUsage => new ClaudeUsagePage(_host),
             SettingsPage.CustomData => new CustomDataPage(_host),
+            SettingsPage.StatusChecks => new StatusChecksPage(_host),
             SettingsPage.Alerts => new AlertsPage(_host),
             SettingsPage.Hotkeys => new HotkeysPage(_host),
             SettingsPage.Logging => new LoggingPage(_host),

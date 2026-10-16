@@ -24,6 +24,12 @@ Themes for the holidays, eight more layouts in the gallery, and countdowns that 
 **Countdowns every year**
 - A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
+**Status checks**
+- A *Status checks* page and a `status` widget for your own servers and services: a NAS, Pi-hole, Plex, the router or a website. Each check pings a host name or IP address, or asks a web address for its page (which can have to say a word, such as *Plex*), every 60 seconds or as often as you like. The widget lists them, or puts them in a grid, each with a dot in the accent colour while it's up and the critical colour while it's down, and how fast it answered.
+- A check that fails is checked again 10 seconds later, and only counts as down if that fails too, so one lost answer doesn't.
+- Each check has readings any widget can show, such as `status.nas.up`, `status.nas.ms` and `status.nas.since` (*3 h*), and `status.summary` says *All up* or which are down (*1 down: Plex*). *Alert…* beside a check sets up an alert for when it goes down.
+- Nothing is checked until you add a check, and only the addresses you add are contacted.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.

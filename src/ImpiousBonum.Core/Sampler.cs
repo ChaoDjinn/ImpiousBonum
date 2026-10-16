@@ -3,6 +3,7 @@ using ImpiousBonum.Core.CustomData;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Sessions;
+using ImpiousBonum.Core.StatusChecks;
 using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.Core;
@@ -42,11 +43,13 @@ public sealed class Sampler : IAsyncDisposable
     /// Other places to get forecasts for, besides <paramref name="weather"/>'s, for the weather widget to move between;
     /// null, or none, fetches no more. They're fetched on the weather's loop, and only along with its place.
     /// </param>
+    /// <param name="statusChecks">Your own servers and services to check; null for none.</param>
     public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(
         string pingHost = "1.1.1.1", Func<(int ProcessId, string? Name)>? frameRateTarget = null, string? claudeUsagePath = null,
         Func<WeatherRequest?>? weather = null, Func<IReadOnlyList<CustomSource>>? customData = null,
         Func<IReadOnlyList<CalendarLink>>? calendars = null, Func<IReadOnlyList<NewsFeed>>? news = null, Func<string?>? gameInFront = null, Action<SessionRecap>? sessionEnded = null,
-        Func<AirQualityRequest?>? airQuality = null, Func<WarningsRequest?>? warnings = null, Func<IReadOnlyList<WeatherRequest>>? weatherPlaces = null) =>
+        Func<AirQualityRequest?>? airQuality = null, Func<WarningsRequest?>? warnings = null, Func<IReadOnlyList<WeatherRequest>>? weatherPlaces = null,
+        Func<IReadOnlyList<StatusCheck>>? statusChecks = null) =>
     [
         new CpuProvider(),
         new MemoryProvider(),
@@ -66,6 +69,7 @@ public sealed class Sampler : IAsyncDisposable
         new CalendarProvider(calendars ?? (() => [])),
         new NewsProvider(news ?? (() => [])),
         new SessionProvider(gameInFront ?? (() => null), sessionEnded),
+        new StatusProvider(statusChecks ?? (() => [])),
         .. claudeUsagePath is null ? Array.Empty<IMetricProvider>() : [new ClaudeUsageProvider(claudeUsagePath)],
     ];
 

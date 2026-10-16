@@ -31,7 +31,7 @@ mean the widget's own.
 
 ## Widgets
 
-- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Top apps](#top-apps-processes)
+- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [News](#news-news) · [Claude usage](#claude-usage-claude)
@@ -320,6 +320,22 @@ Each entry in `thresholds`:
 | `above` | number | — | Above. Matches when the value is above this. |
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
+
+## Status checks (`status`)
+
+Whether your own servers and services are up (set them up on the Status checks page), as a list or a grid: each with a dot in the accent colour while it's up and the critical colour while it's down, its name and how fast it answered.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `checks` | `all`, or names in order, separated by commas | `all` | Checks. All checks, or just the ones chosen, in the order they're listed. |
+| `columns` | number (1–10) | `1` | Columns. 1 is a list; more makes a grid, filled a row at a time. |
+| `time` | true/false | `true` | Show response time. How long each took to answer, e.g. 4 ms. |
+| `since` | true/false | `false` | Show how long. How long each has been up or down, e.g. 3 h. |
+| `fontSize` | number (6–200) | `22` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `spacing` | number (0–100) | `8` | Spacing |
+| `upColor` | color | `accent` | Up. The dot of a check that's up. |
+| `downColor` | color | `critical` | Down. The dot of a check that's down, and the word Down. |
 
 ## Clock (`clock`)
 

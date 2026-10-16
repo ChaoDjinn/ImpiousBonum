@@ -283,6 +283,19 @@ public static class DemoReadings
         for (var i = 0; i < spectrum.Length; i++)
             spectrum[i] = Math.Clamp(0.8 - 0.5 * i / spectrum.Length + 0.12 * Math.Sin(i * 0.9) + (random.NextDouble() - 0.5) * 0.2, 0.05, 1);
         store.SetAttachment(Spectrum, spectrum);
+
+        // The servers at home: all up but Plex, which stopped answering twelve minutes ago.
+        new StatusProvider(() => []).Initialize(store);
+        IReadOnlyList<CheckStatus> checks =
+        [
+            new("Router", true, 2, "12 days", null),
+            new("NAS", true, 4, "6 days", null),
+            new("Pi-hole", true, 3, "3 h", null),
+            new("Plex", false, null, "12 min", "No answer"),
+        ];
+        foreach (var check in checks)
+            StatusProvider.Register(store, check.Name);
+        StatusProvider.Publish(store, checks);
     }
 
     /// <summary>
