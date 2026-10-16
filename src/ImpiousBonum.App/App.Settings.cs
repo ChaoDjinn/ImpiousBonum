@@ -159,6 +159,15 @@ public partial class App : ISettingsHost
         AppLog.Info($"Tablets {(on ? "can" : "can't")} press buttons");
     }
 
+    void ISettingsHost.SetTabletReadings(bool on)
+    {
+        _settings.TabletReadings = on;
+        _settings.Save();
+        if (_tablet is not null)
+            _tablet.Readings = on ? _sampler?.Store : null;
+        AppLog.Info($"Readings {(on ? "shared" : "not shared")} with other apps");
+    }
+
     void ISettingsHost.ShowTabletLink(string? layout) => ShowTabletLink(layout);
 
     void ISettingsHost.CopyTabletLink(string? layout) => CopyTabletLink(layout);

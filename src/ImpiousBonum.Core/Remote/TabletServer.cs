@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using ImpiousBonum.Core.Metrics;
 
 namespace ImpiousBonum.Core.Remote;
 
@@ -11,6 +12,7 @@ public sealed record TabletFrame(byte[] Image, string ContentType, long Sequence
 /// <summary>
 /// The tablet view's web server: a page that shows the dashboard, and the latest <see cref="Frame"/> for it to fetch
 /// once a second. A link can name a saved layout (<c>&amp;layout=</c>) to show that instead, with pictures of its own.
+/// With <see cref="Readings"/> set (another opt-in), it also serves the readings as JSON for other apps.
 /// Read-only unless <see cref="Tap"/> is set (an opt-in), answers only local-network addresses that know
 /// the link's secret, and closes every connection after one response. Written on <see cref="TcpListener"/> because HttpListener needs an admin-registered
 /// URL reservation to accept anything but localhost.
@@ -72,6 +74,12 @@ public sealed class TabletServer : IDisposable
     /// Null, the default, means links can only show the main dashboard. Called on the thread pool.
     /// </summary>
     public Func<string, string?>? FindLayout { get; set; }
+
+    /// <summary>
+    /// The readings other apps can fetch as JSON from <c>/api/metrics</c> and <c>/api/metrics/&lt;id&gt;</c>, with the
+    /// link's secret. Null, the default, means sharing is off: <c>/api</c> doesn't exist. Read on the thread pool.
+    /// </summary>
+    public MetricStore? Readings { get; set; }
 
     /// <summary>The main dashboard's picture to serve. Set from any thread; read by requests on the thread pool.</summary>
     public TabletFrame? Frame
@@ -210,6 +218,8 @@ public sealed class TabletServer : IDisposable
             return RespondToTap(request);
         if (request.Method != "GET")
             return HttpResponse.Text(405, "Method Not Allowed");
+        if (request.Path.StartsWith("/api/", StringComparison.Ordinal))
+            return RespondToApi(request);
         // Without the secret, nothing here exists.
         if (!TabletAccess.TokenMatches(request.Query.GetValueOrDefault("k"), _token))
             return HttpResponse.Text(404, "Not Found");
@@ -257,6 +267,33 @@ public sealed class TabletServer : IDisposable
             return HttpResponse.Text(400, "Bad Request");
         return tap(layout, x, y) ? HttpResponse.Text(200, "Pressed") : new HttpResponse(204, null, []);
     }
+
+    /// <summary>
+    /// The readings, for other apps: only while sharing is on, only with the secret (in the address, as in the tablet's
+    /// link, or as a bearer token), and nothing but the readings. Without both, it doesn't exist.
+    /// </summary>
+    private HttpResponse RespondToApi(HttpRequestHead request)
+    {
+        const string one = "/api/metrics/";
+        var given = BearerToken(request) ?? request.Query.GetValueOrDefault("k");
+        if (Readings is not { } store || !TabletAccess.TokenMatches(given, _token))
+            return HttpResponse.Text(404, "Not Found");
+        if (request.Path == "/api/metrics")
+            return HttpResponse.Json(200, ReadingsJson.All(store));
+        if (!request.Path.StartsWith(one, StringComparison.Ordinal) || request.Path.Length == one.Length)
+            return HttpResponse.Text(404, "Not Found");
+
+        var id = request.Path[one.Length..];
+        return ReadingsJson.One(store, id) is { } reading
+            ? HttpResponse.Json(200, reading)
+            : HttpResponse.Json(404, ReadingsJson.Error($"There's no reading called \"{id}\"."));
+    }
+
+    /// <summary>The secret from an <c>Authorization: Bearer …</c> header, or null without one.</summary>
+    private static string? BearerToken(HttpRequestHead request) =>
+        request.Headers.GetValueOrDefault("Authorization") is { } authorization && authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+            ? authorization["Bearer ".Length..].Trim()
+            : null;
 
     /// <summary>
     /// The saved layout a request's link names, as saved, or null for the main dashboard (a link without <c>layout</c>).
@@ -332,6 +369,8 @@ public sealed record HttpResponse(int Status, string? ContentType, byte[] Body)
 
     public static HttpResponse Html(int status, string html, string contentSecurityPolicy) =>
         new(status, "text/html; charset=utf-8", Encoding.UTF8.GetBytes(html)) { ContentSecurityPolicy = contentSecurityPolicy };
+
+    public static HttpResponse Json(int status, byte[] json) => new(status, "application/json; charset=utf-8", json);
 
     public string Head()
     {

@@ -171,6 +171,7 @@ public partial class App : Application
             AllowTaps = _settings.TabletButtons,
             FindLayout = name => _layouts?.Library.Find(name),
             LoadLayout = LoadTabletLayout,
+            Readings = _settings.TabletReadings ? _sampler.Store : null,
         };
         _tablet.ActionRequested += (_, action) => RunAction(action);
         _usb = new UsbScreenView();

@@ -9,7 +9,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
-- [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
+- [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
 - [Command line](#command-line)
 
 ## Getting started
@@ -29,7 +29,7 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [energy use](#energy-use) (`energyPrice`, `energyCurrency`, `energyOtherWatts`), [grid carbon intensity](#grid-carbon-intensity) (`gridCarbon`, `gridCarbonArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), [status checks](#status-checks) (`statusChecks`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), `scheduleEnabled`, `holidayThemes`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
+- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [energy use](#energy-use) (`energyPrice`, `energyCurrency`, `energyOtherWatts`), [grid carbon intensity](#grid-carbon-intensity) (`gridCarbon`, `gridCarbonArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), [status checks](#status-checks) (`statusChecks`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`), `scheduleEnabled`, `holidayThemes`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`, `tabletReadings`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
 - `energy.json`: the energy your PC has used today and this month so far, so a restart carries on from it (see [Energy use](#energy-use)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
@@ -896,6 +896,60 @@ A tablet or phone on the same Wi-Fi can show the dashboard in its web browser, a
 - **Pressing buttons:** with *Let tablets press buttons* on (under *Tablet view*, off by default), tapping a button on the tablet presses it on the PC: the layout's *Buttons* widgets and the media controls, and nothing else. On a tablet showing a layout of its own, it's that layout's buttons; one that switches layout switches the main dashboard's. A ripple shows where the tap landed, and the result shows on the next frame. Anyone who has the link can then press those buttons, so only turn it on if the layout's buttons are ones you'd be happy for them to press, and use *New link* if a link gets out.
 - **Security:** it's off by default and read-only unless you let tablets press buttons: otherwise the page can't change anything on the PC. The link carries a random secret, and *New link* stops old links working. It only answers addresses on the local network (private, link-local and loopback addresses), never the internet. When Windows asks about the firewall the first time, allow **private networks** only. It's plain HTTP, so someone watching your Wi-Fi traffic could see the dashboard's numbers.
 - It listens on port 8787. If another app uses that port, change `tabletPort` in `settings.json` and turn the tablet view off and on.
+
+#### Readings for other apps
+
+Other apps on your network can read the dashboard's readings as JSON: Home Assistant, Rainmeter on another PC, or a script of your own. Turn on *Share readings with other apps* under *Tablet view* (off by default). It works only while the tablet view is on, since it's the same small server, and it needs the link's secret (the part after `k=` in the tablet link): in the address as `?k=`, or in an `Authorization: Bearer` header.
+
+- `http://<PC>:8787/api/metrics` has every reading, `http://<PC>:8787/api/metrics/cpu.load` just one. Use the PC's address from the tablet link. Ids are the same as in a text widget (`{cpu.load}`), and the editor's metric picker lists them.
+- Each reading has its `id`, `name`, `category`, `unit` (`percent`, `celsius`, `bytesPerSecond` and so on), `value` (a number, or `null` for a text reading or one with nothing yet), `text` (for a text reading, such as what's playing) and `formatted`, the reading as the dashboard shows it:
+
+  ```json
+  {"metrics":[{"id":"cpu.load","name":"CPU load","category":"CPU","unit":"percent","value":37.5,"text":null,"formatted":"37.5 %"}]}
+  ```
+
+- **What's shared:** every reading the dashboard has, including the text ones (what's playing, your next calendar event, your IP address and Wi-Fi network's name), with anyone on your network who has the link. Nothing else, and nothing can be changed this way. *New link* stops the old secret working, so give the apps the new one. Each request just reads the latest readings; nothing is drawn.
+
+A [Home Assistant RESTful sensor](https://www.home-assistant.io/integrations/sensor.rest/), in `configuration.yaml`, reading two in one request every 10 seconds:
+
+```yaml
+rest:
+  - resource: http://192.168.1.20:8787/api/metrics
+    headers:
+      Authorization: Bearer YOUR-SECRET
+    scan_interval: 10
+    sensor:
+      - name: "PC CPU load"
+        value_template: "{{ (value_json.metrics | selectattr('id', 'eq', 'cpu.load') | first).value }}"
+        unit_of_measurement: "%"
+      - name: "PC GPU temperature"
+        value_template: "{{ (value_json.metrics | selectattr('id', 'eq', 'gpu.temp') | first).value }}"
+        unit_of_measurement: "°C"
+        device_class: temperature
+```
+
+A [Rainmeter](https://docs.rainmeter.net/manual/measures/webparser/) skin showing the CPU load as the dashboard does, every 5 seconds:
+
+```ini
+[Rainmeter]
+Update=1000
+
+[MeasureCpu]
+Measure=WebParser
+URL=http://192.168.1.20:8787/api/metrics/cpu.load?k=YOUR-SECRET
+RegExp=(?siU)"formatted":"(.*)"
+CodePage=65001
+UpdateRate=5
+StringIndex=1
+
+[MeterCpu]
+Meter=String
+MeasureName=MeasureCpu
+Text=CPU %1
+FontColor=255,255,255
+FontSize=14
+AntiAlias=1
+```
 
 ### USB screens
 

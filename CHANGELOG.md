@@ -67,6 +67,10 @@ Themes for the holidays, eight more layouts in the gallery, countdowns that come
 - A layout is only drawn while a tablet is showing it, and let go a few minutes after the last one closes, so it costs nothing the rest of the time.
 - Renaming or deleting a layout stops links to it working: the tablet says there's no layout of that name, and the page gives you a new link.
 
+**Readings for other apps**
+- *Share readings with other apps* on the *Tablet and USB screen* page (off by default) lets Home Assistant, Rainmeter or a script of your own read every reading as JSON while the tablet view is on: its name, unit, value and the value as the dashboard shows it. They need the tablet link's secret, and *New link* stops old ones working.
+- The [guide](docs/guide.md#readings-for-other-apps) has a Home Assistant sensor and a Rainmeter skin to start from.
+
 
 **Buttons that send web requests**
 - A *Buttons* action, `web`, sends a web request when you tap it: run a Home Assistant script or scene, switch a smart light, start a Node-RED flow or send a notification to your phone with ntfy. Each button has its address, a method (`GET`, `POST` or `PUT`), and if it needs them a body, such as JSON, and a header, such as `Authorization: Bearer` and a token. The guide has examples for Home Assistant and ntfy.

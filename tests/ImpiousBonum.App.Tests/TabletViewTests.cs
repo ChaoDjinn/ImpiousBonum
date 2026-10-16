@@ -105,6 +105,20 @@ public sealed class TabletViewTests
         Assert.False(view.IsRunning);
     });
 
+    [Fact]
+    public void Readings_are_shared_only_while_turned_on() => Sta.Run(() =>
+    {
+        var store = new MetricStore();
+        using var view = new TabletView { Readings = store };
+        using var server = new TabletServer(0, Token);
+        view.Serve(server);
+        Assert.Same(store, server.Readings);
+
+        view.Readings = null;
+        Assert.Null(server.Readings);
+        Assert.Equal(404, server.Respond(Request($"/api/metrics?k={Token}")).Status);
+    });
+
     private const string Token = "s3cret-token_value";
 
     private static HttpRequestHead Request(string target) => HttpRequestHead.Parse($"GET {target} HTTP/1.1\r\nHost: pc")!;
