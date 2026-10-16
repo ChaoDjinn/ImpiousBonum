@@ -113,6 +113,12 @@ public partial class App
                     },
                 SetWeatherLocation)];
         }
+        if (descriptor.Type == RainWidget.Descriptor.Type)
+        {
+            return [new(_settings.WeatherLocation is null ? "Set location…" : "Change location…",
+                () => _settings.WeatherLocation is { } place ? $"The rain at {place.Name}." : "No location yet, so there's no forecast.",
+                SetWeatherLocation)];
+        }
         if (descriptor.Type == AgendaWidget.Descriptor.Type)
             return [new("Calendars…", () => Count(_settings.Calendars.Count, "calendar", "No calendars yet, so the agenda is empty."), EditCalendars)];
         if (descriptor.Type == NewsWidget.Descriptor.Type)

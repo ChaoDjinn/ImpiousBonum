@@ -16,7 +16,7 @@ public static class OpenMeteo
 
     private static readonly HttpClient Http = CreateClient();
 
-    /// <summary>The forecast for <paramref name="request"/>: now, 48 hours and 16 days. Throws <see cref="HttpRequestException"/> and the like on failure.</summary>
+    /// <summary>The forecast for <paramref name="request"/>: now, three hours of quarter-hours, 48 hours and 16 days. Throws <see cref="HttpRequestException"/> and the like on failure.</summary>
     public static async Task<WeatherReport> ForecastAsync(WeatherRequest request, CancellationToken cancellationToken)
     {
         var json = await Http.GetStringAsync(ForecastUrl(request), cancellationToken).ConfigureAwait(false);
@@ -25,7 +25,9 @@ public static class OpenMeteo
 
     /// <summary>
     /// Everything the forecast has in one request. The three hours before this one are for the pressure trend. The
-    /// widget's hours start after this one, so 49 hours from it leaves 48 to show.
+    /// widget's hours start after this one, so 49 hours from it leaves 48 to show. The rain a quarter of an hour at a
+    /// time is for the next two hours; three hours of it, from the quarter that ended last, still reach two hours ahead
+    /// when the next forecast is a while coming.
     /// </summary>
     internal static string ForecastUrl(WeatherRequest request) =>
         FormattableString.Invariant($"https://api.open-meteo.com/v1/forecast?latitude={request.Latitude:0.####}&longitude={request.Longitude:0.####}")
@@ -34,7 +36,8 @@ public static class OpenMeteo
         + "&hourly=temperature_2m,weather_code,is_day,precipitation_probability,precipitation,pressure_msl,wind_speed_10m,wind_gusts_10m,uv_index"
         + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,sunrise,sunset,"
         + "daylight_duration,uv_index_max,wind_speed_10m_max,wind_gusts_10m_max"
-        + "&timezone=auto&forecast_days=16&past_hours=3&forecast_hours=49"
+        + "&minutely_15=precipitation"
+        + "&timezone=auto&forecast_days=16&past_hours=3&forecast_hours=49&forecast_minutely_15=12"
         + (request.Units == WeatherUnits.Imperial ? "&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch" : "&wind_speed_unit=kmh");
 
     /// <summary>The air quality and pollen now at <paramref name="request"/>'s place. Throws <see cref="HttpRequestException"/> and the like on failure.</summary>

@@ -137,6 +137,7 @@ public sealed class ShrinkToFitTests
     [InlineData("""{ "type": "media", "fontSize": 90 }""", 640, 160)]
     [InlineData("""{ "type": "news", "style": "ticker", "fontSize": 60 }""", 600, 60)]
     [InlineData("""{ "type": "countdowns", "fontSize": 200 }""", 420, 220)]
+    [InlineData("""{ "type": "rain", "fontSize": 120 }""", 420, 160)]
     public void Text_too_big_for_its_widget_shrinks_to_fit_inside_it(string json, double width, double height)
     {
         Sta.Run(() =>

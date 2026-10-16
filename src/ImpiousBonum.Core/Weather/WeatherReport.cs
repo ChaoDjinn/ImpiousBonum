@@ -103,6 +103,11 @@ public sealed record WeatherPeriod(DateTime Time, double Temperature, double? Lo
     public TimeSpan? Daylight { get; init; }
 }
 
+/// <summary>A quarter of an hour of the forecast's next few hours, for the rain soon (see <see cref="RainAhead"/>).</summary>
+/// <param name="Time">Local time at the place: the end of the quarter-hour, as Open-Meteo gives it.</param>
+/// <param name="Precipitation">Rain, showers and snow in the 15 minutes up to <paramref name="Time"/>, in mm or inches.</param>
+public sealed record QuarterHour(DateTime Time, double Precipitation);
+
 /// <summary>
 /// A forecast from Open-Meteo: conditions now, today's range, and the hours and days ahead. The readings added since
 /// the first few are properties, like <see cref="WeatherPeriod"/>'s, and null when the forecast didn't have them.
@@ -145,6 +150,12 @@ public sealed record WeatherReport(
 
     /// <summary>Rain, showers and snow in the last 15 minutes, in mm or inches.</summary>
     public double? Precipitation { get; init; }
+
+    /// <summary>
+    /// The rain, showers and snow of the next three hours, a quarter of an hour at a time, from the one that ended last.
+    /// Empty when the forecast hasn't got them; one Open-Meteo has no value for is left out.
+    /// </summary>
+    public IReadOnlyList<QuarterHour> QuarterHours { get; init; } = [];
 
     /// <summary>Today's forecast, if the report has days.</summary>
     public WeatherPeriod? Today => Days.Count > 0 ? Days[0] : null;
@@ -225,6 +236,17 @@ public sealed record WeatherReport(
                 sunset = ParseTime(sets[0]);
         }
 
+        // Only for the rain soon, so a forecast without them is still a forecast.
+        var quarters = new List<QuarterHour>();
+        if (root.TryGetProperty("minutely_15", out var minutely) && minutely.TryGetProperty("time", out var quarterTimes) && quarterTimes.ValueKind == JsonValueKind.Array)
+        {
+            for (var i = 0; i < quarterTimes.GetArrayLength(); i++)
+            {
+                if (Number(minutely, "precipitation", i) is { } amount && quarterTimes[i].ValueKind == JsonValueKind.String)
+                    quarters.Add(new QuarterHour(ParseTime(quarterTimes[i]), amount));
+            }
+        }
+
         return new WeatherReport(
             units,
             ParseTime(current.GetProperty("time")),
@@ -248,6 +270,7 @@ public sealed record WeatherReport(
             Visibility = Value(current, "visibility") * (VisibilityInFeet(root, units) ? MetresPerFoot : 1),
             Clouds = Value(current, "cloud_cover"),
             Precipitation = Value(current, "precipitation"),
+            QuarterHours = quarters,
         };
     }
 
