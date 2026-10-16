@@ -94,6 +94,7 @@ public static class LayoutValidator
                     "should be foreground, secondary, accent, warning, critical, track, background or a colour like #FF9800",
                 SettingKind.Metric when !IsMetricId(value.GetValue<string>()) =>
                     "should be a metric id like cpu.temp, without braces or spaces",
+                SettingKind.Font when Theme.IsFontAddress(value.GetValue<string>()) => FontNameProblem,
                 _ => null,
             };
             if (problem is not null)
@@ -151,6 +152,8 @@ public static class LayoutValidator
                 issues.Add($"Theme: '{name}' should be a colour like #FF9800.");
         }
 
+        if (Theme.IsFontAddress(theme.FontFamily))
+            issues.Add($"Theme: 'fontFamily' {FontNameProblem}.");
         if (!string.IsNullOrWhiteSpace(theme.FontFile) && !File.Exists(theme.FontFile))
             issues.Add($"Theme: font file not found: {theme.FontFile}");
 
@@ -179,6 +182,9 @@ public static class LayoutValidator
         if (theme.ParticleAmount is < 0 or > 1 || double.IsNaN(theme.ParticleAmount))
             issues.Add("Theme: 'particleAmount' should be between 0 and 1.");
     }
+
+    /// <summary>A font given by its address, which is drawn in another font (see <see cref="Theme.IsFontAddress"/>).</summary>
+    private const string FontNameProblem = "should be the name of a font, such as Segoe UI";
 
     /// <summary>
     /// Metric ids come from the running sensors, so they can't all be known here; this catches the likely slips,

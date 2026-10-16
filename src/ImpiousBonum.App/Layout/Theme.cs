@@ -58,6 +58,16 @@ public sealed class Theme
     public static Theme From(ThemeSettings settings) => new(settings);
 
     /// <summary>
+    /// Whether a font setting is a place to fetch a font from rather than a font's name (or a list of them, such as
+    /// "Cascadia Mono, Consolas"). WPF reads "file://server/fonts/#Name" or "\\server\fonts\#Name" as a font at that
+    /// address, and drawing with it would have Windows reach out to that PC, sending your sign-in. Layouts and themes
+    /// from someone else leave such fonts out as they come in, and one that's still there is drawn in another font.
+    /// </summary>
+    public static bool IsFontAddress(string? font) => font is not null && font.IndexOfAny(FontAddressCharacters) >= 0;
+
+    private static readonly char[] FontAddressCharacters = ['/', '\\', '#', ':'];
+
+    /// <summary>
     /// This theme with a widget's own font and colours (see <see cref="Widgets.Setting.ThemeOverrides"/>) in place of its
     /// values, or this theme itself when the widget has none.
     /// </summary>
@@ -75,7 +85,13 @@ public sealed class Theme
             }
         }
 
-        Set("fontFamily", v => { copy.FontFamily = v; copy.FontFile = null; });
+        // A font given by its address (see IsFontAddress) leaves the widget in the theme's font.
+        if (Get("fontFamily") is { } font && !IsFontAddress(font))
+        {
+            copy.FontFamily = font;
+            copy.FontFile = null;
+            changed = true;
+        }
         if (Get("fontWeight") is { } weight && weight != Widgets.Setting.FromTheme)
         {
             copy.FontWeight = weight;
@@ -133,7 +149,8 @@ public sealed class Theme
             }
         }
 
-        return new FontFamily(settings.FontFamily + ", Segoe UI");
+        // A layout saved before imports checked font names, or edited by hand, may still have an address here.
+        return new FontFamily(IsFontAddress(settings.FontFamily) ? "Segoe UI" : settings.FontFamily + ", Segoe UI");
     }
 
     private static FontWeight ParseWeight(string? weight)

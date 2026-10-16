@@ -38,8 +38,9 @@ public sealed record GalleryIndex(IReadOnlyList<GalleryEntry> Layouts, IReadOnly
 /// The shared layout gallery: an <c>index.json</c> listing layouts and themes, the layouts, and the themes in a
 /// <c>themes</c> folder, in one web folder (the <c>gallery</c> folder of the Impious Bonum repository unless settings
 /// say otherwise). Everything in it comes from other people, so names are checked before they become addresses, sizes
-/// are capped, packages are read with <see cref="LayoutPackage.Read(Stream, string)"/>'s safety rules, and themes are
-/// checked by <see cref="OpenTheme"/>.
+/// are capped, layouts are read with <see cref="LayoutPackage.Read(Stream, string)"/>'s and
+/// <see cref="LayoutPackage.FromLayoutJson"/>'s safety rules (before they're shown, too), and themes are checked by
+/// <see cref="OpenTheme"/>.
 /// </summary>
 public static class Gallery
 {
@@ -188,9 +189,7 @@ public static class Gallery
                 throw new InvalidDataException($"'{key}' should be {(number ? "a number" : "text")}.");
             }
         }
-        // A font's name, not a place to fetch one from: WPF reads "file://server/fonts/#Name" as a font at that address.
-        if (ThemeLibrary.GetString(theme, "fontFamily") is { } font && font.IndexOfAny(['/', '\\', '#', ':']) >= 0)
-            throw new InvalidDataException("'fontFamily' should be the name of a font, such as Segoe UI.");
+        // Among them a font given by a place to fetch it from rather than its name (see Theme.IsFontAddress).
         if (LayoutValidator.Validate(new LayoutDocument { Theme = theme }).FirstOrDefault() is { } problem)
             throw new InvalidDataException(problem.StartsWith("Theme: ", StringComparison.Ordinal) ? problem["Theme: ".Length..] : problem);
         return theme;

@@ -174,6 +174,8 @@ A layout from someone else could have a harmless-looking button that runs any pr
 
 An `.ibl` file is a zip of `layout.json`, `manifest.json` and an `assets` folder. Imports only take the layout and the font (`.ttf`, `.otf`) and images it names, reject a file with `..` or absolute paths in it, and cap sizes (1 MB for the layout, 50 MB per file).
 
+A font has to be given by its name, such as `Segoe UI`. A font "name" that's really an address, such as `file://server/fonts/#Name`, would have Windows reach out to that PC as soon as the layout is drawn, and send it your sign-in, so importing a layout, or picking one in the gallery, leaves it out of the theme and widgets and tells you; the theme's font is used instead. One already in a layout, saved before this check or typed in by hand, is drawn in another font and listed as a problem in the editor.
+
 ### Layout gallery
 
 The *Gallery* page lists ready-made layouts, each with its size, how many widgets it has and a description. Under

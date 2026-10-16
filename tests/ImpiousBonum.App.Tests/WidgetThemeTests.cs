@@ -83,6 +83,50 @@ public sealed class WidgetThemeTests
         Assert.Contains("'track'", issue);
     }
 
+    [Theory]
+    [InlineData("Segoe UI", false)]
+    [InlineData("Cascadia Mono, Consolas", false)]
+    [InlineData(null, false)]
+    [InlineData("file://nas/fonts/#Evil", true)]
+    [InlineData("\\\\nas\\fonts\\#Evil", true)]
+    [InlineData("C:\\Fonts\\#Evil", true)]
+    [InlineData("./#Evil", true)]
+    [InlineData("pack://application:,,,/#Evil", true)]
+    public void Fonts_given_by_an_address_are_told_from_fonts_names(string? font, bool address) => Assert.Equal(address, Theme.IsFontAddress(font));
+
+    [Fact]
+    public void A_font_name_that_is_an_address_is_drawn_in_another_font()
+    {
+        Sta.Run(() =>
+        {
+            // A layout saved before imports checked, or edited by hand: drawing with it would fetch the font from that PC.
+            var theme = Theme.From(new ThemeSettings { FontFamily = "Consolas" });
+            Assert.Same(theme, theme.WithOverrides(new JsonObject { ["fontFamily"] = "file://nas/fonts/#Evil" }));
+            var own = theme.WithOverrides(new JsonObject { ["fontFamily"] = "\\\\nas\\fonts\\#Evil", ["foreground"] = "#FF0000" });
+            Assert.StartsWith("Consolas", own.FontFamily.Source);
+
+            Assert.Equal("Segoe UI", Theme.From(new ThemeSettings { FontFamily = "file://nas/fonts/#Evil" }).FontFamily.Source);
+        });
+    }
+
+    [Fact]
+    public void The_validator_names_fonts_that_are_addresses()
+    {
+        var layout = JsonSerializer.Deserialize<LayoutDocument>(
+            """
+            { "theme": { "fontFamily": "file://nas/fonts/#Evil" },
+              "widgets": [
+                { "type": "clock", "x": 0, "y": 0, "width": 100, "height": 50, "fontFamily": "\\\\nas\\fonts\\#Evil" },
+                { "type": "clock", "x": 0, "y": 50, "width": 100, "height": 50, "fontFamily": "Cascadia Mono, Consolas" }
+            ] }
+            """,
+            JsonDefaults.Options)!;
+
+        Assert.Equal(
+            ["Theme: 'fontFamily' should be the name of a font, such as Segoe UI.", "Widget 1 (clock): 'fontFamily' should be the name of a font, such as Segoe UI."],
+            LayoutValidator.Validate(layout));
+    }
+
     private static Color Text(Widget widget)
     {
         var block = Descendants(widget).OfType<TextBlock>().First(t => t.Text == "Hi");
