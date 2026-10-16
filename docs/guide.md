@@ -7,7 +7,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
-- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
+- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
 - [Command line](#command-line)
@@ -138,7 +138,7 @@ To put a picture behind the widgets, add `"backgroundImage": "C:\\Pictures\\wall
 
 ### Sharing layouts
 
-*Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file, background image and image widgets' pictures inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor's *Layouts ▾*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual.
+*Layouts ▾ → Export…* in the editor saves the layout you're editing as one `.ibl` file, with its font file, background image and image widgets' pictures inside, so it works on another PC. A layout using one of your saved themes takes the theme's values with it; built-in themes stay as names. *Import…* (in the editor's *Layouts ▾*) adds it to your saved layouts, asking before replacing one with the same name. The font and image go in `layouts\<name>\` and are removed when no layout uses them any more. Metrics the other PC doesn't have, such as a particular sensor, show `—` as usual. A [photo frame](#photo-frame)'s folder isn't exported: it stays on your PC, and whoever imports the layout chooses their own.
 
 A layout from someone else could have a harmless-looking button that runs any program, so if it has buttons that open something, the import lists what they'd open and asks whether to keep them or clear them.
 
@@ -655,6 +655,33 @@ The *Shape* widget is a rounded panel, a circle or a divider line, for grouping 
 `track` and `background` work as colour names everywhere, like `foreground`, `secondary`, `accent`, `warning` and `critical`.
 
 Exported layouts carry their image widgets' pictures, like the background image and font.
+
+### Photo frame
+
+The *Photo frame* widget (`photos`) is a slideshow of the pictures in a folder, like a digital photo frame on the
+dashboard. In the editor, choose the folder with *Browse…* beside *Folder*. It shows the PNG, JPG, GIF, BMP and TIFF
+files there, and in the folders inside it unless you turn off *Include subfolders*. Each photo shows for *Seconds per
+photo* (30 to start with) and then fades into the next; tap the frame to move on straight away. *Order* is *shuffle*
+(every photo once, in a random order, before any comes round again), *name* (A to Z, with IMG2 before IMG10, as
+Explorer sorts them) or *date* (oldest first, by when the files last changed).
+
+<p align="center"><img src="images/widgets/photos.png" width="600" alt="A photo of a lake at dusk below hills, with rounded corners and 14 August 2026 along the bottom, beside the time and the date"></p>
+
+*Fit* is *fill*, which covers the frame and crops the edges, or *fit*, which shows the whole photo, with the rounded
+corners and caption on the photo itself. *Caption* puts the photo's file name, or the date it was taken, along the
+bottom over a shade of the theme's background, so it can be read over any photo. The date is the one the camera
+recorded, or else the file's, in the *Date format* you choose. Photos taken with the camera on its side show the right
+way up.
+
+It stays light however big your photos are: only the photo on show and the next one are read, each at about the size
+it's shown. Files that turn out not to be pictures, or can't be read, are passed over. The folder is looked at again
+every five minutes, so photos you add turn up and ones you delete stop showing. A folder with more than 10,000 pictures
+in it shows the first 10,000 found. While the dashboard is hidden (over a fullscreen game, say, or on a page that isn't
+showing) the slideshow waits and reads nothing. The tablet view moves on by itself, without the fade.
+
+The folder is a place on your PC, so it stays there: exported layouts and layouts in the gallery leave it out, and
+whoever adds the layout chooses a folder of their own. Until it has a folder, the frame is empty on the dashboard and
+says *Choose a folder* in the editor.
 
 ## Automatic behaviour
 
