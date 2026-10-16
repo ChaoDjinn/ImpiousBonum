@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
@@ -29,8 +29,9 @@ Settings and layouts live in `%AppData%\ImpiousBonum`:
 
 - `layouts\<name>.json`: your saved layouts (canvas size, theme and widgets), one file each. The dashboard shows one at a time; saved changes to it apply immediately. Upgrading from a version with a single `layout.json` moves it to `layouts\Default.json`, hand edits and all.
 - `themes\<name>.json`: your saved themes (font, colours, gradients, glow and background), which any layout can use by name.
-- `settings.json`: the weather location and units (`weatherLocation`, `weatherUnits`), [more places](#more-places) for the weather (`weatherPlaces`), [air quality and pollen](#air-quality-and-pollen) (`airQuality`, `airQualityScale`), [severe weather warnings](#severe-weather-warnings) (`weatherWarnings`, `weatherWarningsNotify`, `metOfficeArea`), [pages](#pages) (`swipePages`, `rotatePagesSeconds`, `pages`), [alerts](#alerts) (`alerts`), [custom data](#custom-data) (`customData`), the [schedule](#schedule) (`schedule`, `scheduleEnabled`, `holidayThemes`), [dimming when away](#dimming) (`awayDimMinutes`, `awayBrightness`), which monitor, how the window behaves (`fill`, `area`, `locked`, `clickThrough`, `alwaysOnTop`, `hideOverFullscreen`), which layout (`activeLayout`), ping host, the tablet view (`tabletView`, `tabletPort`, `tabletToken`, `tabletButtons`), a [USB screen](#usb-screens) (`usbScreen`), [hotkeys](#hotkeys) (`hotkeys`), [calendars](#calendar) (`calendars`), [news feeds](#news) (`newsFeeds`), [logging](#logging) (`logging`), [game layouts](#game-layouts) (`gameLayouts`, `gameLayoutsEnabled`), [session recaps](#session-recaps) (`sessionRecaps`), the [gallery](#layout-gallery)'s address (`galleryAddress`), `hardwareRendering` (off by default to save memory).
+-
 - `claude-usage.json`: the plan usage Claude Code last reported (see [Claude usage](#claude-usage)).
+- `energy.json`: the energy your PC has used today and this month so far, so a restart carries on from it (see [Energy use](#energy-use)).
 - `dashboard.log`: startup, update checks and any errors. If something goes wrong, this is the file to attach to an issue (*General* → *Settings folder*, or *About and updates* → *Report a problem*).
 
 ### The window and the tray menu
@@ -46,10 +47,12 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | *Pages and schedule* | Swiping and turning between layouts, and what shows when (see [Pages](#pages) and [Schedule](#schedule)) |
 | *Game layouts* | Games linked to a layout or theme, and session recaps (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
 | *Sensors* | Whether the sensor service is running, installing, updating or removing it, and which app the FPS reading follows (see [the sensor service](#sensor-service-temperatures-fans-power-fps)) |
+| *Energy* | Your PC's power now and the energy it's used today and this month, the price and currency for what that costs, the allowance for the parts nothing measures, and Great Britain's grid carbon intensity (see [Energy use](#energy-use)) |
 | *Weather* | The location, more places for the weather widget to move between, the units, air quality and pollen, severe weather warnings, and turning the weather off (see [Weather](#weather)) |
 | *Calendars*, *News feeds* | The links the agenda and news widgets read (see [Calendar](#calendar) and [News](#news)) |
 | *Claude usage* | Whether Claude Code is reporting, and connecting it (see [Claude usage](#claude-usage)) |
 | *Custom data* | Your own metrics from web addresses and commands (see [Custom data](#custom-data)) |
+| *Status checks* | Whether your own servers and services are up (see [Status checks](#status-checks)) |
 | *Alerts*, *Hotkeys*, *Logging* | See [Alerts](#alerts), [Hotkeys](#hotkeys) and [Logging](#logging) |
 | *General* | *Start with Windows*, drawing with the graphics card, and the settings folder and `dashboard.log` |
 | *About and updates* | The version, checking for and installing updates, what's new, this guide and the widget reference for your version, *Report a problem*, and *Details* to copy into a problem report |
@@ -77,7 +80,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="images/default-layout.svg" alt="Map of the default layout: CPU, GPU and memory graphs, CPU and GPU temperatures and the frame rate, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Twenty-two widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `weather` ([Weather](#weather)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Twenty-three widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `drives`, `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `weather` ([Weather](#weather)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
 
 <table>
   <tr>
@@ -214,6 +217,8 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `fps.frametime`, `fps.frametime.max`, `fps.low1`, `fps.low01` | Sensor service, for the same app: average frame time, the slowest frame in the last second, and the 1% and 0.1% lows over the last 30 seconds (see [Frame times](#frame-times)) |
 | `hw/...` (every sensor LibreHardwareMonitor finds: clocks, voltages, fans, per-core loads, …) | Sensor service. Run `ImpiousBonum.Sensors.exe list` to see the ids on your machine |
 | `sensors.status` | Text describing the sensor service connection |
+| `power.total`, `energy.today`, `energy.month`, `energy.cost.today`, `energy.cost.month` | The whole PC's power (the sensor service's CPU and graphics card power, and an allowance for the rest), the energy it's used today and this month, and what that costs at your price (see [Energy use](#energy-use)) |
+| `grid.carbon`, `grid.carbon.index`, `grid.carbon.best`, `grid.carbon.region` | Great Britain's grid carbon intensity from NESO, every 30 minutes, once *Energy* → *Grid carbon intensity* is on (see [Grid carbon intensity](#grid-carbon-intensity)) |
 | `claude.session`, `claude.week`, `claude.session.resets`, `claude.week.resets`, `claude.status` | Your Claude plan's usage limits, from Claude Code's status line (see [Claude usage](#claude-usage)) |
 
 ### Sensor service (temperatures, fans, power, FPS)
@@ -250,6 +255,33 @@ Average FPS hides stutter: a game can average 120 FPS and still hitch. The senso
 <p align="center"><img src="images/widgets/frame-times.png" width="600" alt="Stat tiles of the frame rate at 145 and the 1% and 0.1% lows, each with a trend line and its range, and a graph of the average and slowest frame times"></p>
 
 A sensor service from before 0.8 doesn't send these; *Sensors* → *Update…* brings it up to date.
+
+### Energy use
+
+What your PC is using and what it costs, as readings for any widget. The *Energy* page shows them too, and is where you set your price.
+
+- **Power now:** `power.total`, in watts: the CPU's package power and the graphics card's, from the [sensor service](#sensor-service-temperatures-fans-power-fps), plus an allowance for the parts nothing measures (the motherboard, memory, drives and fans). The allowance is 50 W, which suits most desktops; *Energy* → *Everything else* changes it. Monitors, speakers and anything else plugged in aren't counted, and nor is what the power supply itself loses (often a tenth or so): raise the allowance if you'd like that counted.
+- **Energy used:** `energy.today`, in kWh since midnight, and `energy.month`, since the 1st, added up from `power.total` every second.
+- **What it costs:** `energy.cost.today` and `energy.cost.month`, at the price you type under *Energy* → *Price per kWh*: `0.25`, say, or `24.5p` in pence or cents. They show your region's currency symbol where your region puts it, such as *£0.48*; *Currency symbol* changes it. Without a price they have no reading. The cost is the energy so far at the price now, so a new price applies to the whole day and month. Standing charges aren't included.
+
+Without the sensor service there's no power reading, so `power.total` shows a dash and nothing is counted; the *Energy* page says why. The CPU's power needs the PawnIO driver, as CPU temperatures do: without it, only the graphics card's and the allowance are counted, and the page says so. Some built-in graphics don't report their power, and then it's the CPU's and the allowance.
+
+Energy is only counted while Impious Bonum is running: time it isn't, or the PC is asleep, isn't counted. Today's and this month's totals are kept in `energy.json` in the settings folder, saved every minute, so a restart carries on from them. Today's starts again at midnight, and the month's on the 1st.
+
+For example, `{power.total} · {energy.today} today ({energy.cost.today})` in a text widget reads *433 W · 1.92 kWh today (£0.48)*, and a `graph` of `power.total` shows the power climb when a game starts.
+
+#### Grid carbon intensity
+
+Turn on *Energy* → *Grid carbon intensity* to see how much CO₂ Great Britain's electricity is giving off: the more wind and sun, the less. It's only for Great Britain (England, Scotland and Wales), as Northern Ireland's grid is separate, and it's off until you turn it on.
+
+- `grid.carbon`: the carbon intensity now, in grams of CO₂ for each kWh, e.g. *142 gCO₂/kWh*.
+- `grid.carbon.index`: its level: *Very low*, *Low*, *Moderate*, *High* or *Very high*.
+- `grid.carbon.best`: when it'll be lowest in the next 24 hours, e.g. *Lowest around 03:30*, or *Lowest now*: a good time for a long game update, or the washing machine.
+- `grid.carbon.region`: whose figures they are: *Great Britain*, or your region's name.
+
+The figures are for Great Britain as a whole unless you give *Your area*: the first half of your postcode, such as `LS1`, for your region's (Yorkshire, say). Type the whole postcode if you like; only the first half is kept.
+
+Every 30 minutes, the next 24 hours' forecast comes from the [Carbon Intensity API](https://carbonintensity.org.uk), run by NESO, Great Britain's National Energy System Operator (formerly National Grid ESO). Nothing about you is sent but the first half of your postcode, if you give it, and nothing at all while it's off. Between fetches the readings move on through the forecast, half an hour at a time. If it can't be reached it tries again five minutes later, and the last figures stay for up to three hours. Carbon intensity forecasts by NESO, from carbonintensity.org.uk, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ### Weather
 
@@ -399,6 +431,57 @@ Some examples:
 | A JSON API | Web address `https://api.github.com/repos/<owner>/<repo>`, fields `stars = stargazers_count` and `issues = open_issues_count` |
 
 Sources are stored in `settings.json` (`customData`) on this PC and never in a layout, so a layout from someone else can't add a command to run. Headers, tokens included, are stored there as plain text.
+
+### Status checks
+
+The `status` widget shows whether your own servers and services are up: a NAS, Pi-hole, Plex, the router, a website.
+Each has a dot in the accent colour while it's up and the critical colour while it's down, its name, and how fast it
+answered, as a list or a grid.
+
+<p align="center"><img src="images/widgets/status.png" width="600" alt="Four status checks: the router, the NAS and Pi-hole up with orange dots, answering in 2, 4 and 3 ms and up for 12 days, 6 days and 3 hours, and Plex down in red for 12 minutes; beside them, 1 down: Plex, and 3 of 4 up"></p>
+
+Add them on the *Status checks* page (or select the widget in the editor → *Add a check…*). Each has:
+
+- **Name:** what the dashboard calls it, such as *NAS*.
+- **Address:** a host name or IP address (`nas.local`, `192.168.1.10`), which is pinged, or a web address
+  (`http://pi.hole/admin`, `https://nas.local:5001`), whose page is asked for. A page counts as up when it loads (an
+  answer in the 200s or 300s); *401 Unauthorized* and the like count as down, so for a service behind a sign-in, use a
+  page that doesn't need one. To check a port, give its web address (`http://nas:8080`).
+- **Page must say:** for a web address, a word the page has to contain, in any case, to count as up, so a page that
+  loads but shows an error doesn't. A move to another page of the same server is followed (from `/` to
+  `/web/index.html`, say); a move to another site isn't, and then there's no page to find the word on.
+- **Accept its own certificate:** for an https address whose certificate Windows doesn't trust, as home servers often
+  have their own.
+- **Every:** how often to check it: every 60 seconds unless you say otherwise, and 10 at the least.
+
+*Check now* checks it once and says what it found. A ping waits 2 seconds for its reply and a page 10. One that fails
+is checked again 10 seconds later, and only counts as down if that fails too, so one lost answer doesn't.
+
+Each check has readings any widget can show, listed in the metric picker under *Status: NAS* and so on. The name in
+the id is the check's, in lower case with a hyphen for spaces and punctuation (*Pi-hole* is `status.pi-hole.…`), so
+renaming a check changes its readings.
+
+| Reading | |
+|---|---|
+| `status.<name>.up` | 1 while it's up, 0 while it's down |
+| `status.<name>.ms` | How long it took to answer, while it's up |
+| `status.<name>.since` | How long it's been up or down, e.g. *3 h* or *12 min*, counted from when Impious Bonum first checked it |
+| `status.up`, `status.down` | How many are up, and how many down |
+| `status.summary` | *All up*, or which are down: *1 down: Plex* |
+
+A widget can show some checks and not others: *Checks* works like the [news widget's feeds](#news), so a check's
+name can't have a comma in it or be `all`. *Columns* makes a grid, and *Show response time* and *Show how long* say
+what's beside each name. A check that's down says *Down* in words as well as colour.
+
+**To be told when one goes down,** add an [alert](#alerts) on `status.<name>.up` below 1. *Alert…* beside the check
+sets one up, with a notification saying *NAS is down*; it needn't wait any seconds, as a check is only down once it
+has failed twice. With *Flash a banner on the dashboard*, the banner stays until the check is back. To be told when
+it's back as well, add a second alert on `status.<name>.up` above 0; that one also goes off soon after Impious Bonum
+starts, when it first finds the check up.
+
+Nothing is checked until you add a check, and only the addresses you add are contacted: a ping, or a request for the
+page, as often as you say. Checks are kept in `settings.json` (`statusChecks`) on this PC and never in a layout, so a
+layout from someone else can't make the dashboard contact anything.
 
 ### Claude usage
 
@@ -604,7 +687,7 @@ says *Choose a folder* in the editor.
 
 ### Alerts
 
-Warning colours only help if you're looking. An alert tells you when a reading stays out of bounds: the GPU hot spot above 95 °C for 10 seconds, a drive over 95% full, a frame rate below 30, a [custom data](#custom-data) source reporting an error.
+Warning colours only help if you're looking. An alert tells you when a reading stays out of bounds: the GPU hot spot above 95 °C for 10 seconds, a drive over 95% full, a frame rate below 30, a [custom data](#custom-data) source reporting an error, one of your [servers](#status-checks) going down.
 
 *Alerts* → *Add…* picks the metric (the window shows its reading now), *Above* and/or *Below* a number, for how many seconds (so a brief spike doesn't count), an optional message (a template, so `GPU is cooking: {gpu.hotspot}` shows the reading), and what happens:
 
