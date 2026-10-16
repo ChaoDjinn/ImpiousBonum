@@ -7,7 +7,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [weather](#weather), [calendar](#calendar), [news](#news), [custom data](#custom-data), [Claude usage](#claude-usage)
-- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
+- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [USB screens](#usb-screens)
 - [Command line](#command-line)
@@ -473,6 +473,25 @@ The *Reset* button underneath puts a countdown or stopwatch back to zero. A runn
 another page, switch layouts or edit the layout: timers with the same label, mode and length share one clock, so a
 countdown on two pages is the same countdown. Timers start again from scratch when the app restarts. The notification
 only comes while the timer is on screen; if it's on a page you're not showing, it comes when you next show it.
+
+### Countdowns
+
+The `countdowns` widget lists how long it is until the days you're looking forward to, soonest first: birthdays,
+holidays, a game's release, a trip. In the editor, add entries to *Events*, each with a label and a date, written
+month first like the timer's:
+
+- A month and day with no year, such as `12-25` or `03-14 09:00`, comes round every year. On the day it says *Today*,
+  and the day after it starts counting to next year's.
+- A date, such as `2026-12-25` or `2026-12-25 18:00`, happens once. It says *Today* on the day, then leaves the list.
+- A time of day, such as `23:30`, counts to the next one, so it's always today or tomorrow.
+
+Each row shows *69 days*, *Tomorrow* or *Today*; set *How long* to `time` for the days, hours and minutes instead, such
+as *69d 02:13*. Events that are today are in the accent colour (or your own *Today's colour*). The order you add them
+in doesn't matter: the list always shows the soonest first. *Rows* is the most it shows, and with *Shrink to fit* on,
+rows that don't fit are left out rather than cut in half. A *Heading* can go above the list, and *When there's
+nothing* is shown once everything has gone. A date it can't read says *Unknown date* in red, at the bottom.
+
+<p align="center"><img src="images/widgets/countdowns.png" width="600" alt="Two lists of countdowns, soonest first: the days until Halloween, Bonfire Night, a birthday, Christmas and New Year, and the days, hours and minutes until bedtime (in orange, as it's today), the fireworks, Christmas and a flight"></p>
 
 ### Now playing and buttons
 

@@ -24,6 +24,11 @@ Themes for the holidays, eight more layouts in the gallery, and countdowns that 
 **Countdowns every year**
 - A timer's *Until* can be a month and day with no year, such as `12-25` or `10-31 18:00`, which comes round every year: on the day it shows your *When done* text (*Merry Christmas!*, say) until midnight, then starts counting down to next year's.
 
+**Countdowns widget**
+- A new *Countdowns* widget, under *Time and calendar*, lists how long it is until the days you're looking forward to, soonest first: birthdays, holidays, a game's release, a trip. Each row shows its label and *69 days*, *Tomorrow* or *Today*, or the days, hours and minutes (*69d 02:13*).
+- A month and day such as `12-25` comes round every year, starting again the day after; a date such as `2026-12-25 18:00` leaves the list once its day is over. The ones that are today are in the accent colour.
+- It can have a heading, and says *Nothing coming up* (or your own words) when there's nothing left to count down to.
+
 ## 0.15.0
 
 Alerts that do something when they go off, the next event from just one calendar, and more about your network and battery.
