@@ -17,8 +17,8 @@ public sealed record WidgetDescriptor(
     IReadOnlyList<SettingDescriptor> Settings,
     Func<WidgetSettings, Theme, Widget> Create)
 {
-    /// <summary>Keys every widget has, handled by the canvas rather than the widget.</summary>
-    public static readonly IReadOnlyList<string> GeometryKeys = ["type", "x", "y", "width", "height"];
+    /// <summary>Keys every widget has, handled by the canvas rather than the widget, and the editor's group it can be in.</summary>
+    public static readonly IReadOnlyList<string> GeometryKeys = ["type", "x", "y", "width", "height", "group"];
 
     public SettingDescriptor? Find(string key) => Settings.FirstOrDefault(s => s.Key == key);
 

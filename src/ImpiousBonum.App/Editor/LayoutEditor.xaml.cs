@@ -52,7 +52,12 @@ public partial class LayoutEditor : UserControl
     private readonly MenuItem _deleteLayoutItem;
     private readonly MenuItem _bringForwardItem;
     private readonly MenuItem _sendBackItem;
+    private readonly MenuItem _groupItem;
+    private readonly MenuItem _ungroupItem;
+    private readonly MenuItem _renameGroupItem;
     private readonly MenuItem _alignListItem;
+    /// <summary>What each of the list's rows is, top first.</summary>
+    private List<WidgetRows.Row> _rows = [];
     /// <summary>Every Align menu item, in both menus, with how many widgets it needs selected.</summary>
     private readonly List<(MenuItem Item, int Needs)> _alignItems = [];
     private bool _syncingList;
@@ -127,10 +132,19 @@ public partial class LayoutEditor : UserControl
         // A widget's menu in the list (right-clicking one selects it, or keeps the selection it's in), with the keyboard's
         // ways of doing the same.
         var widgetMenu = new ContextMenu();
-        _bringForwardItem = MenuItemFor("Bring forward", "Draw on top of the next widget", () => _session.MoveSelected(+1), "Ctrl+]");
-        _sendBackItem = MenuItemFor("Send back", "Draw behind the previous widget", () => _session.MoveSelected(-1), "Ctrl+[");
+        _bringForwardItem = MenuItemFor("Bring forward", "Draw on top of the next widget", () => MoveSelectedRow(-1), "Ctrl+]");
+        _sendBackItem = MenuItemFor("Send back", "Draw behind the previous widget", () => MoveSelectedRow(+1), "Ctrl+[");
         widgetMenu.Items.Add(_bringForwardItem);
         widgetMenu.Items.Add(_sendBackItem);
+        widgetMenu.Items.Add(new Separator());
+        _groupItem = MenuItemFor("Group", "Select two or more widgets to group them", () => _session.GroupSelected(), "Ctrl+G");
+        _ungroupItem = MenuItemFor("Ungroup", "Break up the group, leaving its widgets where they are", _session.UngroupSelected, "Ctrl+Shift+G");
+        _renameGroupItem = MenuItemFor("Rename group…", "Select a group to rename it", RenameGroup);
+        foreach (var item in new[] { _groupItem, _ungroupItem, _renameGroupItem })
+        {
+            ToolTipService.SetShowOnDisabled(item, true);
+            widgetMenu.Items.Add(item);
+        }
         widgetMenu.Items.Add(new Separator());
         widgetMenu.Items.Add(MenuItemFor("Duplicate", null, _session.DuplicateSelected, "Ctrl+D"));
         widgetMenu.Items.Add(MenuItemFor("Delete", null, _session.DeleteSelected, "Del"));
@@ -140,7 +154,7 @@ public partial class LayoutEditor : UserControl
         AddAlignItems(_alignListItem.Items);
         widgetMenu.Items.Add(_alignListItem);
         WidgetList.ContextMenu = widgetMenu;
-        DragReorder.Attach(WidgetList, (from, to) => _session.MoveWidget(RowOf(from), RowOf(to)));
+        DragReorder.Attach(WidgetList, MoveRow);
 
         session.Changed += (_, change) =>
         {
@@ -254,13 +268,21 @@ public partial class LayoutEditor : UserControl
         // A new list loses the row that had focus; someone using the keyboard carries on from the selected widget.
         var focused = WidgetList.IsKeyboardFocusWithin;
         _syncingList = true;
-        WidgetList.ItemsSource = _session.Document.Widgets.Select(ListEntry.Of).Reverse().ToList();
+        _rows = WidgetRows.For(Groups());
+        WidgetList.ItemsSource = _rows.Select(row => row.IsGroup
+            ? new ListEntry(row.Group!, $" · {_session.MembersOf(row.Group!).Count} widgets") { Row = row }
+            : ListEntry.Of(_session.Document.Widgets[row.Widget]) with { Row = row }).ToList();
         _syncingList = false;
         SyncListSelection();
         if (focused && WidgetList.SelectedIndex >= 0)
         {
             WidgetList.UpdateLayout();
+            // Focused after a key without Ctrl (Enter in the rename prompt, say), a row selects itself alone, as an arrow key
+            // would make it; so the list isn't listened to while it moves, then shows the selection again.
+            _syncingList = true;
             (WidgetList.ItemContainerGenerator.ContainerFromIndex(WidgetList.SelectedIndex) as UIElement)?.Focus();
+            _syncingList = false;
+            SyncListSelection();
         }
     }
 
@@ -274,43 +296,98 @@ public partial class LayoutEditor : UserControl
     private void SyncListSelection()
     {
         _syncingList = true;
+        // The selected widgets' rows, the first picked first so the list agrees about which that was. A group's own row
+        // stands for its widgets only while it's being clicked: their rows show them selected, so each can be taken out.
+        var rows = _session.Selection.Select(RowOf).Where(row => row >= 0 && row < WidgetList.Items.Count).ToList();
         // Left alone when it already matches, such as when the change came from clicking in the list itself.
-        if (!ListSelection().SequenceEqual(_session.Selection))
+        if (!WidgetList.SelectedItems.Cast<object>().Select(WidgetList.Items.IndexOf).SequenceEqual(rows))
         {
-            // The first picked goes first, so the list agrees about which that was.
             WidgetList.UnselectAll();
-            WidgetList.SelectedIndex = _session.SelectedIndex < 0 ? -1 : RowOf(_session.SelectedIndex);
-            foreach (var index in _session.Selection.Skip(1).Where(i => i < WidgetList.Items.Count))
-                WidgetList.SelectedItems.Add(WidgetList.Items[RowOf(index)]);
+            WidgetList.SelectedIndex = rows.Count > 0 ? rows[0] : -1;
+            foreach (var row in rows.Skip(1))
+                WidgetList.SelectedItems.Add(WidgetList.Items[row]);
         }
         if (_session.SelectedIndex >= 0)
             WidgetList.ScrollIntoView(WidgetList.SelectedItem);
         _syncingList = false;
     }
 
-    /// <summary>The widgets selected in the list, in the order they were picked.</summary>
-    private IEnumerable<int> ListSelection() => WidgetList.SelectedItems.Cast<object>().Select(item => RowOf(WidgetList.Items.IndexOf(item)));
+    /// <summary>The widgets selected in the list, in the order they were picked; a group's row is its widgets.</summary>
+    private IEnumerable<int> ListSelection() => WidgetList.SelectedItems.Cast<object>()
+        .Select(WidgetList.Items.IndexOf)
+        .Where(row => row >= 0 && row < _rows.Count)
+        .SelectMany(row => _rows[row] is { IsGroup: true, Group: { } group } ? _session.MembersOf(group) : [_rows[row].Widget])
+        .Distinct();
 
-    /// <summary>
-    /// The list's row for a widget, or the widget for a row: the list shows the one drawn on top first, the other way up
-    /// from the layout's drawing order.
-    /// </summary>
-    private int RowOf(int index) => _session.Document.Widgets.Count - 1 - index;
+    /// <summary>The list's row for a widget.</summary>
+    private int RowOf(int index) => _rows.FindIndex(row => row.Widget == index);
+
+    /// <summary>The group each widget is in, back to front.</summary>
+    private List<string?> Groups() => [.. Enumerable.Range(0, _session.Document.Widgets.Count).Select(_session.GroupOf)];
 
     private void OnListSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_syncingList)
-            _session.Select(ListSelection());
+        if (_syncingList)
+            return;
+        _session.Select(ListSelection());
+        // A group's row clicked selects its widgets, which the session may already have had selected.
+        if (WidgetList.SelectedItems.Cast<ListEntry>().Any(entry => entry.IsGroup))
+            SyncListSelection();
+    }
+
+    /// <summary>
+    /// Moves a row of the list to another place (take it out at <paramref name="from"/>, put it in at <paramref name="to"/>):
+    /// a widget, into or out of a group by where it goes, or a group with all its widgets.
+    /// </summary>
+    private void MoveRow(int from, int to)
+    {
+        if (from < 0 || from >= _rows.Count || WidgetRows.Move(Groups(), from, to) is not var (order, groups))
+            return;
+        var row = _rows[from];
+        _session.Restack(order, groups, row.IsGroup ? _session.MembersOf(row.Group!) : [row.Widget]);
+    }
+
+    /// <summary>Moves the selected widget's row up (-1, so drawn on top of the one above) or down (+1): bringing it forward or sending it back.</summary>
+    private void MoveSelectedRow(int step)
+    {
+        if (_session.Selection.Count != 1)
+            return;
+        var row = RowOf(_session.SelectedIndex);
+        if (row >= 0 && row + step >= 0 && row + step < _rows.Count)
+            MoveRow(row, row + step);
+    }
+
+    private void RenameGroup()
+    {
+        if (_session.SelectedGroup is not { } group)
+            return;
+        var name = NamePromptWindow.Ask(Owner, "Rename group", $"New name for \"{group}\"", group, n => _session.CheckGroupName(n, group));
+        if (name is not null)
+            _session.RenameGroup(group, name);
     }
 
     /// <summary>"Graph: CPU", "Text: {gpu.load}" — enough to tell widgets apart.</summary>
     private static string Describe(System.Text.Json.Nodes.JsonObject widget) =>
         ListEntry.Of(widget) is var entry && entry.Detail.Length > 0 ? $"{entry.Name}:{entry.Detail}" : entry.Name;
 
-    /// <summary>A row of the widget list: the widget type's name, then what tells it apart, e.g. "Graph" and " CPU".</summary>
+    /// <summary>
+    /// A row of the widget list: the widget type's name, then what tells it apart, e.g. "Graph" and " CPU"; or a group's
+    /// name and how many widgets it has.
+    /// </summary>
     internal sealed record ListEntry(string Name, string Detail)
     {
-        public string ToolTip => Detail.Length > 0 ? $"{Name}:{Detail}" : Name;
+        /// <summary>The row it is in the list; null for a widget described on its own.</summary>
+        public WidgetRows.Row? Row { get; init; }
+
+        public bool IsGroup => Row?.IsGroup == true;
+
+        public string ToolTip => IsGroup ? $"Group: {Name}{Detail}. Click to select them all." : Detail.Length > 0 ? $"{Name}:{Detail}" : Name;
+
+        /// <summary>A group's widgets are set in under its row.</summary>
+        public Thickness Indent => new(Row is { IsGroup: false, Group: not null } ? 18 : 0, 0, 0, 0);
+
+        /// <summary>A group's row has a folder before its name.</summary>
+        public Visibility GlyphVisibility => IsGroup ? Visibility.Visible : Visibility.Collapsed;
 
         // Each row is a widget of its own even when two read the same (a copy, say), so selecting one doesn't select both.
         public bool Equals(ListEntry? other) => ReferenceEquals(this, other);
@@ -618,10 +695,19 @@ public partial class LayoutEditor : UserControl
         foreach (var (item, needs) in _alignItems)
             item.IsEnabled = count >= needs;
         // Several widgets have no one place in the drawing order to move from.
-        _bringForwardItem.IsEnabled = count == 1 && _session.SelectedIndex < _session.Document.Widgets.Count - 1;
-        _sendBackItem.IsEnabled = count == 1 && _session.SelectedIndex > 0;
+        var row = count == 1 ? RowOf(_session.SelectedIndex) : -1;
+        _bringForwardItem.IsEnabled = row > 0;
+        _sendBackItem.IsEnabled = row >= 0 && row < _rows.Count - 1;
+        _groupItem.IsEnabled = count >= 2 && _session.SelectedGroup is null;
+        _ungroupItem.IsEnabled = _session.SelectionHasGroup;
+        _renameGroupItem.IsEnabled = _session.SelectedGroup is not null;
 
-        if (count > 1)
+        if (_session.SelectedGroup is { } group)
+        {
+            var r = EditGeometry.Bounds(_session.Selection.Select(i => LayoutSession.GeometryOf(_session.Document.Widgets[i])));
+            StatusText.Text = $"Group: {group} · {count} widgets · position {r.X:0}, {r.Y:0} · size {r.Width:0}×{r.Height:0} · click one again for it alone · Ctrl+Shift+G ungroups";
+        }
+        else if (count > 1)
         {
             var r = EditGeometry.Bounds(_session.Selection.Select(i => LayoutSession.GeometryOf(_session.Document.Widgets[i])));
             StatusText.Text = $"{count} widgets selected · position {r.X:0}, {r.Y:0} · size {r.Width:0}×{r.Height:0} together · drag one to move them all · arrows nudge (Shift for 10)";
@@ -676,10 +762,16 @@ public partial class LayoutEditor : UserControl
                 _session.DuplicateSelected();
                 break;
             case Key.OemCloseBrackets when ctrl:
-                _session.MoveSelected(+1);
+                MoveSelectedRow(-1);
                 break;
             case Key.OemOpenBrackets when ctrl:
-                _session.MoveSelected(-1);
+                MoveSelectedRow(+1);
+                break;
+            case Key.G when ctrl && shift:
+                _session.UngroupSelected();
+                break;
+            case Key.G when ctrl:
+                _session.GroupSelected();
                 break;
             case Key.Delete when !typing:
                 _session.DeleteSelected();

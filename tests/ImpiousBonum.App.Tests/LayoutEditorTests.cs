@@ -43,8 +43,8 @@ public sealed class LayoutEditorTests : IDisposable
 
             Assert.Null(editor.FindName("ForwardButton"));
             Assert.Null(editor.FindName("BackwardButton"));
-            Assert.Equal(["Bring forward", "Send back", "Duplicate", "Delete", "Align"], menu.Select(m => (string)m.Header));
-            Assert.Equal(["Ctrl+]", "Ctrl+[", "Ctrl+D", "Del", ""], menu.Select(m => m.InputGestureText));
+            Assert.Equal(["Bring forward", "Send back", "Group", "Ungroup", "Rename group…", "Duplicate", "Delete", "Align"], menu.Select(m => (string)m.Header));
+            Assert.Equal(["Ctrl+]", "Ctrl+[", "Ctrl+G", "Ctrl+Shift+G", null, "Ctrl+D", "Del", ""], menu.Select(m => m.InputGestureText));
             Assert.Equal((true, false), atTheBack);
             Assert.Equal("BAC", Order(session));
             Assert.Equal(1, session.SelectedIndex);
@@ -308,6 +308,101 @@ public sealed class LayoutEditorTests : IDisposable
             Assert.False(session.CanUndo);
         });
     }
+
+    [Fact]
+    public void Grouped_widgets_are_under_their_groups_row_which_selects_them_all()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            var session = new LayoutSession(ThreeWidgets());
+            var (editor, window) = Show(session, store);
+            var list = editor.WidgetList;
+
+            session.Select([2, 0]);
+            editor.HandleKey(Key.G, ModifierKeys.Control);
+            var rows = Rows(list);
+            var indents = list.Items.Cast<LayoutEditor.ListEntry>().Select(e => e.Indent.Left).ToList();
+            var status = editor.StatusText.Text;
+            // Clicking the group's row: its widgets' rows are the ones that show selected.
+            session.Select(-1);
+            list.SelectedItems.Add(list.Items[0]);
+            var fromRow = (session.SelectedGroup, Selected(list).Order().ToList());
+            editor.HandleKey(Key.G, ModifierKeys.Control | ModifierKeys.Shift);
+            var ungrouped = Rows(list);
+            window.Close();
+
+            Assert.Equal(["Group 1 · 2 widgets", "C", "A", "B"], rows);
+            Assert.Equal([0.0, 18, 18, 0], indents);
+            Assert.StartsWith("Group: Group 1 · 2 widgets", status);
+            Assert.Equal("Group 1", fromRow.SelectedGroup);
+            Assert.Equal([1, 2], fromRow.Item2);
+            Assert.Equal(["C", "A", "B"], ungrouped);
+        });
+    }
+
+    [Fact]
+    public void Moving_rows_takes_widgets_into_and_out_of_groups_and_groups_whole()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            var session = new LayoutSession(ThreeWidgets());
+            session.Select([1, 2]);
+            session.GroupSelected("W");
+            var (editor, window) = Show(session, store);
+            var list = editor.WidgetList;
+            ListBoxItem Row(int index) => (ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(index);
+
+            // [W] C B A: A up a place, between C and B, into the group.
+            DragReorder.Move(Row(3), -1);
+            var joined = Rows(list);
+            // The group's row down a place: there's nothing under it, so nowhere to go. Up instead, from the top: none.
+            var stuck = DragReorder.Move(Row(0), -1);
+            // C, the group's first, up a place: out above the group's row.
+            session.Select(2);
+            editor.HandleKey(Key.OemCloseBrackets, ModifierKeys.Control);
+            var left = Rows(list);
+            window.Close();
+
+            Assert.Equal(["W · 3 widgets", "C", "A", "B"], joined);
+            Assert.False(stuck);
+            Assert.Equal(["C", "W · 2 widgets", "A", "B"], left);
+            Assert.Equal("C", session.SelectedWidget!.GetString("text"));
+        });
+    }
+
+    [Fact]
+    public void Renaming_a_group_keeps_it_selected()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            var session = new LayoutSession(ThreeWidgets());
+            session.Select([0, 1, 2]);
+            session.GroupSelected("W");
+            var (editor, window) = Show(session, store);
+            var list = editor.WidgetList;
+            // Clicked on its row, so the list has focus, as when the rename is chosen from its menu.
+            Click(Descendants<TextBlock>((ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(0)).Last());
+            var before = session.Selection.Order().ToList();
+
+            session.RenameGroup("W", "Weather area");
+            Pump();
+            var after = session.Selection.Order().ToList();
+            window.Close();
+
+            Assert.Equal([0, 1, 2], before);
+            Assert.Equal([0, 1, 2], after);
+            Assert.Equal("Weather area", session.SelectedGroup);
+        });
+    }
+
+    /// <summary>What each row of the list says.</summary>
+    private static List<string> Rows(ListBox list) => [.. list.Items.Cast<LayoutEditor.ListEntry>().Select(e => e.IsGroup ? e.Name + e.Detail : e.Detail.Trim())];
 
     private static List<int> Selected(ListBox list) => [.. list.SelectedItems.Cast<object>().Select(list.Items.IndexOf)];
 

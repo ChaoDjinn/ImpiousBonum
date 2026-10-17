@@ -2,7 +2,7 @@
 
 <!-- Generated from the widget descriptors: ImpiousBonum.exe --widget-docs docs/widgets.md. Don't edit by hand. -->
 
-Every widget in a layout file has `type`, `x`, `y`, `width` and `height` (in canvas units), plus the settings below.
+Every widget in a layout file has `type`, `x`, `y`, `width` and `height` (in canvas units), plus the settings below. It can have a `group` too, the name of the editor's group it's in; the dashboard takes no notice of it.
 Anything left out uses its default.
 
 Templates are text with live values: `{metric.id}` or `{metric.id:spec}`, where spec can be a number format (`0.0`, `N0`),
