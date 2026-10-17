@@ -3,7 +3,9 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
-## Unreleased
+## 0.17.0
+
+Groups in the layout editor, a *Widgets* list that's the right way up, and a few smaller fixes.
 
 - The editor's *Widgets* list is the right way up: the widget at the top of the list draws on top of the others, as the note under the list now says, so dragging one up brings it forward. It used to be the other way round. Layouts aren't changed, only how the list shows them.
 - Group widgets in the editor: select two or more and press Ctrl+G (or right-click, *Group*), say a shape and the weather widgets on it. The group has its own row in the *Widgets* list with its widgets under it, and they stay together in the drawing order. Clicking one on the canvas selects the whole group, to move it as one, and clicking it again selects just that widget. Drag a widget into or out of a group in the list, or drag the group's row to move all of it. *Rename group*, *Ungroup* (Ctrl+Shift+G) and duplicating a whole group are in the list's right-click menu too. The dashboard looks the same; groups are only for editing.
