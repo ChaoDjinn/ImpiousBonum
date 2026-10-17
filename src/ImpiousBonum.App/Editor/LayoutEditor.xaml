@@ -116,8 +116,9 @@
                 <TextBlock DockPanel.Dock="Top" Text="Widgets" Style="{DynamicResource SectionHeading}" Margin="4,0,0,8" />
                 <TextBlock DockPanel.Dock="Bottom" Style="{DynamicResource NoteText}" Margin="4,10,0,0"
                            Text="The top of the list draws on top: drag a widget up or down to change the order, or into or out of a group. Ctrl+click or Shift+click to select more than one, then Ctrl+G to group them. Click empty canvas (or press Esc) for canvas and theme settings." />
+                <!-- Typing finds a widget (or group) by its name; without a path it went by the rows' record text, all "ListEntry". -->
                 <ListBox x:Name="WidgetList" SelectionMode="Extended" SelectionChanged="OnListSelectionChanged" ContextMenuOpening="OnListMenuOpening"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                         TextSearch.TextPath="Name" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <DockPanel Margin="{Binding Indent}" ToolTip="{Binding ToolTip}">

@@ -374,6 +374,33 @@ public sealed class LayoutEditorTests : IDisposable
         });
     }
 
+    [Fact]
+    public void Renaming_a_group_keeps_it_selected()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            var session = new LayoutSession(ThreeWidgets());
+            session.Select([0, 1, 2]);
+            session.GroupSelected("W");
+            var (editor, window) = Show(session, store);
+            var list = editor.WidgetList;
+            // Clicked on its row, so the list has focus, as when the rename is chosen from its menu.
+            Click(Descendants<TextBlock>((ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(0)).Last());
+            var before = session.Selection.Order().ToList();
+
+            session.RenameGroup("W", "Weather area");
+            Pump();
+            var after = session.Selection.Order().ToList();
+            window.Close();
+
+            Assert.Equal([0, 1, 2], before);
+            Assert.Equal([0, 1, 2], after);
+            Assert.Equal("Weather area", session.SelectedGroup);
+        });
+    }
+
     /// <summary>What each row of the list says.</summary>
     private static List<string> Rows(ListBox list) => [.. list.Items.Cast<LayoutEditor.ListEntry>().Select(e => e.IsGroup ? e.Name + e.Detail : e.Detail.Trim())];
 

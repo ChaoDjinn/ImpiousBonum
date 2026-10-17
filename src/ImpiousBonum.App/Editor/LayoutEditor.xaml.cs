@@ -277,7 +277,12 @@ public partial class LayoutEditor : UserControl
         if (focused && WidgetList.SelectedIndex >= 0)
         {
             WidgetList.UpdateLayout();
+            // Focused after a key without Ctrl (Enter in the rename prompt, say), a row selects itself alone, as an arrow key
+            // would make it; so the list isn't listened to while it moves, then shows the selection again.
+            _syncingList = true;
             (WidgetList.ItemContainerGenerator.ContainerFromIndex(WidgetList.SelectedIndex) as UIElement)?.Focus();
+            _syncingList = false;
+            SyncListSelection();
         }
     }
 
