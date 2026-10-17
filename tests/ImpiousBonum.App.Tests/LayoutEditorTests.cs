@@ -52,6 +52,25 @@ public sealed class LayoutEditorTests : IDisposable
     }
 
     [Fact]
+    public void The_widget_list_shows_the_one_drawn_on_top_first()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            var session = new LayoutSession(ThreeWidgets());
+            var (editor, window) = Show(session, store);
+
+            var rows = editor.WidgetList.Items.Cast<LayoutEditor.ListEntry>().Select(e => e.Detail.Trim()).ToList();
+            var note = Descendants<TextBlock>(editor).Any(t => t.Text.StartsWith("The top of the list draws on top"));
+            window.Close();
+
+            Assert.Equal(["C", "B", "A"], rows);
+            Assert.True(note);
+        });
+    }
+
+    [Fact]
     public void Moving_a_widget_in_the_list_keeps_it_selected_and_focused()
     {
         Sta.Run(() =>
@@ -61,12 +80,13 @@ public sealed class LayoutEditorTests : IDisposable
             var session = new LayoutSession(ThreeWidgets());
             var (editor, window) = Show(session, store);
             var list = editor.WidgetList;
+            // A, drawn at the back, is the bottom row.
             session.Select(0);
-            var first = (ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(0);
-            first.Focus();
+            var back = (ListBoxItem)list.ItemContainerGenerator.ContainerFromIndex(2);
+            back.Focus();
 
-            // What dropping it below the second does (and Alt+Down, from the keyboard).
-            Assert.True(DragReorder.Move(first, +1));
+            // What dropping it above the one over it does (and Alt+Up, from the keyboard): it comes forward.
+            Assert.True(DragReorder.Move(back, -1));
             var focused = list.ItemContainerGenerator.ContainerFromIndex(1) is ListBoxItem { IsKeyboardFocused: true };
             var selected = list.SelectedIndex;
             window.Close();
@@ -120,7 +140,8 @@ public sealed class LayoutEditorTests : IDisposable
             var session = new LayoutSession(ThreeWidgets());
             var (editor, window) = Show(session, store);
 
-            var row = (ListBoxItem)editor.WidgetList.ItemContainerGenerator.ContainerFromIndex(2);
+            // The top row is C, drawn last, on top of the others.
+            var row = (ListBoxItem)editor.WidgetList.ItemContainerGenerator.ContainerFromIndex(0);
             Click(Descendants<TextBlock>(row).First());
             window.Close();
 
@@ -178,7 +199,8 @@ public sealed class LayoutEditorTests : IDisposable
             var oneStatus = editor.StatusText.Text;
             window.Close();
 
-            Assert.Equal([2, 0], shown);
+            // The list is top first: C's row, then A's.
+            Assert.Equal([0, 2], shown);
             Assert.StartsWith("2 widgets selected", status);
             Assert.Equal([2, 0, 1], fromList);
             Assert.Equal([1], one);
@@ -200,12 +222,13 @@ public sealed class LayoutEditorTests : IDisposable
             var (editor, window) = Show(session, store);
             var list = editor.WidgetList;
 
+            // Top first: C, B, the copy, then A.
             var copy = Selected(list);
-            list.SelectedItems.Add(list.Items[0]);
+            list.SelectedItems.Add(list.Items[3]);
             var both = session.Selection.ToList();
             window.Close();
 
-            Assert.Equal([1], copy);
+            Assert.Equal([2], copy);
             Assert.Equal([1, 0], both);
         });
     }
