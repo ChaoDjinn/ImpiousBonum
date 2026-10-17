@@ -140,7 +140,7 @@ public partial class LayoutEditor : UserControl
         AddAlignItems(_alignListItem.Items);
         widgetMenu.Items.Add(_alignListItem);
         WidgetList.ContextMenu = widgetMenu;
-        DragReorder.Attach(WidgetList, _session.MoveWidget);
+        DragReorder.Attach(WidgetList, (from, to) => _session.MoveWidget(RowOf(from), RowOf(to)));
 
         session.Changed += (_, change) =>
         {
@@ -254,7 +254,7 @@ public partial class LayoutEditor : UserControl
         // A new list loses the row that had focus; someone using the keyboard carries on from the selected widget.
         var focused = WidgetList.IsKeyboardFocusWithin;
         _syncingList = true;
-        WidgetList.ItemsSource = _session.Document.Widgets.Select(ListEntry.Of).ToList();
+        WidgetList.ItemsSource = _session.Document.Widgets.Select(ListEntry.Of).Reverse().ToList();
         _syncingList = false;
         SyncListSelection();
         if (focused && WidgetList.SelectedIndex >= 0)
@@ -279,9 +279,9 @@ public partial class LayoutEditor : UserControl
         {
             // The first picked goes first, so the list agrees about which that was.
             WidgetList.UnselectAll();
-            WidgetList.SelectedIndex = _session.SelectedIndex;
+            WidgetList.SelectedIndex = _session.SelectedIndex < 0 ? -1 : RowOf(_session.SelectedIndex);
             foreach (var index in _session.Selection.Skip(1).Where(i => i < WidgetList.Items.Count))
-                WidgetList.SelectedItems.Add(WidgetList.Items[index]);
+                WidgetList.SelectedItems.Add(WidgetList.Items[RowOf(index)]);
         }
         if (_session.SelectedIndex >= 0)
             WidgetList.ScrollIntoView(WidgetList.SelectedItem);
@@ -289,7 +289,13 @@ public partial class LayoutEditor : UserControl
     }
 
     /// <summary>The widgets selected in the list, in the order they were picked.</summary>
-    private IEnumerable<int> ListSelection() => WidgetList.SelectedItems.Cast<object>().Select(WidgetList.Items.IndexOf);
+    private IEnumerable<int> ListSelection() => WidgetList.SelectedItems.Cast<object>().Select(item => RowOf(WidgetList.Items.IndexOf(item)));
+
+    /// <summary>
+    /// The list's row for a widget, or the widget for a row: the list shows the one drawn on top first, the other way up
+    /// from the layout's drawing order.
+    /// </summary>
+    private int RowOf(int index) => _session.Document.Widgets.Count - 1 - index;
 
     private void OnListSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
