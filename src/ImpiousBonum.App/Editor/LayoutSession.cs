@@ -426,7 +426,8 @@ public sealed class LayoutSession
 
     /// <summary>
     /// Copies the selected widgets, each a little down and to the right of the one it copies and drawn just above it,
-    /// as one undo step, and selects the copies.
+    /// as one undo step, and selects the copies. A whole group copied is a new group of its own, drawn just above it;
+    /// a copy of some of a group's widgets is in that group with them.
     /// </summary>
     public void DuplicateSelected()
     {
@@ -441,14 +442,29 @@ public sealed class LayoutSession
             copy["y"] = Number(source.GetDouble("y", 0) + 20);
             return copy;
         }).ToList();
+        var renamed = new Dictionary<string, string>();
+        foreach (var group in sources.Select(GroupOf).OfType<string>().Distinct())
+        {
+            if (MembersOf(group).All(sources.Contains))
+                renamed[group] = UnusedGroupName($"{group} copy", 0);
+        }
+        foreach (var copy in copies)
+        {
+            if (GroupName(copy) is { } group && renamed.TryGetValue(group, out var name))
+                SetGroup(copy, name);
+        }
+        // In the order they were picked, so the first picked's copy is the first selected.
+        var picked = _selection.Select(i => copies[sources.IndexOf(i)]).ToList();
         Edit(ChangeKind.Structure, null, null, null, document =>
         {
             // From the end, so the places of the ones still to copy don't move.
             for (var n = sources.Count - 1; n >= 0; n--)
                 document.Widgets.Insert(sources[n] + 1, copies[n]);
+            // A whole group's copies, put in among its widgets, come out from among them to be a group above it.
+            if (renamed.Count > 0)
+                Gather(document.Widgets);
         });
-        // Each copy is a place further on for every copy put in before it.
-        Select(_selection.Select(i => i + sources.IndexOf(i) + 1));
+        Select(picked.Select(w => Document.Widgets.IndexOf(w)));
     }
 
     /// <summary>Deletes the selected widgets, as one undo step.</summary>
@@ -491,6 +507,182 @@ public sealed class LayoutSession
             document.Widgets.Insert(to, widget);
         });
         SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Puts the widgets in a new drawing order and new groups, as one undo step, and selects <paramref name="select"/>
+    /// where they end up: what dragging in the editor's list does (see <see cref="WidgetRows.Move"/>).
+    /// </summary>
+    /// <param name="order">Every widget, by its index now, back to front.</param>
+    /// <param name="groups">The group each widget is in afterwards, by its index now; null for none.</param>
+    /// <param name="select">The widgets to select, by their indices now.</param>
+    public void Restack(IReadOnlyList<int> order, IReadOnlyList<string?> groups, IReadOnlyList<int> select)
+    {
+        var count = Document.Widgets.Count;
+        if (order.Count != count || groups.Count != count || !order.Order().SequenceEqual(Enumerable.Range(0, count)))
+            return;
+        if (order.SequenceEqual(Enumerable.Range(0, count)) && Enumerable.Range(0, count).All(i => GroupOf(i) == groups[i]))
+            return;
+        var widgets = order.Select(i => Document.Widgets[i]).ToList();
+        var chosen = select.Where(i => i >= 0 && i < count).Select(i => Document.Widgets[i]).ToList();
+        Edit(ChangeKind.Structure, null, null, null, document =>
+        {
+            for (var i = 0; i < count; i++)
+                SetGroup(document.Widgets[i], groups[i]);
+            document.Widgets.Clear();
+            document.Widgets.AddRange(widgets);
+            Gather(document.Widgets);
+            // Selected before views hear of the change, as with MoveWidget.
+            _selection = [.. chosen.Select(w => document.Widgets.IndexOf(w))];
+        });
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    // ---- Groups ---------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Where a widget's group is kept: widgets with the same name in it are one group, which the editor keeps together in
+    /// the drawing order and selects as one. The dashboard takes no notice of it.
+    /// </summary>
+    public const string GroupKey = "group";
+
+    /// <summary>The group a widget is in, or null for none.</summary>
+    public string? GroupOf(int index) => index >= 0 && index < Document.Widgets.Count ? GroupName(Document.Widgets[index]) : null;
+
+    /// <summary>The widgets in a group, back to front.</summary>
+    public IReadOnlyList<int> MembersOf(string group) => [.. Enumerable.Range(0, Document.Widgets.Count).Where(i => GroupOf(i) == group)];
+
+    /// <summary>The selected widgets are all of one group and nothing else: that group, else null.</summary>
+    public string? SelectedGroup =>
+        _selection.Count > 0 && GroupOf(SelectedIndex) is { } group && MembersOf(group).Order().SequenceEqual(_selection.Order()) ? group : null;
+
+    /// <summary>Whether any of the selected widgets is in a group.</summary>
+    public bool SelectionHasGroup => _selection.Any(i => GroupOf(i) is not null);
+
+    /// <summary>
+    /// Selects a widget the way clicking it on the canvas does: with the rest of its group, so the group moves as one. If
+    /// one widget of that group is selected on its own already, it's this one on its own, to get at it inside the group.
+    /// </summary>
+    public void SelectWithGroup(int index)
+    {
+        if (GroupOf(index) is not { } group || (_selection.Count == 1 && GroupOf(SelectedIndex) == group))
+        {
+            Select(index);
+            return;
+        }
+        Select(MembersOf(group).Where(i => i != index).Prepend(index));
+    }
+
+    /// <summary>A name for a new group that no group has yet: Group 1, Group 2 and so on.</summary>
+    public string NewGroupName() => UnusedGroupName("Group", 1);
+
+    private string UnusedGroupName(string stem, int first)
+    {
+        var names = Document.Widgets.Select(GroupName).OfType<string>().ToHashSet(StringComparer.OrdinalIgnoreCase);
+        // From 0, the name on its own and then from 2: Group copy, Group copy 2.
+        for (var n = first; ; n = n == 0 ? 2 : n + 1)
+        {
+            var name = n == 0 ? stem : $"{stem} {n}";
+            if (!names.Contains(name))
+                return name;
+        }
+    }
+
+    /// <summary>Why a group can't be called <paramref name="name"/>, or null if it can. <paramref name="current"/> is its name now.</summary>
+    public string? CheckGroupName(string name, string? current = null)
+    {
+        name = name.Trim();
+        if (name.Length == 0)
+            return "A group needs a name.";
+        if (!string.Equals(name, current, StringComparison.OrdinalIgnoreCase)
+            && Document.Widgets.Any(w => string.Equals(GroupName(w), name, StringComparison.OrdinalIgnoreCase)))
+            return "There's a group called that already.";
+        return null;
+    }
+
+    /// <summary>
+    /// Puts the selected widgets in a new group (taking them out of any they were in), as one undo step, and keeps them
+    /// selected. They go next to each other in the drawing order, where the topmost of them is. Needs two or more.
+    /// </summary>
+    public void GroupSelected(string? name = null)
+    {
+        if (_selection.Count < 2)
+            return;
+        name = string.IsNullOrWhiteSpace(name) ? NewGroupName() : name.Trim();
+        var chosen = _selection.Select(i => Document.Widgets[i]).ToList();
+        Edit(ChangeKind.Structure, null, null, null, document =>
+        {
+            foreach (var widget in chosen)
+                SetGroup(widget, name);
+            Gather(document.Widgets);
+            _selection = [.. chosen.Select(w => document.Widgets.IndexOf(w))];
+        });
+        SelectionChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Breaks up the groups the selected widgets are in, as one undo step. Every widget stays where it is.</summary>
+    public void UngroupSelected()
+    {
+        var groups = _selection.Select(GroupOf).OfType<string>().ToHashSet();
+        if (groups.Count == 0)
+            return;
+        Edit(ChangeKind.Structure, null, null, null, document =>
+        {
+            foreach (var widget in document.Widgets.Where(w => GroupName(w) is { } g && groups.Contains(g)))
+                SetGroup(widget, null);
+        });
+    }
+
+    /// <summary>Gives a group another name, as one undo step. Nothing for a name <see cref="CheckGroupName"/> turns down.</summary>
+    public void RenameGroup(string group, string name)
+    {
+        name = name.Trim();
+        if (name == group || CheckGroupName(name, group) is not null)
+            return;
+        Edit(ChangeKind.Structure, null, null, null, document =>
+        {
+            foreach (var widget in document.Widgets.Where(w => GroupName(w) == group))
+                SetGroup(widget, name);
+        });
+    }
+
+    private static string? GroupName(JsonObject widget) => widget.GetString(GroupKey) is { Length: > 0 } name ? name : null;
+
+    private static void SetGroup(JsonObject widget, string? group)
+    {
+        if (group is null)
+            widget.Remove(GroupKey);
+        else
+            widget[GroupKey] = group;
+    }
+
+    /// <summary>
+    /// Puts each group's widgets next to each other in the drawing order, where the topmost of them is, keeping the order
+    /// of the group's widgets among themselves and of everything else.
+    /// </summary>
+    internal static void Gather(List<JsonObject> widgets)
+    {
+        var placed = new HashSet<string>();
+        var topFirst = new List<JsonObject>(widgets.Count);
+        for (var i = widgets.Count - 1; i >= 0; i--)
+        {
+            var group = GroupName(widgets[i]);
+            if (group is null)
+            {
+                topFirst.Add(widgets[i]);
+            }
+            else if (placed.Add(group))
+            {
+                for (var j = i; j >= 0; j--)
+                {
+                    if (GroupName(widgets[j]) == group)
+                        topFirst.Add(widgets[j]);
+                }
+            }
+        }
+        topFirst.Reverse();
+        widgets.Clear();
+        widgets.AddRange(topFirst);
     }
 
     /// <summary>

@@ -259,7 +259,9 @@ public sealed class EditOverlay : Canvas
             }
             else if (!adding)
             {
-                _session.Select(hit);
+                // A widget in a group brings the rest of the group with it, so the group moves as one; clicked again, it's
+                // the one on its own (the press above, let go without dragging).
+                _session.SelectWithGroup(hit);
             }
 
             if (hit < 0)

@@ -6,6 +6,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 ## Unreleased
 
 - The editor's *Widgets* list is the right way up: the widget at the top of the list draws on top of the others, as the note under the list now says, so dragging one up brings it forward. It used to be the other way round. Layouts aren't changed, only how the list shows them.
+- Group widgets in the editor: select two or more and press Ctrl+G (or right-click, *Group*), say a shape and the weather widgets on it. The group has its own row in the *Widgets* list with its widgets under it, and they stay together in the drawing order. Clicking one on the canvas selects the whole group, to move it as one, and clicking it again selects just that widget. Drag a widget into or out of a group in the list, or drag the group's row to move all of it. *Rename group*, *Ungroup* (Ctrl+Shift+G) and duplicating a whole group are in the list's right-click menu too. The dashboard looks the same; groups are only for editing.
 - Web buttons and alerts that send to this PC itself (`localhost` or `127.0.0.1`, such as a Home Assistant running on it) go straight there, without first asking Windows whether to use a proxy. No proxy could reach them anyway, and with Windows' automatic proxy detection on, as it is by default, asking could hold the request up.
 
 ## 0.16.0
