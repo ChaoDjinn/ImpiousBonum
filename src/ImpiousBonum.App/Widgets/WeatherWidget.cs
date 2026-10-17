@@ -44,7 +44,7 @@ public sealed class WeatherWidget : Widget
         [
             Setting.Toggle("showCurrent", "Weather now", true, group: Setting.Content,
                 help: "The big icon and temperature for now. Off leaves just the forecast, e.g. for a widget of the hours ahead beside another of the days."),
-            Setting.Choice("forecast", "Forecast", "days", ["days", "hours", "none"]),
+            Setting.Choice("forecast", "Forecast", "days", ["days", "hours", "none"], group: Setting.Content),
             Setting.Number("count", "Days or hours", 5, 1, 48, group: Setting.Content, help: "Up to 16 days, or 48 hours."),
             Setting.Number("hourStep", "Hours apart", 1, 1, 12, group: Setting.Content, help: "For an hourly forecast, e.g. 3 for every three hours."),
             Setting.Picks("forecastDetails", "Forecast details", DetailName.RainChance, choices: ForecastDetailNames,

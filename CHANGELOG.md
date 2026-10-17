@@ -6,6 +6,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 ## Unreleased
 
 - The editor's *Widgets* list is the right way up: the widget at the top of the list draws on top of the others, as the note under the list now says, so dragging one up brings it forward. It used to be the other way round. Layouts aren't changed, only how the list shows them.
+- The Weather widget's *Forecast* setting, for days or hours, is now under *Content* beside *Days or hours* and *Hours apart*, rather than further down under *Text* where it was easy to miss.
 - Web buttons and alerts that send to this PC itself (`localhost` or `127.0.0.1`, such as a Home Assistant running on it) go straight there, without first asking Windows whether to use a proxy. No proxy could reach them anyway, and with Windows' automatic proxy detection on, as it is by default, asking could hold the request up.
 
 ## 0.16.0
