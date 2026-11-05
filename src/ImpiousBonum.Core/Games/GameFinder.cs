@@ -1,60 +1,87 @@
+using System.Globalization;
+
 namespace ImpiousBonum.Core.Games;
 
 /// <summary>
 /// Works out which game an exe belongs to, with its name and pictures: a Steam game by the folder it's installed in,
-/// with Steam's name for it, its app id and Steam's pictures; any other game by the exe's own description and icon.
-/// Steam's list of games is read when it's first needed and again at most every ten minutes, for games installed
-/// since; each exe's answer is kept, so going back to a game reads nothing. Not thread-safe: use it from one loop.
+/// with Steam's name for it, its app id and Steam's pictures; an Epic Games or GOG game by its folder too, with that
+/// launcher's name for it and the exe's icon; any other game by the exe's own description and icon. The launchers'
+/// lists of games are read when first needed and again at most every ten minutes, for games installed since; each
+/// exe's answer is kept, so going back to a game reads nothing. Not thread-safe: use it from one loop.
 /// </summary>
 public sealed class GameFinder(IGameFiles files, TimeProvider? time = null)
 {
-    /// <summary>How long Steam's list of games is used before it's read again: reading it opens every game's manifest.</summary>
+    /// <summary>How long the launchers' lists of games are used before they're read again: reading them opens every game's manifest.</summary>
     public static readonly TimeSpan LibraryLifetime = TimeSpan.FromMinutes(10);
 
     /// <summary>The games kept with their pictures, a few hundred KB each: enough to switch between a few without reading any again.</summary>
     private const int GamesKept = 4;
 
-    /// <summary>The exes kept with whether Steam installed them: only paths, so many more.</summary>
+    /// <summary>The exes kept with which launcher's game they belong to, if any: only paths, so many more.</summary>
     private const int ExesKept = 256;
 
     private readonly SteamLibrary _steam = new(files);
+    private readonly EpicLibrary _epic = new(files);
+    private readonly GogLibrary _gog = new(files);
     private readonly TimeProvider _time = time ?? TimeProvider.System;
     private readonly Dictionary<string, SteamApp?> _installed = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, StoreGame?> _othersInstalled = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Game> _games = new(StringComparer.OrdinalIgnoreCase);
     private IReadOnlyList<SteamApp> _apps = [];
+    private IReadOnlyList<StoreGame> _others = [];
     private DateTimeOffset _appsRead = DateTimeOffset.MinValue;
 
     /// <summary>The Steam game <paramref name="exe"/> belongs to, or null if Steam didn't install it.</summary>
     public SteamApp? SteamGame(string exe)
     {
-        var now = _time.GetUtcNow();
-        if (now - _appsRead >= LibraryLifetime)
-        {
-            _apps = _steam.Apps();
-            _appsRead = now;
-            // Steam may have fetched pictures since, too.
-            _installed.Clear();
-            _games.Clear();
-        }
+        Refresh();
+        return Remember(_installed, exe, () => SteamLibrary.Match(_apps, exe));
+    }
 
-        if (!_installed.TryGetValue(exe, out var app))
+    /// <summary>The Epic Games or GOG game <paramref name="exe"/> belongs to, or null if neither installed it.</summary>
+    public StoreGame? OtherGame(string exe)
+    {
+        Refresh();
+        return Remember(_othersInstalled, exe, () => InstallFolders.Match(_others, game => game.Folder, exe));
+    }
+
+    /// <summary>Reads the launchers' lists of games again once they're old enough.</summary>
+    private void Refresh()
+    {
+        var now = _time.GetUtcNow();
+        if (now - _appsRead < LibraryLifetime)
+            return;
+        _apps = _steam.Apps();
+        _others = [.. _epic.Games(), .. _gog.Games()];
+        _appsRead = now;
+        // Steam may have fetched pictures since, too.
+        _installed.Clear();
+        _othersInstalled.Clear();
+        _games.Clear();
+    }
+
+    private static T? Remember<T>(Dictionary<string, T?> kept, string exe, Func<T?> match) where T : class
+    {
+        if (!kept.TryGetValue(exe, out var game))
         {
-            app = SteamLibrary.Match(_apps, exe);
-            if (_installed.Count >= ExesKept)
-                _installed.Clear();
-            _installed[exe] = app;
+            game = match();
+            if (kept.Count >= ExesKept)
+                kept.Clear();
+            kept[exe] = game;
         }
-        return app;
+        return game;
     }
 
     /// <summary>
-    /// The game <paramref name="exe"/> belongs to: a Steam game; or, with <paramref name="anyApp"/>, whatever it is, named
-    /// by its description and pictured by its icon. Null when Steam didn't install it and <paramref name="anyApp"/> is false.
+    /// The game <paramref name="exe"/> belongs to: a Steam, Epic Games or GOG game; or, with <paramref name="anyApp"/>,
+    /// whatever it is, named by its description and pictured by its icon. Null when none of those launchers installed it
+    /// and <paramref name="anyApp"/> is false.
     /// </summary>
     public Game? Find(string exe, bool anyApp)
     {
         var steam = SteamGame(exe);
-        if (steam is null && !anyApp)
+        var other = steam is null ? OtherGame(exe) : null;
+        if (steam is null && other is null && !anyApp)
             return null;
         if (_games.TryGetValue(exe, out var game) && game.AppId == steam?.AppId)
             return game;
@@ -63,8 +90,10 @@ public sealed class GameFinder(IGameFiles files, TimeProvider? time = null)
         // Steam only has pictures of games it has shown in its library; until then, and for other games, the icon.
         if (!art.HasSteamArt)
             art = art with { Icon = files.Icon(exe) };
-        var name = steam?.Name ?? files.Description(exe) ?? Path.GetFileNameWithoutExtension(exe);
-        game = new Game(name, steam?.AppId, art);
+        var name = steam?.Name ?? other?.Name ?? files.Description(exe) ?? Path.GetFileNameWithoutExtension(exe);
+        GameStore? store = steam is not null ? GameStore.Steam : other?.Store;
+        var storeId = steam?.AppId.ToString(CultureInfo.InvariantCulture) ?? other?.Id;
+        game = new Game(name, steam?.AppId, art, store, storeId);
 
         if (_games.Count >= GamesKept)
             _games.Clear();

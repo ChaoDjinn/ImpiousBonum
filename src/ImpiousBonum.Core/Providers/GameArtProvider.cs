@@ -6,9 +6,10 @@ using ImpiousBonum.Core.Native;
 namespace ImpiousBonum.Core.Providers;
 
 /// <summary>
-/// The game you're playing: its name, its Steam app id, and its pictures as an attachment (a <see cref="GameArt"/>) for
-/// the image widget. A game is an app in front that Steam installed, or one linked to a layout or theme on the Game
-/// layouts page. Steam's pictures come from its own cache on this PC; nothing is fetched. Nothing has a reading while
+/// The game you're playing: its name, its Steam app id, the launcher it's from, and its pictures as an attachment (a
+/// <see cref="GameArt"/>) for the image widget. A game is an app in front that Steam, the Epic Games launcher or GOG
+/// installed, or one linked to a layout or theme on the Game layouts page. Steam's pictures come from its own cache on
+/// this PC, and other games show their icon; nothing is fetched. Nothing has a reading while
 /// no game is in front, so widgets that hide without a reading disappear.
 /// </summary>
 /// <param name="appInFront">The app in front, as the FPS reading follows it; the foreground app unless the dashboard says otherwise.</param>
@@ -21,6 +22,9 @@ public sealed class GameArtProvider(
 {
     public const string Name = "game.name";
     public const string AppId = "game.appid";
+
+    /// <summary>The launcher the game is from: Steam, Epic Games or GOG.</summary>
+    public const string Store = "game.store";
 
     /// <summary>The game's pictures (a <see cref="GameArt"/>), as a <see cref="MetricStore"/> attachment.</summary>
     public const string Art = "game.art";
@@ -45,6 +49,7 @@ public sealed class GameArtProvider(
     {
         store.Register(new MetricDefinition(Name, "Game: name", "Game", MetricUnit.Text));
         store.Register(new MetricDefinition(AppId, "Game: Steam app id", "Game", MetricUnit.Text));
+        store.Register(new MetricDefinition(Store, "Game: launcher", "Game", MetricUnit.Text));
     }
 
     public ValueTask SampleAsync(MetricStore store, CancellationToken cancellationToken)
@@ -78,6 +83,7 @@ public sealed class GameArtProvider(
     {
         store.SetText(Name, game?.Name);
         store.SetText(AppId, game?.AppId?.ToString(CultureInfo.InvariantCulture));
+        store.SetText(Store, game?.Store is { } launcher ? StoreGame.StoreName(launcher) : null);
         store.SetAttachment(Art, game?.Art);
     }
 

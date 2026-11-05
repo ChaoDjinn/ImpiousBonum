@@ -1,7 +1,10 @@
 namespace ImpiousBonum.Core.Games;
 
-/// <summary>A game: its name, its Steam app id (null if Steam didn't install it), and its pictures.</summary>
-public sealed record Game(string Name, int? AppId, GameArt Art);
+/// <summary>
+/// A game: its name, its Steam app id (null if Steam didn't install it), its pictures, and the launcher that installed
+/// it with its id there (both null for a game no launcher we know of installed).
+/// </summary>
+public sealed record Game(string Name, int? AppId, GameArt Art, GameStore? Store = null, string? StoreId = null);
 
 /// <summary>
 /// A game's pictures, as image bytes (JPEG, PNG or ICO) for a widget to decode at the size it shows them, like the album

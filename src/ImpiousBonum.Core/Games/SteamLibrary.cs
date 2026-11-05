@@ -86,21 +86,13 @@ public sealed class SteamLibrary(IGameFiles files)
     /// The game whose folder <paramref name="exe"/> is in, however deep (<c>…\common\Game\bin\x64\game.exe</c>), ignoring
     /// case; null if it's in none of them.
     /// </summary>
-    public static SteamApp? Match(IEnumerable<SteamApp> apps, string exe)
+    public static SteamApp? Match(IEnumerable<SteamApp> apps, string exe) => InstallFolders.Match(apps, app => app.Folder, exe);
+
+    /// <summary>The game as one of any launcher's, started through Steam.</summary>
+    public static StoreGame ToStoreGame(SteamApp app)
     {
-        string path;
-        try
-        {
-            path = Normalize(exe);
-        }
-        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
-        {
-            return null;
-        }
-        // The deepest folder wins, should one game be installed inside another's.
-        return apps
-            .Where(app => path.StartsWith(app.Folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-            .MaxBy(app => app.Folder.Length);
+        var id = app.AppId.ToString(CultureInfo.InvariantCulture);
+        return new StoreGame(GameStore.Steam, id, app.Name, app.Folder, $"steam://rungameid/{id}");
     }
 
     /// <summary>Where Steam keeps its pictures of the game, in its library cache; none without Steam.</summary>
@@ -140,7 +132,5 @@ public sealed class SteamLibrary(IGameFiles files)
         return null;
     }
 
-    /// <summary>A full path with Windows' separators and no separator at the end, so paths compare alike.</summary>
-    private static string Normalize(string path) =>
-        Path.TrimEndingDirectorySeparator(Path.GetFullPath(path.Replace('/', Path.DirectorySeparatorChar)));
+    private static string Normalize(string path) => InstallFolders.Normalize(path);
 }

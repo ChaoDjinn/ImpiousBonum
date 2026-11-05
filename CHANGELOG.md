@@ -3,6 +3,10 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+- Games from the Epic Games launcher and GOG Galaxy count as games without linking them, like Steam's: the app knows them by the folders their launchers installed them in, from the launchers' own records on your PC, with no account and nothing fetched. They get their launcher's name in `game.name`, their icon in an *Image* widget showing the game, and a new reading, `game.store`, says which launcher a game is from (*Steam*, *Epic Games* or *GOG*). Add-ons, Unreal Engine and installs that haven't finished are left out.
+
 ## 0.17.0
 
 Groups in the layout editor, a *Widgets* list that's the right way up, and a few smaller fixes.

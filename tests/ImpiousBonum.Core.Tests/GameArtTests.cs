@@ -36,6 +36,8 @@ public sealed class GameArtTests
         }
         """;
 
+    private const string EpicData = @"C:\ProgramData\Epic\EpicGamesLauncher\Data";
+
     private static readonly byte[] CoverJpeg = [0xFF, 0xD8, 1];
     private static readonly byte[] HeaderJpeg = [0xFF, 0xD8, 2];
     private static readonly byte[] HeroJpeg = [0xFF, 0xD8, 3];
@@ -51,6 +53,27 @@ public sealed class GameArtTests
         	"installdir"		"{{installDir}}"
         }
         """;
+
+    /// <summary>A manifest as the Epic Games launcher writes one for each game it installs, trimmed to what's read.</summary>
+    private static string EpicManifest(
+        string appName, string displayName, string location, string? mainGame = null, bool incomplete = false,
+        string categories = "\"public\", \"games\", \"applications\"") => $$"""
+        {
+            "FormatVersion": 0,
+            "bIsIncompleteInstall": {{(incomplete ? "true" : "false")}},
+            "LaunchExecutable": "Binaries/Win64/Game.exe",
+            "AppCategories": [ {{categories}} ],
+            "DisplayName": "{{displayName}}",
+            "InstallLocation": "{{location.Replace(@"\", @"\\")}}",
+            "CatalogNamespace": "ns1",
+            "CatalogItemId": "item1",
+            "AppName": "{{appName}}",
+            "MainGameAppName": "{{mainGame ?? appName}}",
+        }
+        """;
+
+    private static RegistryEntry Gog(string key, Dictionary<string, string> values) =>
+        new(key, new Dictionary<string, string>(values, StringComparer.OrdinalIgnoreCase));
 
     /// <summary>Steam with Hades in its own folder and Hollow Knight in a library on another drive.</summary>
     private static FakeFiles TwoLibraries()
@@ -164,6 +187,78 @@ public sealed class GameArtTests
         SteamApp[] apps = [new(1, "Outer", @"D:\Steam\steamapps\common\Outer"), new(2, "Inner", @"D:\Steam\steamapps\common\Outer\Inner")];
         Assert.Equal(2, SteamLibrary.Match(apps, @"D:\Steam\steamapps\common\Outer\Inner\game.exe")!.AppId);
         Assert.Equal(1, SteamLibrary.Match(apps, @"D:\Steam\steamapps\common\Outer\game.exe")!.AppId);
+    }
+
+    [Fact]
+    public void Epic_s_games_come_from_its_manifests_leaving_out_add_ons_the_engine_and_unfinished_installs()
+    {
+        var files = new FakeFiles { Epic = EpicData };
+        var manifests = $@"{EpicData}\Manifests";
+        files.Texts[$@"{manifests}\A1.item"] = EpicManifest("Sugar", "Hades", @"C:\Program Files\Epic Games\Hades\");
+        files.Texts[$@"{manifests}\A2.item"] = EpicManifest("SugarMusic", "Hades Soundtrack", @"C:\Program Files\Epic Games\Hades", mainGame: "Sugar");
+        files.Texts[$@"{manifests}\A3.item"] = EpicManifest("UE_5.4", "Unreal Engine 5.4", @"C:\Program Files\Epic Games\UE_5.4", categories: "\"engines\"");
+        files.Texts[$@"{manifests}\A4.item"] = EpicManifest("Fortnite", "Fortnite", @"C:\Program Files\Epic Games\Fortnite", incomplete: true);
+        // A whole drive would claim every program on it.
+        files.Texts[$@"{manifests}\A5.item"] = EpicManifest("Odd", "Odd", @"C:\");
+        files.Texts[$@"{manifests}\A6.item"] = "{ not a manifest";
+        files.Texts[$@"{manifests}\A7.txt"] = EpicManifest("Txt", "Not a manifest's name", @"C:\Games\Txt");
+
+        var game = Assert.Single(new EpicLibrary(files).Games());
+        Assert.Equal(new StoreGame(GameStore.Epic, "Sugar", "Hades", @"C:\Program Files\Epic Games\Hades",
+            "com.epicgames.launcher://apps/ns1%3Aitem1%3ASugar?action=launch&silent=true"), game);
+
+        Assert.Empty(new EpicLibrary(new FakeFiles()).Games());
+        // Older launchers' links name just the app.
+        Assert.Equal("com.epicgames.launcher://apps/Sugar?action=launch&silent=true", EpicLibrary.LaunchLink(null, "item1", "Sugar"));
+    }
+
+    [Fact]
+    public void Gog_s_games_come_from_the_registry_leaving_out_add_ons()
+    {
+        var files = new FakeFiles();
+        files.Gog.Add(Gog("1207658924", new()
+        {
+            ["gameID"] = "1207658924",
+            ["GAMENAME"] = "Unreal Gold",
+            ["path"] = @"C:\GOG Games\Unreal Gold",
+            ["exe"] = @"C:\GOG Games\Unreal Gold\System\Unreal.exe",
+            ["launchParam"] = "-windowed",
+            ["dependsOn"] = "",
+        }));
+        files.Gog.Add(Gog("1207658925", new() { ["gameName"] = "Unreal Gold Bonus Pack", ["path"] = @"C:\GOG Games\Unreal Gold", ["dependsOn"] = "1207658924" }));
+        files.Gog.Add(Gog("1", new() { ["gameName"] = "Nowhere" }));
+        // No name: the folder's.
+        files.Gog.Add(Gog("2", new() { ["path"] = @"D:\GOG\Celeste\" }));
+
+        Assert.Equal<StoreGame>(
+        [
+            new(GameStore.Gog, "1207658924", "Unreal Gold", @"C:\GOG Games\Unreal Gold", @"C:\GOG Games\Unreal Gold\System\Unreal.exe", "-windowed"),
+            new(GameStore.Gog, "2", "Celeste", @"D:\GOG\Celeste"),
+        ], new GogLibrary(files).Games());
+        Assert.Empty(new GogLibrary(new FakeFiles()).Games());
+    }
+
+    [Fact]
+    public void Epic_and_gog_games_count_as_games_with_their_launcher_s_name_and_their_icon()
+    {
+        const string Fortnite = @"C:\Program Files\Epic Games\Fortnite\FortniteGame\Binaries\Win64\FortniteClient-Win64-Shipping.exe";
+        const string Unreal = @"C:\GOG Games\Unreal Gold\System\Unreal.exe";
+        var files = TwoLibraries();
+        files.Epic = EpicData;
+        files.Texts[$@"{EpicData}\Manifests\F.item"] = EpicManifest("Fortnite", "Fortnite", @"C:\Program Files\Epic Games\Fortnite");
+        files.Gog.Add(Gog("1207658924", new() { ["gameName"] = "Unreal Gold", ["path"] = @"C:\GOG Games\Unreal Gold" }));
+        files.Icons[Fortnite] = IconPng;
+        files.Descriptions[Unreal] = "Unreal Engine";
+        var finder = new GameFinder(files);
+
+        Assert.Equal(new Game("Fortnite", null, new GameArt(null, null, null, IconPng), GameStore.Epic, "Fortnite"), finder.Find(Fortnite, anyApp: false));
+        var unreal = finder.Find(Unreal, anyApp: false)!;
+        Assert.Equal(("Unreal Gold", (GameStore?)GameStore.Gog, "1207658924"), (unreal.Name, unreal.Store, unreal.StoreId));
+        var hades = finder.Find(@"D:\Programs\Steam\steamapps\common\Hades\Hades.exe", anyApp: false)!;
+        Assert.Equal(((GameStore?)GameStore.Steam, "1145360"), (hades.Store, hades.StoreId));
+
+        // The launcher itself isn't one of its games.
+        Assert.Null(finder.Find(@"C:\Program Files (x86)\Epic Games\Launcher\Portal\Binaries\Win64\EpicGamesLauncher.exe", anyApp: false));
     }
 
     [Fact]
@@ -331,6 +426,7 @@ public sealed class GameArtTests
         await provider.SampleAsync(store, CancellationToken.None);
         Assert.Equal("Hades", Text(store, GameArtProvider.Name));
         Assert.Equal("1145360", Text(store, GameArtProvider.AppId));
+        Assert.Equal("Steam", Text(store, GameArtProvider.Store));
         var art = Assert.IsType<GameArt>(store.GetAttachment(GameArtProvider.Art));
         Assert.Same(CoverJpeg, art.Cover);
 
@@ -349,6 +445,7 @@ public sealed class GameArtTests
         await provider.SampleAsync(store, CancellationToken.None);
         Assert.Null(Text(store, GameArtProvider.Name));
         Assert.Null(Text(store, GameArtProvider.AppId));
+        Assert.Null(Text(store, GameArtProvider.Store));
         Assert.Null(store.GetAttachment(GameArtProvider.Art));
         Assert.Equal(2, lookups);
     }
@@ -371,6 +468,7 @@ public sealed class GameArtTests
         await provider.SampleAsync(store, CancellationToken.None);
         Assert.Equal("Celeste", Text(store, GameArtProvider.Name));
         Assert.Null(Text(store, GameArtProvider.AppId));
+        Assert.Null(Text(store, GameArtProvider.Store));
         Assert.Same(IconPng, ((GameArt)store.GetAttachment(GameArtProvider.Art)!).Icon);
     }
 
@@ -428,6 +526,10 @@ public sealed class GameArtTests
     {
         public string? Steam { get; init; }
 
+        public string? Epic { get; set; }
+
+        public List<RegistryEntry> Gog { get; } = [];
+
         public Dictionary<string, string> Texts { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         public Dictionary<string, byte[]> Pictures { get; } = new(StringComparer.OrdinalIgnoreCase);
@@ -445,6 +547,10 @@ public sealed class GameArtTests
         private IEnumerable<string> All => Texts.Keys.Concat(Pictures.Keys);
 
         public string? SteamPath() => Steam;
+
+        public string? EpicDataPath() => Epic;
+
+        public IReadOnlyList<RegistryEntry> LocalMachineEntries(string path) => path == GogLibrary.RegistryPath ? Gog : [];
 
         public string? ReadText(string path)
         {
