@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries), [Steam downloads](#steam-downloads)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries), [Steam downloads](#steam-downloads), [Steam friends and achievements](#steam-friends-and-achievements)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [recent games](#recent-games), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
@@ -48,6 +48,7 @@ Everything is in Impious Bonum's window: open it from the tray (*Open Impious Bo
 | *Tablet and USB screen* | The dashboard in a browser on a tablet or phone, and on a small USB screen (see [Tablet view](#tablet-view) and [USB screens](#usb-screens)) |
 | *Pages and schedule* | Swiping and turning between layouts, and what shows when (see [Pages](#pages) and [Schedule](#schedule)) |
 | *Game layouts* | Games linked to a layout or theme, and session recaps (see [Game layouts](#game-layouts) and [Session recaps](#session-recaps)) |
+| *Steam* | Your own Steam Web API key and your profile, for your friends online and your achievements, and how fetching them is going (see [Steam friends and achievements](#steam-friends-and-achievements)) |
 | *Sensors* | Whether the sensor service is running, installing, updating or removing it, and which app the FPS reading follows (see [the sensor service](#sensor-service-temperatures-fans-power-fps)) |
 | *Energy* | Your PC's power now and the energy it's used today and this month, the price and currency for what that costs, the allowance for the parts nothing measures, and Great Britain's grid carbon intensity (see [Energy use](#energy-use)) |
 | *Weather* | The location, more places for the weather widget to move between, the units, air quality and pollen, severe weather warnings, and turning the weather off (see [Weather](#weather)) |
@@ -258,6 +259,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `calendar.<name>.next.title`, `calendar.<name>.next.time`, `calendar.<name>.next.location`, `calendar.<name>.next.minutes`, `calendar.<name>.now.title`, `calendar.<name>.today` | The same for one calendar, e.g. `calendar.work.next.title` for a calendar called *Work* |
 | `game.name`, `game.appid`, `game.store` | The game you're playing: its name in Steam, the Epic Games launcher or GOG Galaxy, or the name in its exe for a game linked under *Game layouts*; its Steam app id; and which of those launchers it's from (*Steam*, *Epic Games* or *GOG*). No reading while no game is in front (see [Game cover art](#game-cover-art)) |
 | `steam.downloads` (how many), `steam.download.game`, `steam.download.state`, `steam.download.progress`, `steam.download.done`, `steam.download.size`, `steam.download.speed`, `steam.download.left` | What Steam is downloading, updating or installing, from its own files, every 5 seconds. No reading while nothing is (see [Steam downloads](#steam-downloads)) |
+| `steam.friends.online`, `steam.friends.playing`, `steam.status`, `game.achievements` (e.g. *34 / 50*), `game.achievements.percent` | Your Steam friends online and how many are playing, how fetching them is going, and your achievements in the Steam game in front, from Steam's Web API once you've given your own key on the *Steam* page (see [Steam friends and achievements](#steam-friends-and-achievements)) |
 | `game.hours`, `games.last` | How many hours the game in front has been played (Steam's count for a Steam game, the app's own for an Epic Games or GOG game), and the name of the game played most recently (see [Recent games](#recent-games)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
@@ -702,6 +704,34 @@ The readings are for the first download in the list, the one going now:
 A text widget of `{steam.download.game} {steam.download.progress}` with *Hide without a reading* on shows what's
 downloading only while something is. With [grid carbon intensity](#grid-carbon-intensity) on, `grid.carbon.best` says
 when's a good time for a big one.
+
+### Steam friends and achievements
+
+The *Steam friends* widget lists your Steam friends who are online, those playing first, each with the game they're
+playing or whether they're around: *Sam · Hades*, *Priya · Online*, *Alex · Away*. Friends who are away or busy are
+faded; *Show those away* off leaves them out, and *Only those playing* leaves out everyone not in a game. It hides
+while no friends are online. `game.achievements` is how many of the Steam game in front's achievements you've
+unlocked, such as *34 / 50*, and `game.achievements.percent` the same as a percentage, for a text widget or a gauge.
+
+These come from Steam's Web API, which needs a key of your own:
+
+1. Open Impious Bonum's *Steam* page and press *Get a key*. Sign in to Steam on the page that opens, give any domain
+   name (*localhost* will do), agree to the terms and copy the key.
+2. Paste it into *Web API key*, and your profile's address into *Your profile*: *steamcommunity.com/id/yourname*, or
+   its 17-digit ID (*steamcommunity.com/profiles/7656…*). *Now* says how it's going.
+
+The key is kept in `settings.json` on your PC and only ever sent to Steam. Steam shares only what your profile's
+privacy settings make public, whoever's key asks: your friends list for who's online (*My profile → Edit profile →
+Privacy settings → Friends list*), and your game details for your achievements. Friends whose own profiles are
+private show as offline. Who's online is checked every minute and your friends list every 10 minutes; achievements
+when a Steam game comes to the front and every 2 minutes while it's there. Nothing is fetched from Steam without a
+key, and *Steam downloads* and *Recent games* don't need one.
+
+| Reading | |
+|---|---|
+| `steam.friends.online`, `steam.friends.playing` | How many friends are online, and how many of them are playing a game |
+| `steam.status` | How it's going, e.g. *3 friends online, 1 playing.*, or what to do: a key Steam didn't accept, a private friends list |
+| `game.achievements`, `game.achievements.percent` | The Steam game in front's achievements you've unlocked, e.g. *34 / 50* and *68 %*. No reading for a game without achievements |
 
 ## Widgets in depth
 

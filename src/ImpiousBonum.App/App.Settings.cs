@@ -358,6 +358,15 @@ public partial class App : ISettingsHost
         AppLog.Info(area is null ? "Grid carbon for all of Great Britain" : "Grid carbon area chosen");
     }
 
+    void ISettingsHost.SetSteamAccount(string? key, string? profile)
+    {
+        _settings.SteamApiKey = key;
+        _settings.SteamProfile = profile;
+        _settings.Save();
+        // Neither the key, which is a secret, nor the profile: the log goes with bug reports.
+        AppLog.Info(_settings.SteamRequest() is null ? "Steam friends and achievements off" : "Steam friends and achievements on");
+    }
+
     void ISettingsHost.SetCalendars(IReadOnlyList<CalendarLink> calendars) => SetCalendars(calendars);
 
     void ISettingsHost.SetNewsFeeds(IReadOnlyList<NewsFeed> feeds) => SetNewsFeeds(feeds);

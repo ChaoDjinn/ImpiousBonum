@@ -5,6 +5,7 @@ using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Sessions;
 using ImpiousBonum.Core.StatusChecks;
+using ImpiousBonum.Core.Steam;
 using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.Core;
@@ -54,6 +55,7 @@ public sealed class Sampler : IAsyncDisposable
     /// <param name="linkedGame">
     /// The app in front when it's linked to a layout or theme as a game, for its pictures; null counts only the launchers' games.
     /// </param>
+    /// <param name="steamAccount">Whose Steam friends and achievements to fetch, with your own key; null, or returning null, fetches nothing from Steam.</param>
     /// <param name="playedPath">
     /// Where the app's own record of when Epic Games and GOG games were played is kept between runs; null keeps it only
     /// while it runs.
@@ -64,7 +66,8 @@ public sealed class Sampler : IAsyncDisposable
         Func<IReadOnlyList<CalendarLink>>? calendars = null, Func<IReadOnlyList<NewsFeed>>? news = null, Func<string?>? gameInFront = null, Action<SessionRecap>? sessionEnded = null,
         Func<AirQualityRequest?>? airQuality = null, Func<WarningsRequest?>? warnings = null, Func<IReadOnlyList<WeatherRequest>>? weatherPlaces = null,
         Func<EnergySettings>? energy = null, string? energyTotalsPath = null, Func<GridCarbonRequest?>? gridCarbon = null,
-        Func<IReadOnlyList<StatusCheck>>? statusChecks = null, Func<string?>? linkedGame = null, string? playedPath = null) =>
+        Func<IReadOnlyList<StatusCheck>>? statusChecks = null, Func<string?>? linkedGame = null, string? playedPath = null,
+        Func<SteamAccount?>? steamAccount = null) =>
     [
         new CpuProvider(),
         new MemoryProvider(),
@@ -93,6 +96,7 @@ public sealed class Sampler : IAsyncDisposable
         new GameArtProvider(frameRateTarget, linkedGame),
         new SteamDownloadsProvider(),
         new RecentGamesProvider(playedPath),
+        new SteamFriendsProvider(steamAccount ?? (() => null)),
     ];
 
     public void Start()

@@ -166,6 +166,7 @@ public partial class SettingsWindow : Window
             SettingsPage.TabletAndUsb => new TabletAndUsbPage(_host),
             SettingsPage.PagesAndSchedule => new PagesAndSchedulePage(_host),
             SettingsPage.GameLayouts => new GameLayoutsPage(_host),
+            SettingsPage.Steam => new SteamPage(_host),
             SettingsPage.Sensors => new SensorsPage(_host),
             SettingsPage.Energy => new EnergyPage(_host),
             SettingsPage.Weather => new WeatherPage(_host),
