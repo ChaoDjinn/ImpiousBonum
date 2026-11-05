@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries), [Steam downloads](#steam-downloads)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
@@ -257,6 +257,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set on the *Calendars* page, every 15 minutes (see [Calendar](#calendar)) |
 | `calendar.<name>.next.title`, `calendar.<name>.next.time`, `calendar.<name>.next.location`, `calendar.<name>.next.minutes`, `calendar.<name>.now.title`, `calendar.<name>.today` | The same for one calendar, e.g. `calendar.work.next.title` for a calendar called *Work* |
 | `game.name`, `game.appid`, `game.store` | The game you're playing: its name in Steam, the Epic Games launcher or GOG Galaxy, or the name in its exe for a game linked under *Game layouts*; its Steam app id; and which of those launchers it's from (*Steam*, *Epic Games* or *GOG*). No reading while no game is in front (see [Game cover art](#game-cover-art)) |
+| `steam.downloads` (how many), `steam.download.game`, `steam.download.state`, `steam.download.progress`, `steam.download.done`, `steam.download.size`, `steam.download.speed`, `steam.download.left` | What Steam is downloading, updating or installing, from its own files, every 5 seconds. No reading while nothing is (see [Steam downloads](#steam-downloads)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
@@ -671,6 +672,38 @@ The picture's warning shows only while a device is low, as `battery.low` has no 
 ```
 
 To be told, add an [alert](#alerts) on `battery.<name>` below 20, say.
+
+### Steam downloads
+
+The *Steam downloads* widget lists the games Steam is downloading, updating or installing, each with how much is done
+of how much, the speed and the time left, and a bar: *6.1 / 14.0 GB · 40.0 MB/s · 3m*. A paused or queued download
+says so, and its bar is in the *Waiting colour*. The widget hides while there's nothing to download (and shows faded
+while you edit the layout).
+
+It reads the manifest Steam keeps for each game in its library folders, which Steam rewrites as a download goes, so
+there's no account to link and Steam needn't even be open. Every 5 seconds it looks at when each manifest was last
+written and reads only the ones that changed, and for the downloads that have started, it asks Steam's own entry in the
+registry whether Steam is working on them now, which tells one that's going from one paused or queued. Steam writes
+its progress every so often rather than all the time, so the bar moves in steps, and the speed and time left show
+once it has written twice; they're worked out from when Steam wrote, so they're right however long Impious Bonum has
+been running. A download that hasn't moved for two minutes has no speed. An update Steam is holding until you launch
+the game isn't a download until it starts.
+
+The readings are for the first download in the list, the one going now:
+
+| Reading | |
+|---|---|
+| `steam.downloads` | How many games are downloading, paused or queued |
+| `steam.download.game` | The game's name |
+| `steam.download.state` | *Downloading*, *Installing* (writing what it downloaded into the game's folder), *Paused* or *Queued* |
+| `steam.download.progress` | How far it has got, e.g. *44 %* |
+| `steam.download.done`, `steam.download.size` | How much is done, and of how much |
+| `steam.download.speed` | How fast it's going |
+| `steam.download.left` | How long the rest will take at that speed, e.g. *3m* |
+
+A text widget of `{steam.download.game} {steam.download.progress}` with *Hide without a reading* on shows what's
+downloading only while something is. With [grid carbon intensity](#grid-carbon-intensity) on, `grid.carbon.best` says
+when's a good time for a big one.
 
 ## Widgets in depth
 

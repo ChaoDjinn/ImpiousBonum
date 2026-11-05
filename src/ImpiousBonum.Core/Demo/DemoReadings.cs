@@ -1,5 +1,6 @@
 using ImpiousBonum.Core.Calendar;
 using ImpiousBonum.Core.Energy;
+using ImpiousBonum.Core.Games;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Native;
 using ImpiousBonum.Core.News;
@@ -360,6 +361,16 @@ public static class DemoReadings
         store.SetText(GameArtProvider.Name, "Starfall Odyssey");
         store.SetText(GameArtProvider.AppId, "3141590");
         store.SetText(GameArtProvider.Store, "Steam");
+
+        // Steam is updating one game, with another queued behind it.
+        using var downloads = new SteamDownloadsProvider();
+        downloads.Initialize(store);
+        const long Gigabyte = 1L << 30;
+        SteamDownloadsProvider.Publish(store,
+        [
+            new SteamDownload(1145360, "Ember Hollow", SteamDownloadState.Downloading, 6_550_000_000, 15 * Gigabyte) { Speed = 41_900_000 },
+            new SteamDownload(367520, "Tidewater", SteamDownloadState.Queued, 0, 2_300_000_000),
+        ]);
     }
 
     /// <summary>

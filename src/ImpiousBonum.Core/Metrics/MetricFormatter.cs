@@ -78,6 +78,9 @@ public static class MetricFormatter
     public static string Format(double? value, MetricUnit unit, FormatSpec? spec = null) =>
         Format(new MetricSample(new MetricDefinition(string.Empty, string.Empty, string.Empty, unit), value, null), spec);
 
+    /// <summary>The unit a number of bytes is shown in without a format saying which, e.g. GB for 14 GB.</summary>
+    public static ByteUnit ByteUnitFor(double bytes) => (ByteUnit)AutoByteExponent(bytes);
+
     private static int AutoByteExponent(double value)
     {
         var exponent = 0;
