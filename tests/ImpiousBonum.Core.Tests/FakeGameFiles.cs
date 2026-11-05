@@ -20,6 +20,12 @@ internal sealed class FakeGameFiles : IGameFiles
 
     public Dictionary<string, byte[]> Icons { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>Files that are listed but can't be read just now, as when Steam is writing one.</summary>
+    public HashSet<string> Unreadable { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>What Steam's registry says about whether it's working on each game; a game not in here, nothing.</summary>
+    public Dictionary<int, bool> Updating { get; } = [];
+
     /// <summary>When each file was last written; a file not in here was written at <see cref="DateTime.MinValue"/>.</summary>
     public Dictionary<string, DateTime> Written { get; } = new(StringComparer.OrdinalIgnoreCase);
 
@@ -40,7 +46,7 @@ internal sealed class FakeGameFiles : IGameFiles
     public string? ReadText(string path)
     {
         TextReads++;
-        return Texts.GetValueOrDefault(path);
+        return Unreadable.Contains(path) ? null : Texts.GetValueOrDefault(path);
     }
 
     public byte[]? ReadBytes(string path)
@@ -59,6 +65,8 @@ internal sealed class FakeGameFiles : IGameFiles
 
     public IEnumerable<string> Folders(string folder) =>
         All.SelectMany(Parents).Where(dir => Same(Path.GetDirectoryName(dir), folder)).Distinct(StringComparer.OrdinalIgnoreCase);
+
+    public bool? SteamUpdating(int appId) => Updating.TryGetValue(appId, out var updating) ? updating : null;
 
     public string? Description(string exe) => Descriptions.GetValueOrDefault(exe);
 

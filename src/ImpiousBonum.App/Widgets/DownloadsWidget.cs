@@ -47,6 +47,8 @@ public sealed class DownloadsWidget : Widget
     private readonly Brush _label;
     private readonly Brush _value;
     private readonly List<Row> _current = [];
+    // Not null at first, so the first refresh sets the widget up even without a list.
+    private object? _list = new();
     private string? _shown;
 
     public DownloadsWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
@@ -66,7 +68,12 @@ public sealed class DownloadsWidget : Widget
 
     public override void Refresh(MetricStore store, DateTime now)
     {
-        var downloads = store.GetAttachment(SteamDownloadsProvider.List) as IReadOnlyList<SteamDownload> ?? [];
+        // The provider replaces the list when it looks again, every few seconds; nothing changes in between.
+        var list = store.GetAttachment(SteamDownloadsProvider.List);
+        if (ReferenceEquals(list, _list))
+            return;
+        _list = list;
+        var downloads = list as IReadOnlyList<SteamDownload> ?? [];
         // Downloads start and finish now and then: rebuild only when the games on show change.
         var key = string.Join("\n", downloads.Select(d => $"{d.AppId}|{d.Name}"));
         if (key != _shown)
