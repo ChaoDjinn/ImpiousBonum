@@ -18,7 +18,7 @@ public sealed class DownloadsWidget : Widget
     public static WidgetDescriptor Descriptor { get; } = new(
         "downloads", "Steam downloads",
         "One row per game Steam is downloading, updating or installing, with how much is done, the speed and the time left, and a bar. Read from Steam's own files on this PC, so it needs no account and Steam needn't be open. Shows nothing while there's nothing to download.",
-        425, 230,
+        500, 230,
         [
             Setting.Number("fontSize", "Font size", 25, 6, 200),
             Setting.ShrinkToFit(),
