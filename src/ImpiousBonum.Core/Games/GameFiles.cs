@@ -33,6 +33,26 @@ public interface IGameFiles
 
     /// <summary>The exe's own icon at its largest size, as image bytes, or null if it has none.</summary>
     byte[]? Icon(string exe);
+
+    /// <summary>
+    /// The Epic Games launcher's data folder, which holds a manifest for each game it installed
+    /// (<c>Manifests\*.item</c>): where the launcher's registry entry says, else where it usually is
+    /// (<c>C:\ProgramData\Epic\EpicGamesLauncher\Data</c>). Null if the launcher isn't installed.
+    /// </summary>
+    string? EpicDataPath();
+
+    /// <summary>
+    /// Each key under <c>HKEY_LOCAL_MACHINE\<paramref name="path"/></c> in the 32-bit view (where 32-bit installers such
+    /// as GOG Galaxy's write, under <c>WOW6432Node</c>), with its text values; none if the key isn't there.
+    /// </summary>
+    IReadOnlyList<RegistryEntry> LocalMachineEntries(string path);
+}
+
+/// <summary>A registry key's name and its text values, matched ignoring case as Windows does.</summary>
+public sealed record RegistryEntry(string Key, IReadOnlyDictionary<string, string> Values)
+{
+    /// <summary>The value's text, or null if it's missing or empty.</summary>
+    public string? Text(string name) => Values.GetValueOrDefault(name) is { Length: > 0 } text ? text : null;
 }
 
 /// <summary>The real registry and files, for <see cref="IGameFiles"/>.</summary>
@@ -108,4 +128,51 @@ public sealed class GameFiles : IGameFiles
     public string? Description(string exe) => ExeFile.Description(exe);
 
     public byte[]? Icon(string exe) => ExeFile.LargestIcon(exe);
+
+    public string? EpicDataPath()
+    {
+        try
+        {
+            using var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
+            using var key = root.OpenSubKey(@"SOFTWARE\Epic Games\EpicGamesLauncher");
+            if (key?.GetValue("AppDataPath") is string { Length: > 0 } path)
+                return path;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            // Look where it usually is instead.
+        }
+        var usual = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Epic", "EpicGamesLauncher", "Data");
+        return Directory.Exists(usual) ? usual : null;
+    }
+
+    public IReadOnlyList<RegistryEntry> LocalMachineEntries(string path)
+    {
+        try
+        {
+            using var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
+            using var parent = root.OpenSubKey(path);
+            if (parent is null)
+                return [];
+            var entries = new List<RegistryEntry>();
+            foreach (var name in parent.GetSubKeyNames())
+            {
+                using var key = parent.OpenSubKey(name);
+                if (key is null)
+                    continue;
+                var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var valueName in key.GetValueNames())
+                {
+                    if (key.GetValue(valueName) is string text)
+                        values[valueName] = text;
+                }
+                entries.Add(new RegistryEntry(name, values));
+            }
+            return entries;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            return [];
+        }
+    }
 }

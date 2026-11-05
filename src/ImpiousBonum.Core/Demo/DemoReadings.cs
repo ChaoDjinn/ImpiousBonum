@@ -359,6 +359,7 @@ public static class DemoReadings
         new GameArtProvider(() => (0, null)).Initialize(store);
         store.SetText(GameArtProvider.Name, "Starfall Odyssey");
         store.SetText(GameArtProvider.AppId, "3141590");
+        store.SetText(GameArtProvider.Store, "Steam");
     }
 
     /// <summary>
