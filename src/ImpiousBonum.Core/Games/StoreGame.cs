@@ -19,6 +19,12 @@ public sealed record StoreGame(GameStore Store, string Id, string Name, string F
     /// <summary>The game's own exe, as its launcher records it, for its icon; null if the launcher doesn't say.</summary>
     public string? Exe { get; init; }
 
+    /// <summary>
+    /// For a game started by its exe rather than a launcher's link: the folder it starts in, since many look for their
+    /// files there; null for the default.
+    /// </summary>
+    public string? WorkingDirectory { get; init; }
+
     /// <summary>The game's key among every launcher's, such as <c>steam:367520</c> or <c>epic:Fortnite</c>.</summary>
     public string Key => KeyOf(Store, Id);
 

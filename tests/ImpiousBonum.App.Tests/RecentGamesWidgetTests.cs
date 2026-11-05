@@ -24,7 +24,10 @@ public sealed class RecentGamesWidgetTests
         new StoreGame(GameStore.Epic, "Fortnite", "Fortnite", @"C:\Games\Fortnite", FortniteLink), Now.AddHours(-5), null, new GameArt(null, null, null, Png));
     private static readonly RecentGame Hades = Steam(1145360, "Hades", Now.AddDays(-2), 41);
     private static readonly RecentGame UnrealGold = new(
-        new StoreGame(GameStore.Gog, "1207658924", "Unreal Gold", @"C:\GOG Games\Unreal Gold", @"C:\GOG Games\Unreal Gold\System\Unreal.exe", "-windowed"),
+        new StoreGame(GameStore.Gog, "1207658924", "Unreal Gold", @"C:\GOG Games\Unreal Gold", @"C:\GOG Games\Unreal Gold\System\Unreal.exe", "-windowed")
+        {
+            WorkingDirectory = @"C:\GOG Games\Unreal Gold\System",
+        },
         Now.AddDays(-3), 2, new GameArt(null, null, null, Png));
     private static readonly RecentGame Terraria = Steam(105600, "Terraria", Now.AddDays(-9), 11);
 
@@ -54,7 +57,7 @@ public sealed class RecentGamesWidgetTests
             Assert.Equal(
                 [
                     new WidgetAction(WidgetAction.Open, FortniteLink),
-                    new WidgetAction(WidgetAction.Open, @"C:\GOG Games\Unreal Gold\System\Unreal.exe", "-windowed"),
+                    new WidgetAction(WidgetAction.Open, @"C:\GOG Games\Unreal Gold\System\Unreal.exe", "-windowed") { WorkingDirectory = @"C:\GOG Games\Unreal Gold\System" },
                 ], actions);
         });
     }

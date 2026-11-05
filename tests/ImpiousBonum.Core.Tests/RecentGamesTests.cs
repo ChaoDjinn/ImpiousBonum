@@ -202,6 +202,53 @@ public sealed class RecentGamesTests
         Assert.Equal("Terraria", Text(store, RecentGamesProvider.Last));
     }
 
+    [Fact]
+    public async Task Each_launcher_keeps_its_own_recent_games_so_a_widget_showing_one_launcher_has_them()
+    {
+        var files = new FakeGameFiles { Steam = SteamPath, Epic = EpicData };
+        var steamGames = Enumerable.Range(1, RecentGamesProvider.Kept + 1).ToList();
+        foreach (var i in steamGames)
+            files.Texts[$@"{Steam}\steamapps\appmanifest_{i}.acf"] = Manifest(i, $"Game {i}");
+        files.Texts[Config] = LocalConfig([.. steamGames.Select(i => (i, (DateTimeOffset?)Now.AddHours(-i), 60))]);
+        files.Texts[$@"{EpicData}\Manifests\F.item"] =
+            """{ "AppName": "Fortnite", "DisplayName": "Fortnite", "InstallLocation": "C:\\Games\\Fortnite", "AppCategories": ["games"] }""";
+        var played = TempFile();
+        try
+        {
+            PlayedGames.Write(played, new Dictionary<string, PlayedGame> { ["epic:Fortnite"] = new(Now.AddDays(-1), 90) });
+            using var provider = new RecentGamesProvider(played, files, new FakeTime(Now));
+            var store = new MetricStore();
+            provider.Initialize(store);
+            await provider.SampleAsync(store, CancellationToken.None);
+
+            // Eight of Steam's, newest first, then Fortnite, played before all of them.
+            Assert.Equal([.. steamGames.Take(RecentGamesProvider.Kept).Select(i => $"Game {i}"), "Fortnite"], Recent(store).Select(r => r.Game.Name));
+        }
+        finally
+        {
+            File.Delete(played);
+        }
+    }
+
+    [Fact]
+    public async Task Steam_s_record_that_can_t_be_read_just_now_is_read_next_time()
+    {
+        var files = Library();
+        files.Unreadable.Add(Config);
+        var time = new FakeTime(Now);
+        using var provider = new RecentGamesProvider(null, files, time);
+        var store = new MetricStore();
+        provider.Initialize(store);
+
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Null(store.GetAttachment(RecentGamesProvider.Recent));
+
+        files.Unreadable.Clear();
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["Hollow Knight", "Hades"], Recent(store).Select(r => r.Game.Name));
+    }
+
     private static string TempFile() => Path.Combine(Path.GetTempPath(), $"ib-played-{Guid.NewGuid():N}.json");
 
     private static IReadOnlyList<RecentGame> Recent(MetricStore store) =>

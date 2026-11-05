@@ -225,6 +225,7 @@ public sealed class GameArtTests
             ["path"] = @"C:\GOG Games\Unreal Gold",
             ["exe"] = @"C:\GOG Games\Unreal Gold\System\Unreal.exe",
             ["launchParam"] = "-windowed",
+            ["workingDir"] = @"C:\GOG Games\Unreal Gold",
             ["dependsOn"] = "",
         }));
         files.Gog.Add(Gog("1207658925", new() { ["gameName"] = "Unreal Gold Bonus Pack", ["path"] = @"C:\GOG Games\Unreal Gold", ["dependsOn"] = "1207658924" }));
@@ -237,6 +238,7 @@ public sealed class GameArtTests
             new(GameStore.Gog, "1207658924", "Unreal Gold", @"C:\GOG Games\Unreal Gold", @"C:\GOG Games\Unreal Gold\System\Unreal.exe", "-windowed")
             {
                 Exe = @"C:\GOG Games\Unreal Gold\System\Unreal.exe",
+                WorkingDirectory = @"C:\GOG Games\Unreal Gold",
             },
             new(GameStore.Gog, "2", "Celeste", @"D:\GOG\Celeste"),
         ], new GogLibrary(files).Games());
