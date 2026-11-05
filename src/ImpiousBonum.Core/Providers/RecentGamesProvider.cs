@@ -23,7 +23,10 @@ public sealed class RecentGamesProvider : IMetricProvider
     public const string Last = "games.last";
     public const string Hours = "game.hours";
 
-    /// <summary>How many games the list keeps, with their pictures.</summary>
+    /// <summary>
+    /// How many games the list keeps from each launcher, with their pictures: as many as a widget shows, so one showing
+    /// only Epic's games has them even when the last few played were Steam's.
+    /// </summary>
     public const int Kept = 8;
 
     /// <summary>How often the app's own record is saved while a game it counts is in front, besides when the game leaves.</summary>
@@ -132,10 +135,17 @@ public sealed class RecentGamesProvider : IMetricProvider
         var config = _steam.LocalConfig();
         if (!config.Equals(_localConfig))
         {
-            _localConfig = config;
-            _steamPlayed = config is { } found && _files.ReadText(found.Path) is { } text
-                ? SteamLibrary.PlayHistory(text)
-                : new Dictionary<int, SteamPlay>();
+            if (config is not { } found)
+            {
+                _localConfig = null;
+                _steamPlayed = new Dictionary<int, SteamPlay>();
+            }
+            else if (_files.ReadText(found.Path) is { } text)
+            {
+                _localConfig = config;
+                _steamPlayed = SteamLibrary.PlayHistory(text);
+            }
+            // Else Steam's writing it: it's read next time, and what was read before stands till then.
         }
     }
 
@@ -160,8 +170,9 @@ public sealed class RecentGamesProvider : IMetricProvider
         }
 
         var recent = played
+            .GroupBy(p => p.Game.Store)
+            .SelectMany(launcher => launcher.OrderByDescending(p => p.Last).Take(Kept))
             .OrderByDescending(p => p.Last)
-            .Take(Kept)
             .Select(p => new RecentGame(p.Game, p.Last, p.Hours, ArtOf(p.Game)))
             .ToList();
         foreach (var key in _art.Keys.Except(recent.Select(r => r.Game.Key), StringComparer.OrdinalIgnoreCase).ToList())

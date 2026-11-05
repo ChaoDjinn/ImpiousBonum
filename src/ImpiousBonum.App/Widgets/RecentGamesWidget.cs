@@ -173,8 +173,8 @@ public sealed class RecentGamesWidget : Widget
                 var target = new TapTarget { Child = content, Background = Brushes.Transparent };
                 target.Tapped += (_, _) =>
                 {
-                    if (tile.Game.Game.Launch is { } launch)
-                        RequestAction(new WidgetAction(WidgetAction.Open, launch, tile.Game.Game.Arguments));
+                    if (tile.Game.Game is { Launch: { } launch } game)
+                        RequestAction(new WidgetAction(WidgetAction.Open, launch, game.Arguments) { WorkingDirectory = game.WorkingDirectory ?? "" });
                 };
                 holder = target;
             }

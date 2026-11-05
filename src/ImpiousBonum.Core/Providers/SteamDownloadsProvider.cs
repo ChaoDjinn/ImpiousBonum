@@ -8,7 +8,8 @@ namespace ImpiousBonum.Core.Providers;
 /// (<c>appmanifest_&lt;id&gt;.acf</c>), which it rewrites as a download goes: the list as an attachment (a list of
 /// <see cref="SteamDownload"/>) for the downloads widget, and readings for the first in it. Nothing is fetched and
 /// Steam needn't be running. Every few seconds it looks at when each manifest was last written, which listing Steam's
-/// folders gives for free, and reads only the ones that changed. There's no reading while nothing is downloading.
+/// folders gives for free, and reads only the ones that changed; for the few downloads started, it asks the registry
+/// whether Steam is working on them now. There's no reading while nothing is downloading.
 /// </summary>
 public sealed class SteamDownloadsProvider : IMetricProvider
 {
@@ -75,15 +76,19 @@ public sealed class SteamDownloadsProvider : IMetricProvider
                 _manifests.TryGetValue(path, out var seen);
                 if (seen is not null && seen.Written == written)
                     continue;
-                var download = _files.ReadText(path) is { } text ? SteamLibrary.Download(text) : null;
-                _manifests[path] = Seen.After(seen, written, download, now);
+                // One that can't be read now (Steam writing it, say) is read again next time, rather than forgotten.
+                if (_files.ReadText(path) is not { } text)
+                    continue;
+                _manifests[path] = Seen.After(seen, written, SteamLibrary.DownloadManifest(text));
             }
         }
         foreach (var gone in _manifests.Keys.Where(path => !present.Contains(path)).ToList())
             _manifests.Remove(gone);
 
+        // Only the few downloads that have been started ask Steam whether they're going.
         Publish(store, [.. _manifests.Values
-            .Select(seen => seen.Now(now))
+            .Where(seen => seen.Manifest is { Started: true })
+            .Select(seen => seen.Now(now, _files.SteamUpdating(seen.Manifest!.AppId)))
             .OfType<SteamDownload>()
             .OrderBy(download => download.State)
             .ThenBy(download => download.Name, StringComparer.CurrentCultureIgnoreCase)]);
@@ -110,28 +115,28 @@ public sealed class SteamDownloadsProvider : IMetricProvider
     }
 
     /// <summary>
-    /// A manifest as last read: when it was written, the download it described, and since when that download has been
-    /// as far along as it is, with the speed it got there at.
+    /// A manifest as last read: when Steam wrote it, what it said, and since when its download has been as far along
+    /// as it is (by Steam's writes, not by when the app looked), with the speed it got there at.
     /// </summary>
-    private sealed record Seen(DateTime Written, SteamDownload? Download, DateTimeOffset Since, double? Speed)
+    private sealed record Seen(DateTime Written, SteamManifest? Manifest, DateTimeOffset? Since, double? Speed)
     {
-        /// <summary>The manifest as just read, after <paramref name="before"/>: the speed is how far it has come since then.</summary>
-        public static Seen After(Seen? before, DateTime written, SteamDownload? download, DateTimeOffset now)
+        /// <summary>The manifest as just read, after <paramref name="before"/>: the speed is how far it came between Steam's two writes.</summary>
+        public static Seen After(Seen? before, DateTime written, SteamManifest? manifest)
         {
-            if (download is null)
-                return new Seen(written, null, now, null);
-            if (before is null || before.Download is not { } was || was.AppId != download.AppId || was.State != download.State || download.Done < was.Done)
-                return new Seen(written, download, now, null);
-            if (download.Done == was.Done)
-                return before with { Written = written, Download = download };
-            var seconds = (now - before.Since).TotalSeconds;
-            return new Seen(written, download, now, seconds > 0 ? (download.Done - was.Done) / seconds : before.Speed);
+            // A file's time is only known when the file system gives one.
+            DateTimeOffset? at = written > DateTime.MinValue ? new DateTimeOffset(DateTime.SpecifyKind(written, DateTimeKind.Utc)) : null;
+            if (manifest is null || before is null || before.Manifest is not { } was || was.AppId != manifest.AppId || manifest.Downloaded < was.Downloaded)
+                return new Seen(written, manifest, at, null);
+            if (manifest.Downloaded == was.Downloaded)
+                return before with { Written = written, Manifest = manifest };
+            var seconds = at is { } now && before.Since is { } since ? (now - since).TotalSeconds : 0;
+            return new Seen(written, manifest, at, seconds > 0 ? (manifest.Downloaded - was.Downloaded) / seconds : null);
         }
 
-        /// <summary>The download with its speed, while it's downloading and has moved lately.</summary>
-        public SteamDownload? Now(DateTimeOffset now) =>
-            Download is null ? null
-            : Download.State == SteamDownloadState.Downloading && Speed is not null && now - Since < SpeedLapse ? Download with { Speed = Speed }
-            : Download;
+        /// <summary>The download now, with its speed while it's downloading and has moved lately.</summary>
+        public SteamDownload? Now(DateTimeOffset now, bool? updating) =>
+            Manifest?.Download(updating) is not { } download ? null
+            : download.State == SteamDownloadState.Downloading && Speed is not null && Since is { } since && now - since < SpeedLapse ? download with { Speed = Speed }
+            : download;
     }
 }
