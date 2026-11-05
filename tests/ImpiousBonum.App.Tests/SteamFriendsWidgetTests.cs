@@ -79,7 +79,7 @@ public sealed class SteamFriendsWidgetTests
             var (page, _) = Page(settings);
             Assert.Equal("Off: add your key to start.", Card(page, "Now").Description);
 
-            Box(page, "Web API key").Text = "  SECRETKEY  ";
+            KeyBox(page).Password = "  SECRETKEY  ";
             Box(page, "Your profile").Text = "not a profile!";
             page.Commit();
             Assert.Equal(SteamPage.NotAProfile, Card(page, "Your profile").Description);
@@ -93,7 +93,7 @@ public sealed class SteamFriendsWidgetTests
             Assert.Equal(new SteamAccount("SECRETKEY", "me"), settings.SteamRequest());
 
             // Emptied: off again.
-            Box(page, "Web API key").Text = "";
+            KeyBox(page).Password = "";
             page.Commit();
             Assert.Null(settings.SteamApiKey);
             Assert.Null(settings.SteamRequest());
@@ -153,6 +153,8 @@ public sealed class SteamFriendsWidgetTests
             }
         }
     }
+
+    private static PasswordBox KeyBox(DependencyObject page) => Logical<PasswordBox>(page).Single(b => AutomationProperties.GetName(b) == "Web API key");
 
     private static TextBox Box(DependencyObject page, string name) => Logical<TextBox>(page).Single(b => AutomationProperties.GetName(b) == name);
 

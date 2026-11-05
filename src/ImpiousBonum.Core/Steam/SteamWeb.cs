@@ -102,13 +102,13 @@ public static class SteamWeb
     }
 
     /// <summary>
-    /// Throws <see cref="SteamWebException"/> for a reply that says the key isn't accepted, which Steam gives as 401 or
-    /// 403 to any request with a key it doesn't know.
+    /// Throws <see cref="SteamWebException"/> for a reply that says the key isn't accepted: 403 with a page saying to
+    /// check the <c>key=</c> parameter. Steam sends the same page with 401 when the key is fine but what it asked for is
+    /// private, such as a friends list, so a 401 is left for the caller.
     /// </summary>
     internal static void ThrowIfKeyRefused(HttpStatusCode status, string body)
     {
-        // A refused key gets a page saying to check the key= parameter, rather than JSON.
-        if (status is HttpStatusCode.Forbidden or HttpStatusCode.Unauthorized && body.Contains("key=", StringComparison.OrdinalIgnoreCase))
+        if (status == HttpStatusCode.Forbidden && body.Contains("key=", StringComparison.OrdinalIgnoreCase))
             throw new SteamWebException("Steam didn't accept the key. Check it on Steam's Web API key page, then paste it again.");
     }
 

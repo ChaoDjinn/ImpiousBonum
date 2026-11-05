@@ -41,6 +41,8 @@ public sealed class FriendsWidget : Widget
     private readonly Brush _label;
     private readonly Brush _playing;
     private readonly Brush _value;
+    // Not null at first, so the first refresh sets the widget up even without a list.
+    private object? _list = new();
     private string? _shown;
 
     public FriendsWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
@@ -57,7 +59,12 @@ public sealed class FriendsWidget : Widget
 
     public override void Refresh(MetricStore store, DateTime now)
     {
-        var friends = Pick(store.GetAttachment(SteamFriendsProvider.Friends) as IReadOnlyList<SteamFriend>, _playingOnly, _showAway);
+        // The provider replaces the list when it hears from Steam, once a minute; nothing changes in between.
+        var list = store.GetAttachment(SteamFriendsProvider.Friends);
+        if (ReferenceEquals(list, _list))
+            return;
+        _list = list;
+        var friends = Pick(list as IReadOnlyList<SteamFriend>, _playingOnly, _showAway);
         // Steam is asked once a minute: rebuild only when what's on show changes.
         var key = string.Join("\n", friends.Select(f => $"{f.Name}|{f.Presence}|{f.Game}"));
         if (key != _shown)

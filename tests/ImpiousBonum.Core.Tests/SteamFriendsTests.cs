@@ -18,6 +18,10 @@ public sealed class SteamFriendsTests
     private const string RefusedKey =
         "<html><head><title>Forbidden</title></head><body><h1>Forbidden</h1>Access is denied. Retrying will not help. Please verify your <pre>key=</pre> parameter.</body></html>";
 
+    // Steam's page for a private friends list says the same, with 401.
+    private const string Private =
+        "<html><head><title>Unauthorized</title></head><body><h1>Unauthorized</h1>Access is denied. Retrying will not help. Please verify your <pre>key=</pre> parameter.</body></html>";
+
     private static readonly DateTimeOffset Now = new(2026, 11, 5, 22, 0, 0, TimeSpan.Zero);
 
     private static readonly string Resolved = $$"""{ "response": { "steamid": "{{Me}}", "success": 1 } }""";
@@ -110,7 +114,7 @@ public sealed class SteamFriendsTests
         Assert.Throws<JsonException>(() => SteamWeb.Achievements(HttpStatusCode.OK, "<html>?</html>"));
 
         Assert.Throws<SteamWebException>(() => SteamWeb.ThrowIfKeyRefused(HttpStatusCode.Forbidden, RefusedKey));
-        SteamWeb.ThrowIfKeyRefused(HttpStatusCode.Unauthorized, "<html>Unauthorized</html>");
+        SteamWeb.ThrowIfKeyRefused(HttpStatusCode.Unauthorized, Private);
         SteamWeb.ThrowIfKeyRefused(HttpStatusCode.OK, Resolved);
     }
 
@@ -254,7 +258,7 @@ public sealed class SteamFriendsTests
             return Task.FromResult(method switch
             {
                 "ResolveVanityURL" => (HttpStatusCode.OK, Resolved),
-                "GetFriendList" when PrivateFriends => (HttpStatusCode.Unauthorized, "<html><head><title>Unauthorized</title></head></html>"),
+                "GetFriendList" when PrivateFriends => (HttpStatusCode.Unauthorized, Private),
                 "GetFriendList" => (HttpStatusCode.OK, FriendList),
                 "GetPlayerSummaries" => (HttpStatusCode.OK, Summaries),
                 "GetPlayerAchievements" => (HttpStatusCode.OK, Achievements),
