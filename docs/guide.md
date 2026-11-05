@@ -682,9 +682,12 @@ while you edit the layout).
 
 It reads the manifest Steam keeps for each game in its library folders, which Steam rewrites as a download goes, so
 there's no account to link and Steam needn't even be open. Every 5 seconds it looks at when each manifest was last
-written and reads only the ones that changed. Steam writes its progress every so often rather than all the time, so
-the bar moves in steps, and the speed and time left show once it has written twice. A download that hasn't moved for
-two minutes has no speed. An update Steam is holding until you launch the game isn't a download until it starts.
+written and reads only the ones that changed, and for the downloads that have started, it asks Steam's own entry in the
+registry whether Steam is working on them now, which tells one that's going from one paused or queued. Steam writes
+its progress every so often rather than all the time, so the bar moves in steps, and the speed and time left show
+once it has written twice; they're worked out from when Steam wrote, so they're right however long Impious Bonum has
+been running. A download that hasn't moved for two minutes has no speed. An update Steam is holding until you launch
+the game isn't a download until it starts.
 
 The readings are for the first download in the list, the one going now:
 

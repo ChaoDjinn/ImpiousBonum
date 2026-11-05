@@ -10,19 +10,20 @@ public enum SteamDownloadState
     /// <summary>Downloaded, and being written into the game's folder.</summary>
     Installing,
 
+    /// <summary>Stopped partway.</summary>
     Paused,
 
-    /// <summary>Started, and waiting its turn in Steam's queue (or for Steam to start).</summary>
+    /// <summary>Started, and waiting its turn in Steam's queue.</summary>
     Queued,
 }
 
 /// <summary>
-/// A game Steam is downloading, updating or installing, as its <c>appmanifest_&lt;id&gt;.acf</c> says: how much is done
-/// of how much, which while <see cref="SteamDownloadState.Installing"/> is how much has been written into its folder.
+/// A game Steam is downloading, updating or installing: how much is done of how much, which while
+/// <see cref="SteamDownloadState.Installing"/> is how much has been written into its folder.
 /// </summary>
 public sealed record SteamDownload(int AppId, string Name, SteamDownloadState State, long Done, long Total)
 {
-    /// <summary>Bytes a second, from how <see cref="Done"/> has grown between Steam's writes; null until it has grown, or once it stops.</summary>
+    /// <summary>Bytes a second, from how far it got between Steam's writes; null until it has moved, or once it stops.</summary>
     public double? Speed { get; init; }
 
     /// <summary>How far it has got, 0 to 100; null if Steam hasn't said how big it is.</summary>
@@ -39,8 +40,20 @@ public sealed record SteamDownload(int AppId, string Name, SteamDownloadState St
         SteamDownloadState.Paused => "Paused",
         _ => "Queued",
     };
+}
 
-    // Steam's EAppState flags, as StateFlags in the manifest holds them.
+/// <summary>
+/// What a game's <c>appmanifest_&lt;id&gt;.acf</c> says about downloading it, as Steam last wrote it: its state flags
+/// and how many bytes there are to download and to write into its folder, and how many are done.
+/// </summary>
+/// <remarks>
+/// Steam's flags are its EAppState values. In practice a download that's going has UpdateStarted (1024) set, along with
+/// UpdateRequired (2), and loses it when it's paused or stops, keeping its partial byte counts; the more particular
+/// flags (UpdateRunning, Downloading and so on) are seldom written. So the flags tell going from stopped, and Steam's
+/// own <c>Updating</c> value for the game in the registry, which it keeps up to the moment, settles it when there is one.
+/// </remarks>
+public sealed record SteamManifest(int AppId, string Name, int Flags, long ToDownload, long Downloaded, long ToStage, long Staged)
+{
     private const int UpdateRequired = 2;
     private const int UpdateRunning = 256;
     private const int UpdatePaused = 512;
@@ -50,36 +63,43 @@ public sealed record SteamDownload(int AppId, string Name, SteamDownloadState St
     private const int Staging = 1 << 21;
     private const int Committing = 1 << 22;
 
-    /// <summary>The flags that mean a download has been started, whether or not it's running now.</summary>
-    private const int Started = UpdateRunning | UpdatePaused | UpdateStarted | Preallocating | Downloading | Staging | Committing;
+    private const int Going = UpdateStarted | UpdateRunning | Preallocating | Downloading | Staging | Committing;
 
     /// <summary>
-    /// The download a manifest's <c>AppState</c> describes, or null if there's none: the game is installed and up to
-    /// date, or has an update waiting that hasn't been started (Steam's "update when launched").
+    /// Whether a download has been started, whether or not it's going now; one that hasn't, such as an update Steam is
+    /// holding until the game's launched, isn't a download at all.
     /// </summary>
-    internal static SteamDownload? FromManifest(VdfBlock state)
+    public bool Started => (Flags & (Going | UpdatePaused)) != 0 || ((Flags & UpdateRequired) != 0 && Downloaded > 0 && Downloaded < ToDownload);
+
+    /// <summary>The manifest's <c>AppState</c>, or null if it has no app id.</summary>
+    internal static SteamManifest? Parse(VdfBlock state)
     {
         if (!int.TryParse(state.Text("appid"), NumberStyles.None, CultureInfo.InvariantCulture, out var appId))
             return null;
-        var flags = Number(state, "StateFlags");
-        var toDownload = Number(state, "BytesToDownload");
-        var downloaded = Number(state, "BytesDownloaded");
-        var toStage = Number(state, "BytesToStage");
-        var staged = Number(state, "BytesStaged");
-        var partly = (flags & UpdateRequired) != 0 && downloaded > 0 && downloaded < toDownload;
-        if ((flags & Started) == 0 && !partly)
-            return null;
-
         var name = state.Text("name") is { Length: > 0 } named ? named.Trim() : state.Text("installdir") ?? appId.ToString(CultureInfo.InvariantCulture);
-        var downloadedAll = toDownload <= 0 || downloaded >= toDownload;
-        var installing = (flags & (Staging | Committing)) != 0 || (downloadedAll && toStage > 0 && staged < toStage && (flags & UpdateRunning) != 0);
-        var stateNow = (flags & UpdatePaused) != 0 ? SteamDownloadState.Paused
-            : installing ? SteamDownloadState.Installing
-            : (flags & (UpdateRunning | Downloading | Preallocating)) != 0 ? SteamDownloadState.Downloading
+        return new SteamManifest(appId, name, (int)Number(state, "StateFlags"),
+            Number(state, "BytesToDownload"), Number(state, "BytesDownloaded"), Number(state, "BytesToStage"), Number(state, "BytesStaged"));
+    }
+
+    /// <summary>
+    /// The download now, or null if none has been started. <paramref name="updating"/> is Steam's own word on whether
+    /// it's working on the game, from the registry; null where Steam doesn't say, and then the flags decide.
+    /// </summary>
+    public SteamDownload? Download(bool? updating)
+    {
+        if (!Started)
+            return null;
+        var going = updating ?? ((Flags & Going) != 0 && (Flags & UpdatePaused) == 0);
+        var downloadedAll = ToDownload <= 0 || Downloaded >= ToDownload;
+        var installing = going && ((Flags & (Staging | Committing)) != 0 || (downloadedAll && ToStage > 0 && Staged < ToStage));
+        var state = installing ? SteamDownloadState.Installing
+            : going ? SteamDownloadState.Downloading
+            // Stopped partway is paused; started and not begun is waiting its turn.
+            : (Flags & UpdatePaused) != 0 || Downloaded > 0 ? SteamDownloadState.Paused
             : SteamDownloadState.Queued;
-        return stateNow == SteamDownloadState.Installing && toStage > 0
-            ? new SteamDownload(appId, name, stateNow, staged, toStage)
-            : new SteamDownload(appId, name, stateNow, downloaded, toDownload);
+        return state == SteamDownloadState.Installing && ToStage > 0
+            ? new SteamDownload(AppId, Name, state, Staged, ToStage)
+            : new SteamDownload(AppId, Name, state, Downloaded, ToDownload);
     }
 
     private static long Number(VdfBlock block, string key) =>

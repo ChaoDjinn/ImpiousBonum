@@ -34,6 +34,12 @@ public interface IGameFiles
     /// </summary>
     IReadOnlyList<(string Path, DateTime Written)> FilesWritten(string folder, string pattern);
 
+    /// <summary>
+    /// Whether Steam says it's working on a game's download or update now: its <c>Updating</c> value under
+    /// HKCU\Software\Valve\Steam\Apps\&lt;id&gt;, which it keeps up to the moment. Null if Steam doesn't say.
+    /// </summary>
+    bool? SteamUpdating(int appId);
+
     /// <summary>The exe's description, as Explorer's Properties → Details shows it ("Hollow Knight"), or null.</summary>
     string? Description(string exe);
 
@@ -142,6 +148,19 @@ public sealed class GameFiles : IGameFiles
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or SecurityException)
         {
             return [];
+        }
+    }
+
+    public bool? SteamUpdating(int appId)
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey($@"Software\Valve\Steam\Apps\{appId}");
+            return key?.GetValue("Updating") is int updating ? updating != 0 : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            return null;
         }
     }
 

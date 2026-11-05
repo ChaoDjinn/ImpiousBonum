@@ -138,6 +138,8 @@ public sealed class DownloadsWidgetTests
 
         public IReadOnlyList<(string Path, DateTime Written)> FilesWritten(string folder, string pattern) => [];
 
+        public bool? SteamUpdating(int appId) => null;
+
         public string? Description(string exe) => null;
 
         public byte[]? Icon(string exe) => null;
