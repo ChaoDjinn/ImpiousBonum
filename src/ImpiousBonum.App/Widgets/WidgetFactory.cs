@@ -21,7 +21,7 @@ public static class WidgetFactory
             BatteriesWidget.Descriptor, DownloadsWidget.Descriptor,
             ProcessesWidget.Descriptor, StatusWidget.Descriptor),
         .. In(Time, ClockWidget.Descriptor, TimerWidget.Descriptor, AgendaWidget.Descriptor, CountdownsWidget.Descriptor),
-        .. In(Media, MediaWidget.Descriptor, VisualizerWidget.Descriptor, ButtonsWidget.Descriptor),
+        .. In(Media, MediaWidget.Descriptor, VisualizerWidget.Descriptor, ButtonsWidget.Descriptor, RecentGamesWidget.Descriptor),
         .. In(Online, WeatherWidget.Descriptor, RainWidget.Descriptor, SunMoonWidget.Descriptor, NewsWidget.Descriptor, BarsWidget.ClaudeDescriptor),
         .. In(Decoration, ImageWidget.Descriptor, ShapeWidget.Descriptor, PhotoFrameWidget.Descriptor),
     ]);

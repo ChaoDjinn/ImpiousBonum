@@ -204,7 +204,10 @@ public sealed class GameArtTests
 
         var game = Assert.Single(new EpicLibrary(files).Games());
         Assert.Equal(new StoreGame(GameStore.Epic, "Sugar", "Hades", @"C:\Program Files\Epic Games\Hades",
-            "com.epicgames.launcher://apps/ns1%3Aitem1%3ASugar?action=launch&silent=true"), game);
+            "com.epicgames.launcher://apps/ns1%3Aitem1%3ASugar?action=launch&silent=true")
+        {
+            Exe = @"C:\Program Files\Epic Games\Hades\Binaries\Win64\Game.exe",
+        }, game);
 
         Assert.Empty(new EpicLibrary(new FakeGameFiles()).Games());
         // Older launchers' links name just the app.
@@ -231,7 +234,10 @@ public sealed class GameArtTests
 
         Assert.Equal<StoreGame>(
         [
-            new(GameStore.Gog, "1207658924", "Unreal Gold", @"C:\GOG Games\Unreal Gold", @"C:\GOG Games\Unreal Gold\System\Unreal.exe", "-windowed"),
+            new(GameStore.Gog, "1207658924", "Unreal Gold", @"C:\GOG Games\Unreal Gold", @"C:\GOG Games\Unreal Gold\System\Unreal.exe", "-windowed")
+            {
+                Exe = @"C:\GOG Games\Unreal Gold\System\Unreal.exe",
+            },
             new(GameStore.Gog, "2", "Celeste", @"D:\GOG\Celeste"),
         ], new GogLibrary(files).Games());
         Assert.Empty(new GogLibrary(new FakeGameFiles()).Games());

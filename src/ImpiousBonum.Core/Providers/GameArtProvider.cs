@@ -29,6 +29,9 @@ public sealed class GameArtProvider(
     /// <summary>The game's pictures (a <see cref="GameArt"/>), as a <see cref="MetricStore"/> attachment.</summary>
     public const string Art = "game.art";
 
+    /// <summary>The game itself (a <see cref="Game"/>), as a <see cref="MetricStore"/> attachment, for the other providers that follow it.</summary>
+    public const string Current = "game.current";
+
     /// <summary>How long a game stays after it leaves the front, so a quick alt-tab doesn't blank its picture.</summary>
     public static readonly TimeSpan Linger = TimeSpan.FromSeconds(3);
 
@@ -85,6 +88,7 @@ public sealed class GameArtProvider(
         store.SetText(AppId, game?.AppId?.ToString(CultureInfo.InvariantCulture));
         store.SetText(Store, game?.Store is { } launcher ? StoreGame.StoreName(launcher) : null);
         store.SetAttachment(Art, game?.Art);
+        store.SetAttachment(Current, game);
     }
 
     public void Dispose()

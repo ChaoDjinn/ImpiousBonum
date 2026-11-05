@@ -7,7 +7,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries), [Steam downloads](#steam-downloads)
-- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [photo frame](#photo-frame)
+- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [recent games](#recent-games), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
 - [Command line](#command-line)
@@ -258,6 +258,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `calendar.<name>.next.title`, `calendar.<name>.next.time`, `calendar.<name>.next.location`, `calendar.<name>.next.minutes`, `calendar.<name>.now.title`, `calendar.<name>.today` | The same for one calendar, e.g. `calendar.work.next.title` for a calendar called *Work* |
 | `game.name`, `game.appid`, `game.store` | The game you're playing: its name in Steam, the Epic Games launcher or GOG Galaxy, or the name in its exe for a game linked under *Game layouts*; its Steam app id; and which of those launchers it's from (*Steam*, *Epic Games* or *GOG*). No reading while no game is in front (see [Game cover art](#game-cover-art)) |
 | `steam.downloads` (how many), `steam.download.game`, `steam.download.state`, `steam.download.progress`, `steam.download.done`, `steam.download.size`, `steam.download.speed`, `steam.download.left` | What Steam is downloading, updating or installing, from its own files, every 5 seconds. No reading while nothing is (see [Steam downloads](#steam-downloads)) |
+| `game.hours`, `games.last` | How many hours the game in front has been played (Steam's count for a Steam game, the app's own for an Epic Games or GOG game), and the name of the game played most recently (see [Recent games](#recent-games)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
@@ -870,6 +871,33 @@ It costs next to nothing: the game is looked up only when a different app comes 
 
 ```json
 { "type": "image", "x": 30, "y": 30, "width": 300, "height": 450, "source": "game", "art": "cover", "cornerRadius": 12, "hideNoGame": true }
+```
+
+### Recent games
+
+The *Recent games* widget shows the games you've played lately, newest first, as tiles of Steam's art (the tall
+*cover* or the wide *header*) or, for a game Steam has no pictures of, its icon with its name under it. Tap a tile to
+start the game through its launcher, as its desktop shortcut does: Steam and the Epic Games launcher start theirs
+(opening if they need to), and a GOG game's own exe is started. Turn *Tap to play* off for tiles that only show.
+
+Only installed games are listed, as they're the ones a tap can start. Where the dates come from:
+
+- **Steam** keeps when each game was last played and its hours altogether in its own files (`localconfig.vdf` in
+  your Steam folder's `userdata`), which the widget reads whenever Steam rewrites them, usually as a game closes.
+- **The Epic Games launcher and GOG** keep no such record on your PC, so the app keeps its own: when one of their
+  games is in front, it counts the time and remembers it in `played.json` in the settings folder. So their games show
+  once you've played them with Impious Bonum running, and their hours are the time it has seen.
+
+*Games* sets how many tiles there are (up to 8) and *Rows* how many rows they're spread over; the tiles stay the same
+size however many games there are, so a new one doesn't rearrange the others. *Launchers* picks Steam's, Epic's or
+GOG's games, or all of them. *Show names* puts each game's name under its picture, and *Show when played* how long
+ago it was played and its hours, such as *2d 3h ago · 41 h*. The widget hides while there are no games to show.
+
+`game.hours` is how many hours the game in front has been played, and `games.last` the name of the game played most
+recently. In the layout file:
+
+```json
+{ "type": "games", "x": 30, "y": 30, "width": 640, "height": 300, "count": 4, "art": "cover", "showPlayed": true }
 ```
 
 ### Photo frame

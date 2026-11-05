@@ -21,6 +21,7 @@ public sealed class GogLibrary(IGameFiles files)
             return null;
         var id = entry.Text("gameID") ?? entry.Key;
         var name = (entry.Text("gameName") ?? Path.GetFileName(folder)).Trim();
-        return new StoreGame(GameStore.Gog, id, name, folder, entry.Text("exe"), entry.Text("launchParam") ?? "");
+        var exe = entry.Text("exe");
+        return new StoreGame(GameStore.Gog, id, name, folder, exe, entry.Text("launchParam") ?? "") { Exe = exe };
     }
 }

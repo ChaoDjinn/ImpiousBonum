@@ -47,6 +47,52 @@ public sealed class SteamLibrary(IGameFiles files)
     /// <summary>Steam's library folders: its own and the others it lists; none without Steam.</summary>
     public IReadOnlyList<string> LibraryPaths() => Folder is { } steam ? Libraries(steam) : [];
 
+    /// <summary>
+    /// The <c>localconfig.vdf</c> of whoever signs in to Steam on this PC (in <c>userdata\&lt;account id&gt;\config</c>),
+    /// the most recently written if more than one person has, with when it was written; null without Steam or anyone
+    /// who has signed in.
+    /// </summary>
+    public (string Path, DateTime Written)? LocalConfig()
+    {
+        if (Folder is not { } steam)
+            return null;
+        (string Path, DateTime Written)? newest = null;
+        foreach (var user in files.Folders(Path.Combine(steam, "userdata")))
+        {
+            foreach (var config in files.FilesWritten(Path.Combine(user, "config"), "localconfig.vdf"))
+            {
+                if (newest is not { } best || config.Written > best.Written)
+                    newest = config;
+            }
+        }
+        return newest;
+    }
+
+    /// <summary>
+    /// When each game was last played and how long for altogether, by app id, from a <c>localconfig.vdf</c>; games it
+    /// has neither for are left out.
+    /// </summary>
+    internal static IReadOnlyDictionary<int, SteamPlay> PlayHistory(string localConfig)
+    {
+        var history = new Dictionary<int, SteamPlay>();
+        var apps = Vdf.Parse(localConfig).Block("UserLocalConfigStore")?.Block("Software")?.Block("Valve")?.Block("Steam")?.Block("apps");
+        if (apps is null)
+            return history;
+        foreach (var key in apps.Keys)
+        {
+            if (!int.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out var appId) || apps.Block(key) is not { } app)
+                continue;
+            // Seconds since 1970; anything past the year 9999 is nonsense rather than a date.
+            DateTimeOffset? last = long.TryParse(app.Text("LastPlayed"), NumberStyles.None, CultureInfo.InvariantCulture, out var seconds) && seconds is > 0 and < 253_402_300_800
+                ? DateTimeOffset.FromUnixTimeSeconds(seconds)
+                : null;
+            var minutes = int.TryParse(app.Text("Playtime"), NumberStyles.None, CultureInfo.InvariantCulture, out var played) ? played : 0;
+            if (last is not null || minutes > 0)
+                history[appId] = new SteamPlay(last, minutes);
+        }
+        return history;
+    }
+
     /// <summary>The download an <c>appmanifest_&lt;id&gt;.acf</c> describes, or null if the game isn't being downloaded.</summary>
     internal static SteamDownload? Download(string acf) =>
         Vdf.Parse(acf).Block("AppState") is { } state ? SteamDownload.FromManifest(state) : null;
