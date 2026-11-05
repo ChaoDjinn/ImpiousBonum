@@ -43,7 +43,7 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
             case WidgetAction.VolumeDown: return Press(VolumeDown);
             case WidgetAction.Mute: return Press(VolumeMute);
             case WidgetAction.MicMute: return ToggleMicrophone();
-            case WidgetAction.Open: return Open(action.Target, action.Arguments);
+            case WidgetAction.Open: return Open(action.Target, action.Arguments, action.WorkingDirectory);
             case WidgetAction.Layout:
                 return action.Target.Length == 0 ? "This button has no layout to switch to. Set its target in the editor." : switchLayout(action.Target);
             case WidgetAction.Keys:
@@ -54,7 +54,7 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
         }
     }
 
-    private static string? Open(string target, string arguments)
+    private static string? Open(string target, string arguments, string workingDirectory)
     {
         if (target.Length == 0)
             return "This button has nothing to open. Set its target in the editor.";
@@ -65,6 +65,7 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
             using var process = Process.Start(new ProcessStartInfo(Environment.ExpandEnvironmentVariables(target))
             {
                 Arguments = arguments,
+                WorkingDirectory = workingDirectory,
                 UseShellExecute = true,
             });
             return null;

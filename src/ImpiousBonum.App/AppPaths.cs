@@ -40,6 +40,9 @@ public static class AppPaths
     /// <summary>Today's and this month's energy so far (see <see cref="Core.Energy.EnergyTotals"/>), so a restart carries on from them.</summary>
     public static string EnergyFile => Path.Combine(DataDirectory, Core.Energy.EnergyTotals.FileName);
 
+    /// <summary>When Epic Games and GOG games were last played and for how long, as the app has seen them.</summary>
+    public static string PlayedFile => Path.Combine(DataDirectory, Core.Games.PlayedGames.FileName);
+
     public static void UseDataDirectory(string directory) => DataDirectory = Path.GetFullPath(directory);
 
     public static void EnsureCreated() => Directory.CreateDirectory(DataDirectory);

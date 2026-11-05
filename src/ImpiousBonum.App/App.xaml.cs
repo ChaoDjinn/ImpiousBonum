@@ -143,7 +143,7 @@ public partial class App : Application
                 () => _trackedGame, recap => Dispatcher.BeginInvoke(() => OnSessionEnded(recap)),
                 airQuality: () => _settings.AirQualityRequest(), warnings: () => _settings.WeatherWarningsRequest(), weatherPlaces: () => _settings.WeatherPlaceRequests(),
                 energy: () => _settings.EnergySettings(), energyTotalsPath: AppPaths.EnergyFile, gridCarbon: () => _settings.GridCarbonRequest(),
-                statusChecks: () => _settings.StatusChecks, linkedGame: () => _linkedGame));
+                statusChecks: () => _settings.StatusChecks, linkedGame: () => _linkedGame, playedPath: AppPaths.PlayedFile));
         _sampler.Start();
 
         _window = new DashboardWindow();

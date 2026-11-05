@@ -49,7 +49,10 @@ public sealed class EpicLibrary(IGameFiles files)
                 return null;
             }
             var name = (Text(root, "DisplayName") ?? appName).Trim();
-            return new StoreGame(GameStore.Epic, appName, name, folder, LaunchLink(Text(root, "CatalogNamespace"), Text(root, "CatalogItemId"), appName));
+            return new StoreGame(GameStore.Epic, appName, name, folder, LaunchLink(Text(root, "CatalogNamespace"), Text(root, "CatalogItemId"), appName))
+            {
+                Exe = Exe(folder, Text(root, "LaunchExecutable")),
+            };
         }
         catch (JsonException)
         {
@@ -65,6 +68,21 @@ public sealed class EpicLibrary(IGameFiles files)
     {
         var id = catalogNamespace is null || catalogItemId is null ? appName : $"{catalogNamespace}:{catalogItemId}:{appName}";
         return $"com.epicgames.launcher://apps/{Uri.EscapeDataString(id)}?action=launch&silent=true";
+    }
+
+    /// <summary>The exe the launcher starts, which the manifest gives relative to the game's folder; null if it gives none.</summary>
+    private static string? Exe(string folder, string? launchExecutable)
+    {
+        if (launchExecutable is null)
+            return null;
+        try
+        {
+            return InstallFolders.Normalize(Path.Combine(folder, launchExecutable));
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return null;
+        }
     }
 
     private static string? Text(JsonElement element, string name) =>

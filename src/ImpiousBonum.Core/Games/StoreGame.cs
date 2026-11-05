@@ -16,6 +16,21 @@ public enum GameStore
 /// <param name="Arguments">For an exe in <paramref name="Launch"/>: its command-line arguments.</param>
 public sealed record StoreGame(GameStore Store, string Id, string Name, string Folder, string? Launch = null, string Arguments = "")
 {
+    /// <summary>The game's own exe, as its launcher records it, for its icon; null if the launcher doesn't say.</summary>
+    public string? Exe { get; init; }
+
+    /// <summary>
+    /// For a game started by its exe rather than a launcher's link: the folder it starts in, since many look for their
+    /// files there; null for the default.
+    /// </summary>
+    public string? WorkingDirectory { get; init; }
+
+    /// <summary>The game's key among every launcher's, such as <c>steam:367520</c> or <c>epic:Fortnite</c>.</summary>
+    public string Key => KeyOf(Store, Id);
+
+    /// <summary>The key of the game with this id in this launcher (see <see cref="Key"/>).</summary>
+    public static string KeyOf(GameStore store, string id) => $"{store.ToString().ToLowerInvariant()}:{id}";
+
     /// <summary>The launcher's name as people know it, for the <c>game.store</c> reading.</summary>
     public static string StoreName(GameStore store) => store switch
     {

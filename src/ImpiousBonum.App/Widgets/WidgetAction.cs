@@ -41,6 +41,9 @@ public sealed record WidgetAction(string Kind, string Target = "", string Argume
     /// <summary>The methods a <see cref="Web"/> button can send with.</summary>
     public static readonly IReadOnlyList<string> WebMethods = ["GET", "POST", "PUT"];
 
+    /// <summary>For <see cref="Open"/>: the folder a program starts in, as some games need their own; empty for Windows' choice.</summary>
+    public string WorkingDirectory { get; init; } = "";
+
     /// <summary>For <see cref="Web"/>: one of <see cref="WebMethods"/>; empty is POST.</summary>
     public string Method { get; init; } = "";
 

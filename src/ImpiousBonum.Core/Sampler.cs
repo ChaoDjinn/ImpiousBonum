@@ -52,7 +52,11 @@ public sealed class Sampler : IAsyncDisposable
     /// </param>
     /// <param name="statusChecks">Your own servers and services to check; null for none.</param>
     /// <param name="linkedGame">
-    /// The app in front when it's linked to a layout or theme as a game, for its pictures; null counts only Steam's games.
+    /// The app in front when it's linked to a layout or theme as a game, for its pictures; null counts only the launchers' games.
+    /// </param>
+    /// <param name="playedPath">
+    /// Where the app's own record of when Epic Games and GOG games were played is kept between runs; null keeps it only
+    /// while it runs.
     /// </param>
     public static IReadOnlyList<IMetricProvider> CreateDefaultProviders(
         string pingHost = "1.1.1.1", Func<(int ProcessId, string? Name)>? frameRateTarget = null, string? claudeUsagePath = null,
@@ -60,7 +64,7 @@ public sealed class Sampler : IAsyncDisposable
         Func<IReadOnlyList<CalendarLink>>? calendars = null, Func<IReadOnlyList<NewsFeed>>? news = null, Func<string?>? gameInFront = null, Action<SessionRecap>? sessionEnded = null,
         Func<AirQualityRequest?>? airQuality = null, Func<WarningsRequest?>? warnings = null, Func<IReadOnlyList<WeatherRequest>>? weatherPlaces = null,
         Func<EnergySettings>? energy = null, string? energyTotalsPath = null, Func<GridCarbonRequest?>? gridCarbon = null,
-        Func<IReadOnlyList<StatusCheck>>? statusChecks = null, Func<string?>? linkedGame = null) =>
+        Func<IReadOnlyList<StatusCheck>>? statusChecks = null, Func<string?>? linkedGame = null, string? playedPath = null) =>
     [
         new CpuProvider(),
         new MemoryProvider(),
@@ -88,6 +92,7 @@ public sealed class Sampler : IAsyncDisposable
         new EnergyProvider(energy ?? (() => EnergySettings.Default), energyTotalsPath, new GridCarbonProvider(gridCarbon ?? (() => null))),
         new GameArtProvider(frameRateTarget, linkedGame),
         new SteamDownloadsProvider(),
+        new RecentGamesProvider(playedPath),
     ];
 
     public void Start()
