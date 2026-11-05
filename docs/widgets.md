@@ -31,7 +31,7 @@ mean the widget's own.
 
 ## Widgets
 
-- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Device batteries](#device-batteries-batteries) · [Steam downloads](#steam-downloads-downloads) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
+- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Device batteries](#device-batteries-batteries) · [Steam downloads](#steam-downloads-downloads) · [Steam friends](#steam-friends-friends) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons) · [Recent games](#recent-games-games)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [Sun and moon](#sun-and-moon-sun) · [News](#news-news) · [Claude usage](#claude-usage-claude)
@@ -341,6 +341,21 @@ One row per game Steam is downloading, updating or installing, with how much is 
 | `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
 | `labelColor` | color | `foreground` | Label colour |
 | `valueColor` | color | `secondary` | Value colour |
+
+## Steam friends (`friends`)
+
+One row per Steam friend who's online, those playing first: their name, and the game they're playing or whether they're away. It needs your own Steam Web API key, on the Steam page. Shows nothing while no friends are online.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `playingOnly` | true/false | `false` | Only those playing. Leaves out friends who are online but not in a game. |
+| `showAway` | true/false | `true` | Show those away. Friends who are away or busy, faded. Off leaves them out. |
+| `fontSize` | number (6–200) | `24` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `spacing` | number (0–200) | `6` | Row spacing |
+| `labelColor` | color | `foreground` | Name colour |
+| `playingColor` | color | `accent` | Game colour. The game a friend is playing. |
+| `valueColor` | color | `secondary` | Status colour. Online, Away or Busy, for a friend who isn't playing. |
 
 ## Top apps (`processes`)
 

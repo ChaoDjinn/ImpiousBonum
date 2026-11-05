@@ -8,6 +8,7 @@ using ImpiousBonum.Core.Energy;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
 using ImpiousBonum.Core.StatusChecks;
+using ImpiousBonum.Core.Steam;
 using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.App.Shell;
@@ -382,6 +383,18 @@ public sealed class AppSettings
 
     /// <summary>What the grid carbon provider should fetch, or null when it's off.</summary>
     public GridCarbonRequest? GridCarbonRequest() => GridCarbon ? new GridCarbonRequest(CarbonIntensity.Area(GridCarbonArea)) : null;
+
+    /// <summary>
+    /// Your own Steam Web API key (the Steam page), for your friends online and your achievements. None by default:
+    /// nothing is fetched from Steam without one. It's only ever sent to Steam.
+    /// </summary>
+    public string? SteamApiKey { get; set; }
+
+    /// <summary>Your Steam profile, as it was typed: its 17-digit ID, its address, or the name at the end of its address.</summary>
+    public string? SteamProfile { get; set; }
+
+    /// <summary>Whose Steam friends and achievements to fetch, or null without both a key and a profile.</summary>
+    public SteamAccount? SteamRequest() => SteamWeb.Account(SteamApiKey, SteamProfile);
 
     /// <summary>
     /// Your own servers and services to check (the Status checks page). None by default: nothing is checked until one is

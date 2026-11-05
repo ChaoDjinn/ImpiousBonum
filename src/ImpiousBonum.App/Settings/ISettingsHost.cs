@@ -171,6 +171,9 @@ internal interface ISettingsHost
     /// <summary>The first half of a postcode, or null for Great Britain as a whole.</summary>
     void SetGridCarbonArea(string? area);
 
+    /// <summary>Your own Steam Web API key and your profile, as typed; either null turns fetching from Steam off.</summary>
+    void SetSteamAccount(string? key, string? profile);
+
     void SetCalendars(IReadOnlyList<CalendarLink> calendars);
 
     void SetNewsFeeds(IReadOnlyList<NewsFeed> feeds);

@@ -6,6 +6,7 @@ using ImpiousBonum.Core.Native;
 using ImpiousBonum.Core.News;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Sensors;
+using ImpiousBonum.Core.Steam;
 using ImpiousBonum.Core.Weather;
 
 namespace ImpiousBonum.Core.Demo;
@@ -371,6 +372,17 @@ public static class DemoReadings
             new SteamDownload(1145360, "Ember Hollow", SteamDownloadState.Downloading, 6_550_000_000, 15 * Gigabyte) { Speed = 41_900_000 },
             new SteamDownload(367520, "Tidewater", SteamDownloadState.Queued, 0, 2_300_000_000),
         ]);
+
+        // Three friends online, one of them playing, and the game in front's achievements.
+        using var steam = new SteamFriendsProvider(() => null);
+        steam.Initialize(store);
+        IReadOnlyList<SteamFriend> friends =
+        [
+            new SteamFriend("Sam", SteamPresence.Online, "Ember Hollow"),
+            new SteamFriend("Priya", SteamPresence.Online, null),
+            new SteamFriend("Alex", SteamPresence.Away, null),
+        ];
+        SteamFriendsProvider.Publish(store, friends, new AchievementCount(34, 50), SteamFriendsProvider.FriendsOnline(friends));
     }
 
     /// <summary>
