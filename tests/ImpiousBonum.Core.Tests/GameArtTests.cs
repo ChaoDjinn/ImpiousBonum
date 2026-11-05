@@ -1,4 +1,3 @@
-using System.IO.Enumeration;
 using ImpiousBonum.Core.Games;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Native;
@@ -76,9 +75,9 @@ public sealed class GameArtTests
         new(key, new Dictionary<string, string>(values, StringComparer.OrdinalIgnoreCase));
 
     /// <summary>Steam with Hades in its own folder and Hollow Knight in a library on another drive.</summary>
-    private static FakeFiles TwoLibraries()
+    private static FakeGameFiles TwoLibraries()
     {
-        var files = new FakeFiles { Steam = SteamPath };
+        var files = new FakeGameFiles { Steam = SteamPath };
         files.Texts[$@"{Steam}\steamapps\libraryfolders.vdf"] = LibraryFolders;
         files.Texts[$@"{Steam}\steamapps\appmanifest_1145360.acf"] = Manifest(1145360, "Hades", "Hades");
         files.Texts[@"E:\SteamLibrary\steamapps\appmanifest_367520.acf"] = Manifest(367520, "Hollow Knight", "Hollow Knight");
@@ -154,7 +153,7 @@ public sealed class GameArtTests
         Assert.Equal(["Hades", "Hollow Knight"], new SteamLibrary(files).Apps().Select(a => a.Name).Order());
 
         // Steam often writes its folder in lower case, which is still the library the file lists.
-        var lower = new FakeFiles { Steam = "d:/programs/steam" };
+        var lower = new FakeGameFiles { Steam = "d:/programs/steam" };
         foreach (var (path, text) in files.Texts)
             lower.Texts[path] = text;
         Assert.Equal(2, new SteamLibrary(lower).Apps().Count);
@@ -163,7 +162,7 @@ public sealed class GameArtTests
         files.Texts[$@"{Steam}\steamapps\libraryfolders.vdf"] = "\"LibraryFolders\" { \"1\" \"E:\\\\SteamLibrary\" }";
         Assert.Equal(2, new SteamLibrary(files).Apps().Count);
 
-        Assert.Empty(new SteamLibrary(new FakeFiles()).Apps());
+        Assert.Empty(new SteamLibrary(new FakeGameFiles()).Apps());
     }
 
     [Theory]
@@ -192,7 +191,7 @@ public sealed class GameArtTests
     [Fact]
     public void Epic_s_games_come_from_its_manifests_leaving_out_add_ons_the_engine_and_unfinished_installs()
     {
-        var files = new FakeFiles { Epic = EpicData };
+        var files = new FakeGameFiles { Epic = EpicData };
         var manifests = $@"{EpicData}\Manifests";
         files.Texts[$@"{manifests}\A1.item"] = EpicManifest("Sugar", "Hades", @"C:\Program Files\Epic Games\Hades\");
         files.Texts[$@"{manifests}\A2.item"] = EpicManifest("SugarMusic", "Hades Soundtrack", @"C:\Program Files\Epic Games\Hades", mainGame: "Sugar");
@@ -207,7 +206,7 @@ public sealed class GameArtTests
         Assert.Equal(new StoreGame(GameStore.Epic, "Sugar", "Hades", @"C:\Program Files\Epic Games\Hades",
             "com.epicgames.launcher://apps/ns1%3Aitem1%3ASugar?action=launch&silent=true"), game);
 
-        Assert.Empty(new EpicLibrary(new FakeFiles()).Games());
+        Assert.Empty(new EpicLibrary(new FakeGameFiles()).Games());
         // Older launchers' links name just the app.
         Assert.Equal("com.epicgames.launcher://apps/Sugar?action=launch&silent=true", EpicLibrary.LaunchLink(null, "item1", "Sugar"));
     }
@@ -215,7 +214,7 @@ public sealed class GameArtTests
     [Fact]
     public void Gog_s_games_come_from_the_registry_leaving_out_add_ons()
     {
-        var files = new FakeFiles();
+        var files = new FakeGameFiles();
         files.Gog.Add(Gog("1207658924", new()
         {
             ["gameID"] = "1207658924",
@@ -235,7 +234,7 @@ public sealed class GameArtTests
             new(GameStore.Gog, "1207658924", "Unreal Gold", @"C:\GOG Games\Unreal Gold", @"C:\GOG Games\Unreal Gold\System\Unreal.exe", "-windowed"),
             new(GameStore.Gog, "2", "Celeste", @"D:\GOG\Celeste"),
         ], new GogLibrary(files).Games());
-        Assert.Empty(new GogLibrary(new FakeFiles()).Games());
+        Assert.Empty(new GogLibrary(new FakeGameFiles()).Games());
     }
 
     [Fact]
@@ -299,7 +298,7 @@ public sealed class GameArtTests
         Assert.Equal($@"{Cache}\367520\1aa20f983639643d7961f3ffcadf63bd3c49362f\library_capsule.jpg", new SteamLibrary(files).ArtFiles(367520).Cover);
 
         Assert.Equal(new SteamArtFiles(null, null, null), new SteamLibrary(files).ArtFiles(999));
-        Assert.Equal(new SteamArtFiles(null, null, null), new SteamLibrary(new FakeFiles()).ArtFiles(367520));
+        Assert.Equal(new SteamArtFiles(null, null, null), new SteamLibrary(new FakeGameFiles()).ArtFiles(367520));
     }
 
     [Fact]
@@ -520,74 +519,6 @@ public sealed class GameArtTests
     }
 
     private static string? Text(MetricStore store, string id) => store.TryGet(id, out var sample) ? sample.Text : null;
-
-    /// <summary>Steam's files and exes in memory, counting what's read.</summary>
-    private sealed class FakeFiles : IGameFiles
-    {
-        public string? Steam { get; init; }
-
-        public string? Epic { get; set; }
-
-        public List<RegistryEntry> Gog { get; } = [];
-
-        public Dictionary<string, string> Texts { get; } = new(StringComparer.OrdinalIgnoreCase);
-
-        public Dictionary<string, byte[]> Pictures { get; } = new(StringComparer.OrdinalIgnoreCase);
-
-        public Dictionary<string, string> Descriptions { get; } = new(StringComparer.OrdinalIgnoreCase);
-
-        public Dictionary<string, byte[]> Icons { get; } = new(StringComparer.OrdinalIgnoreCase);
-
-        public int TextReads { get; private set; }
-
-        public int PictureReads { get; private set; }
-
-        public int IconReads { get; private set; }
-
-        private IEnumerable<string> All => Texts.Keys.Concat(Pictures.Keys);
-
-        public string? SteamPath() => Steam;
-
-        public string? EpicDataPath() => Epic;
-
-        public IReadOnlyList<RegistryEntry> LocalMachineEntries(string path) => path == GogLibrary.RegistryPath ? Gog : [];
-
-        public string? ReadText(string path)
-        {
-            TextReads++;
-            return Texts.GetValueOrDefault(path);
-        }
-
-        public byte[]? ReadBytes(string path)
-        {
-            PictureReads++;
-            return Pictures.GetValueOrDefault(path);
-        }
-
-        public bool FileExists(string path) => Texts.ContainsKey(path) || Pictures.ContainsKey(path);
-
-        public IEnumerable<string> Files(string folder, string pattern) =>
-            All.Where(path => Same(Path.GetDirectoryName(path), folder) && FileSystemName.MatchesSimpleExpression(pattern, Path.GetFileName(path)));
-
-        public IEnumerable<string> Folders(string folder) =>
-            All.SelectMany(Parents).Where(dir => Same(Path.GetDirectoryName(dir), folder)).Distinct(StringComparer.OrdinalIgnoreCase);
-
-        public string? Description(string exe) => Descriptions.GetValueOrDefault(exe);
-
-        public byte[]? Icon(string exe)
-        {
-            IconReads++;
-            return Icons.GetValueOrDefault(exe);
-        }
-
-        private static IEnumerable<string> Parents(string path)
-        {
-            for (var dir = Path.GetDirectoryName(path); dir is not null; dir = Path.GetDirectoryName(dir))
-                yield return dir;
-        }
-
-        private static bool Same(string? a, string b) => string.Equals(a, Path.TrimEndingDirectorySeparator(b), StringComparison.OrdinalIgnoreCase);
-    }
 
     private sealed class FakeTime(DateTimeOffset now) : TimeProvider
     {

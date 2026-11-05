@@ -87,6 +87,7 @@ public sealed class Sampler : IAsyncDisposable
         .. claudeUsagePath is null ? Array.Empty<IMetricProvider>() : [new ClaudeUsageProvider(claudeUsagePath)],
         new EnergyProvider(energy ?? (() => EnergySettings.Default), energyTotalsPath, new GridCarbonProvider(gridCarbon ?? (() => null))),
         new GameArtProvider(frameRateTarget, linkedGame),
+        new SteamDownloadsProvider(),
     ];
 
     public void Start()

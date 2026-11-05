@@ -31,7 +31,7 @@ mean the widget's own.
 
 ## Widgets
 
-- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Device batteries](#device-batteries-batteries) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
+- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Device batteries](#device-batteries-batteries) · [Steam downloads](#steam-downloads-downloads) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [Sun and moon](#sun-and-moon-sun) · [News](#news-news) · [Claude usage](#claude-usage-claude)
@@ -323,6 +323,24 @@ Each entry in `thresholds`:
 | `above` | number | — | Above. Matches when the value is above this. |
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
+
+## Steam downloads (`downloads`)
+
+One row per game Steam is downloading, updating or installing, with how much is done, the speed and the time left, and a bar. Read from Steam's own files on this PC, so it needs no account and Steam needn't be open. Shows nothing while there's nothing to download.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `fontSize` | number (6–200) | `25` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `showSize` | true/false | `true` | Show sizes. How much is done of how much, such as 6.1 / 14.0 GB. Off shows how far it has got as a percentage. |
+| `showSpeed` | true/false | `true` | Show speed. The speed and the time left. They show once Steam has written its progress twice, which it does every so often as it downloads. |
+| `barHeight` | number (1–100) | `5` | Bar height |
+| `spacing` | number (0–200) | `12` | Row spacing |
+| `color` | color | `accent` | Bar colour |
+| `waitingColor` | color | `secondary` | Waiting colour. The bar of a download that's paused or queued. |
+| `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
+| `labelColor` | color | `foreground` | Label colour |
+| `valueColor` | color | `secondary` | Value colour |
 
 ## Top apps (`processes`)
 

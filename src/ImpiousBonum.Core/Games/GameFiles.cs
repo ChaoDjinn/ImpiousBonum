@@ -28,6 +28,12 @@ public interface IGameFiles
     /// <summary>The folders in a folder; none if it isn't there.</summary>
     IEnumerable<string> Folders(string folder);
 
+    /// <summary>
+    /// The files in a folder that match a pattern, each with when it was last written (UTC), from one look at the folder;
+    /// none if the folder isn't there.
+    /// </summary>
+    IReadOnlyList<(string Path, DateTime Written)> FilesWritten(string folder, string pattern);
+
     /// <summary>The exe's description, as Explorer's Properties → Details shows it ("Hollow Knight"), or null.</summary>
     string? Description(string exe);
 
@@ -120,6 +126,20 @@ public sealed class GameFiles : IGameFiles
             return Directory.Exists(folder) ? Directory.GetDirectories(folder) : [];
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            return [];
+        }
+    }
+
+    public IReadOnlyList<(string Path, DateTime Written)> FilesWritten(string folder, string pattern)
+    {
+        try
+        {
+            var directory = new DirectoryInfo(folder);
+            // Listing a folder gives each file's times along with its name, so this costs no more than the list.
+            return directory.Exists ? [.. directory.EnumerateFiles(pattern).Select(file => (Path: file.FullName, Written: file.LastWriteTimeUtc))] : [];
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or SecurityException)
         {
             return [];
         }

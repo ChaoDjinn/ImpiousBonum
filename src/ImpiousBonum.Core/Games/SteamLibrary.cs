@@ -44,6 +44,13 @@ public sealed class SteamLibrary(IGameFiles files)
         return apps;
     }
 
+    /// <summary>Steam's library folders: its own and the others it lists; none without Steam.</summary>
+    public IReadOnlyList<string> LibraryPaths() => Folder is { } steam ? Libraries(steam) : [];
+
+    /// <summary>The download an <c>appmanifest_&lt;id&gt;.acf</c> describes, or null if the game isn't being downloaded.</summary>
+    internal static SteamDownload? Download(string acf) =>
+        Vdf.Parse(acf).Block("AppState") is { } state ? SteamDownload.FromManifest(state) : null;
+
     /// <summary>Steam's own folder, which is always a library, and the others it lists.</summary>
     private List<string> Libraries(string steam)
     {
