@@ -3,7 +3,9 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
-## Unreleased
+## 0.19.0
+
+Pictures of every widget to choose from when you add one, Discord in two ways (alerts in a channel, and lights for a call), and your GOG Galaxy hours, achievements and covers.
 
 - The editor's *Add widget…* opens a window with a picture of every widget, instead of a menu that had grown too long to find anything in. The widgets are in groups down the side, now eight of them with *Graphs and bars*, *Lists* and *Games* split off from *Readings*, and each picture is the widget as it starts, in your layout's theme, with made-up readings. Type to find one by name or what it shows, and double-click it to add it. The widget reference in the docs follows the same groups.
 - With GOG Galaxy installed, the app reads what Galaxy keeps on your PC, read-only and with nothing to link: your GOG games' hours and when they were last played, and your Epic games' hours from Epic itself if you've connected Epic in Galaxy, for *Recent games* and `game.hours`, so they no longer start from nothing; a GOG game's achievements in `game.achievements`, with no key; and Galaxy's covers of Epic and GOG games, for *Recent games* tiles and an *Image* widget showing the game, instead of their icons. A tap on a GOG game's tile starts it through Galaxy, as Galaxy's own shortcuts do, so Galaxy counts the time and syncs its saves. Time the app sees that Galaxy hasn't counted yet goes on top, and comes off once Galaxy adds the session, so none counts twice.
