@@ -31,10 +31,13 @@ mean the widget's own.
 
 ## Widgets
 
-- **Readings:** [Text](#text-text) · [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [CPU threads](#cpu-threads-cores) · [Icon and value](#icon-and-value-icon) · [Bars](#bars-bars) · [Rows](#rows-rows) · [Drives](#drives-drives) · [Device batteries](#device-batteries-batteries) · [Steam downloads](#steam-downloads-downloads) · [Steam friends](#steam-friends-friends) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status)
+- **Readings:** [Text](#text-text) · [Gauge](#gauge-gauge) · [Stat tile](#stat-tile-stat) · [Icon and value](#icon-and-value-icon) · [Rows](#rows-rows)
+- **Graphs and bars:** [Graph](#graph-graph) · [Multi-line graph](#multi-line-graph-lines) · [Bars](#bars-bars) · [CPU threads](#cpu-threads-cores)
+- **Lists:** [Drives](#drives-drives) · [Top apps](#top-apps-processes) · [Status checks](#status-checks-status) · [Device batteries](#device-batteries-batteries)
+- **Games:** [Recent games](#recent-games-games) · [Steam downloads](#steam-downloads-downloads) · [Steam friends](#steam-friends-friends)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
-- **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons) · [Recent games](#recent-games-games)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [Sun and moon](#sun-and-moon-sun) · [News](#news-news) · [Claude usage](#claude-usage-claude)
+- **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
 - **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape) · [Photo frame](#photo-frame-photos)
 
 ## Text (`text`)
@@ -60,57 +63,6 @@ Each entry in `thresholds`:
 | `above` | number | — | Above. Matches when the value is above this. |
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
-
-## Graph (`graph`)
-
-A label and live value above a scrolling history of one metric, drawn as a line or a filled area.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `label` | text | `CPU` | Label |
-| `metric` | metric | `cpu.load` | Metric |
-| `text` | template | — | Value text. Shown on the right of the header. Empty shows the metric's value. |
-| `style` | `line` / `area` | `line` | Style |
-| `points` | number (2–240) | `120` | History (seconds) |
-| `min` | number | `0` | Minimum |
-| `max` | number | — | Maximum. Empty uses the metric's natural maximum (100 for percentages, the total for memory), else scales to fit. |
-| `lineThickness` | number (0.5–20) | `2.5` | Line thickness |
-| `fontSize` | number (6–200) | `26` | Font size |
-| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
-| `thresholds` | list | — | Warning colours. Changes the line or area and the value. An empty metric uses the graph's metric. When several rules match, the last one wins, so list them mildest first. |
-
-Each entry in `thresholds`:
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
-| `above` | number | — | Above. Matches when the value is above this. |
-| `below` | number | — | Below. Matches when the value is below this. |
-| `color` | color | `critical` | Colour |
-
-## Multi-line graph (`lines`)
-
-Several metrics' histories on one scale, each in its own colour, e.g. CPU and GPU load, or download and upload. A legend above shows each line's value.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `lines` | list | 2 entries | Lines |
-| `legend` | true/false | `true` | Legend. Each line's colour, label and value above the graph. |
-| `points` | number (2–240) | `120` | History (seconds) |
-| `min` | number | `0` | Minimum |
-| `max` | number | — | Maximum. Empty uses the metrics' natural maximum when they share one (100 for percentages), else scales to fit the highest line. |
-| `lineThickness` | number (0.5–20) | `2` | Line thickness |
-| `fontSize` | number (6–200) | `18` | Font size |
-| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
-
-Each entry in `lines`:
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `label` | text | `CPU` | Label |
-| `metric` | metric | `cpu.load` | Metric |
-| `color` | color | `accent` | Colour |
-| `text` | template | — | Value. Shown in the legend. Empty shows the metric's value. |
 
 ## Gauge (`gauge`)
 
@@ -167,29 +119,6 @@ Each entry in `thresholds`:
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
 
-## CPU threads (`cores`)
-
-Every logical processor's load at once, as bars or a heatmap: shows whether work is spread out or stuck on a few threads.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `style` | `bars` / `heatmap` | `bars` | Style. bars fill up from the bottom; heatmap is a grid of cells that go from the track colour to the accent as they get busy. |
-| `rows` | number (0–64) | `0` | Heatmap rows. 0 picks a grid that suits the box. |
-| `gap` | number (0–50) | `3` | Gap |
-| `cornerRadius` | number (0–50) | `2` | Corner radius |
-| `color` | color | `accent` | Busy colour |
-| `trackColor` | color | `track` | Idle colour. An idle thread's bar track or heatmap cell. track is the theme's bar track. |
-| `thresholds` | list | — | Warning colours. Changes a thread's colour. An empty metric uses that thread's load. When several rules match, the last one wins, so list them mildest first. |
-
-Each entry in `thresholds`:
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
-| `above` | number | — | Above. Matches when the value is above this. |
-| `below` | number | — | Below. Matches when the value is below this. |
-| `color` | color | `critical` | Colour |
-
 ## Icon and value (`icon`)
 
 An accent-coloured line icon followed by a live value, e.g. a chip and the CPU temperature.
@@ -213,6 +142,76 @@ Each entry in `thresholds`:
 | `above` | number | — | Above. Matches when the value is above this. |
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
+
+## Rows (`rows`)
+
+A stack of label and value rows, e.g. Download / Upload / Ping.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `rows` | list | — | Rows |
+| `fontSize` | number (6–200) | `28` | Label size |
+| `valueFontSize` | number (6–200) | — | Value size. Empty uses 85% of the label size. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `align` | `top` / `bottom` | `top` | Stack from |
+
+Each entry in `rows`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `Download` | Label |
+| `text` | template | `{net.down}` | Value |
+
+## Graph (`graph`)
+
+A label and live value above a scrolling history of one metric, drawn as a line or a filled area.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `CPU` | Label |
+| `metric` | metric | `cpu.load` | Metric |
+| `text` | template | — | Value text. Shown on the right of the header. Empty shows the metric's value. |
+| `style` | `line` / `area` | `line` | Style |
+| `points` | number (2–240) | `120` | History (seconds) |
+| `min` | number | `0` | Minimum |
+| `max` | number | — | Maximum. Empty uses the metric's natural maximum (100 for percentages, the total for memory), else scales to fit. |
+| `lineThickness` | number (0.5–20) | `2.5` | Line thickness |
+| `fontSize` | number (6–200) | `26` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `thresholds` | list | — | Warning colours. Changes the line or area and the value. An empty metric uses the graph's metric. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
+
+## Multi-line graph (`lines`)
+
+Several metrics' histories on one scale, each in its own colour, e.g. CPU and GPU load, or download and upload. A legend above shows each line's value.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `lines` | list | 2 entries | Lines |
+| `legend` | true/false | `true` | Legend. Each line's colour, label and value above the graph. |
+| `points` | number (2–240) | `120` | History (seconds) |
+| `min` | number | `0` | Minimum |
+| `max` | number | — | Maximum. Empty uses the metrics' natural maximum when they share one (100 for percentages), else scales to fit the highest line. |
+| `lineThickness` | number (0.5–20) | `2` | Line thickness |
+| `fontSize` | number (6–200) | `18` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+
+Each entry in `lines`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `CPU` | Label |
+| `metric` | metric | `cpu.load` | Metric |
+| `color` | color | `accent` | Colour |
+| `text` | template | — | Value. Shown in the legend. Empty shows the metric's value. |
 
 ## Bars (`bars`)
 
@@ -251,24 +250,28 @@ Each entry in `thresholds`:
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
 
-## Rows (`rows`)
+## CPU threads (`cores`)
 
-A stack of label and value rows, e.g. Download / Upload / Ping.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `rows` | list | — | Rows |
-| `fontSize` | number (6–200) | `28` | Label size |
-| `valueFontSize` | number (6–200) | — | Value size. Empty uses 85% of the label size. |
-| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
-| `align` | `top` / `bottom` | `top` | Stack from |
-
-Each entry in `rows`:
+Every logical processor's load at once, as bars or a heatmap: shows whether work is spread out or stuck on a few threads.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `label` | text | `Download` | Label |
-| `text` | template | `{net.down}` | Value |
+| `style` | `bars` / `heatmap` | `bars` | Style. bars fill up from the bottom; heatmap is a grid of cells that go from the track colour to the accent as they get busy. |
+| `rows` | number (0–64) | `0` | Heatmap rows. 0 picks a grid that suits the box. |
+| `gap` | number (0–50) | `3` | Gap |
+| `cornerRadius` | number (0–50) | `2` | Corner radius |
+| `color` | color | `accent` | Busy colour |
+| `trackColor` | color | `track` | Idle colour. An idle thread's bar track or heatmap cell. track is the theme's bar track. |
+| `thresholds` | list | — | Warning colours. Changes a thread's colour. An empty metric uses that thread's load. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
 
 ## Drives (`drives`)
 
@@ -297,65 +300,6 @@ Each entry in `thresholds`:
 | `above` | number | — | Above. Matches when the value is above this. |
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
-
-## Device batteries (`batteries`)
-
-One row per wireless device, such as a Bluetooth headset, mouse, keyboard or game controller, with how much charge it has left and a bar, which turns the critical colour under 20 %. Follows devices as they connect and disconnect, and shows nothing while there are none.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `devices` | `all`, or names in order, separated by commas | `all` | Devices. All devices, or just the ones chosen, in the order they're listed. Only those connected now show. |
-| `fontSize` | number (6–200) | `25` | Font size |
-| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
-| `barHeight` | number (1–100) | `5` | Bar height |
-| `spacing` | number (0–200) | `12` | Row spacing |
-| `color` | color | `accent` | Bar colour |
-| `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
-| `labelColor` | color | `foreground` | Label colour |
-| `valueColor` | color | `secondary` | Value colour |
-| `thresholds` | list | 1 entry | Warning colours. Changes each device's bar and charge. An empty metric uses that device's charge (battery.headset for one called Headset). Starts with one: under 20, the critical colour. When several rules match, the last one wins, so list them mildest first. |
-
-Each entry in `thresholds`:
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
-| `above` | number | — | Above. Matches when the value is above this. |
-| `below` | number | — | Below. Matches when the value is below this. |
-| `color` | color | `critical` | Colour |
-
-## Steam downloads (`downloads`)
-
-One row per game Steam is downloading, updating or installing, with a bar and how much is done. Read from Steam's own files on this PC, so it needs no account and Steam needn't be open, but Steam writes how far a download has got only when it starts, pauses or resumes, so one that has been going a while shows its size until it next does. Shows nothing while there's nothing to download.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `fontSize` | number (6–200) | `25` | Font size |
-| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
-| `showSize` | true/false | `true` | Show sizes. How much is done of how much, such as 6.1 / 14.0 GB. Off shows how far it has got as a percentage. |
-| `showSpeed` | true/false | `true` | Show speed. The speed and the time left, when Steam has written its progress twice within two minutes. It seldom does, as it writes when a download starts, pauses or resumes. |
-| `barHeight` | number (1–100) | `5` | Bar height |
-| `spacing` | number (0–200) | `12` | Row spacing |
-| `color` | color | `accent` | Bar colour |
-| `waitingColor` | color | `secondary` | Waiting colour. The bar of a download that's paused, or started and waiting behind another. |
-| `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
-| `labelColor` | color | `foreground` | Label colour |
-| `valueColor` | color | `secondary` | Value colour |
-
-## Steam friends (`friends`)
-
-One row per Steam friend who's online, those playing first: their name, and the game they're playing or whether they're away. It needs your own Steam Web API key, on the Steam page. Shows nothing while no friends are online.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `playingOnly` | true/false | `false` | Only those playing. Leaves out friends who are online but not in a game. |
-| `showAway` | true/false | `true` | Show those away. Friends who are away or busy, faded. Off leaves them out. |
-| `fontSize` | number (6–200) | `24` | Font size |
-| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
-| `spacing` | number (0–200) | `6` | Row spacing |
-| `labelColor` | color | `foreground` | Name colour |
-| `playingColor` | color | `accent` | Game colour. The game a friend is playing. |
-| `valueColor` | color | `secondary` | Status colour. Online, Away or Busy, for a friend who isn't playing. |
 
 ## Top apps (`processes`)
 
@@ -395,6 +339,85 @@ Whether your own servers and services are up (set them up on the Status checks p
 | `spacing` | number (0–100) | `8` | Spacing |
 | `upColor` | color | `accent` | Up. The dot of a check that's up. |
 | `downColor` | color | `critical` | Down. The dot of a check that's down, and the word Down. |
+
+## Device batteries (`batteries`)
+
+One row per wireless device, such as a Bluetooth headset, mouse, keyboard or game controller, with how much charge it has left and a bar, which turns the critical colour under 20 %. Follows devices as they connect and disconnect, and shows nothing while there are none.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `devices` | `all`, or names in order, separated by commas | `all` | Devices. All devices, or just the ones chosen, in the order they're listed. Only those connected now show. |
+| `fontSize` | number (6–200) | `25` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `barHeight` | number (1–100) | `5` | Bar height |
+| `spacing` | number (0–200) | `12` | Row spacing |
+| `color` | color | `accent` | Bar colour |
+| `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
+| `labelColor` | color | `foreground` | Label colour |
+| `valueColor` | color | `secondary` | Value colour |
+| `thresholds` | list | 1 entry | Warning colours. Changes each device's bar and charge. An empty metric uses that device's charge (battery.headset for one called Headset). Starts with one: under 20, the critical colour. When several rules match, the last one wins, so list them mildest first. |
+
+Each entry in `thresholds`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `metric` | metric | — | Metric. Empty uses the widget's own metric. |
+| `above` | number | — | Above. Matches when the value is above this. |
+| `below` | number | — | Below. Matches when the value is below this. |
+| `color` | color | `critical` | Colour |
+
+## Recent games (`games`)
+
+The games you've played lately, newest first, as Steam's art or the game's icon. Tap one to start it through its launcher. Games from Steam, the Epic Games launcher and GOG, read from their own records on this PC.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `count` | number (1–8) | `4` | Games |
+| `rows` | number (1–4) | `1` | Rows. The games are spread over this many rows, newest first along each. |
+| `art` | `cover` / `header` | `cover` | Picture. For a Steam game: cover is the tall box art, header the wide banner. Other games show their icon. |
+| `launchers` | `all`, or some of `steam` / `epic` / `gog` in order, separated by commas | `all` | Launchers. Games from all of them, or just the ones chosen: steam, epic (the Epic Games launcher) or gog. |
+| `launch` | true/false | `true` | Tap to play. A tap starts the game through its launcher, as its desktop shortcut does. A GOG game's exe is started itself. |
+| `fontSize` | number (6–200) | `18` | Font size |
+| `showNames` | true/false | `false` | Show names. Each game's name under its picture. A game with only its icon always shows its name. |
+| `showPlayed` | true/false | `false` | Show when played. How long ago it was played, and the hours altogether where known, e.g. 2d 3h ago · 41 h. |
+| `spacing` | number (0–200) | `12` | Spacing |
+| `cornerRadius` | number (0–200) | `8` | Corner radius |
+| `tileColor` | color | `track` | Tile colour. Behind a game's icon. track is the theme's bar track. |
+| `labelColor` | color | `foreground` | Name colour |
+| `valueColor` | color | `secondary` | Played colour |
+
+## Steam downloads (`downloads`)
+
+One row per game Steam is downloading, updating or installing, with a bar and how much is done. Read from Steam's own files on this PC, so it needs no account and Steam needn't be open, but Steam writes how far a download has got only when it starts, pauses or resumes, so one that has been going a while shows its size until it next does. Shows nothing while there's nothing to download.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `fontSize` | number (6–200) | `25` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `showSize` | true/false | `true` | Show sizes. How much is done of how much, such as 6.1 / 14.0 GB. Off shows how far it has got as a percentage. |
+| `showSpeed` | true/false | `true` | Show speed. The speed and the time left, when Steam has written its progress twice within two minutes. It seldom does, as it writes when a download starts, pauses or resumes. |
+| `barHeight` | number (1–100) | `5` | Bar height |
+| `spacing` | number (0–200) | `12` | Row spacing |
+| `color` | color | `accent` | Bar colour |
+| `waitingColor` | color | `secondary` | Waiting colour. The bar of a download that's paused, or started and waiting behind another. |
+| `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
+| `labelColor` | color | `foreground` | Label colour |
+| `valueColor` | color | `secondary` | Value colour |
+
+## Steam friends (`friends`)
+
+One row per Steam friend who's online, those playing first: their name, and the game they're playing or whether they're away. It needs your own Steam Web API key, on the Steam page. Shows nothing while no friends are online.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `playingOnly` | true/false | `false` | Only those playing. Leaves out friends who are online but not in a game. |
+| `showAway` | true/false | `true` | Show those away. Friends who are away or busy, faded. Off leaves them out. |
+| `fontSize` | number (6–200) | `24` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `spacing` | number (0–200) | `6` | Row spacing |
+| `labelColor` | color | `foreground` | Name colour |
+| `playingColor` | color | `accent` | Game colour. The game a friend is playing. |
+| `valueColor` | color | `secondary` | Status colour. Online, Away or Busy, for a friend who isn't playing. |
 
 ## Clock (`clock`)
 
@@ -484,97 +507,6 @@ Each entry in `events`:
 |---|---|---|---|
 | `label` | text | `Christmas` | Label |
 | `date` | text | `12-25` | Date. A month and day that comes round every year, e.g. 12-25 or 03-14 09:00, or a date that happens once, e.g. 2026-12-25 or 2026-12-25 18:00. |
-
-## Now playing (`media`)
-
-What's playing in Spotify, a browser, Media Player or any app in Windows' media controls: album art, title, artist, progress and buttons to skip or pause.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `title` | template | `{media.title}` | Title |
-| `subtitle` | template | `{media.artist}` | Second line. E.g. the artist, or {media.artist} · {media.album}. Empty hides it. |
-| `fontSize` | number (6–200) | `34` | Title size |
-| `subtitleSize` | number (6–200) | — | Second line size. Empty uses 70% of the title size. |
-| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
-| `showArt` | true/false | `true` | Album art |
-| `showProgress` | true/false | `true` | Progress bar. With the position and length under it. |
-| `showControls` | true/false | `true` | Buttons. Previous, play/pause and next. They work like the keyboard's media keys. |
-| `controlSize` | number (16–200) | `52` | Button size |
-| `hideIdle` | true/false | `true` | Hide when nothing is playing. It shows faded while you edit the layout. |
-| `textColor` | color | `foreground` | Title colour |
-| `detailColor` | color | `secondary` | Second line colour. The second line, the times under the progress bar, and the music note when there's no album art. |
-| `artColor` | color | `track` | Album art background. Behind the music note when there's no album art. track is the theme's bar track. |
-| `progressColor` | color | `accent` | Progress colour |
-| `trackColor` | color | `track` | Progress track colour. The rest of the progress bar. track is the theme's bar track. |
-| `buttonColor` | color | `foreground` | Button colour |
-
-## Audio visualiser (`visualizer`)
-
-Bars that move with whatever the PC is playing, from low notes on the left to high on the right. Draws many times a second, so it uses a little more CPU than other widgets.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `bands` | number (4–128) | `32` | Bars |
-| `style` | `bars` / `mirror` | `bars` | Style. bars rise from the bottom; mirror grows up and down from the middle. |
-| `fps` | number (5–60) | `25` | Frames a second. Smoother as it goes up, and a little more CPU. 25 looks fluid. |
-| `gap` | number (0–50) | `3` | Gap |
-| `cornerRadius` | number (0–50) | `2` | Corner radius |
-| `fall` | number (0.01–1) | `0.06` | Fall speed. How far a bar can drop each frame, as a share of the height. Lower falls more gently. |
-| `peaks` | true/false | `true` | Peak markers. A line at each bar's recent highest, drifting down. |
-| `color` | color | `accent` | Colour |
-| `peakColor` | color | `foreground` | Peak colour |
-
-## Buttons (`buttons`)
-
-Buttons to tap: play/pause, skip and volume, open a program, file or web address, send a keyboard shortcut to the app you're using, switch layout, or send a web request to Home Assistant, smart lights or ntfy.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `buttons` | list | 4 entries | Buttons |
-| `columns` | number (0–50) | `0` | Columns. 0 puts every button in one row. |
-| `fontSize` | number (6–200) | `20` | Label size |
-| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
-| `iconSize` | number (0–400) | `40` | Icon size |
-| `spacing` | number (0–200) | `10` | Spacing |
-| `style` | `tile` / `plain` | `tile` | Style. tile gives each button a background. |
-| `cornerRadius` | number (0–200) | `10` | Corner radius |
-| `color` | color | `accent` | Icon colour |
-| `tileColor` | color | `track` | Tile colour. Each button's background, with the tile style. track is the theme's bar track. |
-| `labelColor` | color | `foreground` | Label colour |
-
-Each entry in `buttons`:
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `label` | text | `Play/pause` | Label. Empty shows just the icon. |
-| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `play-pause` | Icon |
-| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `mic-mute` / `open` / `keys` / `layout` / `web` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. |
-| `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… |
-| `arguments` | text | — | Arguments. open: command-line arguments for a program. |
-| `method` | `GET` / `POST` / `PUT` | `POST` | Method. web: how to send it. Webhooks, Home Assistant's services and ntfy want POST. |
-| `body` | text | — | Body. web: what a POST or PUT sends, e.g. {"entity_id": "script.movie_night"}, or the message for ntfy. |
-| `contentType` | text | — | Content type. web: the body's type. Empty sends application/json for a body in { } or [ ], and text/plain for anything else. |
-| `header` | text | — | Header. web: one header as Name: value, e.g. Authorization: Bearer and a token. Left out when you export the layout. |
-
-## Recent games (`games`)
-
-The games you've played lately, newest first, as Steam's art or the game's icon. Tap one to start it through its launcher. Games from Steam, the Epic Games launcher and GOG, read from their own records on this PC.
-
-| Setting | Type | Default | Description |
-|---|---|---|---|
-| `count` | number (1–8) | `4` | Games |
-| `rows` | number (1–4) | `1` | Rows. The games are spread over this many rows, newest first along each. |
-| `art` | `cover` / `header` | `cover` | Picture. For a Steam game: cover is the tall box art, header the wide banner. Other games show their icon. |
-| `launchers` | `all`, or some of `steam` / `epic` / `gog` in order, separated by commas | `all` | Launchers. Games from all of them, or just the ones chosen: steam, epic (the Epic Games launcher) or gog. |
-| `launch` | true/false | `true` | Tap to play. A tap starts the game through its launcher, as its desktop shortcut does. A GOG game's exe is started itself. |
-| `fontSize` | number (6–200) | `18` | Font size |
-| `showNames` | true/false | `false` | Show names. Each game's name under its picture. A game with only its icon always shows its name. |
-| `showPlayed` | true/false | `false` | Show when played. How long ago it was played, and the hours altogether where known, e.g. 2d 3h ago · 41 h. |
-| `spacing` | number (0–200) | `12` | Spacing |
-| `cornerRadius` | number (0–200) | `8` | Corner radius |
-| `tileColor` | color | `track` | Tile colour. Behind a game's icon. track is the theme's bar track. |
-| `labelColor` | color | `foreground` | Name colour |
-| `valueColor` | color | `secondary` | Played colour |
 
 ## Weather (`weather`)
 
@@ -688,6 +620,77 @@ Each entry in `thresholds`:
 | `above` | number | — | Above. Matches when the value is above this. |
 | `below` | number | — | Below. Matches when the value is below this. |
 | `color` | color | `critical` | Colour |
+
+## Now playing (`media`)
+
+What's playing in Spotify, a browser, Media Player or any app in Windows' media controls: album art, title, artist, progress and buttons to skip or pause.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `title` | template | `{media.title}` | Title |
+| `subtitle` | template | `{media.artist}` | Second line. E.g. the artist, or {media.artist} · {media.album}. Empty hides it. |
+| `fontSize` | number (6–200) | `34` | Title size |
+| `subtitleSize` | number (6–200) | — | Second line size. Empty uses 70% of the title size. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `showArt` | true/false | `true` | Album art |
+| `showProgress` | true/false | `true` | Progress bar. With the position and length under it. |
+| `showControls` | true/false | `true` | Buttons. Previous, play/pause and next. They work like the keyboard's media keys. |
+| `controlSize` | number (16–200) | `52` | Button size |
+| `hideIdle` | true/false | `true` | Hide when nothing is playing. It shows faded while you edit the layout. |
+| `textColor` | color | `foreground` | Title colour |
+| `detailColor` | color | `secondary` | Second line colour. The second line, the times under the progress bar, and the music note when there's no album art. |
+| `artColor` | color | `track` | Album art background. Behind the music note when there's no album art. track is the theme's bar track. |
+| `progressColor` | color | `accent` | Progress colour |
+| `trackColor` | color | `track` | Progress track colour. The rest of the progress bar. track is the theme's bar track. |
+| `buttonColor` | color | `foreground` | Button colour |
+
+## Audio visualiser (`visualizer`)
+
+Bars that move with whatever the PC is playing, from low notes on the left to high on the right. Draws many times a second, so it uses a little more CPU than other widgets.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `bands` | number (4–128) | `32` | Bars |
+| `style` | `bars` / `mirror` | `bars` | Style. bars rise from the bottom; mirror grows up and down from the middle. |
+| `fps` | number (5–60) | `25` | Frames a second. Smoother as it goes up, and a little more CPU. 25 looks fluid. |
+| `gap` | number (0–50) | `3` | Gap |
+| `cornerRadius` | number (0–50) | `2` | Corner radius |
+| `fall` | number (0.01–1) | `0.06` | Fall speed. How far a bar can drop each frame, as a share of the height. Lower falls more gently. |
+| `peaks` | true/false | `true` | Peak markers. A line at each bar's recent highest, drifting down. |
+| `color` | color | `accent` | Colour |
+| `peakColor` | color | `foreground` | Peak colour |
+
+## Buttons (`buttons`)
+
+Buttons to tap: play/pause, skip and volume, open a program, file or web address, send a keyboard shortcut to the app you're using, switch layout, or send a web request to Home Assistant, smart lights or ntfy.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `buttons` | list | 4 entries | Buttons |
+| `columns` | number (0–50) | `0` | Columns. 0 puts every button in one row. |
+| `fontSize` | number (6–200) | `20` | Label size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `iconSize` | number (0–400) | `40` | Icon size |
+| `spacing` | number (0–200) | `10` | Spacing |
+| `style` | `tile` / `plain` | `tile` | Style. tile gives each button a background. |
+| `cornerRadius` | number (0–200) | `10` | Corner radius |
+| `color` | color | `accent` | Icon colour |
+| `tileColor` | color | `track` | Tile colour. Each button's background, with the tile style. track is the theme's bar track. |
+| `labelColor` | color | `foreground` | Label colour |
+
+Each entry in `buttons`:
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `label` | text | `Play/pause` | Label. Empty shows just the icon. |
+| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `play-pause` | Icon |
+| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `mic-mute` / `open` / `keys` / `layout` / `web` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. |
+| `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… |
+| `arguments` | text | — | Arguments. open: command-line arguments for a program. |
+| `method` | `GET` / `POST` / `PUT` | `POST` | Method. web: how to send it. Webhooks, Home Assistant's services and ntfy want POST. |
+| `body` | text | — | Body. web: what a POST or PUT sends, e.g. {"entity_id": "script.movie_night"}, or the message for ntfy. |
+| `contentType` | text | — | Content type. web: the body's type. Empty sends application/json for a body in { } or [ ], and text/plain for anything else. |
+| `header` | text | — | Header. web: one header as Name: value, e.g. Authorization: Bearer and a token. Left out when you export the layout. |
 
 ## Image (`image`)
 

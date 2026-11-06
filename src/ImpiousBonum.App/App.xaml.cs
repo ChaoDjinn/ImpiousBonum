@@ -327,8 +327,8 @@ public partial class App : Application
         return new Sampler(store, []);
     }
 
-    /// <summary>The made-up readings (<see cref="DemoReadings"/>), with the pictures the app draws for them.</summary>
-    private static void FillDemo(MetricStore store, DateTime now)
+    /// <summary>The made-up readings (<see cref="DemoReadings"/>), with the pictures the app draws for them; the editor's widget previews use them too.</summary>
+    internal static void FillDemo(MetricStore store, DateTime now)
     {
         DemoReadings.Fill(store, now, DemoArtwork.Png());
         store.SetAttachment(GameArtProvider.Art, DemoArtwork.Game());

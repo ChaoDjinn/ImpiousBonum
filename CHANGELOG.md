@@ -3,6 +3,10 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+- The editor's *Add widget…* opens a window with a picture of every widget, instead of a menu that had grown too long to find anything in. The widgets are in groups down the side, now eight of them with *Graphs and bars*, *Lists* and *Games* split off from *Readings*, and each picture is the widget as it starts, in your layout's theme, with made-up readings. Type to find one by name or what it shows, and double-click it to add it. The widget reference in the docs follows the same groups.
+
 ## 0.18.0
 
 Epic Games and GOG games count as games, and three new widgets for gamers: what Steam is downloading, the games you've played lately, and your Steam friends online with your achievements.

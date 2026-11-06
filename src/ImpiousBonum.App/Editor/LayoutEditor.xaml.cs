@@ -86,31 +86,6 @@ public partial class LayoutEditor : UserControl
         SnapBox.ItemsSource = SnapSizes.Select(s => s <= 1 ? "Off" : $"{s} px").ToList();
         SnapBox.SelectedIndex = Array.IndexOf(SnapSizes, 10.0);
 
-        // Grouped by what the widgets are for, each group under a heading.
-        var menu = new ContextMenu();
-        foreach (var category in WidgetFactory.Descriptors.GroupBy(d => d.Category))
-        {
-            if (menu.Items.Count > 0)
-                menu.Items.Add(new Separator());
-            menu.Items.Add(new MenuItem
-            {
-                Header = new TextBlock { Text = category.Key, FontWeight = FontWeights.SemiBold, FontSize = 12 },
-                IsHitTestVisible = false,
-                Focusable = false,
-            });
-            foreach (var descriptor in category)
-            {
-                var item = new MenuItem { Header = descriptor.Name, ToolTip = descriptor.Description };
-                item.Click += (_, _) =>
-                {
-                    _session.AddWidget(descriptor);
-                    WidgetAdded?.Invoke(this, descriptor);
-                };
-                menu.Items.Add(item);
-            }
-        }
-        AddButton.ContextMenu = menu;
-
         var layoutMenu = new ContextMenu();
         layoutMenu.Items.Add(MenuItemFor("Save as…", "Save your changes as a new layout", SaveAs));
         layoutMenu.Items.Add(MenuItemFor("Rename…", null, RenameLayout));
@@ -629,11 +604,14 @@ public partial class LayoutEditor : UserControl
 
     // ---- Commands -------------------------------------------------------------------------------------
 
+    /// <summary>Picks a widget in the <see cref="AddWidgetWindow"/>, drawn in this layout's theme, and adds it.</summary>
     private void OnAdd(object sender, RoutedEventArgs e)
     {
-        AddButton.ContextMenu.PlacementTarget = AddButton;
-        AddButton.ContextMenu.Placement = PlacementMode.Bottom;
-        AddButton.ContextMenu.IsOpen = true;
+        var window = new AddWidgetWindow(_session.ResolvedTheme) { Owner = Window.GetWindow(this) };
+        if (window.ShowDialog() != true || window.Chosen is not { } descriptor)
+            return;
+        _session.AddWidget(descriptor);
+        WidgetAdded?.Invoke(this, descriptor);
     }
 
     private void OnAlign(object sender, RoutedEventArgs e)
