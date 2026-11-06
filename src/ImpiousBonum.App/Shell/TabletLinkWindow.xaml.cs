@@ -10,7 +10,7 @@ namespace ImpiousBonum.App.Shell;
 
 /// <summary>
 /// Tablet and USB screen → Show QR code: the link as a QR code and as text, with copy and new-link buttons. The link
-/// shows the main dashboard, or a saved layout of its own.
+/// shows the main dashboard, a saved layout of its own, or a tablet screen's layout.
 /// </summary>
 public partial class TabletLinkWindow : Window
 {
@@ -20,17 +20,20 @@ public partial class TabletLinkWindow : Window
     private readonly Func<string> _newToken;
     private string _token;
     private string? _layout;
+    private string? _screen;
 
     /// <param name="newToken">Replaces the link's secret (stopping old links) and returns the new one.</param>
     /// <param name="layout">The saved layout the link shows, or null for the main dashboard.</param>
-    public TabletLinkWindow(int port, string token, Func<string> newToken, string? layout = null)
+    /// <param name="screen">The tablet screen the link shows (by name), which wins over <paramref name="layout"/>.</param>
+    public TabletLinkWindow(int port, string token, Func<string> newToken, string? layout = null, string? screen = null)
     {
         InitializeComponent();
         _port = port;
         _token = token;
         _newToken = newToken;
         _layout = layout;
-        IntroText.Text = IntroFor(layout);
+        _screen = screen;
+        IntroText.Text = IntroFor(layout, screen);
 
         var addresses = TabletAccess.LocalAddresses();
         foreach (var address in addresses)
@@ -50,20 +53,28 @@ public partial class TabletLinkWindow : Window
 
     /// <summary>The link on the PC's first local address, or null when it has none.</summary>
     /// <param name="layout">The saved layout the link shows, or null for the main dashboard.</param>
-    public static string? FirstLink(int port, string token, string? layout = null) =>
-        TabletAccess.LocalAddresses() is [var address, ..] ? TabletAccess.Link(address, port, token, layout) : null;
+    /// <param name="screen">The tablet screen the link shows (by name), which wins over <paramref name="layout"/>.</param>
+    public static string? FirstLink(int port, string token, string? layout = null, string? screen = null) =>
+        TabletAccess.LocalAddresses() is [var address, ..] ? TabletAccess.Link(address, port, token, layout, screen) : null;
 
-    /// <summary>Shows the link for another layout (null for the main dashboard's), when the window's already open.</summary>
-    public void ShowLayout(string? layout)
+    /// <summary>
+    /// Shows the link for another layout or tablet screen (both null for the main dashboard's), when the window's
+    /// already open.
+    /// </summary>
+    public void ShowLayout(string? layout, string? screen = null)
     {
         _layout = layout;
-        IntroText.Text = IntroFor(layout);
+        _screen = screen;
+        IntroText.Text = IntroFor(layout, screen);
         ShowLink();
     }
 
-    private static string IntroFor(string? layout) => layout is null ? Intro : $"{Intro} It shows the layout \"{layout}\", whatever the dashboard shows.";
+    internal static string IntroFor(string? layout, string? screen = null) =>
+        screen is not null ? $"{Intro} It shows the tablet screen \"{screen}\", in whichever layout you give it on the Screens page."
+        : layout is not null ? $"{Intro} It shows the layout \"{layout}\", whatever the dashboard shows."
+        : Intro;
 
-    private string? CurrentLink => AddressBox.SelectedItem is IPAddress address ? TabletAccess.Link(address, _port, _token, _layout) : null;
+    private string? CurrentLink => AddressBox.SelectedItem is IPAddress address ? TabletAccess.Link(address, _port, _token, _layout, _screen) : null;
 
     private void ShowLink()
     {

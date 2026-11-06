@@ -17,7 +17,7 @@
                     <TextBlock Style="{DynamicResource Glyph}" Text="&#xE7F4;" Margin="0,0,8,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     <TextBlock Text="Screen" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     <ComboBox x:Name="ScreenBox" Width="280" SelectionChanged="OnScreenBoxChanged" AutomationProperties.Name="Screen"
-                              ToolTip="The screen whose dashboard you're editing. Each screen's dashboard shows a layout of its own; add dashboards to more screens on the Screens page." />
+                              ToolTip="The screen whose dashboard you're editing. Each screen's dashboard shows a layout of its own; add dashboards to more screens, or a tablet screen to plan a layout at a tablet's size, on the Screens page." />
                     <TextBlock Style="{DynamicResource Glyph}" Text="&#xE8A9;" Margin="20,0,8,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     <TextBlock Text="Layout" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     <ComboBox x:Name="LayoutBox" Width="220" SelectionChanged="OnLayoutBoxChanged" Margin="0,0,6,0" AutomationProperties.Name="Layout"

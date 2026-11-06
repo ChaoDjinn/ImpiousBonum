@@ -11,8 +11,9 @@ internal sealed class TabletAndUsbPage(ISettingsHost host) : CardPage("Tablet an
 
     private SettingsCard? _usbCard;
 
-    // The layout the link below shows, or null for the main dashboard. Not saved: every link works, whichever is picked here.
-    private string? _linkLayout;
+    // What the link below shows: a saved layout, a tablet screen (by name), or neither for the main dashboard. Not saved:
+    // every link works, whichever is picked here.
+    private (string? Layout, string? Screen) _linkFor;
 
     private AppSettings Settings => host.Settings;
 
@@ -38,24 +39,29 @@ internal sealed class TabletAndUsbPage(ISettingsHost host) : CardPage("Tablet an
             Ui.Switch(Settings.TabletReadings, "Share readings with other apps", host.SetTabletReadings)));
         readings.IsEnabled = on;
 
+        // Tablet screens first (each a layout planned at a tablet's size), then the saved layouts; ones that have gone aren't offered.
         var saved = host.Layouts.List();
-        _linkLayout = saved.FirstOrDefault(l => string.Equals(l, _linkLayout, StringComparison.OrdinalIgnoreCase));
-        var linkLayouts = saved.Select(l => ((string?)l, l)).Prepend(((string?)null, "Same as the main dashboard"));
+        var screens = Settings.TabletScreens;
+        _linkFor = (saved.FirstOrDefault(l => string.Equals(l, _linkFor.Layout, StringComparison.OrdinalIgnoreCase)),
+            _linkFor.Screen is { } named ? TabletScreen.Find(screens, named)?.Name : null);
+        var targets = screens.Select(s => (((string?)null, (string?)s.Name), $"{s.Name} (tablet screen)"))
+            .Concat(saved.Select(l => (((string?)l, (string?)null), l)))
+            .Prepend((((string?)null, (string?)null), "Same as the main dashboard"));
         var layoutCard = Add(Ui.Card("", "Layout for the link",
-            "Each tablet can show a layout of its own: pick one, then open the link below on that tablet",
-            Ui.Choice(linkLayouts, _linkLayout, "Layout for the link", layout =>
+            "Each tablet can show a layout of its own: pick one, or a tablet screen from the Screens page, then open the link below on that tablet",
+            Ui.Choice(targets, _linkFor, "Layout for the link", target =>
             {
-                _linkLayout = layout;
+                _linkFor = target;
                 Load();
             })));
         layoutCard.IsEnabled = on;
 
-        var link = on && Settings.TabletToken is { } token ? TabletLinkWindow.FirstLink(Settings.TabletPort, token, _linkLayout) : null;
+        var link = on && Settings.TabletToken is { } token ? TabletLinkWindow.FirstLink(Settings.TabletPort, token, _linkFor.Layout, _linkFor.Screen) : null;
         var linkCard = Add(Ui.Card("", "Link",
             on ? link ?? "This PC doesn't seem to be on a local network." : "Turn on the tablet view for a link to open.",
             Ui.Row(
-                Ui.Button("Show QR code…", () => host.ShowTabletLink(_linkLayout)),
-                Ui.Button("Copy", () => host.CopyTabletLink(_linkLayout)),
+                Ui.Button("Show QR code…", () => host.ShowTabletLink(_linkFor.Layout, _linkFor.Screen)),
+                Ui.Button("Copy", () => host.CopyTabletLink(_linkFor.Layout, _linkFor.Screen)),
                 Ui.Button("New link", () =>
                 {
                     host.NewTabletLink();
@@ -63,7 +69,9 @@ internal sealed class TabletAndUsbPage(ISettingsHost host) : CardPage("Tablet an
                 }))));
         linkCard.IsEnabled = on;
         Add(Ui.Note("A layout of its own stays as it is, in its own theme: game layouts and the schedule only change the main dashboard. "
-            + "Renaming or deleting it stops its links working. A new link stops every old one working, for when one's been shared with someone it shouldn't have been."));
+            + "Renaming or deleting it stops its links working. A tablet screen's link shows whichever layout you give that screen, "
+            + "planned at the tablet's size: add one on the Screens page. "
+            + "A new link stops every old one working, for when one's been shared with someone it shouldn't have been."));
 
         Add(Ui.Heading("USB screen"));
         var usb = Settings.UsbScreen;

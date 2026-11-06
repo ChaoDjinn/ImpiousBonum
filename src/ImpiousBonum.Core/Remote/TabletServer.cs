@@ -11,7 +11,8 @@ public sealed record TabletFrame(byte[] Image, string ContentType, long Sequence
 
 /// <summary>
 /// The tablet view's web server: a page that shows the dashboard, and the latest <see cref="Frame"/> for it to fetch
-/// once a second. A link can name a saved layout (<c>&amp;layout=</c>) to show that instead, with pictures of its own.
+/// once a second. A link can name a saved layout (<c>&amp;layout=</c>) to show that instead, with pictures of its own,
+/// or a tablet screen (<c>&amp;screen=</c>) to show whichever layout that has.
 /// With <see cref="Readings"/> set (another opt-in), it also serves the readings as JSON for other apps.
 /// Read-only unless <see cref="Tap"/> is set (an opt-in), answers only local-network addresses that know
 /// the link's secret, and closes every connection after one response. Written on <see cref="TcpListener"/> because HttpListener needs an admin-registered
@@ -74,6 +75,13 @@ public sealed class TabletServer : IDisposable
     /// Null, the default, means links can only show the main dashboard. Called on the thread pool.
     /// </summary>
     public Func<string, string?>? FindLayout { get; set; }
+
+    /// <summary>
+    /// Finds a tablet screen by the name a link gives it (<c>&amp;screen=</c>), returning the saved layout it shows now,
+    /// or null if there's no such screen. Its pictures are that layout's, so a screen showing another layout carries on
+    /// with that one. Null, the default, means links can't name screens. Called on the thread pool.
+    /// </summary>
+    public Func<string, string?>? FindScreen { get; set; }
 
     /// <summary>
     /// The readings other apps can fetch as JSON from <c>/api/metrics</c> and <c>/api/metrics/&lt;id&gt;</c>, with the
@@ -228,7 +236,11 @@ public sealed class TabletServer : IDisposable
         {
             case "/":
                 if (!TryLayout(request, out var named))
-                    return HttpResponse.Html(404, TabletPage.NoSuchLayout(request.Query["layout"]), TabletPage.MessagePolicy);
+                {
+                    return HttpResponse.Html(404, request.Query.GetValueOrDefault("screen") is { Length: > 0 } screen
+                        ? TabletPage.NoSuchScreen(screen)
+                        : TabletPage.NoSuchLayout(request.Query["layout"]), TabletPage.MessagePolicy);
+                }
                 // Opening the page counts as watching, so the first picture is ready by the time the page asks for it.
                 if (AskFor(named) is null)
                     return HttpResponse.Html(503, TabletPage.TooManyLayouts, TabletPage.MessagePolicy);
@@ -296,12 +308,17 @@ public sealed class TabletServer : IDisposable
             : null;
 
     /// <summary>
-    /// The saved layout a request's link names, as saved, or null for the main dashboard (a link without <c>layout</c>).
-    /// False when it names one there's no layout of.
+    /// The saved layout a request's link names, as saved, or the one the tablet screen it names shows; null for the
+    /// main dashboard (a link with neither). False when it names a layout or screen there's none of.
     /// </summary>
     private bool TryLayout(HttpRequestHead request, out string? layout)
     {
         layout = null;
+        if (request.Query.GetValueOrDefault("screen") is { Length: > 0 } screen)
+        {
+            layout = FindScreen?.Invoke(screen);
+            return layout is not null;
+        }
         if (request.Query.GetValueOrDefault("layout") is not { Length: > 0 } name)
             return true;
         layout = FindLayout?.Invoke(name);

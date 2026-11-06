@@ -5,7 +5,8 @@ namespace ImpiousBonum.Core.Remote;
 /// <summary>
 /// The page a tablet opens: the dashboard picture scaled to fit, fetched again every second. Taps on the picture are
 /// sent to the PC, which presses a button there only if tablets have been allowed to (otherwise they're ignored).
-/// A link with <c>layout</c> shows that saved layout, and asks for its pictures and sends its taps the same way.
+/// A link with <c>layout</c> shows that saved layout, and one with <c>screen</c> that tablet screen's layout; each asks
+/// for its pictures and sends its taps the same way.
 /// </summary>
 public static class TabletPage
 {
@@ -20,6 +21,11 @@ public static class TabletPage
     public static string NoSuchLayout(string name) => Message(
         $"There's no layout called \"{name}\"",
         "It may have been renamed or deleted. On the PC, pick the layout for the link again on Impious Bonum's Tablet and USB screen page, then open the new link here.");
+
+    /// <summary>For a link naming a tablet screen the PC hasn't got, perhaps renamed or removed since the link was made.</summary>
+    public static string NoSuchScreen(string name) => Message(
+        $"There's no tablet screen called \"{name}\"",
+        "It may have been removed. On the PC, pick the tablet screen on Impious Bonum's Screens page, then open its link here.");
 
     /// <summary>For a link naming one layout more than <see cref="TabletServer.MaxLayouts"/>.</summary>
     public static readonly string TooManyLayouts = Message(
@@ -85,10 +91,12 @@ public static class TabletPage
         <script>
           const params = new URLSearchParams(location.search);
           const key = params.get("k") || "";
-          // A layout of its own, or the main dashboard's.
+          // A tablet screen, a layout of its own, or the main dashboard's.
+          const screen = params.get("screen") || "";
           const layout = params.get("layout") || "";
-          const query = "?k=" + encodeURIComponent(key) + (layout ? "&layout=" + encodeURIComponent(layout) : "");
-          if (layout) document.title = layout;
+          const query = "?k=" + encodeURIComponent(key)
+            + (screen ? "&screen=" + encodeURIComponent(screen) : layout ? "&layout=" + encodeURIComponent(layout) : "");
+          if (screen || layout) document.title = screen || layout;
           const frame = document.getElementById("frame");
           const status = document.getElementById("status");
           const full = document.getElementById("full");
@@ -112,7 +120,7 @@ public static class TabletPage
               } else if (response.status === 304 || response.status === 503) {
                 failures = 0;
               } else if (response.status === 410) {
-                // The layout has been renamed or deleted: the page says so when it loads again.
+                // The layout or screen has been renamed or removed: the page says so when it loads again.
                 location.reload();
                 return;
               } else {

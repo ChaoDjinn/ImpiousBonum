@@ -71,7 +71,7 @@ public partial class App : ISettingsHost
         editor.ScreenChosen += (_, index) =>
         {
             EditedWindow()?.EndEdit();
-            _editingScreen = index > 0 && index <= _settings.ExtraDashboards.Count ? _settings.ExtraDashboards[index - 1].MonitorId : null;
+            _editingScreen = EditorScreenList.At(index, _settings.ExtraDashboards, _settings.TabletScreens);
             // Any changes left unsaved on the last dashboard are gone from the screen too.
             ShowSavedLayouts();
             EditedWindow()?.BeginEdit(session);
@@ -103,7 +103,7 @@ public partial class App : ISettingsHost
         ApplyLayout();
     }
 
-    string? ISettingsHost.EditedMonitorId => EditedExtra()?.MonitorId ?? DisplayMonitor.Resolve(_settings, DisplayMonitor.GetAll())?.Id;
+    string? ISettingsHost.EditedScreenId => EditedExtra()?.MonitorId ?? EditedTablet()?.Id ?? DisplayMonitor.Resolve(_settings, DisplayMonitor.GetAll())?.Id;
 
     // ---- Screens ----------------------------------------------------------------------------------
 
@@ -137,6 +137,10 @@ public partial class App : ISettingsHost
 
     void ISettingsHost.AddDashboard(DisplayMonitor monitor, string? layout) => AddDashboard(monitor, layout);
 
+    void ISettingsHost.AddTabletScreen(string name, int width, int height) => AddTabletScreen(name, width, height);
+
+    void ISettingsHost.SetTabletScreens(List<TabletScreen> screens) => SetTabletScreens(screens);
+
     void ISettingsHost.SetAway(int minutes, int brightness)
     {
         (_settings.AwayDimMinutes, _settings.AwayBrightness) = (minutes, brightness);
@@ -168,9 +172,9 @@ public partial class App : ISettingsHost
         AppLog.Info($"Readings {(on ? "shared" : "not shared")} with other apps");
     }
 
-    void ISettingsHost.ShowTabletLink(string? layout) => ShowTabletLink(layout);
+    void ISettingsHost.ShowTabletLink(string? layout, string? screen) => ShowTabletLink(layout, screen);
 
-    void ISettingsHost.CopyTabletLink(string? layout) => CopyTabletLink(layout);
+    void ISettingsHost.CopyTabletLink(string? layout, string? screen) => CopyTabletLink(layout, screen);
 
     void ISettingsHost.NewTabletLink() => NewTabletLink();
 

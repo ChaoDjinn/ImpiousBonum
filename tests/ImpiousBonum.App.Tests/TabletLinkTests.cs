@@ -67,6 +67,46 @@ public sealed class TabletLinkTests : IDisposable
     }
 
     [Fact]
+    public void The_link_can_be_for_a_tablet_screen()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            using var store = new LayoutStore(new AppSettings());
+            store.Save("Weather Station", new LayoutDocument());
+            var host = DispatchProxy.Create<ISettingsHost, LinkHost>();
+            var links = (LinkHost)(object)host;
+            links.Settings = new AppSettings
+            {
+                TabletView = true,
+                TabletToken = "s3cret-token_value",
+                TabletScreens = [new TabletScreen("Galaxy Tab", 2560, 1600, "Weather Station")],
+            };
+            links.Layouts = store;
+            var page = new TabletAndUsbPage(host);
+            page.Load();
+
+            // Tablet screens come before the layouts.
+            var choice = Choice(page, "Layout for the link");
+            Assert.Equal(["Same as the main dashboard", "Galaxy Tab (tablet screen)", "Default", "Weather Station"], choice.Items.Cast<string>());
+            choice.SelectedItem = "Galaxy Tab (tablet screen)";
+            Click(Button(page, "Show QR code…"));
+            Click(Button(page, "Copy"));
+            Assert.Equal([("show", null), ("copy", null)], links.Asked);
+            Assert.Equal(["Galaxy Tab", "Galaxy Tab"], links.Screens);
+            Assert.True(Card(page, "Link").Description is { } link && (link.EndsWith("&screen=Galaxy%20Tab", StringComparison.Ordinal) || !link.StartsWith("http", StringComparison.Ordinal)));
+
+            // One that's been removed isn't offered, and the link goes back to the main dashboard's.
+            links.Settings.TabletScreens = [];
+            page.Load();
+            Assert.Equal("Same as the main dashboard", Choice(page, "Layout for the link").SelectedItem);
+            Click(Button(page, "Copy"));
+            Assert.Equal(("copy", null), links.Asked[^1]);
+            Assert.Null(links.Screens[^1]);
+        });
+    }
+
+    [Fact]
     public void With_the_tablet_view_off_there_is_no_layout_to_pick()
     {
         Sta.Run(() =>
@@ -125,6 +165,9 @@ public sealed class TabletLinkTests : IDisposable
 
         public List<(string, string?)> Asked { get; } = [];
 
+        /// <summary>The tablet screen each link in <see cref="Asked"/> was for, if any.</summary>
+        public List<string?> Screens { get; } = [];
+
         public List<bool> Shared { get; } = [];
 
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
@@ -142,9 +185,11 @@ public sealed class TabletLinkTests : IDisposable
                     return Running;
                 case nameof(ISettingsHost.ShowTabletLink):
                     Asked.Add(("show", (string?)args![0]));
+                    Screens.Add((string?)args[1]);
                     return null;
                 case nameof(ISettingsHost.CopyTabletLink):
                     Asked.Add(("copy", (string?)args![0]));
+                    Screens.Add((string?)args[1]);
                     return null;
                 default:
                     return targetMethod?.ReturnType is { IsValueType: true } type && type != typeof(void) ? Activator.CreateInstance(type) : null;

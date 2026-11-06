@@ -6,9 +6,10 @@ using ImpiousBonum.App.Shell;
 namespace ImpiousBonum.App.Settings;
 
 /// <summary>
-/// Screens: a map of the monitors as Windows arranges them, each showing the dashboard on it if any. Picking one shows
-/// what can be done there: choose its layout, edit it, size the main dashboard's window, add a dashboard or move the
-/// main one there. Below, what goes for every dashboard.
+/// Screens: a map of the monitors as Windows arranges them, each showing the dashboard on it if any, and the tablet
+/// screens below it. Picking one shows what can be done there: choose its layout, edit it, size the main dashboard's
+/// window, add a dashboard or move the main one there; or for a tablet screen, change its size and get its link.
+/// Below, what goes for every dashboard.
 /// </summary>
 public partial class ScreensPage : UserControl, IPage
 {
@@ -33,6 +34,9 @@ public partial class ScreensPage : UserControl, IPage
         MapCard.SizeChanged += (_, _) => DrawMap();
     }
 
+    /// <summary>How tall a tablet screen's tile is: each is as wide as its shape makes it, within reason.</summary>
+    private const double TabletTileHeight = 64;
+
     private AppSettings Settings => _host.Settings;
 
     public void Load()
@@ -40,7 +44,7 @@ public partial class ScreensPage : UserControl, IPage
         _loading = true;
         _monitors = DisplayMonitor.GetAll();
         var main = DisplayMonitor.Resolve(Settings, _monitors);
-        if (_selected is null || _monitors.All(m => m.Id != _selected))
+        if (_selected is null || (_monitors.All(m => m.Id != _selected) && TabletOf(_selected) is null))
             _selected = main?.Id ?? _monitors.FirstOrDefault(m => m.IsPrimary)?.Id;
 
         var options = _host.WindowOptions;
@@ -60,9 +64,13 @@ public partial class ScreensPage : UserControl, IPage
         MissingText.Visibility = missing.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
 
         DrawMap();
+        DrawTablets();
         ShowSelected();
         _loading = false;
     }
+
+    /// <summary>The tablet screen <paramref name="id"/> is the <see cref="TabletScreen.Id"/> of, if any.</summary>
+    private TabletScreen? TabletOf(string? id) => Settings.TabletScreens.FirstOrDefault(t => t.Id == id);
 
     // ---- The map ------------------------------------------------------------------------------------
 
@@ -134,11 +142,55 @@ public partial class ScreensPage : UserControl, IPage
         return new Viewbox { Child = panel, StretchDirection = StretchDirection.DownOnly };
     }
 
+    /// <summary>The tablet screens, in a row under the map: each its shape, picked like a monitor.</summary>
+    private void DrawTablets()
+    {
+        TabletMap.Children.Clear();
+        foreach (var tablet in Settings.TabletScreens)
+        {
+            var tile = new RadioButton
+            {
+                GroupName = "monitors",
+                IsChecked = tablet.Id == _selected,
+                Tag = "dashboard",
+                Height = TabletTileHeight,
+                Width = Math.Clamp(TabletTileHeight * tablet.Width / tablet.Height, 40, 160),
+                Margin = new Thickness(0, 0, 8, 0),
+                Content = TabletTileText(tablet),
+                ToolTip = $"{tablet.DisplayName}\nShows: {tablet.Layout}",
+                Style = (Style)Resources["MonitorTile"],
+            };
+            AutomationProperties.SetName(tile, $"{tablet.DisplayName}: {tablet.Layout}");
+            tile.Checked += (_, _) =>
+            {
+                if (_selected == tablet.Id)
+                    return;
+                _selected = tablet.Id;
+                ShowSelected();
+            };
+            TabletMap.Children.Add(tile);
+        }
+    }
+
+    private static Viewbox TabletTileText(TabletScreen tablet)
+    {
+        var panel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+        panel.Children.Add(new TextBlock { Text = tablet.Name, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center });
+        panel.Children.Add(SettingsWindow.Styled(new TextBlock { Text = tablet.Layout, TextAlignment = TextAlignment.Center }, "NoteText"));
+        return new Viewbox { Child = panel, StretchDirection = StretchDirection.DownOnly };
+    }
+
     // ---- The screen picked --------------------------------------------------------------------------
 
     private void ShowSelected()
     {
         ScreenCards.Children.Clear();
+        if (TabletOf(_selected) is { } tablet)
+        {
+            ScreenHeading.Text = tablet.DisplayName;
+            AddTabletCards(tablet, _host.Layouts.List());
+            return;
+        }
         if (_monitors.FirstOrDefault(m => m.Id == _selected) is not { } monitor)
         {
             ScreenHeading.Text = string.Empty;
@@ -209,6 +261,66 @@ public partial class ScreensPage : UserControl, IPage
                 _host.MoveMainTo(monitor);
                 Load();
             })));
+    }
+
+    private void AddTabletCards(TabletScreen tablet, IReadOnlyList<string> layouts)
+    {
+        var choose = Ui.Choice(layouts.Select(l => (l, l)), layouts.FirstOrDefault(l => string.Equals(l, tablet.Layout, StringComparison.OrdinalIgnoreCase)) ?? tablet.Layout, "Layout",
+            name => ChangeTablets(list => list.Select(t => t.Id == tablet.Id ? t with { Layout = name } : t).ToList()));
+        ScreenCards.Children.Add(Ui.Card("", "Layout",
+            "What the tablet shows through its link, planned at this size in the editor. Pages, the schedule and game layouts are the main dashboard's.",
+            Ui.Row(choose, Ui.Button("Edit", () => _window.EditScreen(tablet.Id), ""))));
+
+        ScreenCards.Children.Add(Ui.Card("", "Size",
+            $"{tablet.Width}×{tablet.Height} pixels, {(tablet.IsPortrait ? "portrait" : "landscape")}. The editor's Match dashboard screen makes a layout this size.",
+            Ui.Button("Change…", () => ChangeTablet(tablet))));
+
+        var on = _host.TabletRunning;
+        var link = on && Settings.TabletToken is { } token ? TabletLinkWindow.FirstLink(Settings.TabletPort, token, screen: tablet.Name) : null;
+        ScreenCards.Children.Add(Ui.Card("", "Tablet link",
+            !on ? "Open it on the tablet to see this screen there. It needs the tablet view, which is off: turn it on for the link."
+                : link ?? "This PC doesn't seem to be on a local network.",
+            on
+                ? (UIElement)Ui.Row(
+                    Ui.Button("Show QR code…", () => _host.ShowTabletLink(null, tablet.Name)),
+                    Ui.Button("Copy", () => _host.CopyTabletLink(null, tablet.Name)))
+                : Ui.Button("Turn on the tablet view", () =>
+                {
+                    _host.SetTabletView(true);
+                    if (_host.TabletRunning)
+                        _host.ShowTabletLink(null, tablet.Name);
+                    Load();
+                })));
+
+        ScreenCards.Children.Add(Ui.Card("", "Remove this tablet screen", "Its layout stays in your layouts. Its link stops working.",
+            Ui.Button("Remove", () => ChangeTablets(list => list.Where(t => t.Id != tablet.Id).ToList()))));
+    }
+
+    /// <summary>A tablet screen's Change…: its name and size, kept in its place in the list.</summary>
+    private void ChangeTablet(TabletScreen tablet)
+    {
+        var others = Settings.TabletScreens.Where(t => t.Id != tablet.Id).ToList();
+        if (TabletScreenWindow.Ask(Window.GetWindow(this), others, tablet) is not (var name, var width, var height))
+            return;
+        var changed = tablet with { Name = name, Width = width, Height = height };
+        _selected = changed.Id;
+        ChangeTablets(list => list.Select(t => t.Id == tablet.Id ? changed : t).ToList());
+    }
+
+    private void OnAddTablet(object sender, RoutedEventArgs e)
+    {
+        if (TabletScreenWindow.Ask(Window.GetWindow(this), Settings.TabletScreens) is not (var name, var width, var height))
+            return;
+        _selected = TabletScreen.IdPrefix + name;
+        _host.AddTabletScreen(name, width, height);
+    }
+
+    private void ChangeTablets(Func<List<TabletScreen>, List<TabletScreen>> change)
+    {
+        if (_loading)
+            return;
+        _host.SetTabletScreens(change(Settings.TabletScreens.ToList()));
+        Load();
     }
 
     private void Change(WindowOptions options)

@@ -25,6 +25,7 @@ public sealed class AppSettings
     private List<CalendarLink> _calendars = [];
     private List<NewsFeed> _newsFeeds = [];
     private List<ExtraDashboard> _extraDashboards = [];
+    private List<TabletScreen> _tabletScreens = [];
     private List<WeatherLocation> _weatherPlaces = [];
     private UsbScreenSettings _usbScreen = UsbScreenSettings.Default;
     private LogSettings _logging = LogSettings.Default;
@@ -164,6 +165,16 @@ public sealed class AppSettings
     {
         get => _extraDashboards;
         set => _extraDashboards = value ?? [];
+    }
+
+    /// <summary>
+    /// Tablets' screens, each a size to plan a layout at and the layout its tablet link shows (the Screens page). None by
+    /// default. Replaced as a whole when changed, never changed in place, since the tablet view reads it from another thread.
+    /// </summary>
+    public List<TabletScreen> TabletScreens
+    {
+        get => _tabletScreens;
+        set => _tabletScreens = value ?? [];
     }
 
     /// <summary>A small USB screen to show a layout on too (the Tablet and USB screen page). Off by default.</summary>

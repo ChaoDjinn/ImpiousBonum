@@ -213,6 +213,33 @@ public sealed class LayoutStoreTests : IDisposable
     }
 
     [Fact]
+    public void Tablet_screens_follow_a_renamed_layout_and_move_off_a_deleted_one()
+    {
+        Sta.Run(() =>
+        {
+            AppPaths.UseDataDirectory(_directory);
+            var settings = new AppSettings
+            {
+                TabletScreens = [new TabletScreen("Galaxy Tab", 2560, 1600, "Tab"), new TabletScreen("Kitchen", 1280, 800, "Clock")],
+            };
+            var before = settings.TabletScreens;
+            using var store = new LayoutStore(settings);
+            store.Save("Tab", WithText("t"));
+            store.Save("Clock", WithText("c"));
+
+            store.Rename("Tab", "Galaxy layout");
+            Assert.Equal(["Galaxy layout", "Clock"], AppSettings.Load().TabletScreens.Select(t => t.Layout));
+            // Replaced, not changed in place, since the tablet view reads the list on another thread.
+            Assert.NotSame(before, settings.TabletScreens);
+            Assert.Equal("Tab", before[0].Layout);
+
+            store.Delete("Clock");
+            Assert.Equal(["Galaxy layout", "Default"], AppSettings.Load().TabletScreens.Select(t => t.Layout));
+            Assert.Equal([(2560, 1600), (1280, 800)], AppSettings.Load().TabletScreens.Select(t => (t.Width, t.Height)));
+        });
+    }
+
+    [Fact]
     public void Any_saved_layout_loads_or_falls_back_to_the_built_in_one()
     {
         Sta.Run(() =>

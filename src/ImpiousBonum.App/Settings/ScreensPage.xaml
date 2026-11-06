@@ -39,10 +39,24 @@
         <c:PageColumn Style="{DynamicResource PageColumn}">
             <TextBlock Style="{DynamicResource PageTitle}" Text="Screens" />
             <TextBlock Style="{DynamicResource PageIntro}"
-                       Text="Where the dashboards show. Pick a screen to choose its layout, or to put a dashboard on it. Each screen's dashboard has a layout of its own." />
+                       Text="Where the dashboards show. Pick a screen to choose its layout, or to put a dashboard on it. Each screen's dashboard has a layout of its own. Add a tablet screen to plan a layout at a tablet's size, for the tablet view." />
 
             <Border x:Name="MapCard" Style="{DynamicResource Card}" Padding="20">
-                <Canvas x:Name="Map" Height="240" HorizontalAlignment="Stretch" />
+                <StackPanel>
+                    <Canvas x:Name="Map" Height="240" HorizontalAlignment="Stretch" />
+                    <!-- Tablet screens aren't monitors, so they're not on Windows' map: each is drawn its shape below it. -->
+                    <DockPanel Margin="0,16,0,0">
+                        <Button DockPanel.Dock="Right" VerticalAlignment="Bottom" Margin="12,0,0,0" Click="OnAddTablet"
+                                AutomationProperties.Name="Add a tablet screen…"
+                                ToolTip="A screen the size of your tablet's, with a layout of its own to plan at that size. Its link shows it in the tablet view.">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{DynamicResource ButtonGlyph}" Text="&#xE710;" />
+                                <TextBlock Text="Add a tablet screen…" />
+                            </StackPanel>
+                        </Button>
+                        <WrapPanel x:Name="TabletMap" VerticalAlignment="Bottom" />
+                    </DockPanel>
+                </StackPanel>
             </Border>
             <TextBlock x:Name="MissingText" Style="{DynamicResource NoteText}" Margin="2,8,0,0" Visibility="Collapsed" />
 

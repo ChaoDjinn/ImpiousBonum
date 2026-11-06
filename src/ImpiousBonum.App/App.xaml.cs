@@ -174,6 +174,7 @@ public partial class App : Application
         {
             AllowTaps = _settings.TabletButtons,
             FindLayout = name => _layouts?.Library.Find(name),
+            FindScreen = FindTabletScreen,
             LoadLayout = LoadTabletLayout,
             Readings = _settings.TabletReadings ? _sampler.Store : null,
         };

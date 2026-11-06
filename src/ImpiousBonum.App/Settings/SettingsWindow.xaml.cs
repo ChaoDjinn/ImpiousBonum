@@ -96,7 +96,7 @@ public partial class SettingsWindow : Window
         {
             _editor = _host.BeginEditing(_screenToEdit);
             _editor.StateChanged += (_, _) => UpdateTitle();
-            _editor.GalleryRequested += (_, _) => ShowGallery(_host.EditedMonitorId);
+            _editor.GalleryRequested += (_, _) => ShowGallery(_host.EditedScreenId);
             if (_host.Store is { } store)
                 _editor.Refresh(store, DateTime.Now);
             PageHost.Content = _editor;
@@ -112,17 +112,20 @@ public partial class SettingsWindow : Window
         return true;
     }
 
-    /// <summary>The Layouts page, on the layout of one dashboard: the main one (null) or another, by its monitor's id.</summary>
+    /// <summary>
+    /// The Layouts page, on the layout of one dashboard: the main one (null), another by its monitor's id, or a tablet
+    /// screen by its <see cref="Shell.TabletScreen.Id"/>.
+    /// </summary>
     public bool EditScreen(string? screen)
     {
         _screenToEdit = screen;
         return ShowPage(SettingsPage.Layouts);
     }
 
-    /// <summary>The Gallery page, for layouts that suit one monitor's screen (by id), or every screen (null).</summary>
-    public bool ShowGallery(string? monitorId)
+    /// <summary>The Gallery page, for layouts that suit one screen (a monitor's or tablet screen's id), or every screen (null).</summary>
+    public bool ShowGallery(string? screen)
     {
-        ((GalleryPage)PageFor(SettingsPage.Gallery)).ForMonitor(monitorId);
+        ((GalleryPage)PageFor(SettingsPage.Gallery)).ForScreen(screen);
         return ShowPage(SettingsPage.Gallery);
     }
 
