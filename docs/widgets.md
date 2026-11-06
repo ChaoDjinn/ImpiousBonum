@@ -37,7 +37,7 @@ mean the widget's own.
 - **Games:** [Recent games](#recent-games-games) · [Steam downloads](#steam-downloads-downloads) · [Steam friends](#steam-friends-friends)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [Sun and moon](#sun-and-moon-sun) · [News](#news-news) · [Claude usage](#claude-usage-claude)
-- **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons)
+- **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons) · [Discord voice](#discord-voice-voice)
 - **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape) · [Photo frame](#photo-frame-photos)
 
 ## Text (`text`)
@@ -691,6 +691,24 @@ Each entry in `buttons`:
 | `body` | text | — | Body. web: what a POST or PUT sends, e.g. {"entity_id": "script.movie_night"}, or the message for ntfy. |
 | `contentType` | text | — | Content type. web: the body's type. Empty sends application/json for a body in { } or [ ], and text/plain for anything else. |
 | `header` | text | — | Header. web: one header as Name: value, e.g. Authorization: Bearer and a token. Left out when you export the layout. |
+
+## Discord voice (`voice`)
+
+Lights for your Discord call: one comes on while someone's talking, the other while your microphone is picking you up, even when you're muted. Hidden outside a call.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `talking` | true/false | `true` | Someone talking. The light for sound from Discord: anyone talking, or Discord's own sounds. |
+| `talkingLabel` | text | `Talking` | Talking label |
+| `you` | true/false | `true` | You. The light for your microphone picking up sound, as Discord hears it, whether or not Discord sends it: muted, or push to talk. |
+| `youLabel` | text | `You` | Your label |
+| `layout` | `row` / `column` | `row` | Layout. row puts the lights side by side; column one above the other. |
+| `outsideCall` | true/false | `false` | Show outside a call. Off hides the lights until you join a voice channel or call. Either way they're hidden while Discord isn't running. |
+| `fontSize` | number (6–200) | `22` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `talkingColor` | color | `accent` | Talking. The talking light while it's on. |
+| `youColor` | color | `critical` | You. Your light while it's on: red, like an on-air light. |
+| `offColor` | color | `track` | Off. The lights while they're off. |
 
 ## Image (`image`)
 

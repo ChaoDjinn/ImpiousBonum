@@ -168,7 +168,7 @@ Impious Bonum is young: it's at version 0.18, first released at the end of Septe
 - [x] Vulkan/OpenGL frame counting
 - [x] Tablet view: the dashboard in a browser over the local network
 - [x] Bars, and Claude plan usage from Claude Code
-- [x] More widget types: 28 so far
+- [x] More widget types: 32 so far
 - [x] Themes: 56 built in, holidays too, with gradients, glow, moving backgrounds and falling snow, plus themes made from a picture
 - [x] Screenshots of the real dashboard, the editor and the widgets, here and in the guide
 - [x] A window with a page for every setting, and a gallery of 21 ready-made layouts for screens from 3.5" to 4K, and themes

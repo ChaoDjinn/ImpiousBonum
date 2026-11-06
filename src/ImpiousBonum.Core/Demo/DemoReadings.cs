@@ -303,6 +303,10 @@ public static class DemoReadings
             [new ConsentEntry(@"C:#Users#Sam#AppData#Local#Discord#app-1.0.9260#Discord.exe", Packaged: false, Start: 2, Stop: 0)],
             [new ConsentEntry("Microsoft.WindowsCamera_8wekyb3d8bbwe", Packaged: true, Start: 1, Stop: 2)]);
 
+        // In a Discord call, with a friend talking and you listening.
+        using var voice = new VoiceChatProvider(_ => []);
+        voice.Publish(store, [new AppSound(1, "Discord", SoundFlow.Out, true, 0.32), new AppSound(1, "Discord", SoundFlow.In, true, 0.004)], new DateTimeOffset(now));
+
         // The whole PC's power (the CPU's and graphics card's above, and 50 W for the rest), what it's used at 25p a kWh,
         // and Great Britain's grid: moderate now, and cleanest at half past three in the morning, when the wind's up.
         var energy = new EnergyProvider(() => EnergySettings.Default);

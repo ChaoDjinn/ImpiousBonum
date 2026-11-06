@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries), [Steam downloads](#steam-downloads), [Steam friends and achievements](#steam-friends-and-achievements), [GOG Galaxy](#gog-galaxy)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [Discord voice](#discord-voice), [device batteries](#device-batteries), [Steam downloads](#steam-downloads), [Steam friends and achievements](#steam-friends-and-achievements), [GOG Galaxy](#gog-galaxy)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [recent games](#recent-games), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
@@ -97,7 +97,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="images/default-layout.svg" alt="Map of the default layout: CPU, GPU and memory graphs, CPU and GPU temperatures and the frame rate, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Twenty-eight widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `countdowns` ([Countdowns](#countdowns)), `drives`, `batteries` ([Device batteries](#device-batteries)), `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `weather` ([Weather](#weather)), `rain` ([Rain soon](#rain-soon)), `sun` ([Sun and moon](#sun-and-moon)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)), `photos` ([Photo frame](#photo-frame)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Thirty-two widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `countdowns` ([Countdowns](#countdowns)), `drives`, `batteries` ([Device batteries](#device-batteries)), `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `voice` ([Discord voice](#discord-voice)), `games` ([Recent games](#recent-games)), `downloads` ([Steam downloads](#steam-downloads)), `friends` ([Steam friends and achievements](#steam-friends-and-achievements)), `weather` ([Weather](#weather)), `rain` ([Rain soon](#rain-soon)), `sun` ([Sun and moon](#sun-and-moon)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)), `photos` ([Photo frame](#photo-frame)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
 
 <table>
   <tr>
@@ -631,6 +631,41 @@ To make a widget go red, give it a warning colour on one of these metrics (see [
 ```
 
 In the editor, the same rules are each widget's *Warning colours*: pick the metric, set *Above* to 0, and choose a colour.
+
+### Discord voice
+
+Lights for a Discord call: one on while someone's talking, one while your microphone is picking you up. The *Discord
+voice* widget (`voice`, under *Media and controls*) shows both, side by side or one above the other, and hides outside
+a call.
+
+| Reading | |
+|---|---|
+| `discord.call` | 1 while you're in a Discord voice channel or call, 0 while you aren't |
+| `discord.talking` | 1 if sound came out of Discord, in a call, in the last second: someone talking, or Discord's own sounds |
+| `discord.you` | 1 if your microphone picked up sound, in a call, in the last second |
+| `discord.level`, `discord.mic.level` | How loud Discord's sound, and your microphone as Discord hears it, got in the last second, e.g. *32 %* |
+
+- **Where it comes from:** the sound meters Windows keeps for every app, the green bars in the Volume mixer. Impious
+  Bonum reads Discord's ten times a second. It never opens your microphone or hears what's said: a meter only says how
+  loud, and Windows doesn't count reading one as using the microphone.
+- **Talking** is Discord's sound rather than who's speaking: anyone in the call, a soundboard, or Discord's join and
+  leave sounds. Its message pings outside a call don't count.
+- **You** is your microphone as Discord hears it, before Discord decides whether to send it. It lights while you're
+  muted in Discord, and between presses of push to talk, so it says your microphone hears you, not that the call does.
+  Keyboard clicks and a loud room can light it too.
+- **In a call** means Discord has a microphone open, which it does in a voice channel or call (and while you test your
+  microphone in its settings).
+- The readings appear the first time Discord makes or hears a sound, and have no reading while it's closed. Discord's
+  test builds (PTB and Canary) count too.
+
+The widget looks ten times a second while it's on screen, so its lights keep up with a voice; the readings are once a
+second, like everything else, for [alerts](#alerts), warning colours and text. Its settings choose the lights and their
+labels, their colours (*Talking* is the theme's accent and *You* red, like an on-air light; both are the dim `track`
+colour while off) and *Show outside a call*, which keeps the lights on screen while you're not in one:
+
+```json
+{ "type": "voice", "x": 30, "y": 20, "width": 320, "height": 60, "fontSize": 28 }
+```
 
 ### Device batteries
 
