@@ -383,6 +383,24 @@ public static class DemoReadings
             new SteamFriend("Alex", SteamPresence.Away, null),
         ];
         SteamFriendsProvider.Publish(store, friends, new AchievementCount(34, 50), SteamFriendsProvider.FriendsOnline(friends));
+
+        // The games played lately, from all three launchers. Their pictures are drawn by the app (DemoArtwork.RecentGames),
+        // like the album cover; without the app, their tiles show their names.
+        using var recent = new RecentGamesProvider();
+        recent.Initialize(store);
+        var noArt = new GameArt(null, null, null, null);
+        RecentGame Played(GameStore launcher, string id, string name, double hoursAgo, double? hours) =>
+            new(new StoreGame(launcher, id, name, $@"C:\Games\{name}"), new DateTimeOffset(now).AddHours(-hoursAgo), hours, noArt);
+        IReadOnlyList<RecentGame> games =
+        [
+            Played(GameStore.Steam, "3141590", "Starfall Odyssey", 0, 41.5),
+            Played(GameStore.Epic, "Lumen", "Lumen Drift", 26, 3.2),
+            Played(GameStore.Steam, "1145360", "Ember Hollow", 51, 120),
+            Played(GameStore.Gog, "1207658924", "Tidewater", 170, 0.6),
+        ];
+        store.SetAttachment(RecentGamesProvider.Recent, games);
+        store.SetText(RecentGamesProvider.Last, games[0].Game.Name);
+        store.Set(RecentGamesProvider.Hours, games[0].Hours);
     }
 
     /// <summary>

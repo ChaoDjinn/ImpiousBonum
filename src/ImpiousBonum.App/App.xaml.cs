@@ -323,9 +323,17 @@ public partial class App : Application
     private static Sampler DemoSampler()
     {
         var store = new MetricStore();
-        DemoReadings.Fill(store, DateTime.Now, DemoArtwork.Png());
-        store.SetAttachment(GameArtProvider.Art, DemoArtwork.Game());
+        FillDemo(store, DateTime.Now);
         return new Sampler(store, []);
+    }
+
+    /// <summary>The made-up readings (<see cref="DemoReadings"/>), with the pictures the app draws for them.</summary>
+    private static void FillDemo(MetricStore store, DateTime now)
+    {
+        DemoReadings.Fill(store, now, DemoArtwork.Png());
+        store.SetAttachment(GameArtProvider.Art, DemoArtwork.Game());
+        if (store.GetAttachment(RecentGamesProvider.Recent) is IReadOnlyList<RecentGame> recent)
+            store.SetAttachment(RecentGamesProvider.Recent, DemoArtwork.RecentGames(recent));
     }
 
     /// <summary>Returns false if <paramref name="layoutName"/> isn't a saved layout.</summary>
@@ -352,8 +360,7 @@ public partial class App : Application
         else
         {
             now = DateTime.Today.AddHours(21).AddMinutes(47);
-            DemoReadings.Fill(store, now, DemoArtwork.Png());
-            store.SetAttachment(GameArtProvider.Art, DemoArtwork.Game());
+            FillDemo(store, now);
         }
 
         var layout = library.Load(name);

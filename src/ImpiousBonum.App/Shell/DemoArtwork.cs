@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ImpiousBonum.Core.Games;
+using ImpiousBonum.Core.Providers;
 
 namespace ImpiousBonum.App.Shell;
 
@@ -275,6 +276,116 @@ public static class DemoArtwork
         line.MaxTextWidth = width;
         line.TextAlignment = alignment;
         return line;
+    }
+
+    /// <summary>
+    /// The demo readings' recent games with pictures, as they'd have them: Steam's cover and banner for the Steam games
+    /// (Starfall Odyssey's the same as the game in front's), and its icon for an Epic Games or GOG game, drawn in code.
+    /// </summary>
+    public static IReadOnlyList<RecentGame> RecentGames(IReadOnlyList<RecentGame> games) =>
+        [.. games.Select(game => game with
+        {
+            Art = game.Game.Name switch
+            {
+                "Starfall Odyssey" => Game(),
+                "Ember Hollow" => new GameArt(Jpeg(400, 600, (dc, w, h) => Ember(dc, w, h, tall: true)), Jpeg(920, 430, (dc, w, h) => Ember(dc, w, h, tall: false)), null, null),
+                "Lumen Drift" => new GameArt(null, null, null, Icon(256, Lumen)),
+                "Tidewater" => new GameArt(null, null, null, Icon(256, Tide)),
+                _ => game.Art,
+            },
+        })];
+
+    /// <summary>Ember Hollow's cover (<paramref name="tall"/>) or banner: a burnt forest at dusk, glowing where the hollow is, with embers rising.</summary>
+    private static void Ember(DrawingContext dc, double w, double h, bool tall)
+    {
+        dc.DrawRectangle(new LinearGradientBrush(
+            [
+                new GradientStop(Color.FromRgb(0x12, 0x09, 0x0C), 0), new GradientStop(Color.FromRgb(0x4E, 0x12, 0x14), 0.55),
+                new GradientStop(Color.FromRgb(0xD8, 0x56, 0x1C), 1),
+            ], 90), null, new Rect(0, 0, w, h));
+        var hollow = new Point(w * (tall ? 0.5 : 0.74), h * 0.8);
+        dc.DrawEllipse(new RadialGradientBrush(Color.FromArgb(0xD0, 0xFF, 0xB0, 0x48), Color.FromArgb(0, 0xFF, 0x58, 0x1C)), null, hollow, w * 0.42, h * 0.34);
+
+        // Bare trunks, always in the same places, and the embers drifting up between them.
+        var random = new Random(7);
+        var trunk = new SolidColorBrush(Color.FromRgb(0x0B, 0x05, 0x07));
+        for (var i = 0; i < 11; i++)
+        {
+            var width = w * (0.015 + random.NextDouble() * 0.035);
+            dc.DrawRectangle(trunk, null, new Rect(random.NextDouble() * w - width / 2, h * (0.05 + random.NextDouble() * 0.35), width, h));
+        }
+        var unit = Math.Min(w, h);
+        for (var i = 0; i < 70; i++)
+        {
+            var glow = (byte)(0x90 + random.Next(0x70));
+            dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(glow, 0xFF, (byte)(0x90 + random.Next(0x50)), 0x30)), null,
+                new Point(random.NextDouble() * w, h * (0.25 + random.NextDouble() * 0.75)), unit * (0.003 + random.NextDouble() * 0.007), unit * (0.003 + random.NextDouble() * 0.007));
+        }
+
+        // The title: EMBER large, HOLLOW spaced out under it, in the middle of the cover, which a wide tile crops to.
+        var area = tall ? new Rect(w * 0.08, h * 0.36, w * 0.84, h * 0.2) : new Rect(w * 0.05, h * 0.3, w * 0.45, h * 0.4);
+        var alignment = tall ? TextAlignment.Center : TextAlignment.Left;
+        var name = Title("EMBER", area.Height * 0.62, area.Width, alignment, FontWeights.Black,
+            new LinearGradientBrush(Color.FromRgb(0xFF, 0xE8, 0xC0), Color.FromRgb(0xFF, 0x8A, 0x3A), 90));
+        var subtitle = Title(string.Join(' ', "HOLLOW".ToCharArray()), area.Height * 0.26, area.Width, alignment, FontWeights.SemiBold,
+            new SolidColorBrush(Color.FromRgb(0xFF, 0xC8, 0x90)));
+        var top = area.Top + (area.Height - name.Height - subtitle.Height) / 2;
+        dc.DrawText(name, new Point(area.Left, top));
+        dc.DrawText(subtitle, new Point(area.Left, top + name.Height));
+    }
+
+    /// <summary>Lumen Drift's icon: a glowing moon adrift on a teal night.</summary>
+    private static void Lumen(DrawingContext dc, double s)
+    {
+        dc.DrawRoundedRectangle(new LinearGradientBrush(Color.FromRgb(0x0E, 0x6E, 0x7A), Color.FromRgb(0x1C, 0x1A, 0x4E), 45), null, new Rect(0, 0, s, s), s * 0.18, s * 0.18);
+        var moon = new Point(s * 0.5, s * 0.48);
+        dc.DrawEllipse(new RadialGradientBrush(Color.FromArgb(0x90, 0xB8, 0xFF, 0xF0), Color.FromArgb(0, 0xB8, 0xFF, 0xF0)), null, moon, s * 0.42, s * 0.42);
+        var crescent = Geometry.Combine(new EllipseGeometry(moon, s * 0.24, s * 0.24), new EllipseGeometry(new Point(moon.X + s * 0.11, moon.Y - s * 0.07), s * 0.2, s * 0.2),
+            GeometryCombineMode.Exclude, null);
+        dc.DrawGeometry(new LinearGradientBrush(Color.FromRgb(0xFF, 0xFF, 0xF2), Color.FromRgb(0xA8, 0xF0, 0xE4), 90), null, crescent);
+        var star = new SolidColorBrush(Color.FromArgb(0xE0, 0xFF, 0xFF, 0xFF));
+        foreach (var (x, y, r) in new[] { (0.22, 0.24, 0.018), (0.78, 0.3, 0.013), (0.72, 0.74, 0.016), (0.3, 0.78, 0.011) })
+            dc.DrawEllipse(star, null, new Point(s * x, s * y), s * r, s * r);
+    }
+
+    /// <summary>Tidewater's icon: two waves rolling across deep blue.</summary>
+    private static void Tide(DrawingContext dc, double s)
+    {
+        dc.DrawRoundedRectangle(new LinearGradientBrush(Color.FromRgb(0x1E, 0x5A, 0xA8), Color.FromRgb(0x0A, 0x1E, 0x46), 90), null, new Rect(0, 0, s, s), s * 0.18, s * 0.18);
+        dc.PushClip(new RectangleGeometry(new Rect(0, 0, s, s), s * 0.18, s * 0.18));
+        foreach (var (top, color) in new[] { (0.42, Color.FromRgb(0x6C, 0xD4, 0xF0)), (0.62, Color.FromRgb(0xE8, 0xF8, 0xFF)) })
+        {
+            var wave = new StreamGeometry();
+            using (var g = wave.Open())
+            {
+                // Two rolls of a wave: each rises to a crest and falls to a trough.
+                g.BeginFigure(new Point(0, s * top), true, true);
+                for (var i = 0; i < 2; i++)
+                {
+                    var x = s * 0.5 * i;
+                    g.BezierTo(new Point(x + s * 0.14, s * (top - 0.13)), new Point(x + s * 0.36, s * (top + 0.13)), new Point(x + s * 0.5, s * top), true, true);
+                }
+                g.LineTo(new Point(s, s), true, false);
+                g.LineTo(new Point(0, s), true, false);
+            }
+            dc.DrawGeometry(new SolidColorBrush(Color.FromArgb(0xD8, color.R, color.G, color.B)), null, wave);
+        }
+        dc.Pop();
+    }
+
+    /// <summary>A square icon drawn by <paramref name="draw"/>, as PNG bytes, as an exe's icon would come.</summary>
+    private static byte[] Icon(int size, Action<DrawingContext, double> draw)
+    {
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+            draw(dc, size);
+        var bitmap = new RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(visual);
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var stream = new MemoryStream();
+        encoder.Save(stream);
+        return stream.ToArray();
     }
 
     private static byte[] Jpeg(int width, int height, Action<DrawingContext, double, double> draw)
