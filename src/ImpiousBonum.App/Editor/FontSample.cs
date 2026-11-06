@@ -8,14 +8,18 @@ namespace ImpiousBonum.App.Editor;
 /// <summary>A font in the font picker: an installed font, or (for a widget's own font) the theme's.</summary>
 public sealed class FontChoice
 {
-    private static IReadOnlyList<FontChoice>? _installed;
-    private string? _sample;
-    private bool _inspected;
+    // Shared by every font drop-down, which can be on different threads (each window of the app's, and each test, has
+    // its own), so worked out once whichever asks first, and never half-done for another asking at the same time.
+    private static readonly Lazy<IReadOnlyList<FontChoice>> InstalledFonts = new(() =>
+        [.. Fonts.SystemFontFamilies.DistinctBy(f => f.Source).OrderBy(f => f.Source).Select(f => new FontChoice(f.Source, f))]);
+
+    private readonly Lazy<string?> _sample;
 
     private FontChoice(string name, FontFamily? family)
     {
         Name = name;
         Family = family;
+        _sample = new Lazy<string?>(() => Inspect(family, name));
     }
 
     /// <summary>The theme's font, which a widget uses when its own font is empty.</summary>
@@ -24,8 +28,7 @@ public sealed class FontChoice
     /// <summary>
     /// Every installed font, by name. Listing them is quick; each font is only loaded when the drop-down shows it.
     /// </summary>
-    public static IReadOnlyList<FontChoice> Installed => _installed ??=
-        [.. Fonts.SystemFontFamilies.DistinctBy(f => f.Source).OrderBy(f => f.Source).Select(f => new FontChoice(f.Source, f))];
+    public static IReadOnlyList<FontChoice> Installed => InstalledFonts.Value;
 
     /// <summary>What's stored for it: the font's name, or empty for the theme's font.</summary>
     public string Name { get; }
@@ -37,18 +40,7 @@ public sealed class FontChoice
     /// A few of the font's symbols to show beside its name when it's a symbol or icon font, whose letters wouldn't spell
     /// its name; null for any other font, whose name is drawn in itself. Worked out the first time the font is shown.
     /// </summary>
-    public string? Sample
-    {
-        get
-        {
-            if (!_inspected)
-            {
-                _inspected = true;
-                _sample = Inspect(Family, Name);
-            }
-            return _sample;
-        }
-    }
+    public string? Sample => _sample.Value;
 
     /// <summary>
     /// What screen readers call its row. The drop-down's text and search use <see cref="Name"/>, which is empty for the
