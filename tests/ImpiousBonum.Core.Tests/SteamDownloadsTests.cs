@@ -51,7 +51,7 @@ public sealed class SteamDownloadsTests
         Assert.Equal(new SteamDownload(2, "Tunic", SteamDownloadState.Paused, 400, 1000), SteamLibrary.Download(Manifest(2, "Tunic", SeenPaused, 1000, 400)));
         Assert.Equal(new SteamDownload(2, "Tunic", SteamDownloadState.Paused, 300, 1000), SteamLibrary.Download(Manifest(2, "Tunic", UpdateRequired | FullyInstalled, 1000, 300)));
         // Downloaded, and being written into its folder: how much is written of how much.
-        Assert.Equal(new SteamDownload(2, "Tunic", SteamDownloadState.Installing, 700, 2000), SteamLibrary.Download(Manifest(2, "Tunic", Staging, 1000, 1000, 2000, 700)));
+        Assert.Equal(new SteamDownload(2, "Tunic", SteamDownloadState.Installing, 700, 2000) { Overall = 35 }, SteamLibrary.Download(Manifest(2, "Tunic", Staging, 1000, 1000, 2000, 700)));
 
         // Steam's registry has the last word on whether it's going: a started download it isn't working on is waiting,
         // or paused if it got partway; one it is working on is going, whatever the flags.
@@ -62,6 +62,40 @@ public sealed class SteamDownloadsTests
 
         // No name: its folder's.
         Assert.Equal("Tunic", SteamLibrary.Download(Manifest(2, "", Running, 1000, 400, folder: "Tunic"))!.Name);
+    }
+
+    [Fact]
+    public void Steam_working_on_an_update_it_hasn_t_written_as_started_is_a_download()
+    {
+        // For a few seconds after a download starts, Steam sizes it and makes room before it writes the started flag;
+        // as seen for a 13 GB update, the manifest still says only that an update is wanted, and the registry that Steam
+        // is working on it.
+        var waiting = SteamLibrary.DownloadManifest(Manifest(2, "Tunic", UpdateRequired | FullyInstalled))!;
+        Assert.False(waiting.Started);
+        Assert.True(waiting.ToDo);
+        Assert.Null(waiting.Download(updating: null));
+        Assert.Null(waiting.Download(updating: false));
+        Assert.Equal(new SteamDownload(2, "Tunic", SteamDownloadState.Downloading, 0, 0), waiting.Download(updating: true));
+        // An installed game with nothing to do isn't asked about.
+        Assert.False(SteamLibrary.DownloadManifest(Manifest(1, "Hades", FullyInstalled, 1000, 1000))!.ToDo);
+    }
+
+    [Fact]
+    public void How_far_the_whole_update_has_got_is_the_download_or_the_writing_whichever_is_behind()
+    {
+        // As Steam wrote it on pausing a 13.8 GB update: 96% downloaded and 65% written. The bar shows 65, then carries
+        // on from there as the writing finishes, rather than dropping from 96 to whatever the writing is at.
+        var paused = SteamLibrary.Download(Manifest(2, "Frosthaven", Going, 13_829_622_784, 13_323_208_464, 25_270_250_554, 16_389_762_847), updating: false)!;
+        Assert.Equal(SteamDownloadState.Paused, paused.State);
+        Assert.Equal(13_323_208_464, paused.Done);
+        Assert.Equal(64.86, paused.Percent!.Value, 2);
+        var installing = SteamLibrary.Download(Manifest(2, "Frosthaven", Going, 13_829_622_784, 13_829_622_784, 25_270_250_554, 19_104_132_507), updating: true)!;
+        Assert.Equal(SteamDownloadState.Installing, installing.State);
+        Assert.Equal(75.6, installing.Percent!.Value, 1);
+        // A download that writes nothing into the folder is how much of it is downloaded.
+        Assert.Equal(40, SteamLibrary.Download(Manifest(2, "Tunic", Going, 1000, 400))!.Percent);
+        // Nothing to download, only writing: how much is written.
+        Assert.Equal(25, SteamLibrary.Download(Manifest(2, "Tunic", Going, 0, 0, 2000, 500), updating: true)!.Percent);
     }
 
     [Fact]
@@ -119,11 +153,19 @@ public sealed class SteamDownloadsTests
         Assert.Equal(reads + 1, files.TextReads);
         Assert.Equal(10 * Megabyte, Number(store, SteamDownloadsProvider.Speed));
 
-        // Stuck for long enough, it has no speed.
+        // Steam hasn't written for a while, as it doesn't while a download's going: no speed, and only the size, as how
+        // far it had got has fallen behind.
         time.Advance(SteamDownloadsProvider.SpeedLapse);
         await provider.SampleAsync(store, CancellationToken.None);
         Assert.Null(Number(store, SteamDownloadsProvider.Speed));
-        Assert.Equal(40, Number(store, SteamDownloadsProvider.Progress));
+        Assert.Null(Number(store, SteamDownloadsProvider.Progress));
+        Assert.Null(Number(store, SteamDownloadsProvider.Done));
+        Assert.Equal(1000 * Megabyte, Number(store, SteamDownloadsProvider.Size));
+        Assert.Equal("Downloading", Text(store, SteamDownloadsProvider.State));
+        Assert.True(Downloads(store)[0].Stale);
+        // A paused download's progress is as Steam wrote it on pausing, so it isn't out of date however long it waits.
+        Assert.False(Downloads(store).Single(d => d.Name == "Abzu").Stale);
+        Assert.Equal(25, Downloads(store).Single(d => d.Name == "Abzu").Percent);
 
         // Finished, unpaused and taken out of the queue: nothing is downloading, so there's no reading at all.
         Write(files, 2, Manifest(2, "Tunic", FullyInstalled, 1000 * Megabyte, 1000 * Megabyte), time);
@@ -135,6 +177,102 @@ public sealed class SteamDownloadsTests
         Assert.Null(Text(store, SteamDownloadsProvider.Game));
         Assert.Null(Text(store, SteamDownloadsProvider.State));
         Assert.Null(Number(store, SteamDownloadsProvider.Progress));
+    }
+
+    [Fact]
+    public async Task A_speed_is_timed_from_steam_s_last_write_not_from_before_the_download_started_or_across_a_pause()
+    {
+        var files = new FakeGameFiles { Steam = "D:/Programs/Steam" };
+        var time = new FakeTime(new DateTimeOffset(2026, 11, 5, 22, 0, 0, TimeSpan.Zero));
+        // An update Steam has known about for an hour without starting it.
+        Write(files, 2, Manifest(2, "Icarus", UpdateRequired | FullyInstalled, 1300 * Megabyte), time);
+        using var provider = new SteamDownloadsProvider(files, time);
+        var store = new MetricStore();
+        provider.Initialize(store);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Null(store.GetAttachment(SteamDownloadsProvider.List));
+
+        // Steam starts it, writing that it has, then 6 seconds later how far it got. Timed from the manifest written an
+        // hour before, as it once was, 24 MB came to 7 KB/s, with a day and a half left; from Steam's last write, 4 MB/s.
+        time.Advance(TimeSpan.FromHours(1));
+        files.Updating[2] = true;
+        Write(files, 2, Manifest(2, "Icarus", Going, 1300 * Megabyte), time);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal("Downloading", Text(store, SteamDownloadsProvider.State));
+        Assert.Null(Number(store, SteamDownloadsProvider.Speed));
+        time.Advance(TimeSpan.FromSeconds(6));
+        Write(files, 2, Manifest(2, "Icarus", Going, 1300 * Megabyte, 24 * Megabyte), time);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(4 * Megabyte, Number(store, SteamDownloadsProvider.Speed));
+        Assert.Equal("5m", Text(store, SteamDownloadsProvider.TimeLeft));
+
+        // Paused three minutes on, with nothing written in between: too long a gap to time a speed over.
+        time.Advance(TimeSpan.FromMinutes(3));
+        files.Updating[2] = false;
+        Write(files, 2, Manifest(2, "Icarus", Going, 1300 * Megabyte, 800 * Megabyte), time);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal("Paused", Text(store, SteamDownloadsProvider.State));
+        Assert.Null(Number(store, SteamDownloadsProvider.Speed));
+
+        // Resumed an hour later, which Steam writes without having moved, and 10 seconds on 100 MB further: 10 MB/s, not
+        // 100 MB over the hour and ten seconds since it last moved (0.03 MB/s, and 4 hours left).
+        time.Advance(TimeSpan.FromHours(1));
+        files.Updating[2] = true;
+        Write(files, 2, Manifest(2, "Icarus", Going, 1300 * Megabyte, 800 * Megabyte), time);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal("Downloading", Text(store, SteamDownloadsProvider.State));
+        Assert.Null(Number(store, SteamDownloadsProvider.Speed));
+        time.Advance(TimeSpan.FromSeconds(10));
+        Write(files, 2, Manifest(2, "Icarus", Going, 1300 * Megabyte, 900 * Megabyte), time);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(10 * Megabyte, Number(store, SteamDownloadsProvider.Speed));
+
+        // Paused again for an hour, and resumed without a write of its own: the first write after has no speed, rather
+        // than one timed across the pause, and the next has the right one.
+        time.Advance(TimeSpan.FromSeconds(10));
+        files.Updating[2] = false;
+        Write(files, 2, Manifest(2, "Icarus", Going, 1300 * Megabyte, 1000 * Megabyte), time);
+        await provider.SampleAsync(store, CancellationToken.None);
+        time.Advance(TimeSpan.FromHours(1));
+        files.Updating[2] = true;
+        Write(files, 2, Manifest(2, "Icarus", Going, 1300 * Megabyte, 1100 * Megabyte), time);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Null(Number(store, SteamDownloadsProvider.Speed));
+        time.Advance(TimeSpan.FromSeconds(20));
+        Write(files, 2, Manifest(2, "Icarus", Going, 1300 * Megabyte, 1250 * Megabyte), time);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(7.5 * Megabyte, Number(store, SteamDownloadsProvider.Speed));
+    }
+
+    [Fact]
+    public async Task How_far_a_download_has_got_stands_for_half_a_minute_after_steam_writes_it()
+    {
+        var files = new FakeGameFiles { Steam = "D:/Programs/Steam" };
+        var time = new FakeTime(new DateTimeOffset(2026, 11, 5, 22, 0, 0, TimeSpan.Zero));
+        files.Updating[2] = true;
+        Write(files, 2, Manifest(2, "Frosthaven", Going, 13_829_622_784, 13_323_208_464), time);
+        using var provider = new SteamDownloadsProvider(files, time);
+        var store = new MetricStore();
+        provider.Initialize(store);
+
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(96.34, Number(store, SteamDownloadsProvider.Progress)!.Value, 2);
+        time.Advance(SteamDownloadsProvider.FreshFor - TimeSpan.FromSeconds(1));
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.NotNull(Number(store, SteamDownloadsProvider.Progress));
+
+        // Steam has carried on without writing: how far it had got is out of date.
+        time.Advance(TimeSpan.FromSeconds(1));
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Null(Number(store, SteamDownloadsProvider.Progress));
+        Assert.Equal(13_829_622_784, Number(store, SteamDownloadsProvider.Size));
+        Assert.True(Downloads(store)[0].Stale);
+
+        // Steam getting ready to start another: a download, with nothing to say yet but that it's going.
+        files.Updating[3] = true;
+        Write(files, 3, Manifest(3, "Age of Wonders 4", UpdateRequired | FullyInstalled), time);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(["Age of Wonders 4", "Frosthaven"], Downloads(store).Select(d => d.Name));
     }
 
     [Fact]

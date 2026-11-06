@@ -10,25 +10,25 @@ namespace ImpiousBonum.App.Widgets;
 
 /// <summary>
 /// One row per game Steam is downloading, updating or installing (<see cref="SteamDownloadsProvider"/>): its name, how
-/// far it has got and how fast, and a bar. Rows follow Steam's downloads as they start and finish, and the widget hides
-/// while there are none.
+/// far it has got and how fast where Steam has said lately, and a bar. Rows follow Steam's downloads as they start and
+/// finish, and the widget hides while there are none.
 /// </summary>
 public sealed class DownloadsWidget : Widget
 {
     public static WidgetDescriptor Descriptor { get; } = new(
         "downloads", "Steam downloads",
-        "One row per game Steam is downloading, updating or installing, with how much is done, the speed and the time left, and a bar. Read from Steam's own files on this PC, so it needs no account and Steam needn't be open. Shows nothing while there's nothing to download.",
+        "One row per game Steam is downloading, updating or installing, with a bar and how much is done. Read from Steam's own files on this PC, so it needs no account and Steam needn't be open, but Steam writes how far a download has got only when it starts, pauses or resumes, so one that has been going a while shows its size until it next does. Shows nothing while there's nothing to download.",
         500, 230,
         [
             Setting.Number("fontSize", "Font size", 25, 6, 200),
             Setting.ShrinkToFit(),
             Setting.Toggle("showSize", "Show sizes", true, help: "How much is done of how much, such as 6.1 / 14.0 GB. Off shows how far it has got as a percentage."),
             Setting.Toggle("showSpeed", "Show speed", true,
-                help: "The speed and the time left. They show once Steam has written its progress twice, which it does every so often as it downloads."),
+                help: "The speed and the time left, when Steam has written its progress twice within two minutes. It seldom does, as it writes when a download starts, pauses or resumes."),
             Setting.Number("barHeight", "Bar height", 5, 1, 100, group: Setting.Appearance),
             Setting.Number("spacing", "Row spacing", 12, 0, 200, group: Setting.Appearance),
             Setting.Color("color", "Bar colour", "accent"),
-            Setting.Color("waitingColor", "Waiting colour", "secondary", help: "The bar of a download that's paused or queued."),
+            Setting.Color("waitingColor", "Waiting colour", "secondary", help: "The bar of a download that's paused, or started and waiting behind another."),
             Setting.Color("trackColor", "Track colour", "track", help: "The empty part of each bar. track is the theme's bar track."),
             Setting.Color("labelColor", "Label colour", "foreground"),
             Setting.Color("valueColor", "Value colour", "secondary"),
@@ -88,6 +88,7 @@ public sealed class DownloadsWidget : Widget
             var download = downloads[i];
             var row = _current[i];
             row.Value.Text = Describe(download, _showSize, _showSpeed);
+            // Without word lately of how far it has got, the bar is empty rather than showing where it was.
             var percent = download.Percent ?? 0;
             row.Bar.ColumnDefinitions[0].Width = new GridLength(percent, GridUnitType.Star);
             row.Bar.ColumnDefinitions[1].Width = new GridLength(100 - percent, GridUnitType.Star);
@@ -97,22 +98,23 @@ public sealed class DownloadsWidget : Widget
 
     /// <summary>
     /// A download's progress in a few words: "6.1 / 14.0 GB · 40.0 MB/s · 3m" while it downloads, its state first while
-    /// it's doing anything else ("Paused · 6.1 / 14.0 GB", "Queued · 2.1 GB"), and a percentage instead of sizes without
-    /// <paramref name="sizes"/>.
+    /// it's doing anything else ("Paused · 6.1 / 14.0 GB", "Queued · 2.1 GB") or Steam hasn't said lately how far it has
+    /// got ("Downloading · 14.0 GB"), and a percentage instead of sizes without <paramref name="sizes"/>.
     /// </summary>
     internal static string Describe(SteamDownload download, bool sizes, bool speed)
     {
         var parts = new List<string>();
-        if (download.State != SteamDownloadState.Downloading)
+        // Downloading goes without saying beside how far it has got, but not on its own.
+        if (download.State != SteamDownloadState.Downloading || download.Percent is null)
             parts.Add(SteamDownload.StateName(download.State));
         if (download.Total > 0)
         {
-            // A download that hasn't started has only a size.
-            parts.Add(download.Done == 0 && download.State == SteamDownloadState.Queued ? MetricFormatter.Format(download.Total, MetricUnit.Bytes)
+            // A download that hasn't started, or whose progress is out of date, has only a size.
+            parts.Add(download.Stale || (download.Done == 0 && download.State == SteamDownloadState.Queued) ? MetricFormatter.Format(download.Total, MetricUnit.Bytes)
                 : sizes ? Sizes(download.Done, download.Total)
                 : MetricFormatter.Format(download.Percent, MetricUnit.Percent, new FormatSpec("0")));
         }
-        if (speed && download.Speed is { } bytesPerSecond)
+        if (speed && !download.Stale && download.Speed is { } bytesPerSecond)
         {
             parts.Add(MetricFormatter.Format(bytesPerSecond, MetricUnit.BytesPerSecond));
             if (download.TimeLeft is { } left)
