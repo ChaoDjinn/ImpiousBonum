@@ -79,7 +79,7 @@ Without a spare screen, *Screens* → pick the monitor → *Size* → *A window*
 
 *General* → *Back up and restore* → *Back up…* saves your whole setup as one `.ibbackup` file: `settings.json` (calendars, alerts, hotkeys, the schedule, custom data, which screens the dashboards are on and the rest), every saved layout with the fonts and pictures in its folder under `layouts`, and your saved themes. Keep it somewhere safe, or take it to another PC.
 
-**A backup has private things in it**: your calendar links, the tablet link, and the web addresses and commands you've set up, for alerts and custom data among others (with any tokens in custom data's headers). Keep it somewhere only you can open, and don't share it the way you'd share a layout: to share a layout, export it instead (see [Sharing layouts](#sharing-layouts)).
+**A backup has private things in it**: your calendar links, the tablet link, your [Steam Web API key](#steam-friends-and-achievements), and the web addresses and commands you've set up, for alerts and custom data among others (with any tokens in custom data's headers). Keep it somewhere only you can open, and don't share it the way you'd share a layout: to share a layout, export it instead (see [Sharing layouts](#sharing-layouts)).
 
 *Restore…* shows what's in a backup: when it was made, by which version of Impious Bonum, and how many layouts and saved themes it has. Once you say yes, Impious Bonum first saves your setup as it is now in a folder beside the settings folder (`%AppData%\ImpiousBonum backups`, as *Before restoring 2026-10-16 14.05.ibbackup*), so you can restore that to go back. Then it closes, puts the backup's settings, layouts and themes in place of yours, and starts again. Layouts and themes that aren't in the backup go, though they're in the one saved before restoring.
 
@@ -723,12 +723,12 @@ These come from Steam's Web API, which needs a key of your own:
 2. Paste it into *Web API key*, and your profile's address into *Your profile*: *steamcommunity.com/id/yourname*, or
    its 17-digit ID (*steamcommunity.com/profiles/7656…*). *Now* says how it's going.
 
-The key is kept in `settings.json` on your PC and only ever sent to Steam. Steam shares only what your profile's
-privacy settings make public, whoever's key asks: your friends list for who's online (*My profile → Edit profile →
-Privacy settings → Friends list*), and your game details for your achievements. Friends whose own profiles are
-private show as offline. Who's online is checked every minute and your friends list every 10 minutes; achievements
-when a Steam game comes to the front and every 2 minutes while it's there. Nothing is fetched from Steam without a
-key, and *Steam downloads* and *Recent games* don't need one.
+The key is kept in `settings.json` on your PC, and so in [backups](#backing-up-your-settings), and only ever sent to
+Steam. Steam shares only what your profile's privacy settings make public, whoever's key asks: your friends list for
+who's online (*My profile → Edit profile → Privacy settings → Friends list*), and your game details for your
+achievements. Friends whose own profiles are private show as offline. Who's online is checked every minute and your
+friends list every 10 minutes; achievements when a Steam game comes to the front and every 2 minutes while it's there.
+Nothing is fetched from Steam without a key, and *Steam downloads* and *Recent games* don't need one.
 
 | Reading | |
 |---|---|
