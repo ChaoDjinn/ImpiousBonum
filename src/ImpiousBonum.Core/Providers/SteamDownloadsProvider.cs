@@ -5,11 +5,13 @@ namespace ImpiousBonum.Core.Providers;
 
 /// <summary>
 /// What Steam is downloading, updating or installing, from the manifest it keeps for each game
-/// (<c>appmanifest_&lt;id&gt;.acf</c>), which it rewrites as a download goes: the list as an attachment (a list of
-/// <see cref="SteamDownload"/>) for the downloads widget, and readings for the first in it. Nothing is fetched and
-/// Steam needn't be running. Every few seconds it looks at when each manifest was last written, which listing Steam's
-/// folders gives for free, and reads only the ones that changed; for the few downloads started, it asks the registry
-/// whether Steam is working on them now. There's no reading while nothing is downloading.
+/// (<c>appmanifest_&lt;id&gt;.acf</c>): the list as an attachment (a list of <see cref="SteamDownload"/>) for the
+/// downloads widget, and readings for the first in it. Nothing is fetched and Steam needn't be running. Every few
+/// seconds it looks at when each manifest was last written, which listing Steam's folders gives for free, and reads
+/// only the ones that changed; for the few games with something to download, it asks the registry whether Steam is
+/// working on them now. Steam rewrites a manifest when a download starts, pauses, resumes or finishes, and seldom in
+/// between, so how far one that's going has got is only known for a little while after (<see cref="FreshFor"/>).
+/// There's no reading while nothing is downloading.
 /// </summary>
 public sealed class SteamDownloadsProvider : IMetricProvider
 {
@@ -25,8 +27,18 @@ public sealed class SteamDownloadsProvider : IMetricProvider
     public const string Speed = "steam.download.speed";
     public const string TimeLeft = "steam.download.left";
 
-    /// <summary>A download whose progress hasn't moved for this long has no speed: Steam may be between files, or stuck.</summary>
+    /// <summary>
+    /// A download whose progress hasn't moved for this long has no speed: Steam may be between files, or stuck. Nor is a
+    /// speed worked out over a longer gap between Steam's writes, as it may have been paused, or not started, for most of it.
+    /// </summary>
     public static readonly TimeSpan SpeedLapse = TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    /// How long what Steam last wrote about a download that's going stands as how far it has got. Steam writes when a
+    /// download starts, pauses, resumes or finishes, and seldom in between (none in two minutes of a 13 GB download), so
+    /// after this the figures have fallen behind, and a download shows only its size until Steam writes again.
+    /// </summary>
+    public static readonly TimeSpan FreshFor = TimeSpan.FromSeconds(30);
 
     private readonly IGameFiles _files;
     private readonly SteamLibrary _steam;
@@ -85,9 +97,9 @@ public sealed class SteamDownloadsProvider : IMetricProvider
         foreach (var gone in _manifests.Keys.Where(path => !present.Contains(path)).ToList())
             _manifests.Remove(gone);
 
-        // Only the few downloads that have been started ask Steam whether they're going.
+        // Only the few games with something to download ask Steam whether it's working on them.
         Publish(store, [.. _manifests.Values
-            .Where(seen => seen.Manifest is { Started: true })
+            .Where(seen => seen.Manifest is { ToDo: true })
             .Select(seen => seen.Now(now, _files.SteamUpdating(seen.Manifest!.AppId)))
             .OfType<SteamDownload>()
             .OrderBy(download => download.State)
@@ -104,7 +116,7 @@ public sealed class SteamDownloadsProvider : IMetricProvider
         store.SetText(Game, first?.Name);
         store.SetText(State, first is null ? null : SteamDownload.StateName(first.State));
         store.Set(Progress, first?.Percent);
-        store.Set(Done, first?.Done);
+        store.Set(Done, first is { Stale: false } ? first.Done : null);
         store.Set(Size, first is { Total: > 0 } ? first.Total : null);
         store.Set(Speed, first?.Speed);
         store.SetText(TimeLeft, first?.TimeLeft is { } left ? DurationText.Format(left) : null);
@@ -115,28 +127,47 @@ public sealed class SteamDownloadsProvider : IMetricProvider
     }
 
     /// <summary>
-    /// A manifest as last read: when Steam wrote it, what it said, and since when its download has been as far along
-    /// as it is (by Steam's writes, not by when the app looked), with the speed it got there at.
+    /// A manifest as last read: when Steam wrote it, what it said, and when Steam last wrote that its download was as far
+    /// along as it is now (by Steam's writes, not by when the app looked), with the speed it got there at.
     /// </summary>
     private sealed record Seen(DateTime Written, SteamManifest? Manifest, DateTimeOffset? Since, double? Speed)
     {
-        /// <summary>The manifest as just read, after <paramref name="before"/>: the speed is how far it came between Steam's two writes.</summary>
+        /// <summary>
+        /// The manifest as just read, after <paramref name="before"/>: the speed is how far it came since Steam last wrote
+        /// the figure before, if that was lately. A write that hasn't moved, as when a download pauses or resumes, has no
+        /// speed and is where the next one is timed from, so the time it sat paused or waiting to start doesn't count.
+        /// </summary>
         public static Seen After(Seen? before, DateTime written, SteamManifest? manifest)
         {
-            // A file's time is only known when the file system gives one.
-            DateTimeOffset? at = written > DateTime.MinValue ? new DateTimeOffset(DateTime.SpecifyKind(written, DateTimeKind.Utc)) : null;
+            var at = At(written);
             if (manifest is null || before is null || before.Manifest is not { } was || was.AppId != manifest.AppId || manifest.Downloaded < was.Downloaded)
                 return new Seen(written, manifest, at, null);
             if (manifest.Downloaded == was.Downloaded)
-                return before with { Written = written, Manifest = manifest };
+                return new Seen(written, manifest, at ?? before.Since, null);
             var seconds = at is { } now && before.Since is { } since ? (now - since).TotalSeconds : 0;
-            return new Seen(written, manifest, at, seconds > 0 ? (manifest.Downloaded - was.Downloaded) / seconds : null);
+            return new Seen(written, manifest, at,
+                seconds > 0 && seconds <= SpeedLapse.TotalSeconds ? (manifest.Downloaded - was.Downloaded) / seconds : null);
         }
 
-        /// <summary>The download now, with its speed while it's downloading and has moved lately.</summary>
-        public SteamDownload? Now(DateTimeOffset now, bool? updating) =>
-            Manifest?.Download(updating) is not { } download ? null
-            : download.State == SteamDownloadState.Downloading && Speed is not null && Since is { } since && now - since < SpeedLapse ? download with { Speed = Speed }
-            : download;
+        /// <summary>
+        /// The download now: stale while it's going and Steam hasn't written for <see cref="FreshFor"/>, and with its speed
+        /// while it's downloading and has moved lately.
+        /// </summary>
+        public SteamDownload? Now(DateTimeOffset now, bool? updating)
+        {
+            if (Manifest?.Download(updating) is not { } download)
+                return null;
+            var going = download.State is SteamDownloadState.Downloading or SteamDownloadState.Installing;
+            var fresh = At(Written) is { } written && now - written < FreshFor;
+            if (going && !fresh)
+                return download with { Stale = true };
+            return download.State == SteamDownloadState.Downloading && Speed is not null && Since is { } since && now - since < SpeedLapse
+                ? download with { Speed = Speed }
+                : download;
+        }
+
+        /// <summary>When a file was written, as the file system gives it (UTC); null when it gives none.</summary>
+        private static DateTimeOffset? At(DateTime written) =>
+            written > DateTime.MinValue ? new DateTimeOffset(DateTime.SpecifyKind(written, DateTimeKind.Utc)) : null;
     }
 }

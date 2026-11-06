@@ -57,6 +57,13 @@ public sealed class DownloadsWidgetTests
             Assert.Same(row, Rows(widget)[0]);
             Assert.Equal("9.0 / 15.0 GB · 40.0 MB/s · 2m", Texts(row)[1]);
 
+            // Steam hasn't written for a while: the size, and an empty bar rather than where it was.
+            SteamDownloadsProvider.Publish(store, [Tunic with { Done = 9 * Gigabyte, Stale = true }]);
+            widget.Refresh(store, DateTime.Now);
+            Assert.Same(row, Rows(widget)[0]);
+            Assert.Equal("Downloading · 15.0 GB", Texts(row)[1]);
+            Assert.Equal(0, Bar(row).ColumnDefinitions[0].Width.Value);
+
             // Another queued behind it.
             SteamDownloadsProvider.Publish(store, [Tunic, Celeste]);
             widget.Refresh(store, DateTime.Now);
@@ -84,6 +91,12 @@ public sealed class DownloadsWidgetTests
             Assert.Equal("Downloading", DownloadsWidget.Describe(Tunic with { Done = 0, Total = 0, Speed = null }, sizes: true, speed: true));
             Assert.Equal("Installing · 700.0 / 900.0 MB", DownloadsWidget.Describe(
                 new SteamDownload(5, "Hades", SteamDownloadState.Installing, 700 * Megabyte, 900 * Megabyte), sizes: true, speed: true));
+            // Out of date: the state and the size, however it's set, and no speed.
+            Assert.Equal("Downloading · 15.0 GB", DownloadsWidget.Describe(Tunic with { Stale = true }, sizes: false, speed: true));
+            Assert.Equal("Installing · 900.0 MB", DownloadsWidget.Describe(
+                new SteamDownload(5, "Hades", SteamDownloadState.Installing, 700 * Megabyte, 900 * Megabyte) { Stale = true }, sizes: true, speed: true));
+            // The whole update's progress, where Steam gives it, rather than the download's alone.
+            Assert.Equal("Paused · 65 %", DownloadsWidget.Describe(Abzu with { Overall = 65 }, sizes: false, speed: true));
         });
     }
 

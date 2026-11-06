@@ -678,29 +678,35 @@ To be told, add an [alert](#alerts) on `battery.<name>` below 20, say.
 
 ### Steam downloads
 
-The *Steam downloads* widget lists the games Steam is downloading, updating or installing, each with how much is done
-of how much, the speed and the time left, and a bar: *6.1 / 14.0 GB · 40.0 MB/s · 3m*. A paused or queued download
-says so, and its bar is in the *Waiting colour*. The widget hides while there's nothing to download (and shows faded
-while you edit the layout).
+The *Steam downloads* widget lists the games Steam is downloading, updating or installing, each with a bar and how
+much is done of how much: *6.1 / 14.0 GB*. A paused download says so, and its bar is in the *Waiting colour*. The
+widget hides while there's nothing to download (and shows faded while you edit the layout).
 
-It reads the manifest Steam keeps for each game in its library folders, which Steam rewrites as a download goes, so
-there's no account to link and Steam needn't even be open. Every 5 seconds it looks at when each manifest was last
-written and reads only the ones that changed, and for the downloads that have started, it asks Steam's own entry in the
-registry whether Steam is working on them now, which tells one that's going from one paused or queued. Steam writes
-its progress every so often rather than all the time, so the bar moves in steps, and the speed and time left show
-once it has written twice; they're worked out from when Steam wrote, so they're right however long Impious Bonum has
-been running. A download that hasn't moved for two minutes has no speed. An update Steam is holding until you launch
-the game isn't a download until it starts.
+It reads the manifest Steam keeps for each game in its library folders, so there's no account to link and Steam
+needn't even be open. Every 5 seconds it looks at when each manifest was last written and reads only the ones that
+changed, and for the games with something to download, it asks Steam's own entry in the registry whether Steam is
+working on them now, which tells one that's going from one that's paused.
+
+Steam writes how far a download has got when it starts, pauses, resumes or finishes, and seldom in between (not once
+in two minutes of a 13 GB update), so a download that's been going for more than half a minute shows *Downloading*
+and its size, with an empty bar, rather than figures that have fallen behind. Pause it in Steam to see how far it has
+got. The speed and time left (*40.0 MB/s · 3m*) show only when Steam has written twice within two minutes with the
+download further along, which isn't often. The bar is how far the whole update has got: the download, or writing it
+into the game's folder (which Steam does at the same time), whichever is behind, so it doesn't go back when the
+download finishes and the installing goes on.
+
+A game waiting in Steam's queue (*Up Next*) shows once Steam starts it, as Steam's files don't tell it apart from an
+update that's only scheduled. An update Steam is holding until you launch the game isn't a download until it starts.
 
 The readings are for the first download in the list, the one going now:
 
 | Reading | |
 |---|---|
-| `steam.downloads` | How many games are downloading, paused or queued |
+| `steam.downloads` | How many games are downloading, installing or paused |
 | `steam.download.game` | The game's name |
-| `steam.download.state` | *Downloading*, *Installing* (writing what it downloaded into the game's folder), *Paused* or *Queued* |
-| `steam.download.progress` | How far it has got, e.g. *44 %* |
-| `steam.download.done`, `steam.download.size` | How much is done, and of how much |
+| `steam.download.state` | *Downloading*, *Installing* (writing what it downloaded into the game's folder), *Paused* or *Queued* (started, then put behind another) |
+| `steam.download.progress` | How far the whole update has got, e.g. *44 %*; no reading while Steam hasn't said lately |
+| `steam.download.done`, `steam.download.size` | How much is done (while Steam has said lately), and of how much |
 | `steam.download.speed` | How fast it's going |
 | `steam.download.left` | How long the rest will take at that speed, e.g. *3m* |
 
