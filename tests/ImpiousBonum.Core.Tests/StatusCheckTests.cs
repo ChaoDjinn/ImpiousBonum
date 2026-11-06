@@ -271,9 +271,9 @@ public sealed class StatusCheckTests
         Assert.Equal(1, asked);
 
         slow.SetResult(CheckResult.Answered(40));
-        // Its answer arrives in the background.
-        await Task.Delay(50);
-        await provider.SampleAsync(store, CancellationToken.None);
+        // Its answer arrives in the background, on a thread of its own, so a later look finds it: how much later depends
+        // on how busy the PC is, which a fixed wait once got wrong on CI.
+        await SampleUntil(provider, store, () => Format(store, "status.nas.ms") == "40 ms");
         Assert.Equal("40 ms", Format(store, "status.nas.ms"));
         Assert.Equal("All up", Format(store, StatusProvider.Summary));
     }
@@ -420,6 +420,18 @@ public sealed class StatusCheckTests
 
     private static string Format(MetricStore store, string id) =>
         store.TryGet(id, out var sample) ? MetricFormatter.Format(sample) : "(missing)";
+
+    /// <summary>Looks again and again, a few milliseconds apart, until <paramref name="done"/>, or for 10 seconds at most.</summary>
+    private static async Task SampleUntil(StatusProvider provider, MetricStore store, Func<bool> done)
+    {
+        var giveUp = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        await provider.SampleAsync(store, CancellationToken.None);
+        while (!done() && DateTime.UtcNow < giveUp)
+        {
+            await Task.Delay(10);
+            await provider.SampleAsync(store, CancellationToken.None);
+        }
+    }
 
     private sealed class FakeTime(DateTimeOffset now) : TimeProvider
     {

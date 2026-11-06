@@ -145,20 +145,22 @@ public sealed class FontPickerTests
 
             Press(combo, Key.Down, Key.Down, Key.Down);
             var shown = combo.Text;
-            Assert.NotEqual(string.Empty, shown);
-            Assert.Equal(shown, Font(session));
-            Assert.False(session.IsDirty);
+            // This failed once, in a full run, and not in many runs since, even with every core kept busy: each check says
+            // what it saw, so another failure says which step went wrong.
+            Assert.True(shown.Length > 0, $"Nothing in the box after three Downs: open {combo.IsDropDownOpen}, at {combo.SelectedIndex} of {combo.Items.Count}");
+            Assert.True(shown == Font(session), $"The box shows {shown}, the widget {Font(session) ?? "(theme font)"}");
+            Assert.False(session.IsDirty, "Looking through the list changed the layout");
 
             Press(combo, Key.Enter);
             Pump();
             window.Close();
 
-            Assert.False(combo.IsDropDownOpen);
-            Assert.Equal(shown, Font(session));
-            Assert.True(session.IsDirty);
+            Assert.False(combo.IsDropDownOpen, "Enter left the list open");
+            Assert.True(shown == Font(session), $"Enter kept {Font(session) ?? "(theme font)"}, not {shown}");
+            Assert.True(session.IsDirty, "Enter didn't change the layout");
             session.Undo();
-            Assert.Null(Font(session));
-            Assert.False(session.CanUndo);
+            Assert.True(Font(session) is null, $"One undo left {Font(session)}");
+            Assert.False(session.CanUndo, "Keeping the font took more than one undo step");
         });
     }
 

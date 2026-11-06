@@ -290,7 +290,11 @@ public sealed class PhotoFrameTests : IDisposable
         return frame;
     }
 
-    /// <summary>Refreshes the frame at <paramref name="now"/>, then waits while it lists the folder and decodes photos.</summary>
+    /// <summary>
+    /// Refreshes the frame at <paramref name="now"/>, then waits while it lists the folder and decodes photos, in the
+    /// thread pool. That takes milliseconds, but on a busy CI machine the work can wait its turn for seconds (see
+    /// <see cref="Sta"/>), so it gets half a minute before the frame counts as stuck.
+    /// </summary>
     private static void Settle(PhotoFrameWidget frame, DateTime now, MetricStore? store = null)
     {
         frame.Refresh(store ?? new MetricStore(), now);
@@ -302,8 +306,8 @@ public sealed class PhotoFrameTests : IDisposable
             Dispatcher.PushFrame(done);
             if (!frame.Busy)
                 return;
-            if (waiting.Elapsed > TimeSpan.FromSeconds(10))
-                throw new TimeoutException("The photo frame was still busy after 10 seconds.");
+            if (waiting.Elapsed > TimeSpan.FromSeconds(30))
+                throw new TimeoutException("The photo frame was still busy after 30 seconds.");
             Thread.Sleep(5);
         }
     }
