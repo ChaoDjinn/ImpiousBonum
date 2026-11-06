@@ -98,6 +98,7 @@ public sealed class Sampler : IAsyncDisposable
         new RecentGamesProvider(playedPath),
         new SteamFriendsProvider(steamAccount ?? (() => null)),
         new GalaxyAchievementsProvider(),
+        new VoiceChatProvider(),
     ];
 
     public void Start()
