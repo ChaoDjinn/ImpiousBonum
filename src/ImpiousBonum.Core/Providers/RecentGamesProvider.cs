@@ -10,10 +10,11 @@ public sealed record RecentGame(StoreGame Game, DateTimeOffset LastPlayed, doubl
 /// <summary>
 /// The games played lately, newest first, as an attachment (a list of <see cref="RecentGame"/>) for the recent games
 /// widget, and how many hours the game in front has been played. Steam's games come with Steam's own record of when each
-/// was last played and for how long (its <c>localconfig.vdf</c>), read again only when Steam rewrites it. The Epic Games
-/// launcher and GOG keep no such record on the PC, so their games come with the app's own, counted while they're in front
-/// and kept in <c>played.json</c>. Only installed games are listed, as they're the ones a tap can start. Nothing is
-/// fetched.
+/// was last played and for how long (its <c>localconfig.vdf</c>), read again only when Steam rewrites it, which it adds
+/// a session to only as the game closes; until then the app counts the time it sees a Steam game in front on top. The
+/// Epic Games launcher and GOG keep no such record on the PC, so their games come with the app's own, counted while
+/// they're in front and kept in <c>played.json</c>. Only installed games are listed, as they're the ones a tap can
+/// start. Nothing is fetched.
 /// </summary>
 public sealed class RecentGamesProvider : IMetricProvider
 {
@@ -43,6 +44,12 @@ public sealed class RecentGamesProvider : IMetricProvider
     private IReadOnlyList<StoreGame> _installed = [];
     private DateTimeOffset _installedRead = DateTimeOffset.MinValue;
     private IReadOnlyDictionary<int, SteamPlay> _steamPlayed = new Dictionary<int, SteamPlay>();
+
+    /// <summary>
+    /// For Steam games: the minutes the app has seen each in front that Steam hasn't yet added to its record, and when it
+    /// was last in front. Kept only while the app runs, as Steam soon has its own count.
+    /// </summary>
+    private readonly Dictionary<int, PlayedGame> _steamSession = [];
     private (string Path, DateTime Written)? _localConfig;
     private string? _counting;
     private DateTimeOffset _countedTo;
@@ -97,25 +104,33 @@ public sealed class RecentGamesProvider : IMetricProvider
     }
 
     /// <summary>
-    /// Counts the time an Epic Games or GOG game has been in front since the last look, and that it was played now. Time
-    /// counts only when the same game was in front at the last look, and not across a long gap, such as the PC asleep.
+    /// Counts the time the game in front has been in front since the last look, and that it was played now: an Epic
+    /// Games or GOG game's in the app's own record, a Steam game's until Steam counts it. Time counts only when the same
+    /// game was in front at the last look, and not across a long gap, such as the PC asleep.
     /// </summary>
     private void Count(Game? inFront, DateTimeOffset now)
     {
         string? key = null;
+        double Minutes()
+        {
+            var since = now - _countedTo;
+            return key == _counting && since > TimeSpan.Zero && since <= Interval * 4 ? since.TotalMinutes : 0;
+        }
+
         if (inFront is { Store: { } launcher, StoreId: { } id } && launcher is GameStore.Epic or GameStore.Gog)
         {
             key = StoreGame.KeyOf(launcher, id);
-            var since = now - _countedTo;
-            var minutes = key == _counting && since > TimeSpan.Zero && since <= Interval * 4 ? since.TotalMinutes : 0;
-            _played[key] = new PlayedGame(now, (_played.GetValueOrDefault(key)?.Minutes ?? 0) + minutes);
+            _played[key] = new PlayedGame(now, (_played.GetValueOrDefault(key)?.Minutes ?? 0) + Minutes());
             _unsaved = true;
         }
-        else if (_counting is not null)
+        else if (inFront is { Store: GameStore.Steam, AppId: { } appId })
         {
-            // The game has gone: keep what was counted now rather than at the next save.
-            _saveNow = true;
+            key = StoreGame.KeyOf(GameStore.Steam, appId.ToString(CultureInfo.InvariantCulture));
+            _steamSession[appId] = new PlayedGame(now, (_steamSession.GetValueOrDefault(appId)?.Minutes ?? 0) + Minutes());
         }
+        // A game has gone: keep what was counted now rather than at the next save.
+        if (_counting is not null && _counting != key)
+            _saveNow = true;
         _counting = key;
         _countedTo = now;
     }
@@ -142,8 +157,22 @@ public sealed class RecentGamesProvider : IMetricProvider
             }
             else if (_files.ReadText(found.Path) is { } text)
             {
+                var rewritten = _localConfig is not null;
                 _localConfig = config;
+                var before = _steamPlayed;
                 _steamPlayed = SteamLibrary.PlayHistory(text);
+                // Steam has counted the minutes it added since it last wrote: the app's own count stops at what Steam
+                // hasn't. The first read adds nothing, as it's all from before.
+                foreach (var (appId, session) in rewritten ? _steamSession.ToList() : [])
+                {
+                    var added = (_steamPlayed.GetValueOrDefault(appId)?.Minutes ?? 0) - (before.GetValueOrDefault(appId)?.Minutes ?? 0);
+                    if (added <= 0)
+                        continue;
+                    if (session.Minutes > added)
+                        _steamSession[appId] = session with { Minutes = session.Minutes - added };
+                    else
+                        _steamSession.Remove(appId);
+                }
             }
             // Else Steam's writing it: it's read next time, and what was read before stands till then.
         }
@@ -157,11 +186,8 @@ public sealed class RecentGamesProvider : IMetricProvider
         {
             if (game.Store == GameStore.Steam)
             {
-                if (int.TryParse(game.Id, NumberStyles.None, CultureInfo.InvariantCulture, out var appId)
-                    && _steamPlayed.TryGetValue(appId, out var play) && play.LastPlayed is { } last)
-                {
-                    played.Add((game, last, play.Minutes / 60.0));
-                }
+                if (int.TryParse(game.Id, NumberStyles.None, CultureInfo.InvariantCulture, out var appId) && SteamPlayed(appId) is { } play)
+                    played.Add((game, play.Last, play.Minutes / 60.0));
             }
             else if (_played.TryGetValue(game.Key, out var own))
             {
@@ -200,11 +226,27 @@ public sealed class RecentGamesProvider : IMetricProvider
 
     private byte[]? Bytes(string? path) => path is null ? null : _files.ReadBytes(path);
 
+    /// <summary>
+    /// When a Steam game was last played and its minutes: Steam's record, with the time the app has seen it in front that
+    /// Steam hasn't counted yet. Null if it has neither.
+    /// </summary>
+    private PlayedGame? SteamPlayed(int appId)
+    {
+        var steam = _steamPlayed.GetValueOrDefault(appId)?.LastPlayed;
+        var seen = _steamSession.GetValueOrDefault(appId)?.Last;
+        var last = steam is null ? seen : seen is null || steam > seen ? steam : seen;
+        return last is { } when ? new PlayedGame(when, SteamMinutes(appId)) : null;
+    }
+
+    /// <summary>A Steam game's minutes: Steam's count, and the time the app has seen it in front that Steam hasn't counted yet.</summary>
+    private double SteamMinutes(int appId) =>
+        (_steamPlayed.GetValueOrDefault(appId)?.Minutes ?? 0) + (_steamSession.GetValueOrDefault(appId)?.Minutes ?? 0);
+
     /// <summary>The hours the game has been played: Steam's count for a Steam game, the app's own for an Epic Games or GOG game.</summary>
     private double? HoursOf(Game? game)
     {
         if (game is { Store: GameStore.Steam, AppId: { } appId })
-            return _steamPlayed.TryGetValue(appId, out var play) && play.Minutes > 0 ? play.Minutes / 60.0 : null;
+            return SteamMinutes(appId) is > 0 and var minutes ? minutes / 60.0 : null;
         if (game is { Store: { } launcher, StoreId: { } id } && launcher is GameStore.Epic or GameStore.Gog)
             return _played.TryGetValue(StoreGame.KeyOf(launcher, id), out var own) ? own.Minutes / 60.0 : null;
         return null;
