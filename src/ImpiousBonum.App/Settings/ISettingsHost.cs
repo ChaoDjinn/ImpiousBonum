@@ -23,16 +23,19 @@ internal interface ISettingsHost
     // ---- Layouts ----------------------------------------------------------------------------------
 
     /// <summary>
-    /// Starts editing the layout of one dashboard: the main one (null) or another, by its monitor's id. Its window shows
-    /// the editor's handles until <see cref="EndEditing"/>.
+    /// Starts editing the layout of one dashboard: the main one (null), another by its monitor's id, or a tablet screen
+    /// by its <see cref="TabletScreen.Id"/>. A monitor's window shows the editor's handles until <see cref="EndEditing"/>.
     /// </summary>
     LayoutEditor BeginEditing(string? screen);
 
     /// <summary>The editor has gone (unsaved changes dealt with): the dashboards show their saved layouts again.</summary>
     void EndEditing();
 
-    /// <summary>The monitor id of the dashboard being edited, the main one's included; null if its screen isn't connected.</summary>
-    string? EditedMonitorId { get; }
+    /// <summary>
+    /// The id of the screen being edited: its monitor's, the main one's included, or a tablet screen's
+    /// (<see cref="TabletScreen.Id"/>). Null if the main dashboard's screen isn't connected.
+    /// </summary>
+    string? EditedScreenId { get; }
 
     // ---- Screens ----------------------------------------------------------------------------------
 
@@ -60,6 +63,15 @@ internal interface ISettingsHost
     /// </summary>
     void AddDashboard(DisplayMonitor monitor, string? layout = null);
 
+    /// <summary>
+    /// A new tablet screen of that name and size, with a new, empty layout of its own made to that size, which opens in
+    /// the editor to fill.
+    /// </summary>
+    void AddTabletScreen(string name, int width, int height);
+
+    /// <summary>The tablet screens, replaced as a whole.</summary>
+    void SetTabletScreens(List<TabletScreen> screens);
+
     /// <summary>Dim after <paramref name="minutes"/> without input (0 never) to <paramref name="brightness"/> percent.</summary>
     void SetAway(int minutes, int brightness);
 
@@ -74,10 +86,13 @@ internal interface ISettingsHost
     /// <summary>Share every reading as JSON with other apps that have the link's secret.</summary>
     void SetTabletReadings(bool on);
 
-    /// <summary>The link and its QR code, for the main dashboard or the saved layout <paramref name="layout"/>.</summary>
-    void ShowTabletLink(string? layout);
+    /// <summary>
+    /// The link and its QR code, for the main dashboard, the saved layout <paramref name="layout"/>, or the tablet screen
+    /// <paramref name="screen"/> (by name).
+    /// </summary>
+    void ShowTabletLink(string? layout, string? screen = null);
 
-    void CopyTabletLink(string? layout);
+    void CopyTabletLink(string? layout, string? screen = null);
 
     void NewTabletLink();
 

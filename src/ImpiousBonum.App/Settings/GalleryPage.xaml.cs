@@ -38,10 +38,12 @@ public partial class GalleryPage : UserControl, IPage
     private IReadOnlyList<GalleryEntry> _entries = [];
     private IReadOnlyList<GalleryTheme> _themes = [];
     private IReadOnlyList<DisplayMonitor> _monitors = [];
+    // Listed after the monitors.
+    private IReadOnlyList<TabletScreen> _tablets = [];
     private CancellationTokenSource? _loading;
     private bool _listed;
     private bool _filling;
-    private string? _forMonitor;
+    private string? _forScreen;
     private bool _forLayouts;
     /// <summary>Where "Edit it" goes after a layout was put on a screen: that dashboard (null for the main one).</summary>
     private (bool Shown, string? Screen) _used;
@@ -58,12 +60,12 @@ public partial class GalleryPage : UserControl, IPage
     }
 
     /// <summary>
-    /// The next time it's shown, it's for a layout for this monitor's screen (by id), as when the editor asks for a
-    /// layout for its screen.
+    /// The next time it's shown, it's for a layout for this screen (a monitor's id, or a tablet screen's), as when the
+    /// editor asks for a layout for its screen.
     /// </summary>
-    public void ForMonitor(string? monitorId)
+    public void ForScreen(string? screen)
     {
-        _forMonitor = monitorId;
+        _forScreen = screen;
         _forLayouts = true;
     }
 
@@ -76,11 +78,15 @@ public partial class GalleryPage : UserControl, IPage
             LayoutsTab.IsChecked = true;
         _forLayouts = false;
         _filling = true;
-        var keep = _forMonitor ?? Selected?.Id;
+        var keep = _forScreen ?? Selected?.Id ?? SelectedTablet?.Id;
         _monitors = DisplayMonitor.GetAll();
-        ScreenBox.ItemsSource = _monitors.Select(Describe).Prepend("Any screen").ToList();
-        ScreenBox.SelectedIndex = keep is null ? 0 : _monitors.ToList().FindIndex(m => m.Id == keep) + 1;
-        _forMonitor = null;
+        _tablets = _host.Settings.TabletScreens;
+        ScreenBox.ItemsSource = _monitors.Select(Describe).Concat(_tablets.Select(Describe)).Prepend("Any screen").ToList();
+        var tablet = _tablets.ToList().FindIndex(t => t.Id == keep);
+        ScreenBox.SelectedIndex = keep is null ? 0
+            : tablet >= 0 ? _monitors.Count + 1 + tablet
+            : _monitors.ToList().FindIndex(m => m.Id == keep) + 1;
+        _forScreen = null;
         _filling = false;
         UpdateUseButton();
 
@@ -107,7 +113,14 @@ public partial class GalleryPage : UserControl, IPage
         return $"{monitor.Name ?? monitor.ShortDevice} · {monitor.Bounds.Width}×{monitor.Bounds.Height} · {role}";
     }
 
+    /// <summary>"Galaxy Tab · 2560×1600 · tablet screen: Galaxy Tab"</summary>
+    private static string Describe(TabletScreen tablet) => $"{tablet.Name} · {tablet.Width}×{tablet.Height} · tablet screen: {tablet.Layout}";
+
+    /// <summary>The monitor picked, or null for any screen or a tablet screen.</summary>
     private DisplayMonitor? Selected => ScreenBox.SelectedIndex > 0 && ScreenBox.SelectedIndex <= _monitors.Count ? _monitors[ScreenBox.SelectedIndex - 1] : null;
+
+    /// <summary>The tablet screen picked, if one is.</summary>
+    private TabletScreen? SelectedTablet => ScreenBox.SelectedIndex - _monitors.Count - 1 is var i && i >= 0 && i < _tablets.Count ? _tablets[i] : null;
 
     private async Task LoadListAsync()
     {
@@ -136,7 +149,9 @@ public partial class GalleryPage : UserControl, IPage
             return;
         }
 
-        var screen = Selected is { } monitor ? (monitor.Bounds.Width, monitor.Bounds.Height) : ((int, int)?)null;
+        var screen = Selected is { } monitor ? (monitor.Bounds.Width, monitor.Bounds.Height)
+            : SelectedTablet is { } tablet ? (tablet.Width, tablet.Height)
+            : ((int, int)?)null;
         var detail = Details[Math.Max(0, DetailBox.SelectedIndex)].Detail;
         var shown = GalleryFit.For(_entries, screen, detail);
         List(shown, shown.Count > 0 ? "Pick a layout to see it."
@@ -193,6 +208,7 @@ public partial class GalleryPage : UserControl, IPage
             ? (DisplayMonitor.Resolve(_host.Settings, _monitors)?.Id == monitor.Id || _host.Settings.ExtraDashboards.Any(e => e.MonitorId == monitor.Id)
                 ? $"Show on {monitor.Name ?? monitor.ShortDevice}"
                 : $"Add a dashboard on {monitor.Name ?? monitor.ShortDevice}")
+            : SelectedTablet is { } tablet ? $"Show on {tablet.Name}"
             : "Add to my layouts";
     }
 
@@ -266,7 +282,13 @@ public partial class GalleryPage : UserControl, IPage
         AppLog.Info($"Added layout \"{name}\" from the gallery");
 
         _used = (false, null);
-        if (Selected is not { } monitor)
+        if (SelectedTablet is { } tablet)
+        {
+            _host.SetTabletScreens(_host.Settings.TabletScreens.Select(t => t.Id == tablet.Id ? t with { Layout = name } : t).ToList());
+            _used = (true, tablet.Id);
+            StatusText.Text = $"Showing \"{name}\" on {tablet.Name}.";
+        }
+        else if (Selected is not { } monitor)
         {
             StatusText.Text = $"\"{name}\" is in your layouts. Show it on a screen from the Screens or Layouts page.";
         }

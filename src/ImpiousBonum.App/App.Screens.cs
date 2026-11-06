@@ -123,29 +123,32 @@ public partial class App
         }
     }
 
-    /// <summary>The link and its QR code: for the main dashboard, or for the saved layout <paramref name="layout"/>.</summary>
-    private void ShowTabletLink(string? layout = null)
+    /// <summary>
+    /// The link and its QR code: for the main dashboard, the saved layout <paramref name="layout"/>, or the tablet screen
+    /// <paramref name="screen"/>.
+    /// </summary>
+    private void ShowTabletLink(string? layout = null, string? screen = null)
     {
         if (_tabletLink is not null)
         {
-            _tabletLink.ShowLayout(layout);
+            _tabletLink.ShowLayout(layout, screen);
             BringToFront(_tabletLink);
             return;
         }
         if (_tablet?.IsRunning != true || _settings.TabletToken is not { } token)
             return;
 
-        _tabletLink = new TabletLinkWindow(_settings.TabletPort, token, NewTabletLink, layout);
+        _tabletLink = new TabletLinkWindow(_settings.TabletPort, token, NewTabletLink, layout, screen);
         _tabletLink.Closed += (_, _) => _tabletLink = null;
         _tabletLink.Show();
         BringToFront(_tabletLink);
     }
 
-    private void CopyTabletLink(string? layout)
+    private void CopyTabletLink(string? layout, string? screen = null)
     {
         if (_settings.TabletToken is not { } token)
             return;
-        if (TabletLinkWindow.FirstLink(_settings.TabletPort, token, layout) is not { } link)
+        if (TabletLinkWindow.FirstLink(_settings.TabletPort, token, layout, screen) is not { } link)
             _tray?.ShowError("No tablet link", "This PC doesn't seem to be on a local network.");
         else if (TabletLinkWindow.CopyToClipboard(link))
             _tray?.ShowInfo("Tablet link copied", link);
@@ -169,6 +172,41 @@ public partial class App
             layout = LayoutStore.LoadDefault();
         }
         return (layout, layouts.Themes.Resolve(layout.Theme));
+    }
+
+    /// <summary>
+    /// The saved layout the tablet screen a link names shows, as saved, or null if there's no tablet screen of that name.
+    /// One whose layout has gone shows the built-in layout (see <see cref="LoadTabletLayout"/>). Called on the thread pool.
+    /// </summary>
+    private string? FindTabletScreen(string name) =>
+        TabletScreen.Find(_settings.TabletScreens, name) is { } screen ? _layouts?.Library.Find(screen.Layout) ?? screen.Layout : null;
+
+    /// <summary>
+    /// Screens → Add a tablet screen: a screen the size of a tablet's, with a new, empty layout of its own made to that
+    /// size, which opens in the editor to fill. The tablet view shows it through its own link.
+    /// </summary>
+    private void AddTabletScreen(string name, int width, int height)
+    {
+        if (_layouts is null || RefuseWhileEditing())
+            return;
+        var layout = TabletScreen.NewLayoutName(name, _layouts.List());
+        var screen = new TabletScreen(name.Trim(), width, height, layout);
+        _layouts.Save(layout, screen.NewLayout(_layouts.LoadOrDefault().Theme));
+        _settings.TabletScreens = [.. _settings.TabletScreens, screen];
+        _settings.Save();
+        AppLog.Info($"Tablet screens: added \"{screen.Name}\", {width}×{height}, with layout \"{layout}\"");
+        EditDashboard(screen.Id);
+    }
+
+    /// <summary>The tablet screens, replaced as a whole: renamed, resized, showing another layout, or removed.</summary>
+    private void SetTabletScreens(List<TabletScreen> screens)
+    {
+        if (RefuseWhileEditing())
+            return;
+        _settings.TabletScreens = screens;
+        _settings.Save();
+        AppLog.Info(screens.Count == 0 ? "Tablet screens: none"
+            : $"Tablet screens: {string.Join(", ", screens.Select(s => $"\"{s.Name}\" {s.Width}×{s.Height} showing \"{s.Layout}\""))}");
     }
 
     /// <summary>A new secret for the link: tablets using the old one stop updating. Returns the new secret.</summary>

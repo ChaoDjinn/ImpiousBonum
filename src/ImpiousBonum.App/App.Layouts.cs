@@ -34,9 +34,11 @@ public partial class App
             window.EditScreen(screen);
     }
 
-    /// <summary>Where a dashboard is in the editor's list of them: the main one first, then the others in order.</summary>
-    private int ScreenIndex(string? screen) =>
-        screen is null ? 0 : _settings.ExtraDashboards.FindIndex(e => e.MonitorId == screen) + 1;
+    /// <summary>
+    /// Where a dashboard is in the editor's list of them: the main one first, then the others in order, then the tablet
+    /// screens. One it doesn't know is the main one.
+    /// </summary>
+    private int ScreenIndex(string? screen) => EditorScreenList.IndexOf(screen, _settings.ExtraDashboards, _settings.TabletScreens);
 
     /// <summary>The dashboards the editor can edit, by their screens' names, in <see cref="ScreenIndex"/> order.</summary>
     private List<string> EditorScreens()
@@ -44,28 +46,34 @@ public partial class App
         var monitors = DisplayMonitor.GetAll();
         var main = DisplayMonitor.Resolve(_settings, monitors)?.DisplayName
             ?? $"{DisplayMonitor.ShortName(_settings.MonitorDevice ?? "Dashboard")} (not connected)";
-        return [main, .. _settings.ExtraDashboards.Select(e => e.MonitorName(monitors))];
+        return [main, .. _settings.ExtraDashboards.Select(e => e.MonitorName(monitors)), .. _settings.TabletScreens.Select(t => t.DisplayName)];
     }
 
-    /// <summary>The extra dashboard the editor is on, or null for the main one.</summary>
+    /// <summary>The extra dashboard the editor is on, or null for the main one or a tablet screen.</summary>
     private ExtraDashboard? EditedExtra() =>
         _editingScreen is null ? null : _settings.ExtraDashboards.FirstOrDefault(e => e.MonitorId == _editingScreen);
 
-    /// <summary>The saved layout the dashboard being edited shows.</summary>
-    private string EditedLayout() => EditedExtra()?.Layout ?? _layouts!.Active;
+    /// <summary>The tablet screen the editor is on, or null for a monitor's dashboard.</summary>
+    private TabletScreen? EditedTablet() =>
+        _editingScreen is null ? null : _settings.TabletScreens.FirstOrDefault(t => t.Id == _editingScreen);
 
-    /// <summary>The window of the dashboard being edited, which shows the editor's handles.</summary>
+    /// <summary>The saved layout the dashboard being edited shows.</summary>
+    private string EditedLayout() => EditedExtra()?.Layout ?? EditedTablet()?.Layout ?? _layouts!.Active;
+
+    /// <summary>The window of the dashboard being edited, which shows the editor's handles; none for a tablet screen.</summary>
     private DashboardWindow? EditedWindow()
     {
         if (_editingScreen is null)
             return _window;
         var index = ScreenIndex(_editingScreen) - 1;
-        return index >= 0 && index < _extras.Count ? _extras[index] : null;
+        return index >= 0 && index < _extras.Count && index < _settings.ExtraDashboards.Count ? _extras[index] : null;
     }
 
     /// <summary>The size in pixels of the dashboard being edited, for the editor's "Match dashboard screen".</summary>
     private (int Width, int Height)? EditedScreenSize()
     {
+        if (EditedTablet() is { } tablet)
+            return (tablet.Width, tablet.Height);
         var monitors = DisplayMonitor.GetAll();
         if (EditedExtra() is { } extra)
             return extra.Resolve(monitors) is { } screen ? (screen.Bounds.Width, screen.Bounds.Height) : null;
@@ -82,6 +90,12 @@ public partial class App
             _settings.ExtraDashboards = _settings.ExtraDashboards.Select(e => e.MonitorId == extra.MonitorId ? e with { Layout = name } : e).ToList();
             _settings.Save();
             AppLog.Info($"Dashboard on {extra.MonitorDevice}: showing layout \"{name}\"");
+        }
+        else if (EditedTablet() is { } tablet)
+        {
+            _settings.TabletScreens = _settings.TabletScreens.Select(t => t.Id == tablet.Id ? t with { Layout = name } : t).ToList();
+            _settings.Save();
+            AppLog.Info($"Tablet screen \"{tablet.Name}\": showing layout \"{name}\"");
         }
         else
         {

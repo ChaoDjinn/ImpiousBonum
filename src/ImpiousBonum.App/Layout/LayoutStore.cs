@@ -176,8 +176,8 @@ public sealed class LayoutStore : IDisposable
     }
 
     /// <summary>
-    /// Renames a layout, keeping it active or remembered, and the other dashboards, the USB screen, game links, schedule
-    /// rules and hotkeys pointing at it, where they were.
+    /// Renames a layout, keeping it active or remembered, and the other dashboards, tablet screens, the USB screen, game
+    /// links, schedule rules and hotkeys pointing at it, where they were.
     /// </summary>
     public void Rename(string name, string newName)
     {
@@ -199,6 +199,12 @@ public sealed class LayoutStore : IDisposable
                 _settings.ExtraDashboards[i] = extra with { Layout = renamed };
                 changed = true;
             }
+        }
+        if (_settings.TabletScreens.Any(t => Is(name, t.Layout)))
+        {
+            // Replaced as a whole, since the tablet view reads it from another thread.
+            _settings.TabletScreens = _settings.TabletScreens.Select(t => Is(name, t.Layout) ? t with { Layout = renamed } : t).ToList();
+            changed = true;
         }
         if (Is(name, _settings.UsbScreen.Layout))
         {
@@ -248,7 +254,7 @@ public sealed class LayoutStore : IDisposable
 
     /// <summary>
     /// Deletes a layout. Deleting the active one switches to the remembered one, or another if that was it; other
-    /// dashboards showing it switch to the remembered one too, rather than to the built-in default.
+    /// dashboards and tablet screens showing it switch to the remembered one too, rather than to the built-in default.
     /// </summary>
     public void Delete(string name)
     {
@@ -259,6 +265,12 @@ public sealed class LayoutStore : IDisposable
         {
             var fallback = Library.Resolve(_settings.ActiveLayout);
             _settings.ExtraDashboards = _settings.ExtraDashboards.Select(e => Is(name, e.Layout) ? e with { Layout = fallback } : e).ToList();
+            _settings.Save();
+        }
+        if (_settings.TabletScreens.Any(t => Is(name, t.Layout)))
+        {
+            var fallback = Library.Resolve(_settings.ActiveLayout);
+            _settings.TabletScreens = _settings.TabletScreens.Select(t => Is(name, t.Layout) ? t with { Layout = fallback } : t).ToList();
             _settings.Save();
         }
         if (Is(name, Active))

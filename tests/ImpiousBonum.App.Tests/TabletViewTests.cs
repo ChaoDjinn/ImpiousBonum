@@ -91,6 +91,40 @@ public sealed class TabletViewTests
     });
 
     [Fact]
+    public void A_tablet_screens_link_is_drawn_its_layout_at_that_layouts_size() => Sta.Run(() =>
+    {
+        var screens = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["Galaxy Tab"] = "Tab" };
+        var sizes = new Dictionary<string, (int Width, int Height)> { ["Tab"] = (1280, 800), ["Upright"] = (600, 960) };
+        using var view = new TabletView
+        {
+            FindLayout = name => name,
+            FindScreen = name => screens.GetValueOrDefault(name),
+            LoadLayout = name => (new LayoutDocument { Width = sizes[name].Width, Height = sizes[name].Height }, new ThemeSettings()),
+        };
+        using var server = new TabletServer(0, Token);
+        view.Serve(server);
+        var store = new MetricStore();
+
+        Assert.Equal(503, server.Respond(Request($"/frame?k={Token}&screen=galaxy%20tab")).Status);
+        view.Refresh(store, Now);
+        Assert.Equal(["Tab"], view.Layouts);
+        Assert.Equal((1280, 800), PixelSize(server.Respond(Request($"/frame?k={Token}&screen=Galaxy%20Tab")).Body));
+
+        // Given another layout, the tablet's next pictures are that one's, at its size.
+        screens["Galaxy Tab"] = "Upright";
+        server.Respond(Request($"/frame?k={Token}&screen=Galaxy%20Tab"));
+        view.Refresh(store, Now);
+        Assert.Equal((600, 960), PixelSize(server.Respond(Request($"/frame?k={Token}&screen=Galaxy%20Tab")).Body));
+    });
+
+    private static (int Width, int Height) PixelSize(byte[] jpeg)
+    {
+        var decoder = System.Windows.Media.Imaging.BitmapDecoder.Create(new System.IO.MemoryStream(jpeg),
+            System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad);
+        return (decoder.Frames[0].PixelWidth, decoder.Frames[0].PixelHeight);
+    }
+
+    [Fact]
     public void Stopping_lets_every_layout_go() => Sta.Run(() =>
     {
         using var view = new TabletView { FindLayout = name => name, LoadLayout = _ => (LayoutStore.LoadDefault(), new ThemeSettings()) };

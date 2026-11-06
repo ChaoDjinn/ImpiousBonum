@@ -1,0 +1,55 @@
+<Window x:Class="ImpiousBonum.App.Shell.TabletScreenWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="clr-namespace:ImpiousBonum.App.Controls"
+        ThemeMode="System"
+        Title="Add a tablet screen"
+        Width="480" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False">
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Style="{DynamicResource DialogFooter}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="OkButton" Content="Add" IsDefault="True" Click="OnOk" MinWidth="{DynamicResource DialogButtonWidth}"
+                        Style="{DynamicResource AccentButtonStyle}" />
+                <Button Content="Cancel" IsCancel="True" Margin="{DynamicResource ButtonGap}" MinWidth="{DynamicResource DialogButtonWidth}" />
+            </StackPanel>
+        </Border>
+        <StackPanel Margin="{DynamicResource DialogPadding}">
+            <TextBlock x:Name="IntroText" TextWrapping="Wrap" Margin="0,0,0,14"
+                       Text="A screen the size of your tablet's, to plan a layout at. Its own link shows that layout on the tablet." />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="Name" VerticalAlignment="Center" />
+                <TextBox x:Name="NameBox" Grid.Column="1" TextChanged="OnChanged" AutomationProperties.Name="Name" />
+                <TextBlock Text="Tablet" Grid.Row="1" VerticalAlignment="Center" Margin="0,8,0,0" />
+                <ComboBox x:Name="PresetBox" Grid.Row="1" Grid.Column="1" Margin="0,8,0,0" SelectionChanged="OnPreset" AutomationProperties.Name="Tablet" />
+                <TextBlock Text="Size" Grid.Row="2" VerticalAlignment="Center" Margin="0,8,0,0" />
+                <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBox x:Name="WidthBox" Width="80" TextChanged="OnSizeTyped" AutomationProperties.Name="Width" />
+                    <TextBlock Text="×" VerticalAlignment="Center" Margin="8,0" />
+                    <TextBox x:Name="HeightBox" Width="80" TextChanged="OnSizeTyped" AutomationProperties.Name="Height" />
+                    <TextBlock Text="pixels" VerticalAlignment="Center" Margin="8,0,0,0" />
+                </StackPanel>
+                <TextBlock Text="Way up" Grid.Row="3" VerticalAlignment="Center" Margin="0,8,0,0" />
+                <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,8,0,0">
+                    <RadioButton x:Name="Landscape" Content="Landscape" GroupName="WayUp" IsChecked="True" Checked="OnWayUp" />
+                    <RadioButton x:Name="Portrait" Content="Portrait" GroupName="WayUp" Margin="16,0,0,0" Checked="OnWayUp" />
+                </StackPanel>
+            </Grid>
+
+            <TextBlock x:Name="ProblemText" Style="{DynamicResource ProblemText}" c:Dialog.ShowAfterInput="True" Margin="0,12,0,0" />
+            <TextBlock x:Name="NoteText" Style="{DynamicResource NoteText}" Margin="0,4,0,0"
+                       Text="Not listed? Its screen's resolution is in the tablet maker's specifications. Layouts drawn at the screen's own size look sharpest on it." />
+        </StackPanel>
+    </DockPanel>
+</Window>

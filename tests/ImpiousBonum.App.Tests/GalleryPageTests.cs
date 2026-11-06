@@ -64,6 +64,42 @@ public sealed class GalleryPageTests : IDisposable
         });
     }
 
+    [Fact]
+    public void A_tablet_screen_can_be_picked_like_a_monitor_for_layouts_that_suit_it()
+    {
+        Sta.Run(() =>
+        {
+            SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext());
+            AppPaths.UseDataDirectory(_directory);
+            using var layouts = new LayoutStore(new AppSettings());
+            var tablet = new TabletScreen("Galaxy Tab", 2560, 1600, "Default");
+            var host = DispatchProxy.Create<ISettingsHost, GalleryHost>();
+            ((GalleryHost)(object)host).Settings = new AppSettings { GalleryAddress = GalleryTests.RepositoryGallery(), TabletScreens = [tablet] };
+            ((GalleryHost)(object)host).Layouts = layouts;
+            var page = new GalleryPage(host, null!);
+
+            // As when the editor, on the tablet screen, asks for a layout from the gallery.
+            page.ForScreen(tablet.Id);
+            page.Load();
+            Settle(() => page.PreviewText.Text != "Loading the gallery…");
+            Assert.Equal("Galaxy Tab · 2560×1600 · tablet screen: Default", page.ScreenBox.SelectedItem);
+            Assert.Equal(page.ScreenBox.Items.Count - 1, page.ScreenBox.SelectedIndex);
+            Assert.Equal("Show on Galaxy Tab", page.UseText.Text);
+            var forTablet = page.EntryList.Items.Cast<GalleryEntry>().ToList();
+
+            // Those are the ones that suit its size, of all of them.
+            page.ScreenBox.SelectedIndex = 0;
+            Assert.Equal("Add to my layouts", page.UseText.Text);
+            var all = page.EntryList.Items.Cast<GalleryEntry>().ToList();
+            Assert.Equal(GalleryFit.For(all, (2560, 1600), GalleryDetail.Any), forTablet);
+
+            // It stays picked when the page is shown again.
+            page.ScreenBox.SelectedIndex = page.ScreenBox.Items.Count - 1;
+            page.Load();
+            Assert.Equal("Galaxy Tab · 2560×1600 · tablet screen: Default", page.ScreenBox.SelectedItem);
+        });
+    }
+
     /// <summary>Lets the dispatcher run until <paramref name="done"/>, as the page reads the gallery folder in the background.</summary>
     private static void Settle(Func<bool> done)
     {

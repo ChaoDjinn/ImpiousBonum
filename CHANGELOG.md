@@ -3,6 +3,10 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+- Plan a layout at your tablet's size: *Screens* → *Add a tablet screen…* (under the map), then pick your tablet from the list or type its resolution, landscape or portrait. It gets an empty layout of its own at that size and the editor opens on it. The editor's *Screen* list has the tablet screen in it after your monitors, so its preview is the tablet's shape and *Match dashboard screen* gives a layout its size; the *Gallery* can pick it too. The tablet screen has a tablet link of its own (*Show QR code…* on the *Screens* page, or *Layout for the link* on the *Tablet and USB screen* page) that shows whichever layout you give it, so changing its layout on the PC changes the tablet without a new link. Nothing changes until you add one.
+
 ## 0.19.0
 
 Pictures of every widget to choose from when you add one, Discord in two ways (alerts in a channel, and lights for a call), and your GOG Galaxy hours, achievements and covers.

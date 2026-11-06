@@ -56,6 +56,13 @@ public sealed class TabletView : IDisposable
     /// </summary>
     public Func<string, string?>? FindLayout { get; set; }
 
+    /// <summary>
+    /// Finds a tablet screen by the name in a link, returning the saved layout it shows, or null if there's none. Called
+    /// on the thread pool. A screen's tablets are drawn its layout like a link naming that layout. Until it's set, links
+    /// can't name screens.
+    /// </summary>
+    public Func<string, string?>? FindScreen { get; set; }
+
     /// <summary>Reads a saved layout a link names, with the theme to draw it in.</summary>
     public Func<string, (LayoutDocument Layout, ThemeSettings Theme)>? LoadLayout { get; set; }
 
@@ -124,6 +131,7 @@ public sealed class TabletView : IDisposable
     {
         server.Tap = _allowTaps ? TapFromServer : null;
         server.FindLayout = name => FindLayout?.Invoke(name);
+        server.FindScreen = name => FindScreen?.Invoke(name);
         server.Readings = _readings;
         _server = server;
     }
