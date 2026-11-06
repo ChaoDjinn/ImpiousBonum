@@ -14,7 +14,7 @@ internal sealed class SteamPage(ISettingsHost host) : CardPage("Steam",
     "Your Steam friends who are online and what they're playing, and your achievements in the game you're playing, from Steam's Web API with a key of your own. Nothing is fetched from Steam until you add one. Steam downloads and recent games don't need it: they're read from Steam's files on your PC.")
 {
     internal const string KeyNote =
-        "Your own key, from Steam's Web API key page: sign in, give any domain name (localhost will do), copy the key and paste it here. It's kept in settings.json on this PC and only ever sent to Steam.";
+        "Your own key, from Steam's Web API key page: sign in, give any domain name (localhost will do), copy the key and paste it here. It's kept in settings.json on this PC, and so in backups you make, and only ever sent to Steam.";
 
     internal const string ProfileNote =
         "Your profile's address, such as steamcommunity.com/id/yourname, or its 17-digit ID. Steam shares only what your privacy settings make public: your friends list for who's online, and your game details for your achievements.";
