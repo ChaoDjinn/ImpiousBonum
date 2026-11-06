@@ -4,6 +4,11 @@ namespace ImpiousBonum.Core.Metrics;
 /// Thread-safe home for every metric definition and its latest value plus a short history.
 /// Providers write from background threads; the UI reads on its own tick.
 /// </summary>
+/// <remarks>
+/// Every metric keeps its last <see cref="DefaultHistoryLength"/> readings. Longer, averaged history
+/// (<see cref="GetHistory(string, LongSpan)"/>) is kept only for the metrics a graph has asked it of, from when it first
+/// asked, so the metrics no graph shows that way cost nothing more.
+/// </remarks>
 public sealed class MetricStore
 {
     public const int DefaultHistoryLength = 240;
@@ -12,8 +17,14 @@ public sealed class MetricStore
     private readonly Dictionary<string, Entry> _entries = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, object> _attachments = new(StringComparer.OrdinalIgnoreCase);
     private readonly int _historyLength;
+    private readonly TimeProvider _time;
 
-    public MetricStore(int historyLength = DefaultHistoryLength) => _historyLength = historyLength;
+    /// <param name="time">The clock averaged history follows; the system's unless a test swaps it.</param>
+    public MetricStore(int historyLength = DefaultHistoryLength, TimeProvider? time = null)
+    {
+        _historyLength = historyLength;
+        _time = time ?? TimeProvider.System;
+    }
 
     /// <summary>Registers (or re-describes) a metric. Existing values and history are kept.</summary>
     public void Register(MetricDefinition definition)
@@ -42,6 +53,12 @@ public sealed class MetricStore
 
             entry.Value = value;
             entry.History.Add(value ?? double.NaN);
+            if (entry.Tiers is { } tiers && value is { } reading && double.IsFinite(reading))
+            {
+                var now = _time.GetUtcNow();
+                foreach (var tier in tiers)
+                    tier?.Add(now, reading);
+            }
         }
     }
 
@@ -97,6 +114,24 @@ public sealed class MetricStore
             return _entries.TryGetValue(id, out var entry) ? entry.History.Latest(count) : [];
     }
 
+    /// <summary>
+    /// The metric's averaged history over <paramref name="span"/>. The first time a metric is asked for a span, it starts
+    /// keeping that history, so it fills from then on, and keeps it while the app runs.
+    /// </summary>
+    public AveragedHistory GetHistory(string id, LongSpan span)
+    {
+        var (size, points) = AveragedTier.Of(span);
+        var (step, capacity) = AveragedTier.Sizes[size];
+        lock (_gate)
+        {
+            if (!_entries.TryGetValue(id, out var entry))
+                return AveragedHistory.Empty(step);
+            entry.Tiers ??= new AveragedTier?[AveragedTier.Sizes.Length];
+            var tier = entry.Tiers[size] ??= new AveragedTier(step, capacity);
+            return tier.Latest(_time.GetUtcNow(), points);
+        }
+    }
+
     public IReadOnlyList<MetricDefinition> Definitions
     {
         get
@@ -112,5 +147,8 @@ public sealed class MetricStore
         public double? Value { get; set; }
         public string? Text { get; set; }
         public RingBuffer History { get; } = new(historyLength);
+
+        /// <summary>The averaged history asked for, by <see cref="AveragedTier.Sizes"/>; null until a graph asks.</summary>
+        public AveragedTier?[]? Tiers { get; set; }
     }
 }
