@@ -1022,6 +1022,11 @@ Warning colours only help if you're looking. An alert tells you when a reading s
   `{"alert": "gpu.hotspot above 95 for 10 s", "message": "GPU is cooking: 97.2 °C", "metric": "gpu.hotspot", "value": 97.2, "time": "2026-10-14T21:30:00Z"}`.
   *Just the message, not JSON* sends only the text, which is what [ntfy](https://ntfy.sh) shows as a notification on
   your phone (`https://ntfy.sh/<your topic>`).
+  **A Discord channel** takes the message as a chat message, from *Impious Bonum*: in Discord, *Edit channel* →
+  *Integrations* → *Webhooks* → *New webhook*, then *Copy webhook URL* and paste it in (`https://discord.com/api/webhooks/…`).
+  It can't ping anyone, whatever the message says, and a message longer than Discord's 2,000 characters is cut short.
+  A Slack incoming webhook (`https://hooks.slack.com/services/…`) works the same way. Anyone with the address can post to
+  the channel, so keep it to yourself; it's in your [backups](#backing-up-your-settings) with the alert.
 
 Everything but the banner happens once, when the alert goes off. If a sound, layout, program or web address doesn't
 work, a notification says why and it's written to `dashboard.log`. In the demo (`--demo`) the readings are made up, so

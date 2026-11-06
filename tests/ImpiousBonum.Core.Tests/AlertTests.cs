@@ -151,6 +151,46 @@ public sealed class AlertTests
     }
 
     [Fact]
+    public async Task A_discord_or_slack_webhook_gets_the_text_as_a_chat_message()
+    {
+        var store = Store();
+        var time = new DateTimeOffset(2026, 10, 14, 22, 30, 0, TimeSpan.Zero);
+        string? body = null;
+        string? type = null;
+        async Task<HttpResponseMessage> Send(HttpRequestMessage request, CancellationToken token)
+        {
+            body = await request.Content!.ReadAsStringAsync(token);
+            type = request.Content.Headers.ContentType!.MediaType;
+            // Discord answers a webhook's message with 204 No Content.
+            return new HttpResponseMessage(System.Net.HttpStatusCode.NoContent);
+        }
+
+        // From Impious Bonum, and pinging no one, whatever the text says; "Just the message" makes no difference.
+        var discord = HotSpot with { Webhook = "https://discord.com/api/webhooks/1234567890/AbCdEf-token", WebhookText = true };
+        Assert.Null(await AlertWebhook.SendAsync(discord, "GPU is cooking @everyone", store, time, Send));
+        Assert.Equal("application/json", type);
+        Assert.Equal("""{"content":"GPU is cooking @everyone","username":"Impious Bonum","allowed_mentions":{"parse":[]}}""", body);
+        Assert.Equal(["notify", "post to Discord"], discord.Does());
+
+        // Cut to Discord's 2,000 characters, ending with ….
+        await AlertWebhook.SendAsync(discord, new string('x', 2500), store, time, Send);
+        var content = (string)System.Text.Json.Nodes.JsonNode.Parse(body!)!["content"]!;
+        Assert.Equal(AlertWebhook.DiscordLimit, content.Length);
+        Assert.EndsWith("x…", content);
+
+        var slack = HotSpot with { Webhook = "https://hooks.slack.com/services/T000/B000/XXXX" };
+        Assert.Null(await AlertWebhook.SendAsync(slack, "GPU > 95 & rising", store, time, Send));
+        Assert.Equal("GPU &gt; 95 &amp; rising", (string)System.Text.Json.Nodes.JsonNode.Parse(body!)!["text"]!);
+        Assert.Equal(["notify", "post to Slack"], slack.Does());
+
+        // Other addresses on those sites, and look-alikes, are ordinary webhooks.
+        foreach (var other in new[] { "https://discord.com/channels/1/2", "https://discord.com.example.org/api/webhooks/1/x", "https://slack.com/services/1" })
+            Assert.Equal(ChatWebhook.None, AlertWebhook.ChatOf(new Uri(other)));
+        Assert.Equal(ChatWebhook.Discord, AlertWebhook.ChatOf(new Uri("https://DiscordApp.com/api/webhooks/1/x")));
+        Assert.Equal(ChatWebhook.Discord, AlertWebhook.ChatOf(new Uri("https://ptb.discord.com/api/webhooks/1/x")));
+    }
+
+    [Fact]
     public async Task A_webhook_that_fails_says_why()
     {
         var store = Store();

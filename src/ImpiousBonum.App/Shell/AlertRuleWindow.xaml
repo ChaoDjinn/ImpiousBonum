@@ -90,8 +90,8 @@
 
                 <CheckBox x:Name="WebhookCheck" Grid.Row="4" Content="Send it to" Margin="0,6,12,0" VerticalAlignment="Center" Checked="OnChanged" Unchecked="OnChanged" />
                 <TextBox x:Name="WebhookBox" Grid.Row="4" Grid.Column="1" Margin="0,6,0,0" TextChanged="OnChanged"
-                         c:Placeholder.Text="A web address, e.g. https://ntfy.sh/my-pc"
-                         ToolTip="Sent as a POST: JSON with the alert, message, metric, value and time, or just the message." />
+                         c:Placeholder.Text="A web address, e.g. https://ntfy.sh/my-pc, or a Discord channel's webhook"
+                         ToolTip="Sent as a POST: JSON with the alert, message, metric, value and time, or just the message. A Discord or Slack webhook gets the message as a chat message." />
                 <CheckBox x:Name="WebhookTextCheck" Grid.Row="5" Grid.Column="1" Content="Just the message, not JSON (for ntfy)" Margin="0,6,0,0" Checked="OnChanged" Unchecked="OnChanged" />
             </Grid>
 
