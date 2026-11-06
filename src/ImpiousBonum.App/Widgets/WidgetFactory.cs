@@ -7,22 +7,27 @@ namespace ImpiousBonum.App.Widgets;
 public static class WidgetFactory
 {
     public const string Readings = "Readings";
+    public const string Graphs = "Graphs and bars";
+    public const string Lists = "Lists";
+    public const string Games = "Games";
     public const string Time = "Time and calendar";
     public const string Media = "Media and controls";
     public const string Online = "Weather, news and Claude";
     public const string Decoration = "Pictures and shapes";
 
-    /// <summary>Every widget type, grouped by what it's for, in the order the editor offers them.</summary>
+    /// <summary>
+    /// Every widget type, grouped by what it's for, in the order the editor offers them: the groups are the tabs of its
+    /// <see cref="Editor.AddWidgetWindow"/> and the sections of the widget reference.
+    /// </summary>
     public static readonly IReadOnlyList<WidgetDescriptor> Descriptors = WithThemeOverrides(
     [
-        .. In(Readings,
-            TextWidget.Descriptor, GraphWidget.Descriptor, LinesWidget.Descriptor, GaugeWidget.Descriptor, StatWidget.Descriptor,
-            CoresWidget.Descriptor, IconValueWidget.Descriptor, BarsWidget.Descriptor, RowsWidget.Descriptor, DrivesWidget.Descriptor,
-            BatteriesWidget.Descriptor, DownloadsWidget.Descriptor, FriendsWidget.Descriptor,
-            ProcessesWidget.Descriptor, StatusWidget.Descriptor),
+        .. In(Readings, TextWidget.Descriptor, GaugeWidget.Descriptor, StatWidget.Descriptor, IconValueWidget.Descriptor, RowsWidget.Descriptor),
+        .. In(Graphs, GraphWidget.Descriptor, LinesWidget.Descriptor, BarsWidget.Descriptor, CoresWidget.Descriptor),
+        .. In(Lists, DrivesWidget.Descriptor, ProcessesWidget.Descriptor, StatusWidget.Descriptor, BatteriesWidget.Descriptor),
+        .. In(Games, RecentGamesWidget.Descriptor, DownloadsWidget.Descriptor, FriendsWidget.Descriptor),
         .. In(Time, ClockWidget.Descriptor, TimerWidget.Descriptor, AgendaWidget.Descriptor, CountdownsWidget.Descriptor),
-        .. In(Media, MediaWidget.Descriptor, VisualizerWidget.Descriptor, ButtonsWidget.Descriptor, RecentGamesWidget.Descriptor),
         .. In(Online, WeatherWidget.Descriptor, RainWidget.Descriptor, SunMoonWidget.Descriptor, NewsWidget.Descriptor, BarsWidget.ClaudeDescriptor),
+        .. In(Media, MediaWidget.Descriptor, VisualizerWidget.Descriptor, ButtonsWidget.Descriptor),
         .. In(Decoration, ImageWidget.Descriptor, ShapeWidget.Descriptor, PhotoFrameWidget.Descriptor),
     ]);
 
