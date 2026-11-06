@@ -86,8 +86,11 @@ public sealed class GameFinder(IGameFiles files, TimeProvider? time = null)
         if (_games.TryGetValue(exe, out var game) && game.AppId == steam?.AppId)
             return game;
 
-        var art = steam is null ? new GameArt(null, null, null, null) : Read(_steam.ArtFiles(steam.AppId));
-        // Steam only has pictures of games it has shown in its library; until then, and for other games, the icon.
+        var art = steam is not null ? Read(_steam.ArtFiles(steam.AppId))
+            : other is not null ? GalaxyArt(other)
+            : new GameArt(null, null, null, null);
+        // Steam only has pictures of games it has shown in its library, and GOG Galaxy of games in its library; until
+        // then, and for other games, the icon.
         if (!art.HasSteamArt)
             art = art with { Icon = files.Icon(exe) };
         var name = steam?.Name ?? other?.Name ?? files.Description(exe) ?? Path.GetFileNameWithoutExtension(exe);
@@ -102,6 +105,16 @@ public sealed class GameFinder(IGameFiles files, TimeProvider? time = null)
     }
 
     private GameArt Read(SteamArtFiles art) => new(Bytes(art.Cover), Bytes(art.Header), Bytes(art.Hero), null);
+
+    /// <summary>An Epic Games or GOG game's pictures as GOG Galaxy has cached them: its cover, and its background as the wide ones.</summary>
+    private GameArt GalaxyArt(StoreGame game)
+    {
+        var key = GogGalaxy.KeyOf(game.Store, game.Id);
+        if (files.GalaxyGames([key])?.GetValueOrDefault(key) is not { } galaxy)
+            return new GameArt(null, null, null, null);
+        var background = Bytes(galaxy.Background);
+        return new GameArt(Bytes(galaxy.Cover), background, background, null);
+    }
 
     private byte[]? Bytes(string? path) => path is null ? null : files.ReadBytes(path);
 }

@@ -29,6 +29,20 @@ internal sealed class FakeGameFiles : IGameFiles
     /// <summary>When each file was last written; a file not in here was written at <see cref="DateTime.MinValue"/>.</summary>
     public Dictionary<string, DateTime> Written { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>What GOG Galaxy's database says, by its key (gog_…, epic_…); null for no Galaxy.</summary>
+    public Dictionary<string, GalaxyGame>? Galaxy { get; set; }
+
+    /// <summary>When Galaxy's database last changed.</summary>
+    public DateTime GalaxyChanged { get; set; } = new(2026, 11, 5, 21, 0, 0, DateTimeKind.Utc);
+
+    /// <summary>Galaxy's database can't be read just now, as while Galaxy writes it.</summary>
+    public bool GalaxyBusy { get; set; }
+
+    /// <summary>Where GalaxyClient.exe is; null for no Galaxy.</summary>
+    public string? GalaxyExe { get; set; }
+
+    public int GalaxyReads { get; private set; }
+
     public int TextReads { get; private set; }
 
     public int PictureReads { get; private set; }
@@ -69,6 +83,20 @@ internal sealed class FakeGameFiles : IGameFiles
     public bool? SteamUpdating(int appId) => Updating.TryGetValue(appId, out var updating) ? updating : null;
 
     public string? Description(string exe) => Descriptions.GetValueOrDefault(exe);
+
+    public DateTime? GalaxyWritten() => Galaxy is null ? null : GalaxyChanged;
+
+    public IReadOnlyDictionary<string, GalaxyGame>? GalaxyGames(IReadOnlyCollection<string> keys)
+    {
+        GalaxyReads++;
+        if (GalaxyBusy)
+            return null;
+        return Galaxy is null
+            ? new Dictionary<string, GalaxyGame>()
+            : Galaxy.Where(g => keys.Contains(g.Key, StringComparer.OrdinalIgnoreCase)).ToDictionary(g => g.Key, g => g.Value, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public string? GalaxyClient() => GalaxyExe;
 
     public byte[]? Icon(string exe)
     {

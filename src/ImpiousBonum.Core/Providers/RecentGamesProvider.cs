@@ -11,10 +11,11 @@ public sealed record RecentGame(StoreGame Game, DateTimeOffset LastPlayed, doubl
 /// The games played lately, newest first, as an attachment (a list of <see cref="RecentGame"/>) for the recent games
 /// widget, and how many hours the game in front has been played. Steam's games come with Steam's own record of when each
 /// was last played and for how long (its <c>localconfig.vdf</c>), read again only when Steam rewrites it, which it adds
-/// a session to only as the game closes; until then the app counts the time it sees a Steam game in front on top. The
-/// Epic Games launcher and GOG keep no such record on the PC, so their games come with the app's own, counted while
-/// they're in front and kept in <c>played.json</c>. Only installed games are listed, as they're the ones a tap can
-/// start. Nothing is fetched.
+/// a session to only as the game closes; until then the app counts the time it sees a Steam game in front on top. For
+/// Epic Games and GOG games the app keeps its own record, counted while they're in front and kept in <c>played.json</c>,
+/// and where GOG Galaxy is installed, Galaxy's record comes first: its minutes for GOG games and, through its
+/// integration, Epic's, when GOG's were last played, and its cached covers. Only installed games are listed, as they're
+/// the ones a tap can start. Nothing is fetched.
 /// </summary>
 public sealed class RecentGamesProvider : IMetricProvider
 {
@@ -33,6 +34,9 @@ public sealed class RecentGamesProvider : IMetricProvider
     /// <summary>How often the app's own record is saved while a game it counts is in front, besides when the game leaves.</summary>
     public static readonly TimeSpan SaveEvery = TimeSpan.FromMinutes(5);
 
+    /// <summary>How often GOG Galaxy's record is read again at most, as Galaxy writes to its database often while it runs.</summary>
+    public static readonly TimeSpan GalaxyEvery = TimeSpan.FromMinutes(1);
+
     private readonly IGameFiles _files;
     private readonly SteamLibrary _steam;
     private readonly EpicLibrary _epic;
@@ -44,6 +48,12 @@ public sealed class RecentGamesProvider : IMetricProvider
     private IReadOnlyList<StoreGame> _installed = [];
     private DateTimeOffset _installedRead = DateTimeOffset.MinValue;
     private IReadOnlyDictionary<int, SteamPlay> _steamPlayed = new Dictionary<int, SteamPlay>();
+
+    /// <summary>What GOG Galaxy said about the installed Epic Games and GOG games when last read, by Galaxy's key.</summary>
+    private IReadOnlyDictionary<string, GalaxyGame> _galaxy = new Dictionary<string, GalaxyGame>();
+    private DateTime? _galaxyWritten;
+    private DateTimeOffset _galaxyRead = DateTimeOffset.MinValue;
+    private string? _galaxyPictures;
 
     /// <summary>
     /// For Steam games: the minutes the app has seen each in front that Steam hasn't yet added to its record, and when it
@@ -120,7 +130,8 @@ public sealed class RecentGamesProvider : IMetricProvider
         if (inFront is { Store: { } launcher, StoreId: { } id } && launcher is GameStore.Epic or GameStore.Gog)
         {
             key = StoreGame.KeyOf(launcher, id);
-            _played[key] = new PlayedGame(now, (_played.GetValueOrDefault(key)?.Minutes ?? 0) + Minutes());
+            var minutes = Minutes();
+            _played[key] = _played.TryGetValue(key, out var own) ? own with { Last = now, Minutes = own.Minutes + minutes } : new PlayedGame(now, minutes);
             _unsaved = true;
         }
         else if (inFront is { Store: GameStore.Steam, AppId: { } appId })
@@ -135,17 +146,23 @@ public sealed class RecentGamesProvider : IMetricProvider
         _countedTo = now;
     }
 
-    /// <summary>Reads the launchers' lists of games again once they're old enough, and Steam's record whenever it's rewritten.</summary>
+    /// <summary>
+    /// Reads the launchers' lists of games again once they're old enough, Steam's record whenever it's rewritten, and GOG
+    /// Galaxy's when it changes, at most every <see cref="GalaxyEvery"/>.
+    /// </summary>
     private void Refresh(DateTimeOffset now)
     {
         if (now - _installedRead >= GameFinder.LibraryLifetime)
         {
             _installed = [.. _steam.Apps().Select(SteamLibrary.ToStoreGame), .. _epic.Games(), .. _gog.Games()];
             _installedRead = now;
-            // Steam may have pictures of more games since.
+            // Steam may have pictures of more games since, and Galaxy may know more of them.
             _art.Clear();
             _published = null;
+            _galaxyWritten = null;
+            _galaxyRead = DateTimeOffset.MinValue;
         }
+        RefreshGalaxy(now);
 
         var config = _steam.LocalConfig();
         if (!config.Equals(_localConfig))
@@ -178,6 +195,41 @@ public sealed class RecentGamesProvider : IMetricProvider
         }
     }
 
+    /// <summary>
+    /// Reads GOG Galaxy's record of the installed Epic Games and GOG games when it has changed: its minutes, which the
+    /// app's own record is brought into line with (see <see cref="PlayedGame.WithGalaxy"/>), when GOG's were last played,
+    /// and its pictures. One that can't be read just now is read next time, and what was read before stands.
+    /// </summary>
+    private void RefreshGalaxy(DateTimeOffset now)
+    {
+        var written = _files.GalaxyWritten();
+        if (written == _galaxyWritten || now - _galaxyRead < GalaxyEvery)
+            return;
+        var games = _installed.Where(g => g.Store is GameStore.Epic or GameStore.Gog).ToList();
+        if (_files.GalaxyGames([.. games.Select(g => GogGalaxy.KeyOf(g.Store, g.Id))]) is not { } galaxy)
+            return;
+        _galaxyWritten = written;
+        _galaxyRead = now;
+
+        var pictures = string.Join("\n", galaxy.OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase).Select(g => $"{g.Key}|{g.Value.Cover}|{g.Value.Background}|{g.Value.Icon}"));
+        if (pictures != _galaxyPictures)
+        {
+            _galaxyPictures = pictures;
+            _art.Clear();
+            _published = null;
+        }
+        _galaxy = galaxy;
+        foreach (var game in games)
+        {
+            if (_played.TryGetValue(game.Key, out var own) && galaxy.GetValueOrDefault(GogGalaxy.KeyOf(game.Store, game.Id))?.Minutes is { } minutes
+                && own.WithGalaxy(minutes) is var counted && counted != own)
+            {
+                _played[game.Key] = counted;
+                _unsaved = true;
+            }
+        }
+    }
+
     /// <summary>The installed games played lately, newest first, with their pictures; pictures of games no longer on the list are let go.</summary>
     private List<RecentGame> RecentGames()
     {
@@ -189,9 +241,9 @@ public sealed class RecentGamesProvider : IMetricProvider
                 if (int.TryParse(game.Id, NumberStyles.None, CultureInfo.InvariantCulture, out var appId) && SteamPlayed(appId) is { } play)
                     played.Add((game, play.Last, play.Minutes / 60.0));
             }
-            else if (_played.TryGetValue(game.Key, out var own))
+            else if (StorePlayed(game.Store, game.Id) is { Last: { } last } play)
             {
-                played.Add((game, own.Last, own.Minutes / 60.0));
+                played.Add((game, last, play.Minutes / 60.0));
             }
         }
 
@@ -206,20 +258,28 @@ public sealed class RecentGamesProvider : IMetricProvider
         return recent;
     }
 
-    /// <summary>A game's pictures: Steam's cover and banner from its cache, or the exe's icon. Kept while the game is on the list.</summary>
+    /// <summary>
+    /// A game's pictures: Steam's cover and banner from its cache; for an Epic Games or GOG game, the cover and background
+    /// GOG Galaxy has cached; else the exe's icon, or Galaxy's. Kept while the game is on the list.
+    /// </summary>
     private GameArt ArtOf(StoreGame game)
     {
         if (_art.TryGetValue(game.Key, out var art))
             return art;
         art = new GameArt(null, null, null, null);
+        var galaxy = game.Store is GameStore.Epic or GameStore.Gog ? _galaxy.GetValueOrDefault(GogGalaxy.KeyOf(game.Store, game.Id)) : null;
         if (game.Store == GameStore.Steam && int.TryParse(game.Id, NumberStyles.None, CultureInfo.InvariantCulture, out var appId))
         {
             // Not the hero picture: it's the biggest, and the widget doesn't show it.
             var files = _steam.ArtFiles(appId);
             art = new GameArt(Bytes(files.Cover), Bytes(files.Header), null, null);
         }
-        if (!art.HasSteamArt && game.Exe is { } exe)
-            art = art with { Icon = _files.Icon(exe) };
+        else if (galaxy is not null)
+        {
+            art = new GameArt(Bytes(galaxy.Cover), Bytes(galaxy.Background), null, null);
+        }
+        if (!art.HasSteamArt)
+            art = art with { Icon = (game.Exe is { } exe ? _files.Icon(exe) : null) ?? Bytes(galaxy?.Icon) };
         _art[game.Key] = art;
         return art;
     }
@@ -232,23 +292,40 @@ public sealed class RecentGamesProvider : IMetricProvider
     /// </summary>
     private PlayedGame? SteamPlayed(int appId)
     {
-        var steam = _steamPlayed.GetValueOrDefault(appId)?.LastPlayed;
-        var seen = _steamSession.GetValueOrDefault(appId)?.Last;
-        var last = steam is null ? seen : seen is null || steam > seen ? steam : seen;
+        var last = Later(_steamPlayed.GetValueOrDefault(appId)?.LastPlayed, _steamSession.GetValueOrDefault(appId)?.Last);
         return last is { } when ? new PlayedGame(when, SteamMinutes(appId)) : null;
     }
+
+    /// <summary>
+    /// When an Epic Games or GOG game was last played (null if nothing says) and its minutes: GOG Galaxy's count where it
+    /// has one, with the time the app has seen that Galaxy hasn't counted, else the app's own. Null if neither knows it.
+    /// </summary>
+    private (DateTimeOffset? Last, double Minutes)? StorePlayed(GameStore store, string id)
+    {
+        var own = _played.GetValueOrDefault(StoreGame.KeyOf(store, id));
+        var galaxy = _galaxy.GetValueOrDefault(GogGalaxy.KeyOf(store, id));
+        if (own is null && galaxy is null)
+            return null;
+        var minutes = galaxy?.Minutes is { } counted ? own?.WithGalaxy(counted).Total ?? counted : own?.Total ?? 0;
+        return (Later(own?.Last, galaxy?.LastPlayed), minutes);
+    }
+
+    private static DateTimeOffset? Later(DateTimeOffset? a, DateTimeOffset? b) => a is null ? b : b is null || a > b ? a : b;
 
     /// <summary>A Steam game's minutes: Steam's count, and the time the app has seen it in front that Steam hasn't counted yet.</summary>
     private double SteamMinutes(int appId) =>
         (_steamPlayed.GetValueOrDefault(appId)?.Minutes ?? 0) + (_steamSession.GetValueOrDefault(appId)?.Minutes ?? 0);
 
-    /// <summary>The hours the game has been played: Steam's count for a Steam game, the app's own for an Epic Games or GOG game.</summary>
+    /// <summary>
+    /// The hours the game has been played: Steam's count for a Steam game, GOG Galaxy's or the app's own for an Epic Games
+    /// or GOG game, each with the time the app has seen that they haven't counted yet.
+    /// </summary>
     private double? HoursOf(Game? game)
     {
         if (game is { Store: GameStore.Steam, AppId: { } appId })
             return SteamMinutes(appId) is > 0 and var minutes ? minutes / 60.0 : null;
         if (game is { Store: { } launcher, StoreId: { } id } && launcher is GameStore.Epic or GameStore.Gog)
-            return _played.TryGetValue(StoreGame.KeyOf(launcher, id), out var own) ? own.Minutes / 60.0 : null;
+            return StorePlayed(launcher, id) is { } play ? play.Minutes / 60.0 : null;
         return null;
     }
 

@@ -3,8 +3,9 @@ namespace ImpiousBonum.Core.Games;
 /// <summary>
 /// The games GOG Galaxy, or a GOG installer, has installed, from the registry entry each gets under
 /// <c>HKEY_LOCAL_MACHINE\SOFTWARE\GOG.com\Games</c>: the game's name, the folder it's in, and its exe and the folder to
-/// start it in, which start it directly since GOG's games don't need a launcher running. Nothing is fetched. Add-ons, which name the game they
-/// depend on, are left out.
+/// start it in. A game Galaxy has installed is started through Galaxy, as its own shortcuts do, so Galaxy counts the
+/// time and syncs the saves; any other is started directly, as GOG's games don't need a launcher running. Nothing is
+/// fetched. Add-ons, which name the game they depend on, are left out.
 /// </summary>
 public sealed class GogLibrary(IGameFiles files)
 {
@@ -12,7 +13,22 @@ public sealed class GogLibrary(IGameFiles files)
     public const string RegistryPath = @"SOFTWARE\GOG.com\Games";
 
     /// <summary>Every game GOG has installed; none without it.</summary>
-    public IReadOnlyList<StoreGame> Games() => [.. files.LocalMachineEntries(RegistryPath).Select(Entry).OfType<StoreGame>()];
+    public IReadOnlyList<StoreGame> Games()
+    {
+        var games = files.LocalMachineEntries(RegistryPath).Select(Entry).OfType<StoreGame>().ToList();
+        if (games.Count == 0 || files.GalaxyClient() is not { } galaxy)
+            return games;
+        var known = files.GalaxyGames([.. games.Select(game => GogGalaxy.KeyOf(GameStore.Gog, game.Id))]);
+        return [.. games.Select(game => known?.GetValueOrDefault(GogGalaxy.KeyOf(GameStore.Gog, game.Id)) is { Installed: true } ? ThroughGalaxy(game, galaxy) : game)];
+    }
+
+    /// <summary>The game started by Galaxy, as Galaxy's own shortcuts start it: <c>GalaxyClient.exe /command=runGame /gameId=… /path="…"</c>.</summary>
+    internal static StoreGame ThroughGalaxy(StoreGame game, string galaxy) => game with
+    {
+        Launch = galaxy,
+        Arguments = $"/command=runGame /gameId={game.Id} /path=\"{game.Folder}\"",
+        WorkingDirectory = Path.GetDirectoryName(galaxy),
+    };
 
     /// <summary>The game a registry entry describes, or null if it has no folder or is an add-on.</summary>
     internal static StoreGame? Entry(RegistryEntry entry)

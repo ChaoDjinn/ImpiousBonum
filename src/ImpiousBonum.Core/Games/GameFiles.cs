@@ -58,6 +58,22 @@ public interface IGameFiles
     /// as GOG Galaxy's write, under <c>WOW6432Node</c>), with its text values; none if the key isn't there.
     /// </summary>
     IReadOnlyList<RegistryEntry> LocalMachineEntries(string path);
+
+    /// <summary>
+    /// When GOG Galaxy's database last changed: the later of the database and the log of its latest changes beside it
+    /// (<c>galaxy-2.0.db-wal</c>), UTC. Null without Galaxy.
+    /// </summary>
+    DateTime? GalaxyWritten();
+
+    /// <summary>
+    /// What GOG Galaxy's database says about the games with these keys (see <see cref="GogGalaxy.KeyOf"/>); those it
+    /// doesn't know are left out, and without Galaxy there are none. Null if it can't be read just now, as when Galaxy
+    /// is busy writing it, so what was read before can stand.
+    /// </summary>
+    IReadOnlyDictionary<string, GalaxyGame>? GalaxyGames(IReadOnlyCollection<string> keys);
+
+    /// <summary>GOG Galaxy's program, <c>GalaxyClient.exe</c>, where the registry says it's installed; null if it isn't.</summary>
+    string? GalaxyClient();
 }
 
 /// <summary>A registry key's name and its text values, matched ignoring case as Windows does.</summary>
@@ -183,6 +199,52 @@ public sealed class GameFiles : IGameFiles
         }
         var usual = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Epic", "EpicGamesLauncher", "Data");
         return Directory.Exists(usual) ? usual : null;
+    }
+
+    public DateTime? GalaxyWritten()
+    {
+        try
+        {
+            var database = new FileInfo(GogGalaxy.DatabasePath);
+            if (!database.Exists)
+                return null;
+            var log = new FileInfo(GogGalaxy.DatabasePath + "-wal");
+            return log.Exists && log.LastWriteTimeUtc > database.LastWriteTimeUtc ? log.LastWriteTimeUtc : database.LastWriteTimeUtc;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            return null;
+        }
+    }
+
+    public IReadOnlyDictionary<string, GalaxyGame>? GalaxyGames(IReadOnlyCollection<string> keys)
+    {
+        try
+        {
+            return File.Exists(GogGalaxy.DatabasePath) ? GogGalaxy.Read(GogGalaxy.DatabasePath, keys) : new Dictionary<string, GalaxyGame>();
+        }
+        // Busy, laid out differently since an update, or no SQLite on this Windows.
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DllNotFoundException or EntryPointNotFoundException)
+        {
+            return null;
+        }
+    }
+
+    public string? GalaxyClient()
+    {
+        try
+        {
+            using var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
+            using var key = root.OpenSubKey(@"SOFTWARE\GOG.com\GalaxyClient\paths");
+            if (key?.GetValue("client") is not string { Length: > 0 } folder)
+                return null;
+            var exe = Path.Combine(folder, "GalaxyClient.exe");
+            return File.Exists(exe) ? exe : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or ArgumentException)
+        {
+            return null;
+        }
     }
 
     public IReadOnlyList<RegistryEntry> LocalMachineEntries(string path)

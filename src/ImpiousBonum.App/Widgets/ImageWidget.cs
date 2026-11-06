@@ -25,11 +25,11 @@ public sealed class ImageWidget : Widget
         240, 240,
         [
             Setting.Choice("source", "Show", FileSource, [FileSource, GameSource], group: Setting.Content,
-                help: "file shows the picture below. game shows the game you're playing: Steam's art for it, or its icon."),
+                help: "file shows the picture below. game shows the game you're playing: Steam's art for it, GOG Galaxy's for an Epic Games or GOG game, or its icon."),
             new SettingDescriptor(LayoutPackage.ImageFileKey, "Picture", SettingKind.ImageFile, null, Setting.Content, "A PNG, JPG, GIF, BMP or TIFF file."),
             Setting.Choice("art", "Game picture", GameArt.CoverKind, GameArt.Kinds, group: Setting.Content,
                 help: "For a Steam game: cover is the tall box art, header the wide banner, hero the big picture from its library page. "
-                + "Other games show their icon."),
+                + "An Epic Games or GOG game with GOG Galaxy installed has Galaxy's cover, and its background for header and hero. Other games show their icon."),
             Setting.Toggle("hideNoGame", "Hide when there's no game", false, group: Setting.Content,
                 help: "Otherwise it's empty while no game is in front. It shows faded while you edit the layout."),
             Setting.Choice("fit", "Fit", "fit", BackgroundImage.Fits, group: Setting.Appearance,
