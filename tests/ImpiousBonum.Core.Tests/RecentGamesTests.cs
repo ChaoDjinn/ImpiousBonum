@@ -113,6 +113,54 @@ public sealed class RecentGamesTests
     }
 
     [Fact]
+    public async Task A_steam_game_s_time_in_front_counts_on_top_of_steam_s_record_until_steam_counts_it()
+    {
+        var files = Library();
+        var time = new FakeTime(Now);
+        using var provider = new RecentGamesProvider(null, files, time);
+        var store = new MetricStore();
+        provider.Initialize(store);
+        var hades = new Game("Hades", 1145360, new GameArt(null, null, null, null), GameStore.Steam, "1145360");
+
+        // Steam's record says two days ago and 41 hours; it adds a session only once the game closes. Played now, so first.
+        store.SetAttachment(GameArtProvider.Current, hades);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(41, Number(store, RecentGamesProvider.Hours));
+        Assert.Equal("Hades", Recent(store)[0].Game.Name);
+        Assert.Equal(Now, Recent(store)[0].LastPlayed);
+
+        // Ten minutes in front: they count, where they used to stay at Steam's 41 hours till the game closed.
+        for (var i = 0; i < 40; i++)
+        {
+            time.Advance(provider.Interval);
+            await provider.SampleAsync(store, CancellationToken.None);
+        }
+        Assert.Equal(41 + 10.0 / 60, Number(store, RecentGamesProvider.Hours)!.Value, 6);
+        Assert.Equal(41 + 10.0 / 60, Recent(store)[0].Hours!.Value, 6);
+
+        // It closes, and Steam adds the session to its record, 11 minutes by its count from launch: Steam's count, not both.
+        store.SetAttachment(GameArtProvider.Current, null);
+        files.Texts[Config] = LocalConfig((1145360, Now.AddMinutes(11), 2471), (367520, Now.AddHours(-3), 30), (105600, null, 600), (999, Now.AddHours(-1), 5));
+        files.Written[Config] = Now.UtcDateTime.AddMinutes(11);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(2471 / 60.0, Recent(store)[0].Hours!.Value, 6);
+        Assert.Equal(Now.AddMinutes(11), Recent(store)[0].LastPlayed);
+
+        // Back in front: from Steam's count on.
+        store.SetAttachment(GameArtProvider.Current, hades);
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(2471 / 60.0, Number(store, RecentGamesProvider.Hours)!.Value, 6);
+
+        // A Steam game Steam has minutes for but no date of: its hours, though it isn't listed till it's played.
+        store.SetAttachment(GameArtProvider.Current, new Game("Terraria", 105600, new GameArt(null, null, null, null), GameStore.Steam, "105600"));
+        time.Advance(provider.Interval);
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(10, Number(store, RecentGamesProvider.Hours));
+    }
+
+    [Fact]
     public async Task An_epic_game_s_time_in_front_is_counted_and_kept_once_it_leaves()
     {
         var played = TempFile();

@@ -79,7 +79,7 @@ Without a spare screen, *Screens* → pick the monitor → *Size* → *A window*
 
 *General* → *Back up and restore* → *Back up…* saves your whole setup as one `.ibbackup` file: `settings.json` (calendars, alerts, hotkeys, the schedule, custom data, which screens the dashboards are on and the rest), every saved layout with the fonts and pictures in its folder under `layouts`, and your saved themes. Keep it somewhere safe, or take it to another PC.
 
-**A backup has private things in it**: your calendar links, the tablet link, and the web addresses and commands you've set up, for alerts and custom data among others (with any tokens in custom data's headers). Keep it somewhere only you can open, and don't share it the way you'd share a layout: to share a layout, export it instead (see [Sharing layouts](#sharing-layouts)).
+**A backup has private things in it**: your calendar links, the tablet link, your [Steam Web API key](#steam-friends-and-achievements), and the web addresses and commands you've set up, for alerts and custom data among others (with any tokens in custom data's headers). Keep it somewhere only you can open, and don't share it the way you'd share a layout: to share a layout, export it instead (see [Sharing layouts](#sharing-layouts)).
 
 *Restore…* shows what's in a backup: when it was made, by which version of Impious Bonum, and how many layouts and saved themes it has. Once you say yes, Impious Bonum first saves your setup as it is now in a folder beside the settings folder (`%AppData%\ImpiousBonum backups`, as *Before restoring 2026-10-16 14.05.ibbackup*), so you can restore that to go back. Then it closes, puts the backup's settings, layouts and themes in place of yours, and starts again. Layouts and themes that aren't in the backup go, though they're in the one saved before restoring.
 
@@ -260,7 +260,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `game.name`, `game.appid`, `game.store` | The game you're playing: its name in Steam, the Epic Games launcher or GOG Galaxy, or the name in its exe for a game linked under *Game layouts*; its Steam app id; and which of those launchers it's from (*Steam*, *Epic Games* or *GOG*). No reading while no game is in front (see [Game cover art](#game-cover-art)) |
 | `steam.downloads` (how many), `steam.download.game`, `steam.download.state`, `steam.download.progress`, `steam.download.done`, `steam.download.size`, `steam.download.speed`, `steam.download.left` | What Steam is downloading, updating or installing, from its own files, every 5 seconds. No reading while nothing is (see [Steam downloads](#steam-downloads)) |
 | `steam.friends.online`, `steam.friends.playing`, `steam.status`, `game.achievements` (e.g. *34 / 50*), `game.achievements.percent` | Your Steam friends online and how many are playing, how fetching them is going, and your achievements in the Steam game in front, from Steam's Web API once you've given your own key on the *Steam* page (see [Steam friends and achievements](#steam-friends-and-achievements)) |
-| `game.hours`, `games.last` | How many hours the game in front has been played (Steam's count for a Steam game, the app's own for an Epic Games or GOG game), and the name of the game played most recently (see [Recent games](#recent-games)) |
+| `game.hours`, `games.last` | How many hours the game in front has been played (Steam's count for a Steam game, plus the time it's been in front that Steam hasn't counted yet; the app's own for an Epic Games or GOG game), and the name of the game played most recently (see [Recent games](#recent-games)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
@@ -678,29 +678,35 @@ To be told, add an [alert](#alerts) on `battery.<name>` below 20, say.
 
 ### Steam downloads
 
-The *Steam downloads* widget lists the games Steam is downloading, updating or installing, each with how much is done
-of how much, the speed and the time left, and a bar: *6.1 / 14.0 GB · 40.0 MB/s · 3m*. A paused or queued download
-says so, and its bar is in the *Waiting colour*. The widget hides while there's nothing to download (and shows faded
-while you edit the layout).
+The *Steam downloads* widget lists the games Steam is downloading, updating or installing, each with a bar and how
+much is done of how much: *6.1 / 14.0 GB*. A paused download says so, and its bar is in the *Waiting colour*. The
+widget hides while there's nothing to download (and shows faded while you edit the layout).
 
-It reads the manifest Steam keeps for each game in its library folders, which Steam rewrites as a download goes, so
-there's no account to link and Steam needn't even be open. Every 5 seconds it looks at when each manifest was last
-written and reads only the ones that changed, and for the downloads that have started, it asks Steam's own entry in the
-registry whether Steam is working on them now, which tells one that's going from one paused or queued. Steam writes
-its progress every so often rather than all the time, so the bar moves in steps, and the speed and time left show
-once it has written twice; they're worked out from when Steam wrote, so they're right however long Impious Bonum has
-been running. A download that hasn't moved for two minutes has no speed. An update Steam is holding until you launch
-the game isn't a download until it starts.
+It reads the manifest Steam keeps for each game in its library folders, so there's no account to link and Steam
+needn't even be open. Every 5 seconds it looks at when each manifest was last written and reads only the ones that
+changed, and for the games with something to download, it asks Steam's own entry in the registry whether Steam is
+working on them now, which tells one that's going from one that's paused.
+
+Steam writes how far a download has got when it starts, pauses, resumes or finishes, and seldom in between (not once
+in two minutes of a 13 GB update), so a download that's been going for more than half a minute shows *Downloading*
+and its size, with an empty bar, rather than figures that have fallen behind. Pause it in Steam to see how far it has
+got. The speed and time left (*40.0 MB/s · 3m*) show only when Steam has written twice within two minutes with the
+download further along, which isn't often. The bar is how far the whole update has got: the download, or writing it
+into the game's folder (which Steam does at the same time), whichever is behind, so it doesn't go back when the
+download finishes and the installing goes on.
+
+A game waiting in Steam's queue (*Up Next*) shows once Steam starts it, as Steam's files don't tell it apart from an
+update that's only scheduled. An update Steam is holding until you launch the game isn't a download until it starts.
 
 The readings are for the first download in the list, the one going now:
 
 | Reading | |
 |---|---|
-| `steam.downloads` | How many games are downloading, paused or queued |
+| `steam.downloads` | How many games are downloading, installing or paused |
 | `steam.download.game` | The game's name |
-| `steam.download.state` | *Downloading*, *Installing* (writing what it downloaded into the game's folder), *Paused* or *Queued* |
-| `steam.download.progress` | How far it has got, e.g. *44 %* |
-| `steam.download.done`, `steam.download.size` | How much is done, and of how much |
+| `steam.download.state` | *Downloading*, *Installing* (writing what it downloaded into the game's folder), *Paused* or *Queued* (started, then put behind another) |
+| `steam.download.progress` | How far the whole update has got, e.g. *44 %*; no reading while Steam hasn't said lately |
+| `steam.download.done`, `steam.download.size` | How much is done (while Steam has said lately), and of how much |
 | `steam.download.speed` | How fast it's going |
 | `steam.download.left` | How long the rest will take at that speed, e.g. *3m* |
 
@@ -723,12 +729,12 @@ These come from Steam's Web API, which needs a key of your own:
 2. Paste it into *Web API key*, and your profile's address into *Your profile*: *steamcommunity.com/id/yourname*, or
    its 17-digit ID (*steamcommunity.com/profiles/7656…*). *Now* says how it's going.
 
-The key is kept in `settings.json` on your PC and only ever sent to Steam. Steam shares only what your profile's
-privacy settings make public, whoever's key asks: your friends list for who's online (*My profile → Edit profile →
-Privacy settings → Friends list*), and your game details for your achievements. Friends whose own profiles are
-private show as offline. Who's online is checked every minute and your friends list every 10 minutes; achievements
-when a Steam game comes to the front and every 2 minutes while it's there. Nothing is fetched from Steam without a
-key, and *Steam downloads* and *Recent games* don't need one.
+The key is kept in `settings.json` on your PC, and so in [backups](#backing-up-your-settings), and only ever sent to
+Steam. Steam shares only what your profile's privacy settings make public, whoever's key asks: your friends list for
+who's online (*My profile → Edit profile → Privacy settings → Friends list*), and your game details for your
+achievements. Friends whose own profiles are private show as offline. Who's online is checked every minute and your
+friends list every 10 minutes; achievements when a Steam game comes to the front and every 2 minutes while it's there.
+Nothing is fetched from Steam without a key, and *Steam downloads* and *Recent games* don't need one.
 
 | Reading | |
 |---|---|
@@ -916,7 +922,9 @@ start the game through its launcher, as its desktop shortcut does: Steam and the
 Only installed games are listed, as they're the ones a tap can start. Where the dates come from:
 
 - **Steam** keeps when each game was last played and its hours altogether in its own files (`localconfig.vdf` in
-  your Steam folder's `userdata`), which the widget reads whenever Steam rewrites them, usually as a game closes.
+  your Steam folder's `userdata`), which the widget reads whenever Steam rewrites them. Steam adds a session to them
+  only as the game closes, so while a Steam game is in front the app adds the time it's there: its tile moves to the
+  front and its hours count up as you play, and once Steam has counted the session, Steam's count takes over.
 - **The Epic Games launcher and GOG** keep no such record on your PC, so the app keeps its own: when one of their
   games is in front, it counts the time and remembers it in `played.json` in the settings folder. So their games show
   once you've played them with Impious Bonum running, and their hours are the time it has seen.

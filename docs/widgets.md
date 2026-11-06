@@ -326,18 +326,18 @@ Each entry in `thresholds`:
 
 ## Steam downloads (`downloads`)
 
-One row per game Steam is downloading, updating or installing, with how much is done, the speed and the time left, and a bar. Read from Steam's own files on this PC, so it needs no account and Steam needn't be open. Shows nothing while there's nothing to download.
+One row per game Steam is downloading, updating or installing, with a bar and how much is done. Read from Steam's own files on this PC, so it needs no account and Steam needn't be open, but Steam writes how far a download has got only when it starts, pauses or resumes, so one that has been going a while shows its size until it next does. Shows nothing while there's nothing to download.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `fontSize` | number (6–200) | `25` | Font size |
 | `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `showSize` | true/false | `true` | Show sizes. How much is done of how much, such as 6.1 / 14.0 GB. Off shows how far it has got as a percentage. |
-| `showSpeed` | true/false | `true` | Show speed. The speed and the time left. They show once Steam has written its progress twice, which it does every so often as it downloads. |
+| `showSpeed` | true/false | `true` | Show speed. The speed and the time left, when Steam has written its progress twice within two minutes. It seldom does, as it writes when a download starts, pauses or resumes. |
 | `barHeight` | number (1–100) | `5` | Bar height |
 | `spacing` | number (0–200) | `12` | Row spacing |
 | `color` | color | `accent` | Bar colour |
-| `waitingColor` | color | `secondary` | Waiting colour. The bar of a download that's paused or queued. |
+| `waitingColor` | color | `secondary` | Waiting colour. The bar of a download that's paused, or started and waiting behind another. |
 | `trackColor` | color | `track` | Track colour. The empty part of each bar. track is the theme's bar track. |
 | `labelColor` | color | `foreground` | Label colour |
 | `valueColor` | color | `secondary` | Value colour |
