@@ -384,7 +384,8 @@ public static class DemoReadings
         ];
         SteamFriendsProvider.Publish(store, friends, new AchievementCount(34, 50), SteamFriendsProvider.FriendsOnline(friends));
 
-        // The games played lately, from all three launchers. They've no pictures here, so their tiles show their names.
+        // The games played lately, from all three launchers. Their pictures are drawn by the app (DemoArtwork.RecentGames),
+        // like the album cover; without the app, their tiles show their names.
         using var recent = new RecentGamesProvider();
         recent.Initialize(store);
         var noArt = new GameArt(null, null, null, null);
