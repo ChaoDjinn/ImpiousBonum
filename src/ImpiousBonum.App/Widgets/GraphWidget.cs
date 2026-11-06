@@ -10,14 +10,17 @@ namespace ImpiousBonum.App.Widgets;
 public sealed class GraphWidget : Widget
 {
     public static WidgetDescriptor Descriptor { get; } = new(
-        "graph", "Graph", "A label and live value above a scrolling history of one metric, drawn as a line or a filled area.",
+        "graph", "Graph", "A label and live value above a scrolling history of one metric, drawn as a line or a filled area, from the last few minutes up to the last 24 hours.",
         427, 100,
         [
             Setting.PlainText("label", "Label", "CPU"),
             Setting.Metric("metric", "Metric", "cpu.load"),
             Setting.Template("text", "Value text", null, help: "Shown on the right of the header. Empty shows the metric's value."),
             Setting.Choice("style", "Style", "line", ["line", "area"], group: Setting.Appearance),
-            Setting.Number("points", "History (seconds)", 120, 2, MetricStore.DefaultHistoryLength, group: Setting.Appearance),
+            GraphSpan.Setting(),
+            GraphSpan.Points(120),
+            Setting.Toggle("band", "Lowest and highest", true, group: Setting.Appearance,
+                help: "With a longer time span, a pale band behind the line from the lowest reading to the highest in each point's time, so a short spike still shows."),
             Setting.Number("min", "Minimum", 0, double.MinValue, double.MaxValue, group: Setting.Appearance),
             Setting.Number("max", "Maximum", null, double.MinValue, double.MaxValue, group: Setting.Appearance,
                 help: "Empty uses the metric's natural maximum (100 for percentages, the total for memory), else scales to fit."),
@@ -35,11 +38,16 @@ public sealed class GraphWidget : Widget
     private readonly GraphElement _graph;
     private readonly double? _configuredMax;
     private readonly ThresholdColors _thresholds;
+    private readonly LongSpan? _span;
+    private readonly bool _band;
     private readonly Dictionary<Brush, Brush> _areaFills = new();
+    private readonly Dictionary<Brush, Brush> _bandFills = new();
 
     public GraphWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
         _metric = settings.String("metric");
+        _span = GraphSpan.Of(settings);
+        _band = settings.Bool("band");
         _template = ValueTemplate.Parse(settings.OptionalString("text") is { Length: > 0 } text ? text : $"{{{_metric}}}");
         _configuredMax = settings.OptionalNumber("max");
         _thresholds = new ThresholdColors(settings, theme);
@@ -60,7 +68,7 @@ public sealed class GraphWidget : Widget
         _graph = new GraphElement
         {
             Kind = style,
-            Points = (int)settings.Number("points"),
+            Points = _span?.Points() ?? (int)settings.Number("points"),
             Minimum = settings.Number("min"),
             Maximum = _configuredMax,
             Stroke = theme.Accent,
@@ -84,7 +92,27 @@ public sealed class GraphWidget : Widget
         _graph.Fill = AreaFill(color);
         if (_configuredMax is null && store.TryGet(_metric, out var sample))
             _graph.Maximum = sample.Definition.Max;
-        _graph.SetValues(store.GetHistory(_metric, _graph.Points));
+        if (_span is { } span)
+        {
+            var history = store.GetHistory(_metric, span);
+            _graph.BandFill = _band ? BandFill(color) : null;
+            _graph.SetValues(history.Average, history.Low, history.High);
+        }
+        else
+            _graph.SetValues(store.GetHistory(_metric, _graph.Points));
+    }
+
+    /// <summary>The line's colour, faint: the band of lowest and highest readings behind it.</summary>
+    private Brush BandFill(Brush stroke)
+    {
+        if (!_bandFills.TryGetValue(stroke, out var fill))
+        {
+            var color = stroke is SolidColorBrush solid ? solid.Color : Theme.AccentColor;
+            var brush = new SolidColorBrush(Color.FromArgb(0x40, color.R, color.G, color.B));
+            brush.Freeze();
+            _bandFills[stroke] = fill = brush;
+        }
+        return fill;
     }
 
     private Brush AreaFill(Brush stroke)

@@ -7,7 +7,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [Discord voice](#discord-voice), [device batteries](#device-batteries), [Steam downloads](#steam-downloads), [Steam friends and achievements](#steam-friends-and-achievements), [GOG Galaxy](#gog-galaxy)
-- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [recent games](#recent-games), [photo frame](#photo-frame)
+- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [longer history](#longer-history), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [recent games](#recent-games), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
 - [Command line](#command-line)
@@ -97,7 +97,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="images/default-layout.svg" alt="Map of the default layout: CPU, GPU and memory graphs, CPU and GPU temperatures and the frame rate, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Thirty-two widget types are available: `text`, `graph` (line or area history with a header), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `countdowns` ([Countdowns](#countdowns)), `drives`, `batteries` ([Device batteries](#device-batteries)), `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `voice` ([Discord voice](#discord-voice)), `games` ([Recent games](#recent-games)), `downloads` ([Steam downloads](#steam-downloads)), `friends` ([Steam friends and achievements](#steam-friends-and-achievements)), `weather` ([Weather](#weather)), `rain` ([Rain soon](#rain-soon)), `sun` ([Sun and moon](#sun-and-moon)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)), `photos` ([Photo frame](#photo-frame)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Thirty-two widget types are available: `text`, `graph` (line or area history with a header, up to 24 hours back: [Longer history](#longer-history)), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `countdowns` ([Countdowns](#countdowns)), `drives`, `batteries` ([Device batteries](#device-batteries)), `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `voice` ([Discord voice](#discord-voice)), `games` ([Recent games](#recent-games)), `downloads` ([Steam downloads](#steam-downloads)), `friends` ([Steam friends and achievements](#steam-friends-and-achievements)), `weather` ([Weather](#weather)), `rain` ([Rain soon](#rain-soon)), `sun` ([Sun and moon](#sun-and-moon)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)), `photos` ([Photo frame](#photo-frame)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
 
 <table>
   <tr>
@@ -829,6 +829,32 @@ whose metrics share a natural maximum (percentages, say) are drawn out of it; ot
 line, or set *Maximum* yourself.
 
 <p align="center"><img src="images/widgets/graphs.png" width="600" alt="A line graph of CPU load and an area graph of memory, each with a label and value, beside a multi-line graph of CPU and GPU load in orange and blue with a legend"></p>
+
+### Longer history
+
+Graphs, multi-line graphs and stat tiles show a reading a second: the last two minutes by default (a minute for a
+stat tile), and up to four minutes with *History (seconds)*. *Time span* goes further back, with a point for every
+few seconds or minutes:
+
+| Time span | A point every | Points |
+|---|---|---|
+| 15 minutes | 10 seconds | 90 |
+| 1 hour | 10 seconds | 360 |
+| 6 hours | minute | 360 |
+| 24 hours | 5 minutes | 288 |
+
+- **Each point is an average** of the readings in its time. On a graph, a pale band behind the line goes from the
+  lowest reading to the highest in each point's time, so a spike shorter than a point still shows; *Lowest and
+  highest* turns it off. A stat tile's ↓ and ↑ are the lowest and highest readings over the whole span, not the
+  averages'. A multi-line graph draws just the averages, as bands would hide one another's lines.
+- **Time without readings is a gap**: while a sensor was away, or the PC was asleep.
+- **It fills from when the graph is first on screen**, or in the editor, and starts again when Impious Bonum does.
+  The longer history is kept only for the readings a graph shows that way, and only while the app runs, so nothing
+  else costs more memory: under 10 KB for each reading and time span.
+
+```json
+{ "type": "graph", "x": 30, "y": 20, "width": 600, "height": 160, "label": "CPU today", "metric": "cpu.load", "span": "24 hours" }
+```
 
 ### World clocks
 

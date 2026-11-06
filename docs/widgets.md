@@ -95,14 +95,15 @@ Each entry in `thresholds`:
 
 ## Stat tile (`stat`)
 
-A big value with a small trend line and its lowest and highest readings over the last minute or so.
+A big value with a small trend line and its lowest and highest readings over its time span: the last minute, or up to the last 24 hours.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `label` | text | `CPU` | Label |
 | `metric` | metric | `cpu.load` | Metric |
 | `text` | template | — | Value text. Empty shows the metric's value. |
-| `points` | number (2–240) | `60` | History (seconds) |
+| `span` | `seconds` / `15 minutes` / `1 hour` / `6 hours` / `24 hours` | `seconds` | Time span. seconds shows the last History (seconds) of readings, one a second. The longer spans show averages, a point every 10 seconds for 15 minutes or an hour, a minute for 6 hours and 5 minutes for 24 hours, and fill from when the graph is first on screen. |
+| `points` | number (2–240) | `60` | History (seconds). How many seconds of readings, with Time span on seconds. |
 | `style` | `area` / `line` / `none` | `area` | Trend line |
 | `showRange` | true/false | `true` | Lowest and highest |
 | `fontSize` | number (6–400) | `56` | Value size |
@@ -164,7 +165,7 @@ Each entry in `rows`:
 
 ## Graph (`graph`)
 
-A label and live value above a scrolling history of one metric, drawn as a line or a filled area.
+A label and live value above a scrolling history of one metric, drawn as a line or a filled area, from the last few minutes up to the last 24 hours.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
@@ -172,7 +173,9 @@ A label and live value above a scrolling history of one metric, drawn as a line 
 | `metric` | metric | `cpu.load` | Metric |
 | `text` | template | — | Value text. Shown on the right of the header. Empty shows the metric's value. |
 | `style` | `line` / `area` | `line` | Style |
-| `points` | number (2–240) | `120` | History (seconds) |
+| `span` | `seconds` / `15 minutes` / `1 hour` / `6 hours` / `24 hours` | `seconds` | Time span. seconds shows the last History (seconds) of readings, one a second. The longer spans show averages, a point every 10 seconds for 15 minutes or an hour, a minute for 6 hours and 5 minutes for 24 hours, and fill from when the graph is first on screen. |
+| `points` | number (2–240) | `120` | History (seconds). How many seconds of readings, with Time span on seconds. |
+| `band` | true/false | `true` | Lowest and highest. With a longer time span, a pale band behind the line from the lowest reading to the highest in each point's time, so a short spike still shows. |
 | `min` | number | `0` | Minimum |
 | `max` | number | — | Maximum. Empty uses the metric's natural maximum (100 for percentages, the total for memory), else scales to fit. |
 | `lineThickness` | number (0.5–20) | `2.5` | Line thickness |
@@ -197,7 +200,8 @@ Several metrics' histories on one scale, each in its own colour, e.g. CPU and GP
 |---|---|---|---|
 | `lines` | list | 2 entries | Lines |
 | `legend` | true/false | `true` | Legend. Each line's colour, label and value above the graph. |
-| `points` | number (2–240) | `120` | History (seconds) |
+| `span` | `seconds` / `15 minutes` / `1 hour` / `6 hours` / `24 hours` | `seconds` | Time span. seconds shows the last History (seconds) of readings, one a second. The longer spans show averages, a point every 10 seconds for 15 minutes or an hour, a minute for 6 hours and 5 minutes for 24 hours, and fill from when the graph is first on screen. |
+| `points` | number (2–240) | `120` | History (seconds). How many seconds of readings, with Time span on seconds. |
 | `min` | number | `0` | Minimum |
 | `max` | number | — | Maximum. Empty uses the metrics' natural maximum when they share one (100 for percentages), else scales to fit the highest line. |
 | `lineThickness` | number (0.5–20) | `2` | Line thickness |

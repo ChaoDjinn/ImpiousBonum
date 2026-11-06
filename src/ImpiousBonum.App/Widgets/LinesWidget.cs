@@ -25,7 +25,8 @@ public sealed class LinesWidget : Widget
             ],
             defaults: [Line("CPU", CpuProvider.Load, "accent"), Line("GPU", GpuProvider.Load, "warning")]),
             Setting.Toggle("legend", "Legend", true, group: Setting.Content, help: "Each line's colour, label and value above the graph."),
-            Setting.Number("points", "History (seconds)", 120, 2, MetricStore.DefaultHistoryLength, group: Setting.Appearance),
+            GraphSpan.Setting(),
+            GraphSpan.Points(120),
             Setting.Number("min", "Minimum", 0, double.MinValue, double.MaxValue, group: Setting.Appearance),
             Setting.Number("max", "Maximum", null, double.MinValue, double.MaxValue, group: Setting.Appearance,
                 help: "Empty uses the metrics' natural maximum when they share one (100 for percentages), else scales to fit the highest line."),
@@ -41,13 +42,15 @@ public sealed class LinesWidget : Widget
     private readonly List<Series> _series = [];
     private readonly double? _configuredMax;
     private readonly int _points;
+    private readonly LongSpan? _span;
 
     private sealed record Series(string Metric, ValueTemplate Template, TextBlock? Value, GraphElement Graph);
 
     public LinesWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
         _configuredMax = settings.OptionalNumber("max");
-        _points = (int)settings.Number("points");
+        _span = GraphSpan.Of(settings);
+        _points = _span?.Points() ?? (int)settings.Number("points");
         var fontSize = settings.Number("fontSize");
         var legend = settings.Bool("legend");
 
@@ -111,7 +114,8 @@ public sealed class LinesWidget : Widget
 
     public override void Refresh(MetricStore store, DateTime now)
     {
-        var histories = _series.Select(s => store.GetHistory(s.Metric, _points)).ToList();
+        // Over a longer span, each line is its averages: bands for every line would hide one another.
+        var histories = _series.Select(s => _span is { } span ? store.GetHistory(s.Metric, span).Average : store.GetHistory(s.Metric, _points)).ToList();
         var naturals = _series.Select(s => store.TryGet(s.Metric, out var sample) ? sample.Definition.Max : null).ToList();
         var max = _configuredMax ?? SharedMaximum(naturals, histories);
         for (var i = 0; i < _series.Count; i++)

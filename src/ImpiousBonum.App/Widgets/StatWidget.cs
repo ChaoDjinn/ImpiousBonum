@@ -14,13 +14,14 @@ public sealed class StatWidget : Widget
 {
     public static WidgetDescriptor Descriptor { get; } = new(
         "stat", "Stat tile",
-        "A big value with a small trend line and its lowest and highest readings over the last minute or so.",
+        "A big value with a small trend line and its lowest and highest readings over its time span: the last minute, or up to the last 24 hours.",
         300, 160,
         [
             Setting.PlainText("label", "Label", "CPU"),
             Setting.Metric("metric", "Metric", "cpu.load"),
             Setting.Template("text", "Value text", null, help: "Empty shows the metric's value."),
-            Setting.Number("points", "History (seconds)", 60, 2, MetricStore.DefaultHistoryLength, group: Setting.Appearance),
+            GraphSpan.Setting(),
+            GraphSpan.Points(60),
             Setting.Choice("style", "Trend line", "area", ["area", "line", "none"], group: Setting.Appearance),
             Setting.Toggle("showRange", "Lowest and highest", true, group: Setting.Appearance),
             Setting.Number("fontSize", "Value size", 56, 6, 400),
@@ -33,6 +34,7 @@ public sealed class StatWidget : Widget
     private readonly string _metric;
     private readonly ValueTemplate _template;
     private readonly int _points;
+    private readonly LongSpan? _span;
     private readonly TextBlock _value;
     private readonly WarningSymbol? _symbol;
     private readonly TextBlock? _range;
@@ -44,7 +46,8 @@ public sealed class StatWidget : Widget
     {
         _metric = settings.String("metric");
         _template = ValueTemplate.Parse(settings.OptionalString("text") is { Length: > 0 } text ? text : $"{{{_metric}}}");
-        _points = (int)settings.Number("points");
+        _span = GraphSpan.Of(settings);
+        _points = _span?.Points() ?? (int)settings.Number("points");
         _thresholds = new ThresholdColors(settings, theme);
         var labelSize = settings.Number("labelSize");
 
@@ -95,15 +98,17 @@ public sealed class StatWidget : Widget
         _value.Foreground = ReferenceEquals(color, Theme.Accent) ? Theme.Foreground : color;
         _symbol?.Show(level, color);
 
-        var history = store.GetHistory(_metric, _points);
+        // Over a longer span the trend is the averages, and the lowest and highest are the readings' own, not the averages'.
+        var averaged = _span is { } span ? store.GetHistory(_metric, span) : null;
+        var history = averaged?.Average ?? store.GetHistory(_metric, _points);
         var known = store.TryGet(_metric, out var sample);
-        var range = Range(history);
+        var range = averaged is null ? Range(history) : Range(averaged.Low, averaged.High);
         if (_trend is not null)
         {
             _trend.Stroke = color;
             _trend.Fill = Fill(color);
             // Scaled to its own lowest and highest, so small changes still show as a shape.
-            if (range is { } r)
+            if (Range(history) is { } r)
                 (_trend.Minimum, _trend.Maximum) = Scale(r.Min, r.Max);
             _trend.SetValues(history);
         }
@@ -117,6 +122,10 @@ public sealed class StatWidget : Widget
         var values = history.Where(v => !double.IsNaN(v)).ToList();
         return values.Count == 0 ? null : (values.Min(), values.Max());
     }
+
+    /// <summary>The lowest of <paramref name="lows"/> and the highest of <paramref name="highs"/>, ignoring gaps; null when there are none.</summary>
+    internal static (double Min, double Max)? Range(IEnumerable<double> lows, IEnumerable<double> highs) =>
+        Range(lows) is { } low && Range(highs) is { } high ? (low.Min, high.Max) : null;
 
     /// <summary>The trend line's scale: the range with a little room above and below, or around a flat value.</summary>
     internal static (double Min, double Max) Scale(double min, double max)
