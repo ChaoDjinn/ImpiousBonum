@@ -50,11 +50,10 @@
         <!-- Editing tools -->
         <Border DockPanel.Dock="Top" Padding="16,8" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}">
             <StackPanel Orientation="Horizontal">
-                <Button x:Name="AddButton" Click="OnAdd" ToolTip="Add a widget to the layout">
+                <Button x:Name="AddButton" Click="OnAdd" ToolTip="Pick a widget to add to the layout, from pictures of them all">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Style="{DynamicResource ButtonGlyph}" Text="&#xE710;" />
-                        <TextBlock Text="Add widget" />
-                        <TextBlock Style="{DynamicResource Glyph}" Text="&#xE70D;" FontSize="10" Margin="8,1,0,0" />
+                        <TextBlock Text="Add widget…" />
                     </StackPanel>
                 </Button>
                 <Border Style="{StaticResource ToolbarSeparator}" />
