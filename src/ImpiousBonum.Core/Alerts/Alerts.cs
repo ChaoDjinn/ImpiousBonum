@@ -55,7 +55,14 @@ public sealed record AlertRule(
         Has(Sound) ? "play a sound" : null,
         Has(Layout) ? $"switch to {Layout!.Trim()}" : null,
         Has(Command) ? $"run {Path.GetFileName(Command!.Trim())}" : null,
-        AlertWebhook.Address(Webhook) is { } address ? $"send to {address.Host}" : null,
+        AlertWebhook.Address(Webhook) is { } address
+            ? AlertWebhook.ChatOf(address) switch
+            {
+                ChatWebhook.Discord => "post to Discord",
+                ChatWebhook.Slack => "post to Slack",
+                _ => $"send to {address.Host}",
+            }
+            : null,
     }.OfType<string>().ToList();
 
     /// <summary>
@@ -102,21 +109,60 @@ public sealed record AlertRule(
     private static string Number(double value) => value.ToString("0.##", CultureInfo.CurrentCulture);
 }
 
+/// <summary>A chat service's incoming webhook, which takes a message in its own JSON rather than the alert's.</summary>
+public enum ChatWebhook
+{
+    None,
+
+    /// <summary>A Discord channel's webhook: <c>https://discord.com/api/webhooks/…</c>, from the channel's Integrations.</summary>
+    Discord,
+
+    /// <summary>A Slack incoming webhook: <c>https://hooks.slack.com/services/…</c>.</summary>
+    Slack,
+}
+
 /// <summary>
 /// The web request an alert sends: a POST of JSON (<c>{"alert": "gpu.hotspot above 95 for 10 s", "message": "…",
 /// "metric": "gpu.hotspot", "value": 97.2, "time": "2026-10-14T21:30:00Z"}</c>, for Home Assistant's webhooks and the
-/// like), or of just the text (for ntfy, which shows the body as the notification). <see cref="WebRequestSender"/>
-/// sends it.
+/// like), or of just the text (for ntfy, which shows the body as the notification). A Discord or Slack webhook gets the
+/// text as a chat message, in the JSON each wants, whichever is chosen. <see cref="WebRequestSender"/> sends it.
 /// </summary>
 public static class AlertWebhook
 {
     public static readonly TimeSpan Timeout = TimeSpan.FromSeconds(15);
 
+    /// <summary>The longest message Discord takes, in characters.</summary>
+    public const int DiscordLimit = 2000;
+
     /// <summary>The address, if it's an absolute http or https one.</summary>
     public static Uri? Address(string? webhook) => WebRequestSender.Address(webhook);
 
+    /// <summary>Which chat service's webhook <paramref name="address"/> is, by its host and path; <see cref="ChatWebhook.None"/> for any other address.</summary>
+    public static ChatWebhook ChatOf(Uri address) => address switch
+    {
+        { Host: "discord.com" or "discordapp.com" or "ptb.discord.com" or "canary.discord.com" } when address.AbsolutePath.StartsWith("/api/webhooks/", StringComparison.Ordinal)
+            => ChatWebhook.Discord,
+        { Host: "hooks.slack.com" } when address.AbsolutePath.StartsWith("/services/", StringComparison.Ordinal) => ChatWebhook.Slack,
+        _ => ChatWebhook.None,
+    };
+
     public static HttpContent Content(AlertRule rule, string text, MetricStore store, DateTimeOffset time)
     {
+        switch (Address(rule.Webhook) is { } address ? ChatOf(address) : ChatWebhook.None)
+        {
+            case ChatWebhook.Discord:
+                // From "Impious Bonum", cut to Discord's limit, and with no @everyone, @here or role pings, which a headline
+                // or an event's title in the message could otherwise set off.
+                return Json(new JsonObject
+                {
+                    ["content"] = text.Length > DiscordLimit ? string.Concat(text.AsSpan(0, DiscordLimit - 1), "…") : text,
+                    ["username"] = "Impious Bonum",
+                    ["allowed_mentions"] = new JsonObject { ["parse"] = new JsonArray() },
+                });
+            case ChatWebhook.Slack:
+                // Slack reads &, < and > as its own markup unless they're escaped.
+                return Json(new JsonObject { ["text"] = text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;") });
+        }
         if (rule.WebhookText)
             return new StringContent(text, Encoding.UTF8, "text/plain");
         var body = new JsonObject
@@ -127,8 +173,10 @@ public static class AlertWebhook
             ["value"] = store.TryGet(rule.Metric, out var sample) && sample.Value is { } value && double.IsFinite(value) ? value : null,
             ["time"] = time.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture),
         };
-        return new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json");
+        return Json(body);
     }
+
+    private static StringContent Json(JsonObject body) => new(body.ToJsonString(), Encoding.UTF8, "application/json");
 
     /// <summary>Sends it: null when it worked, or what went wrong.</summary>
     /// <param name="send">Sends the request; HTTP unless a test swaps it.</param>

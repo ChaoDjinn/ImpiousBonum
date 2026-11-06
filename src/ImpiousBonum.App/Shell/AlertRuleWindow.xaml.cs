@@ -128,7 +128,10 @@ public partial class AlertRuleWindow : Window
         SoundBox.IsEnabled = SoundBrowseButton.IsEnabled = PlayButton.IsEnabled = SoundCheck.IsChecked == true;
         LayoutBox.IsEnabled = LayoutCheck.IsChecked == true;
         CommandBox.IsEnabled = ArgumentsBox.IsEnabled = CommandBrowseButton.IsEnabled = CommandCheck.IsChecked == true;
-        WebhookBox.IsEnabled = WebhookTextCheck.IsEnabled = WebhookCheck.IsChecked == true;
+        WebhookBox.IsEnabled = WebhookCheck.IsChecked == true;
+        // A Discord or Slack webhook takes the message as a chat message, whichever way it's set.
+        WebhookTextCheck.IsEnabled = WebhookCheck.IsChecked == true
+            && (AlertWebhook.Address(WebhookBox.Text.Trim()) is not { } address || AlertWebhook.ChatOf(address) == ChatWebhook.None);
         var metric = MetricBox.Text.Trim();
         NowText.Text = metric.Length == 0 ? string.Empty
             : _store?.TryGet(metric, out var sample) == true ? $"{sample.Definition.Name}: now {MetricFormatter.Format(sample)}"
