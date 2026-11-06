@@ -682,6 +682,8 @@ The *Steam downloads* widget lists the games Steam is downloading, updating or i
 much is done of how much: *6.1 / 14.0 GB*. A paused download says so, and its bar is in the *Waiting colour*. The
 widget hides while there's nothing to download (and shows faded while you edit the layout).
 
+<p align="center"><img src="images/widgets/steam-downloads.png" width="600" alt="Two Steam downloads: Ember Hollow at 6.1 of 15.0 GB with an orange bar, 40.0 MB/s and 3 minutes left, and Tidewater queued at 2.1 GB; beside them, 41 %, 40.0 MB/s and 3m left"></p>
+
 It reads the manifest Steam keeps for each game in its library folders, so there's no account to link and Steam
 needn't even be open. Every 5 seconds it looks at when each manifest was last written and reads only the ones that
 changed, and for the games with something to download, it asks Steam's own entry in the registry whether Steam is
@@ -721,6 +723,8 @@ playing or whether they're around: *Sam · Hades*, *Priya · Online*, *Alex · A
 faded; *Show those away* off leaves them out, and *Only those playing* leaves out everyone not in a game. It hides
 while no friends are online. `game.achievements` is how many of the Steam game in front's achievements you've
 unlocked, such as *34 / 50*, and `game.achievements.percent` the same as a percentage, for a text widget or a gauge.
+
+<p align="center"><img src="images/widgets/steam-friends.png" width="600" alt="Three Steam friends online: Sam playing Ember Hollow, in orange, Priya online and Alex away, faded; beside them, the game in front, Starfall Odyssey, with 34 / 50 achievements and Steam · 41.5 h"></p>
 
 These come from Steam's Web API, which needs a key of your own:
 
@@ -918,6 +922,8 @@ The *Recent games* widget shows the games you've played lately, newest first, as
 *cover* or the wide *header*) or, for a game Steam has no pictures of, its icon with its name under it. Tap a tile to
 start the game through its launcher, as its desktop shortcut does: Steam and the Epic Games launcher start theirs
 (opening if they need to), and a GOG game's own exe is started. Turn *Tap to play* off for tiles that only show.
+
+<p align="center"><img src="images/widgets/recent-games.png" width="600" alt="Four recent games as tiles: Starfall Odyssey's cover, now and 42 h; Lumen Drift's icon, 1d 2h ago and 3 h; Ember Hollow's cover, 2d 3h ago and 120 h; and Tidewater's icon, 7d 2h ago and under an hour; under them, Last played: Starfall Odyssey"></p>
 
 Only installed games are listed, as they're the ones a tap can start. Where the dates come from:
 
