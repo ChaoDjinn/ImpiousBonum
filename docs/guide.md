@@ -260,7 +260,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `game.name`, `game.appid`, `game.store` | The game you're playing: its name in Steam, the Epic Games launcher or GOG Galaxy, or the name in its exe for a game linked under *Game layouts*; its Steam app id; and which of those launchers it's from (*Steam*, *Epic Games* or *GOG*). No reading while no game is in front (see [Game cover art](#game-cover-art)) |
 | `steam.downloads` (how many), `steam.download.game`, `steam.download.state`, `steam.download.progress`, `steam.download.done`, `steam.download.size`, `steam.download.speed`, `steam.download.left` | What Steam is downloading, updating or installing, from its own files, every 5 seconds. No reading while nothing is (see [Steam downloads](#steam-downloads)) |
 | `steam.friends.online`, `steam.friends.playing`, `steam.status`, `game.achievements` (e.g. *34 / 50*), `game.achievements.percent` | Your Steam friends online and how many are playing, how fetching them is going, and your achievements in the Steam game in front, from Steam's Web API once you've given your own key on the *Steam* page (see [Steam friends and achievements](#steam-friends-and-achievements)) |
-| `game.hours`, `games.last` | How many hours the game in front has been played (Steam's count for a Steam game, the app's own for an Epic Games or GOG game), and the name of the game played most recently (see [Recent games](#recent-games)) |
+| `game.hours`, `games.last` | How many hours the game in front has been played (Steam's count for a Steam game, plus the time it's been in front that Steam hasn't counted yet; the app's own for an Epic Games or GOG game), and the name of the game played most recently (see [Recent games](#recent-games)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
@@ -922,7 +922,9 @@ start the game through its launcher, as its desktop shortcut does: Steam and the
 Only installed games are listed, as they're the ones a tap can start. Where the dates come from:
 
 - **Steam** keeps when each game was last played and its hours altogether in its own files (`localconfig.vdf` in
-  your Steam folder's `userdata`), which the widget reads whenever Steam rewrites them, usually as a game closes.
+  your Steam folder's `userdata`), which the widget reads whenever Steam rewrites them. Steam adds a session to them
+  only as the game closes, so while a Steam game is in front the app adds the time it's there: its tile moves to the
+  front and its hours count up as you play, and once Steam has counted the session, Steam's count takes over.
 - **The Epic Games launcher and GOG** keep no such record on your PC, so the app keeps its own: when one of their
   games is in front, it counts the time and remembers it in `played.json` in the settings folder. So their games show
   once you've played them with Impious Bonum running, and their hours are the time it has seen.
