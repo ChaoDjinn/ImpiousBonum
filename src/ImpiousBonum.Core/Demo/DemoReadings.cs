@@ -298,9 +298,9 @@ public static class DemoReadings
         store.SetAttachment(Spectrum, spectrum);
 
         // A headset microphone, live, with Discord using it; the camera's off.
-        using var privacy = new PrivacyProvider(() => null, _ => null);
+        using var privacy = new PrivacyProvider(() => null, () => [], () => null);
         privacy.Publish(store, new MicrophoneState("Headset microphone", Muted: false),
-            [new ConsentEntry(@"C:#Users#Sam#AppData#Local#Discord#app-1.0.9260#Discord.exe", Packaged: false, Start: 2, Stop: 0)],
+            [new AppSound(1, "Discord", SoundFlow.In, Active: true, Peak: 0.004)],
             [new ConsentEntry("Microsoft.WindowsCamera_8wekyb3d8bbwe", Packaged: true, Start: 1, Stop: 2)]);
 
         // In a Discord call, with a friend talking and you listening.

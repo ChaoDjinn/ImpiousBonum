@@ -25,6 +25,13 @@ public readonly record struct ConsentEntry(string Key, bool Packaged, long Start
 /// permission and isn't using either, so it never lights those icons. The record keeps every app that ever used one
 /// (well over a hundred keys on a PC that's had Discord a while: a new key for each version), so it's read again only
 /// after Windows changes it, which a change notification on the key says. Not thread-safe: use one reader from one loop.
+/// <para>
+/// Newer builds of Windows 11 have stopped keeping it: on Insider build 26300 nothing was written after early October
+/// 2026, as Windows moved the record to a database only administrators can read (where
+/// HKLM\…\CapabilityAccessManager\CapabilityUsageHistory's DatabaseRoot points). There, the registry's copy is
+/// frozen, and an app reads as not using it. The microphone is read from its sound streams instead, which every build
+/// has (see <see cref="AudioSessionReader"/>); the camera has nothing like them, so it's still read from here.
+/// </para>
 /// </summary>
 internal sealed partial class ConsentStoreReader : IDisposable
 {

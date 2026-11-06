@@ -17,11 +17,11 @@ public enum SoundFlow
 public sealed record AppSound(int ProcessId, string App, SoundFlow Flow, bool Active, double Peak);
 
 /// <summary>
-/// The sound streams of some apps, by program name, from Core Audio's sessions on every audio device that's on, and the
-/// meter Windows keeps on each (the green bar in the Volume mixer). Reading a meter opens nothing: an app's microphone
-/// stream is metered only while the app itself has it open, and Windows doesn't count the app reading it as using the
-/// microphone. The streams are looked for again only when asked, as finding them means asking every device; their meters
-/// are cheap to read. Not thread-safe: use one reader from one loop.
+/// The sound streams of some apps (by program name) or of all of them, from Core Audio's sessions on every audio device
+/// that's on, and the meter Windows keeps on each (the green bar in the Volume mixer). Reading a meter opens nothing: an
+/// app's microphone stream is metered only while the app itself has it open, and Windows doesn't count the app reading it
+/// as using the microphone. The streams are looked for again only when asked, as finding them means asking every device;
+/// their meters are cheap to read. Not thread-safe: use one reader from one loop.
 /// </summary>
 internal sealed class AudioSessionReader : IDisposable
 {
@@ -36,15 +36,16 @@ internal sealed class AudioSessionReader : IDisposable
     private IDeviceEnumerator? _enumerator;
 
     /// <summary>
-    /// The streams of the apps named in <paramref name="apps"/> (program names without .exe, ignoring case), looked for
-    /// again first with <paramref name="lookAgain"/>. None when the audio service isn't running.
+    /// The streams of the apps named in <paramref name="apps"/> (program names without .exe, ignoring case), or of every
+    /// app when it's null, looked for again first with <paramref name="lookAgain"/>: on every device, or only on those
+    /// one way (<paramref name="flow"/>). None when the audio service isn't running.
     /// </summary>
-    public IReadOnlyList<AppSound> Read(IReadOnlySet<string> apps, bool lookAgain)
+    public IReadOnlyList<AppSound> Read(IReadOnlySet<string>? apps, bool lookAgain, SoundFlow? flow = null)
     {
         try
         {
             if (lookAgain)
-                Find(apps);
+                Find(apps, flow);
             var sounds = new List<AppSound>(_sessions.Count);
             foreach (var session in _sessions)
             {
@@ -62,12 +63,14 @@ internal sealed class AudioSessionReader : IDisposable
         }
     }
 
-    private void Find(IReadOnlySet<string> apps)
+    private void Find(IReadOnlySet<string>? apps, SoundFlow? only)
     {
         ReleaseSessions();
         _enumerator ??= (IDeviceEnumerator)new Microphone.MMDeviceEnumerator();
         foreach (var (flow, dataFlow) in new[] { (SoundFlow.Out, Render), (SoundFlow.In, Capture) })
         {
+            if (only is { } wanted && flow != wanted)
+                continue;
             if (_enumerator.EnumAudioEndpoints(dataFlow, ActiveDevices, out var devices) < 0 || devices is null)
                 continue;
             try
@@ -99,7 +102,7 @@ internal sealed class AudioSessionReader : IDisposable
             _names.Remove(gone);
     }
 
-    private void FindOn(Microphone.IMMDevice device, SoundFlow flow, IReadOnlySet<string> apps)
+    private void FindOn(Microphone.IMMDevice device, SoundFlow flow, IReadOnlySet<string>? apps)
     {
         var iid = typeof(IAudioSessionManager2).GUID;
         if (device.Activate(ref iid, ClsctxAll, 0, out var activated) < 0 || activated is not IAudioSessionManager2 manager)
@@ -116,7 +119,7 @@ internal sealed class AudioSessionReader : IDisposable
                 {
                     if (enumerator.GetSession(i, out var found) < 0 || found is not IAudioSessionControl2 control)
                         continue;
-                    if (control.GetProcessId(out var processId) >= 0 && processId != 0 && NameOf(processId) is { } app && apps.Contains(app)
+                    if (control.GetProcessId(out var processId) >= 0 && processId != 0 && NameOf(processId) is { } app && (apps is null || apps.Contains(app))
                         && control is IAudioMeterInformation meter)
                     {
                         _sessions.Add(new Session(control, meter, processId, app, flow));

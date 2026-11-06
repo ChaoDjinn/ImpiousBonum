@@ -34,8 +34,19 @@ public sealed class PrivacyProviderTests
     public void Apps_have_readable_names(string key, bool packaged, string expected) =>
         Assert.Equal(expected, PrivacyProvider.AppName(new ConsentEntry(key, packaged, 1, 0)));
 
+    /// <summary>A sound stream's app is its process's program name, which has no .exe.</summary>
+    [Theory]
+    [InlineData("Discord", "Discord")]
+    [InlineData("obs64", "OBS")]
+    [InlineData("chrome", "Chrome")]
+    [InlineData("SteelSeriesSonar", "SteelSeriesSonar")]
+    [InlineData("ProjectZomboid64", "ProjectZomboid")]
+    [InlineData("vlc", "VLC")]
+    public void Programs_have_readable_names(string program, string expected) =>
+        Assert.Equal(expected, PrivacyProvider.ProgramName(program));
+
     [Fact]
-    public void The_apps_using_it_are_listed_once_each_in_order()
+    public void The_apps_using_the_camera_are_listed_once_each_in_order()
     {
         IReadOnlyList<ConsentEntry> entries =
         [
@@ -52,20 +63,41 @@ public sealed class PrivacyProviderTests
     }
 
     [Fact]
-    public async Task Metrics_appear_once_there_is_a_microphone_or_a_history()
+    public void The_apps_using_the_microphone_are_those_recording_now()
+    {
+        IReadOnlyList<AppSound> sounds =
+        [
+            Recording(40, "obs64"),
+            // Discord records on two microphones (one a router's, like Sonar's), and plays its sound out: it's listed once.
+            Recording(12, "Discord"),
+            Recording(12, "Discord"),
+            new(12, "Discord", SoundFlow.Out, true, 0.3),
+            Recording(33, "SteelSeriesSonar"),
+            // Open, but stopped: Windows doesn't count it as using the microphone, nor light its icon for it.
+            Recording(50, "chrome", active: false),
+            // Playing sound only.
+            new(60, "Spotify", SoundFlow.Out, true, 0.5),
+        ];
+        Assert.Equal("Discord, OBS, SteelSeriesSonar", PrivacyProvider.AppsRecording(sounds));
+        Assert.Null(PrivacyProvider.AppsRecording([Recording(50, "chrome", active: false), new(60, "Spotify", SoundFlow.Out, true, 0.5)]));
+        Assert.Null(PrivacyProvider.AppsRecording([]));
+    }
+
+    [Fact]
+    public async Task Metrics_appear_once_there_is_a_microphone_or_a_camera_has_been_used()
     {
         MicrophoneState? mic = null;
-        IReadOnlyList<ConsentEntry>? micApps = null, cameraApps = null;
-        using var provider = new PrivacyProvider(() => mic, key => key == PrivacyProvider.MicrophoneKey ? micApps : cameraApps);
+        IReadOnlyList<AppSound> recording = [];
+        IReadOnlyList<ConsentEntry>? cameraApps = null;
+        using var provider = new PrivacyProvider(() => mic, () => recording, () => cameraApps);
         var store = new MetricStore();
         provider.Initialize(store);
 
-        // No microphone, and no keys: nothing to show.
+        // No microphone, no streams and no keys: nothing to show.
         await provider.SampleAsync(store, CancellationToken.None);
         Assert.Empty(store.Definitions);
 
-        // Apps allowed to use them, but none ever has.
-        micApps = [new(Camera, true, 0, 0)];
+        // Apps allowed to use the camera, but none ever has.
         cameraApps = [new(Camera, true, 0, 0)];
         await provider.SampleAsync(store, CancellationToken.None);
         Assert.Empty(store.Definitions);
@@ -80,7 +112,7 @@ public sealed class PrivacyProviderTests
         Assert.False(store.TryGet(PrivacyProvider.CameraInUse, out _));
 
         mic = mic with { Muted = true };
-        micApps = [new(Discord, false, 400, 0), new(Obs, false, 200, 300)];
+        recording = [Recording(12, "Discord"), Recording(40, "obs64", active: false)];
         cameraApps = [new(Camera, true, 100, 200)];
         await provider.SampleAsync(store, CancellationToken.None);
         Assert.Equal(1, Value(store, PrivacyProvider.MicMuted));
@@ -94,9 +126,16 @@ public sealed class PrivacyProviderTests
         Assert.Equal(1, Value(store, PrivacyProvider.CameraInUse));
         Assert.Equal("WindowsCamera", Text(store, PrivacyProvider.CameraApps));
 
+        // Discord leaves the call: its stream stops, though it's still open.
+        recording = [Recording(12, "Discord", active: false)];
+        await provider.SampleAsync(store, CancellationToken.None);
+        Assert.Equal(0, Value(store, PrivacyProvider.MicInUse));
+        Assert.Null(Text(store, PrivacyProvider.MicApps));
+
         // The microphone unplugged, and the keys gone: the metrics stay, with no mute or name and nothing in use.
         mic = null;
-        micApps = cameraApps = null;
+        recording = [];
+        cameraApps = null;
         await provider.SampleAsync(store, CancellationToken.None);
         Assert.Null(Value(store, PrivacyProvider.MicMuted));
         Assert.Null(Text(store, PrivacyProvider.MicName));
@@ -105,13 +144,14 @@ public sealed class PrivacyProviderTests
     }
 
     [Fact]
-    public async Task A_history_without_a_microphone_still_shows_the_apps()
+    public async Task An_app_recording_without_a_default_microphone_still_shows()
     {
-        using var provider = new PrivacyProvider(() => null, key => key == PrivacyProvider.MicrophoneKey ? [new(Discord, false, 400, 0)] : null);
+        using var provider = new PrivacyProvider(() => null, () => [Recording(12, "Discord")], () => null);
         var store = new MetricStore();
         await provider.SampleAsync(store, CancellationToken.None);
 
         Assert.Null(Value(store, PrivacyProvider.MicMuted));
+        Assert.Equal(1, Value(store, PrivacyProvider.MicInUse));
         Assert.Equal("Discord", Text(store, PrivacyProvider.MicApps));
         Assert.False(store.TryGet(PrivacyProvider.CameraInUse, out _));
     }
@@ -121,7 +161,7 @@ public sealed class PrivacyProviderTests
     public void Records_are_read_from_the_registry_and_again_after_they_change()
     {
         var root = $@"Software\ImpiousBonum.Tests.{Guid.NewGuid():N}";
-        var path = $@"{root}\microphone";
+        var path = $@"{root}\webcam";
         using var reader = new ConsentStoreReader(path);
         try
         {
@@ -175,7 +215,8 @@ public sealed class PrivacyProviderTests
         }
     }
 
-    // These read the real microphone and records, so they only check anything on a PC with them (CI has neither).
+    // These read the real microphone, sound streams and records, so they only check anything on a PC with them (CI
+    // has none).
     [Fact]
     public async Task Reading_this_pc_gives_sensible_values()
     {
@@ -188,8 +229,30 @@ public sealed class PrivacyProviderTests
         if (store.TryGet(PrivacyProvider.MicMuted, out var muted) && muted.Value is { } value)
             Assert.Contains(value, new double[] { 0, 1 });
         if (store.TryGet(PrivacyProvider.MicInUse, out var inUse))
+        {
             Assert.Contains(inUse.Value, new double?[] { 0, 1 });
+            Assert.Equal(inUse.Value == 1, store.TryGet(PrivacyProvider.MicApps, out var apps) && apps.Text is { Length: > 0 });
+        }
     }
+
+    [Fact]
+    public void Every_apps_recording_streams_are_found_and_nothing_else()
+    {
+        using var reader = new AudioSessionReader();
+        var sounds = reader.Read(null, lookAgain: true, SoundFlow.In);
+
+        Assert.All(sounds, s =>
+        {
+            Assert.Equal(SoundFlow.In, s.Flow);
+            Assert.NotEqual(0, s.ProcessId);
+            Assert.False(string.IsNullOrEmpty(s.App));
+            Assert.InRange(s.Peak, 0, 1);
+        });
+        // Read again without looking, the same streams.
+        Assert.Equal(sounds.Select(s => (s.ProcessId, s.App)), reader.Read(null, lookAgain: false, SoundFlow.In).Select(s => (s.ProcessId, s.App)));
+    }
+
+    private static AppSound Recording(int processId, string app, bool active = true) => new(processId, app, SoundFlow.In, active, active ? 0.05 : 0);
 
     private static double? Value(MetricStore store, string id) => store.TryGet(id, out var sample) ? sample.Value : null;
 
