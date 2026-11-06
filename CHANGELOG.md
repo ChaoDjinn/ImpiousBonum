@@ -3,7 +3,9 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
-## Unreleased
+## 0.18.0
+
+Epic Games and GOG games count as games, and three new widgets for gamers: what Steam is downloading, the games you've played lately, and your Steam friends online with your achievements.
 
 - Games from the Epic Games launcher and GOG Galaxy count as games without linking them, like Steam's: the app knows them by the folders their launchers installed them in, from the launchers' own records on your PC, with no account and nothing fetched. They get their launcher's name in `game.name`, their icon in an *Image* widget showing the game, and a new reading, `game.store`, says which launcher a game is from (*Steam*, *Epic Games* or *GOG*). Add-ons, Unreal Engine and installs that haven't finished are left out.
 - A new *Steam downloads* widget lists the games Steam is downloading, updating or installing, each with a bar and how much is done of how much, and hides while there's nothing to download. Readings for the download going now (`steam.download.game`, `steam.download.state`, `steam.download.progress` and more) work in any widget. It's all read from Steam's own files on your PC, so it needs no account and Steam needn't be open. Steam writes how far a download has got only when it starts, pauses or resumes, so one that has been going a while shows its size until Steam next does, rather than figures that have fallen behind; pause it in Steam to see how far it has got.
