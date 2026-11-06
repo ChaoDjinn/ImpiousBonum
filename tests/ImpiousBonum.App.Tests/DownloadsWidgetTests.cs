@@ -160,5 +160,11 @@ public sealed class DownloadsWidgetTests
         public string? EpicDataPath() => null;
 
         public IReadOnlyList<RegistryEntry> LocalMachineEntries(string path) => [];
+
+        public DateTime? GalaxyWritten() => null;
+
+        public IReadOnlyDictionary<string, GalaxyGame>? GalaxyGames(IReadOnlyCollection<string> keys) => new Dictionary<string, GalaxyGame>();
+
+        public string? GalaxyClient() => null;
     }
 }

@@ -27,8 +27,8 @@ public sealed class SteamFriendsProvider(
     public const string Online = "steam.friends.online";
     public const string Playing = "steam.friends.playing";
     public const string Status = "steam.status";
-    public const string Achievements = "game.achievements";
-    public const string AchievementsPercent = "game.achievements.percent";
+    public const string Achievements = GameAchievements.Text;
+    public const string AchievementsPercent = GameAchievements.Percent;
 
     public static readonly TimeSpan FriendsEvery = TimeSpan.FromMinutes(1);
     public static readonly TimeSpan FriendListEvery = TimeSpan.FromMinutes(10);
@@ -50,6 +50,7 @@ public sealed class SteamFriendsProvider(
     private AchievementCount? _achievements;
     private string? _achievementsProblem;
     private DateTimeOffset _achievementsAt;
+    private bool _achievementsShown;
     private string? _problem;
     private DateTimeOffset _nextTry;
 
@@ -60,8 +61,7 @@ public sealed class SteamFriendsProvider(
         store.Register(new MetricDefinition(Online, "Steam: friends online", "Steam", MetricUnit.None, Format: "0"));
         store.Register(new MetricDefinition(Playing, "Steam: friends playing a game", "Steam", MetricUnit.None, Format: "0"));
         store.Register(new MetricDefinition(Status, "Steam: how fetching your friends and achievements is going", "Steam", MetricUnit.Text));
-        store.Register(new MetricDefinition(Achievements, "Game: achievements unlocked, e.g. 34 / 50", "Game", MetricUnit.Text));
-        store.Register(new MetricDefinition(AchievementsPercent, "Game: achievements unlocked", "Game", MetricUnit.Percent, 100, "0"));
+        GameAchievements.Register(store);
     }
 
     public async ValueTask SampleAsync(MetricStore store, CancellationToken cancellationToken)
@@ -81,15 +81,19 @@ public sealed class SteamFriendsProvider(
             _nextTry = DateTimeOffset.MinValue;
             ForgetAchievements(_app);
         }
+        // Achievements are Steam's to write only while a Steam game is in front, and to clear once when it goes: another
+        // launcher's game has its own (see GameAchievements).
+        var app = (store.GetAttachment(GameArtProvider.Current) as Game)?.AppId;
+        var achievementsToo = app is not null || _achievementsShown;
+        _achievementsShown = app is not null;
         if (wanted is null)
         {
-            Publish(store, null, null, null);
+            Publish(store, null, null, null, achievementsToo);
             return;
         }
 
         var now = _time.GetUtcNow();
         // Another game in front, or none: its achievements are wanted now, and the last game's are gone.
-        var app = (store.GetAttachment(GameArtProvider.Current) as Game)?.AppId;
         if (app != _app)
             ForgetAchievements(app);
 
@@ -130,7 +134,7 @@ public sealed class SteamFriendsProvider(
                 _nextTry = now + RetryAfter;
             }
         }
-        Publish(store, _friends, _achievements, StatusText());
+        Publish(store, _friends, _achievements, StatusText(), achievementsToo);
     }
 
     /// <summary>Lets the achievements go, so <paramref name="app"/>'s are fetched afresh.</summary>
@@ -142,15 +146,18 @@ public sealed class SteamFriendsProvider(
         _achievementsAt = DateTimeOffset.MinValue;
     }
 
-    /// <summary>Writes the friends, the counts, the achievements and the status, or clears them all with nulls.</summary>
-    public static void Publish(MetricStore store, IReadOnlyList<SteamFriend>? friends, AchievementCount? achievements, string? status)
+    /// <summary>
+    /// Writes the friends, the counts, the status and, with <paramref name="achievementsToo"/>, the achievements, or
+    /// clears them with nulls. Without it the achievements are left as they are, for another launcher's game.
+    /// </summary>
+    public static void Publish(MetricStore store, IReadOnlyList<SteamFriend>? friends, AchievementCount? achievements, string? status, bool achievementsToo = true)
     {
         store.SetAttachment(Friends, friends is { Count: > 0 } ? friends : null);
         store.Set(Online, friends?.Count);
         store.Set(Playing, friends?.Count(f => f.Game is not null));
         store.SetText(Status, status);
-        store.SetText(Achievements, achievements is null ? null : string.Create(CultureInfo.CurrentCulture, $"{achievements.Unlocked} / {achievements.Total}"));
-        store.Set(AchievementsPercent, achievements?.Percent);
+        if (achievementsToo)
+            GameAchievements.Publish(store, achievements);
     }
 
     /// <summary>"3 friends online, 1 playing", or what's wrong.</summary>

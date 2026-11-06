@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries), [Steam downloads](#steam-downloads), [Steam friends and achievements](#steam-friends-and-achievements)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [device batteries](#device-batteries), [Steam downloads](#steam-downloads), [Steam friends and achievements](#steam-friends-and-achievements), [GOG Galaxy](#gog-galaxy)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [recent games](#recent-games), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
@@ -260,7 +260,7 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `game.name`, `game.appid`, `game.store` | The game you're playing: its name in Steam, the Epic Games launcher or GOG Galaxy, or the name in its exe for a game linked under *Game layouts*; its Steam app id; and which of those launchers it's from (*Steam*, *Epic Games* or *GOG*). No reading while no game is in front (see [Game cover art](#game-cover-art)) |
 | `steam.downloads` (how many), `steam.download.game`, `steam.download.state`, `steam.download.progress`, `steam.download.done`, `steam.download.size`, `steam.download.speed`, `steam.download.left` | What Steam is downloading, updating or installing, from its own files, every 5 seconds. No reading while nothing is (see [Steam downloads](#steam-downloads)) |
 | `steam.friends.online`, `steam.friends.playing`, `steam.status`, `game.achievements` (e.g. *34 / 50*), `game.achievements.percent` | Your Steam friends online and how many are playing, how fetching them is going, and your achievements in the Steam game in front, from Steam's Web API once you've given your own key on the *Steam* page (see [Steam friends and achievements](#steam-friends-and-achievements)) |
-| `game.hours`, `games.last` | How many hours the game in front has been played (Steam's count for a Steam game, plus the time it's been in front that Steam hasn't counted yet; the app's own for an Epic Games or GOG game), and the name of the game played most recently (see [Recent games](#recent-games)) |
+| `game.hours`, `games.last` | How many hours the game in front has been played (Steam's count for a Steam game, plus the time it's been in front that Steam hasn't counted yet; for an Epic Games or GOG game, [GOG Galaxy](#gog-galaxy)'s count where there is one, else the app's own, with its time on top), and the name of the game played most recently (see [Recent games](#recent-games)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
@@ -723,6 +723,7 @@ playing or whether they're around: *Sam · Hades*, *Priya · Online*, *Alex · A
 faded; *Show those away* off leaves them out, and *Only those playing* leaves out everyone not in a game. It hides
 while no friends are online. `game.achievements` is how many of the Steam game in front's achievements you've
 unlocked, such as *34 / 50*, and `game.achievements.percent` the same as a percentage, for a text widget or a gauge.
+A GOG game's come from [GOG Galaxy](#gog-galaxy), with no key.
 
 <p align="center"><img src="images/widgets/steam-friends.png" width="600" alt="Three Steam friends online: Sam playing Ember Hollow, in orange, Priya online and Alex away, faded; beside them, the game in front, Starfall Odyssey, with 34 / 50 achievements and Steam · 41.5 h"></p>
 
@@ -744,7 +745,29 @@ Nothing is fetched from Steam without a key, and *Steam downloads* and *Recent g
 |---|---|
 | `steam.friends.online`, `steam.friends.playing` | How many friends are online, and how many of them are playing a game |
 | `steam.status` | How it's going, e.g. *3 friends online, 1 playing.*, or what to do: a key Steam didn't accept, a private friends list |
-| `game.achievements`, `game.achievements.percent` | The Steam game in front's achievements you've unlocked, e.g. *34 / 50* and *68 %*. No reading for a game without achievements |
+| `game.achievements`, `game.achievements.percent` | The Steam game in front's achievements you've unlocked, e.g. *34 / 50* and *68 %*, or a GOG game's from [GOG Galaxy](#gog-galaxy). No reading for a game without achievements |
+
+### GOG Galaxy
+
+With GOG Galaxy installed, the app reads what Galaxy keeps on your PC about your GOG and Epic Games games: its
+database (`C:\ProgramData\GOG.com\Galaxy\storage\galaxy-2.0.db`) and its cache of pictures, read-only, with no
+account to link and nothing fetched.
+
+- **Hours and when last played**, for [Recent games](#recent-games) and `game.hours`: Galaxy's count of a GOG game's
+  time and when it was last played, and the Epic Games launcher's count of an Epic game's time if you've connected
+  Epic in Galaxy (*Settings → Integrations*). The time the app sees a game in front that Galaxy hasn't counted yet
+  goes on top, and comes off again once Galaxy adds the session, so none counts twice. Time in a GOG game started
+  from its own exe, without Galaxy, counts only in the app's own record (`played.json`).
+- **Achievements** of a GOG game: `game.achievements` (*25 / 57*) and `game.achievements.percent`, as Galaxy last
+  synced them, with no key. A Steam game's come from [Steam's Web API](#steam-friends-and-achievements).
+- **Covers** of Epic Games and GOG games, as Galaxy has cached them, for Recent games' tiles and an
+  [Image widget](#game-cover-art) showing the game, rather than their icons.
+- **Starting games**: a tap on a GOG game's tile starts it through Galaxy, as Galaxy's own shortcuts do, so Galaxy
+  counts the time and syncs its saves. A game Galaxy didn't install starts by its own exe.
+
+Galaxy's database is read when it changes, at most once a minute, and only for the games installed here. Galaxy
+doesn't document it, so an update to Galaxy could change it: anything the app can't read counts as not known, and its
+own record carries on.
 
 ## Widgets in depth
 
@@ -904,7 +927,7 @@ An *Image* widget can show the game you're playing: set *Show* to `game`. For a 
 | `header` | The wide banner from the game's store page |
 | `hero` | The big picture across the top of the game's page in Steam's library |
 
-The pictures come from Steam's own cache on your PC, so nothing is downloaded; Steam keeps them for each game that has shown in your library. If it hasn't the one you chose, the widget shows another it has. A game Steam didn't install, or hasn't pictures of yet, shows its own icon, whole and in the middle. Games from the Epic Games launcher and GOG Galaxy show their icon too: the app reads only Steam's pictures.
+The pictures come from Steam's own cache on your PC, so nothing is downloaded; Steam keeps them for each game that has shown in your library. If it hasn't the one you chose, the widget shows another it has. A game Steam didn't install, or hasn't pictures of yet, shows its own icon, whole and in the middle. Games from the Epic Games launcher and GOG show the cover [GOG Galaxy](#gog-galaxy) has cached, if it's installed, with Galaxy's background picture as the *header* and *hero*; otherwise their icon.
 
 A game is the app in front, as for the FPS reading and [game layouts](#game-layouts), when Steam, the Epic Games launcher or GOG Galaxy installed it, or when it's linked to a layout or theme on the *Game layouts* page. The app knows a launcher's games by the folders the launcher installed them in, from the launcher's own records on your PC (Steam's library files, Epic's manifests, GOG's registry entries), so no account is needed and nothing is fetched. For a game from anywhere else, link it to get its icon. The picture stays for a few seconds when you alt-tab away, and goes once no game is in front, leaving the widget empty; turn on *Hide when there's no game* to hide it instead (it shows faded while you edit the layout). The *Gaming HUD* in the [gallery](#layout-gallery) has the game's banner beside the session so far.
 
@@ -919,9 +942,10 @@ It costs next to nothing: the game is looked up only when a different app comes 
 ### Recent games
 
 The *Recent games* widget shows the games you've played lately, newest first, as tiles of Steam's art (the tall
-*cover* or the wide *header*) or, for a game Steam has no pictures of, its icon with its name under it. Tap a tile to
-start the game through its launcher, as its desktop shortcut does: Steam and the Epic Games launcher start theirs
-(opening if they need to), and a GOG game's own exe is started. Turn *Tap to play* off for tiles that only show.
+*cover* or the wide *header*), [GOG Galaxy](#gog-galaxy)'s cover of an Epic Games or GOG game, or else the game's icon
+with its name under it. Tap a tile to start the game through its launcher, as its desktop shortcut does: Steam and the
+Epic Games launcher start theirs (opening if they need to), and a GOG game starts through GOG Galaxy if Galaxy
+installed it, or else by its own exe. Turn *Tap to play* off for tiles that only show.
 
 <p align="center"><img src="images/widgets/recent-games.png" width="600" alt="Four recent games as tiles: Starfall Odyssey's cover, now and 42 h; Lumen Drift's icon, 1d 2h ago and 3 h; Ember Hollow's cover, 2d 3h ago and 120 h; and Tidewater's icon, 7d 2h ago and under an hour; under them, Last played: Starfall Odyssey"></p>
 
@@ -931,9 +955,11 @@ Only installed games are listed, as they're the ones a tap can start. Where the 
   your Steam folder's `userdata`), which the widget reads whenever Steam rewrites them. Steam adds a session to them
   only as the game closes, so while a Steam game is in front the app adds the time it's there: its tile moves to the
   front and its hours count up as you play, and once Steam has counted the session, Steam's count takes over.
-- **The Epic Games launcher and GOG** keep no such record on your PC, so the app keeps its own: when one of their
-  games is in front, it counts the time and remembers it in `played.json` in the settings folder. So their games show
-  once you've played them with Impious Bonum running, and their hours are the time it has seen.
+- **The Epic Games launcher and GOG** keep no such record of their own on your PC, so the app keeps one: when one of
+  their games is in front, it counts the time and remembers it in `played.json` in the settings folder. With
+  [GOG Galaxy](#gog-galaxy) installed, Galaxy's record comes first: when GOG games were last played and their hours,
+  and Epic's hours for Epic games, with the app's own time on top. Without Galaxy, their games show once you've played
+  them with Impious Bonum running, and their hours are the time it has seen.
 
 *Games* sets how many tiles there are (up to 8) and *Rows* how many rows they're spread over; the tiles stay the same
 size however many games there are, so a new one doesn't rearrange the others. *Launchers* picks Steam's, Epic's or

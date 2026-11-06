@@ -558,15 +558,15 @@ Each entry in `buttons`:
 
 ## Recent games (`games`)
 
-The games you've played lately, newest first, as Steam's art or the game's icon. Tap one to start it through its launcher. Games from Steam, the Epic Games launcher and GOG, read from their own records on this PC.
+The games you've played lately, newest first, as Steam's or GOG Galaxy's art or the game's icon. Tap one to start it through its launcher. Games from Steam, the Epic Games launcher and GOG, read from their own records on this PC and GOG Galaxy's.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `count` | number (1–8) | `4` | Games |
 | `rows` | number (1–4) | `1` | Rows. The games are spread over this many rows, newest first along each. |
-| `art` | `cover` / `header` | `cover` | Picture. For a Steam game: cover is the tall box art, header the wide banner. Other games show their icon. |
+| `art` | `cover` / `header` | `cover` | Picture. For a Steam game: cover is the tall box art, header the wide banner. An Epic Games or GOG game with GOG Galaxy installed has Galaxy's cover, and its background for header. Other games show their icon. |
 | `launchers` | `all`, or some of `steam` / `epic` / `gog` in order, separated by commas | `all` | Launchers. Games from all of them, or just the ones chosen: steam, epic (the Epic Games launcher) or gog. |
-| `launch` | true/false | `true` | Tap to play. A tap starts the game through its launcher, as its desktop shortcut does. A GOG game's exe is started itself. |
+| `launch` | true/false | `true` | Tap to play. A tap starts the game through its launcher, as its desktop shortcut does: a GOG game through GOG Galaxy if Galaxy installed it, else by its own exe. |
 | `fontSize` | number (6–200) | `18` | Font size |
 | `showNames` | true/false | `false` | Show names. Each game's name under its picture. A game with only its icon always shows its name. |
 | `showPlayed` | true/false | `false` | Show when played. How long ago it was played, and the hours altogether where known, e.g. 2d 3h ago · 41 h. |
@@ -695,9 +695,9 @@ A logo, artwork or a photo from a file, packed into exported layouts so it trave
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `source` | `file` / `game` | `file` | Show. file shows the picture below. game shows the game you're playing: Steam's art for it, or its icon. |
+| `source` | `file` / `game` | `file` | Show. file shows the picture below. game shows the game you're playing: Steam's art for it, GOG Galaxy's for an Epic Games or GOG game, or its icon. |
 | `file` | imagefile | — | Picture. A PNG, JPG, GIF, BMP or TIFF file. |
-| `art` | `cover` / `header` / `hero` | `cover` | Game picture. For a Steam game: cover is the tall box art, header the wide banner, hero the big picture from its library page. Other games show their icon. |
+| `art` | `cover` / `header` / `hero` | `cover` | Game picture. For a Steam game: cover is the tall box art, header the wide banner, hero the big picture from its library page. An Epic Games or GOG game with GOG Galaxy installed has Galaxy's cover, and its background for header and hero. Other games show their icon. |
 | `hideNoGame` | true/false | `false` | Hide when there's no game. Otherwise it's empty while no game is in front. It shows faded while you edit the layout. |
 | `fit` | `fill` / `fit` / `stretch` / `center` / `tile` | `fit` | Fit. fill covers the box (cropping), fit shows it all, stretch distorts to fit, center and tile keep its size. |
 | `opacity` | number (0–1) | `1` | Opacity |

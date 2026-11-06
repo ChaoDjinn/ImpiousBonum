@@ -269,6 +269,30 @@ public sealed class GameArtTests
     }
 
     [Fact]
+    public void An_epic_or_gog_game_galaxy_has_pictures_of_has_its_cover_and_background_rather_than_its_icon()
+    {
+        const string Fortnite = @"C:\Program Files\Epic Games\Fortnite\FortniteGame\Binaries\Win64\FortniteClient-Win64-Shipping.exe";
+        const string Unreal = @"C:\GOG Games\Unreal Gold\System\Unreal.exe";
+        var files = TwoLibraries();
+        files.Epic = EpicData;
+        files.Texts[$@"{EpicData}\Manifests\F.item"] = EpicManifest("Fortnite", "Fortnite", @"C:\Program Files\Epic Games\Fortnite");
+        files.Gog.Add(Gog("1207658924", new() { ["gameName"] = "Unreal Gold", ["path"] = @"C:\GOG Games\Unreal Gold" }));
+        files.Icons[Fortnite] = IconPng;
+        files.Icons[Unreal] = IconPng;
+        var cover = Path.Combine(GogGalaxy.DataFolder, "webcache", "1", "epic", "Fortnite", "cover.webp");
+        var background = Path.Combine(GogGalaxy.DataFolder, "webcache", "1", "epic", "Fortnite", "background.webp");
+        files.Pictures[cover] = CoverJpeg;
+        files.Pictures[background] = HeroJpeg;
+        files.Galaxy = new() { ["epic_Fortnite"] = new GalaxyGame(7222, null, null, false) { Cover = cover, Background = background } };
+        var finder = new GameFinder(files);
+
+        // The background serves for the wide pictures, as Galaxy has no banner.
+        Assert.Equal(new GameArt(CoverJpeg, HeroJpeg, HeroJpeg, null), finder.Find(Fortnite, anyApp: false)!.Art);
+        // A game Galaxy has no pictures of keeps its icon.
+        Assert.Equal(new GameArt(null, null, null, IconPng), finder.Find(Unreal, anyApp: false)!.Art);
+    }
+
+    [Fact]
     public void Pictures_are_found_in_older_steam_s_flat_cache()
     {
         var files = TwoLibraries();

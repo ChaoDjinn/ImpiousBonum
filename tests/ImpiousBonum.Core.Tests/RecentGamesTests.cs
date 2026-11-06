@@ -161,6 +161,91 @@ public sealed class RecentGamesTests
     }
 
     [Fact]
+    public async Task Gog_galaxy_s_record_comes_first_for_epic_and_gog_games_with_the_time_the_app_sees_on_top()
+    {
+        var played = TempFile();
+        try
+        {
+            PlayedGames.Write(played, new Dictionary<string, PlayedGame> { ["epic:Fortnite"] = new(Now.AddHours(-1), 3) });
+            var files = Library();
+            files.Gog.Add(new RegistryEntry("1423049311", new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["gameID"] = "1423049311",
+                ["gameName"] = "Cyberpunk 2077",
+                ["path"] = @"D:\GOG\Cyberpunk 2077",
+                ["exe"] = @"D:\GOG\Cyberpunk 2077\REDprelauncher.exe",
+            }));
+            byte[] gogCover = [0x52, 0x49, 0x46, 0x46, 1];
+            byte[] epicCover = [0x52, 0x49, 0x46, 0x46, 2];
+            var cyberpunkCover = Path.Combine(GogGalaxy.DataFolder, "webcache", "1", "gog", "1423049311", "cover.webp");
+            var fortniteCover = Path.Combine(GogGalaxy.DataFolder, "webcache", "1", "epic", "Fortnite", "cover.webp");
+            files.Pictures[cyberpunkCover] = gogCover;
+            files.Pictures[fortniteCover] = epicCover;
+            files.Galaxy = new()
+            {
+                ["gog_1423049311"] = new GalaxyGame(3873, Now.AddDays(-30), null, true) { Cover = cyberpunkCover },
+                ["epic_Fortnite"] = new GalaxyGame(7222, null, null, false) { Cover = fortniteCover },
+            };
+            var time = new FakeTime(Now);
+            using var provider = new RecentGamesProvider(played, files, time);
+            var store = new MetricStore();
+            provider.Initialize(store);
+
+            // Fortnite an hour ago by the app's record, with Epic's 7,222 minutes through Galaxy (the app's 3 taken to be
+            // in them), and Galaxy's cover rather than the icon. Cyberpunk 2077 a month ago by Galaxy's, unseen by the app.
+            await provider.SampleAsync(store, CancellationToken.None);
+            var fortnite = Recent(store).Single(r => r.Game.Name == "Fortnite");
+            Assert.Equal((Now.AddHours(-1), 7222 / 60.0), (fortnite.LastPlayed, fortnite.Hours!.Value));
+            Assert.Same(epicCover, fortnite.Art.Cover);
+            Assert.Null(fortnite.Art.Icon);
+            var cyberpunk = Recent(store).Single(r => r.Game.Name == "Cyberpunk 2077");
+            Assert.Equal((Now.AddDays(-30), 3873 / 60.0), (cyberpunk.LastPlayed, cyberpunk.Hours!.Value));
+            Assert.Same(gogCover, cyberpunk.Art.Cover);
+
+            // Two minutes of Fortnite in front count on top of Galaxy's.
+            store.SetAttachment(GameArtProvider.Current, Fortnite);
+            for (var i = 0; i < 9; i++)
+            {
+                time.Advance(provider.Interval);
+                await provider.SampleAsync(store, CancellationToken.None);
+            }
+            Assert.Equal(7224 / 60.0, Number(store, RecentGamesProvider.Hours)!.Value, 6);
+            store.SetAttachment(GameArtProvider.Current, null);
+            time.Advance(provider.Interval);
+            await provider.SampleAsync(store, CancellationToken.None);
+
+            // Galaxy syncs Epic's count with the session in it: Galaxy's count, not the session twice. Read again only once
+            // it has changed, and at most every minute.
+            files.Galaxy["epic_Fortnite"] = files.Galaxy["epic_Fortnite"] with { Minutes = 7224 };
+            files.GalaxyChanged = files.GalaxyChanged.AddMinutes(5);
+            time.Advance(RecentGamesProvider.GalaxyEvery);
+            await provider.SampleAsync(store, CancellationToken.None);
+            store.SetAttachment(GameArtProvider.Current, Fortnite);
+            time.Advance(provider.Interval);
+            await provider.SampleAsync(store, CancellationToken.None);
+            Assert.Equal(7224 / 60.0, Number(store, RecentGamesProvider.Hours)!.Value, 6);
+
+            // Galaxy busy writing: what was read before stands.
+            store.SetAttachment(GameArtProvider.Current, null);
+            files.GalaxyBusy = true;
+            files.GalaxyChanged = files.GalaxyChanged.AddMinutes(5);
+            time.Advance(RecentGamesProvider.GalaxyEvery);
+            await provider.SampleAsync(store, CancellationToken.None);
+            Assert.Equal(3873 / 60.0, Recent(store).Single(r => r.Game.Name == "Cyberpunk 2077").Hours!.Value, 6);
+
+            // Kept between runs: Galaxy's count as last seen, and what the app saw on top of it.
+            provider.Dispose();
+            var kept = PlayedGames.Read(played)["epic:Fortnite"];
+            Assert.Equal(7224, kept.Galaxy);
+            Assert.Equal(7224, kept.Total, 6);
+        }
+        finally
+        {
+            File.Delete(played);
+        }
+    }
+
+    [Fact]
     public async Task An_epic_game_s_time_in_front_is_counted_and_kept_once_it_leaves()
     {
         var played = TempFile();
