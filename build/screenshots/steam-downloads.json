@@ -1,0 +1,12 @@
+// What Steam is downloading, and the first download's readings in text, for the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 300,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "downloads", "x": 30, "y": 30, "width": 520, "height": 240 },
+    { "type": "text", "x": 570, "y": 60, "width": 210, "height": 50, "fontSize": 28, "text": "{steam.download.progress}" },
+    { "type": "text", "x": 570, "y": 125, "width": 210, "height": 50, "fontSize": 28, "text": "{steam.download.speed}" },
+    { "type": "text", "x": 570, "y": 190, "width": 210, "height": 50, "fontSize": 28, "text": "{steam.download.left} left" }
+  ]
+}
