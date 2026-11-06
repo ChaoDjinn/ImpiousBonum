@@ -1,0 +1,12 @@
+// Steam friends online, and the game in front's achievements, for the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 300,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "friends", "x": 30, "y": 30, "width": 420, "height": 240 },
+    { "type": "text", "x": 480, "y": 60, "width": 300, "height": 50, "fontSize": 28, "text": "{game.name}" },
+    { "type": "text", "x": 480, "y": 125, "width": 300, "height": 50, "fontSize": 28, "text": "{game.achievements} achievements" },
+    { "type": "text", "x": 480, "y": 190, "width": 300, "height": 50, "fontSize": 28, "text": "{game.store} · {game.hours} h" }
+  ]
+}
