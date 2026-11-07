@@ -37,7 +37,7 @@ mean the widget's own.
 - **Games:** [Recent games](#recent-games-games) · [Steam downloads](#steam-downloads-downloads) · [Steam friends](#steam-friends-friends)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [Sun and moon](#sun-and-moon-sun) · [News](#news-news) · [Claude usage](#claude-usage-claude)
-- **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons) · [Discord voice](#discord-voice-voice)
+- **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons) · [Discord voice](#discord-voice-voice) · [OBS Studio](#obs-studio-obs)
 - **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape) · [Photo frame](#photo-frame-photos)
 
 ## Text (`text`)
@@ -126,7 +126,7 @@ An accent-coloured line icon followed by a live value, e.g. a chip and the CPU t
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `record` / `broadcast` / `replay` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `cpu` | Icon |
+| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `record` / `broadcast` / `replay` / `save` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `cpu` | Icon |
 | `text` | template | `{cpu.temp:nounit} °C` | Text |
 | `fontSize` | number (6–400) | `64` | Font size |
 | `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
@@ -688,7 +688,7 @@ Each entry in `buttons`:
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `label` | text | `Play/pause` | Label. Empty shows just the icon. |
-| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `record` / `broadcast` / `replay` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `play-pause` | Icon |
+| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `record` / `broadcast` / `replay` / `save` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `play-pause` | Icon |
 | `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `mic-mute` / `open` / `keys` / `layout` / `web` / `obs-record` / `obs-stream` / `obs-replay` / `obs-save-replay` / `obs-scene` / `obs-mute` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. The obs actions control OBS Studio, once it's connected on the OBS page; record, stream, replay and scene buttons take the on colour while they're on. |
 | `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… · obs-scene: the scene's name, e.g. BRB · obs-mute: the audio source's name, e.g. Mic/Aux |
 | `arguments` | text | — | Arguments. open: command-line arguments for a program. |
@@ -714,6 +714,30 @@ Lights for your Discord call: one comes on while someone's talking, the other wh
 | `talkingColor` | color | `accent` | Talking. The talking light while it's on. |
 | `youColor` | color | `critical` | You. Your light while it's on: red, like an on-air light. |
 | `offColor` | color | `track` | Off. The lights while they're off. |
+
+## OBS Studio (`obs`)
+
+Whether OBS is recording or live and for how long, the scene on air, and buttons to record, stream, save a replay or switch scenes, which turn red while they're on. Connect OBS on the OBS Studio page first.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `status` | true/false | `true` | Status line. Recording or live and for how long, and the scene on air, above the buttons. |
+| `record` | true/false | `true` | Record button |
+| `stream` | true/false | `true` | Stream button. Goes live straight away, with the stream settings in OBS. Turn it off if you only record. |
+| `replay` | true/false | `false` | Replay buffer button. Turns OBS's replay buffer on or off. |
+| `saveReplay` | true/false | `true` | Save replay button. Saves the last few seconds or minutes, as the replay buffer keeps. The replay buffer has to be on in OBS. |
+| `scenes` | text | — | Scene buttons. Scenes to switch to, by their names in OBS, with commas between them, e.g. Gaming, BRB. Each is a button, lit while its scene is on air. |
+| `labels` | true/false | `true` | Labels. A word under each button's icon. |
+| `fontSize` | number (6–200) | `22` | Font size. The status line's; the labels are a little smaller. |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `iconSize` | number (0–400) | `34` | Icon size |
+| `spacing` | number (0–200) | `10` | Spacing |
+| `style` | `tile` / `plain` | `tile` | Style. tile gives each button a background. |
+| `cornerRadius` | number (0–200) | `10` | Corner radius |
+| `color` | color | `accent` | Icon colour |
+| `tileColor` | color | `track` | Tile colour. Each button's background, with the tile style. |
+| `labelColor` | color | `foreground` | Label colour |
+| `activeColor` | color | `critical` | On colour. The status line while recording or live, and a button's icon and label while it's on. |
 
 ## Image (`image`)
 

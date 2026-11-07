@@ -6,6 +6,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 ## Unreleased
 
 - With *Let tablets press buttons* on, a tap on a *Recent games* tile on the tablet starts the game on the PC, as a tap on the dashboard does. Before, the tablet could press only *Buttons* widgets and the media controls, so game tiles did nothing.
+- A new *OBS Studio* widget, under *Media and controls*, puts OBS together in one place: a status line saying *● REC 12:05* or *● LIVE 1:30:00* in red while OBS is recording or live, with the scene on air, over buttons to record, stream, save a replay and switch to the scenes you name, which turn red while they're on. Before, OBS buttons had to be set up one by one on a *Buttons* widget, which still works. A new `save` icon goes with it.
 
 ## 0.20.0
 
