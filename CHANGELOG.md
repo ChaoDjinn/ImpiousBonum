@@ -7,6 +7,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 
 - With *Let tablets press buttons* on, a tap on a *Recent games* tile on the tablet starts the game on the PC, as a tap on the dashboard does. Before, the tablet could press only *Buttons* widgets and the media controls, so game tiles did nothing.
 - A new *OBS Studio* widget, under *Media and controls*, puts OBS together in one place: a status line saying *● REC 12:05* or *● LIVE 1:30:00* in red while OBS is recording or live, with the scene on air, over buttons to record, stream, save a replay and switch to the scenes you name, which turn red while they're on. Before, OBS buttons had to be set up one by one on a *Buttons* widget, which still works. A new `save` icon goes with it.
+- A new *Volume mixer* widget is Windows' Volume mixer on the dashboard: a row for each app with sound, with its own icon, and your speakers or headphones first. Drag an app's bar to set its volume, or tap its icon to mute it. *Only apps playing* and *Apps* narrow it down. The apps are only looked at while a mixer is on screen. A new `app-mute` button action mutes one app with a tap, and new readings give the speakers' volume, whether they're muted and their name (`sound.volume`, `sound.muted`, `sound.device`).
 
 ## 0.20.0
 

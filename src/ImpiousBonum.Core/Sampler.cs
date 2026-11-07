@@ -102,6 +102,7 @@ public sealed class Sampler : IAsyncDisposable
         new GalaxyAchievementsProvider(),
         new VoiceChatProvider(),
         new ObsProvider(obs),
+        new SoundProvider(),
     ];
 
     public void Start()

@@ -37,6 +37,16 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
     /// <summary>The connection to OBS that OBS buttons send to; null when there's none, as in the demo.</summary>
     public ObsConnection? Obs { get; init; }
 
+    /// <summary>Sets an app's volume (see <see cref="WidgetAction.AppVolume"/>); Windows' unless a test swaps it.</summary>
+    public Func<string, double, bool> SetAppVolume { get; init; } = AppVolumeControl.SetVolume;
+
+    /// <summary>Mutes or unmutes an app (see <see cref="WidgetAction.AppMute"/>); Windows' unless a test swaps it.</summary>
+    public Func<string, bool?> ToggleAppMute { get; init; } = AppVolumeControl.ToggleMute;
+
+    /// <summary>The latest volume asked for each app, sent one at a time so a dragged slider doesn't queue up.</summary>
+    private readonly Dictionary<string, double> _volumes = [];
+    private readonly HashSet<string> _settingVolume = [];
+
     public string? Run(WidgetAction action)
     {
         switch (action.Kind.ToLowerInvariant())
@@ -55,6 +65,10 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
             case WidgetAction.Keys:
                 return KeyChord.Parse(action.Target, out var problem) is { } chord ? Send(chord) : $"This button's keys can't be sent. {problem}";
             case WidgetAction.Web: return SendWebRequest(action);
+            case WidgetAction.AppMute:
+                return MuteApp(action.Target);
+            case WidgetAction.AppVolume:
+                return SetVolume(action.Target, action.Arguments);
             case WidgetAction.ObsRecord:
             case WidgetAction.ObsStream:
             case WidgetAction.ObsReplay:
@@ -65,6 +79,52 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
             default:
                 return $"Buttons can't \"{action.Kind}\". Pick an action in the editor.";
         }
+    }
+
+    /// <summary>Mutes or unmutes an app in the background, as it means asking every sound device.</summary>
+    private string? MuteApp(string app)
+    {
+        if (app.Length == 0)
+            return "This button has no app to mute. Set its target in the editor to the app's name, such as Spotify.";
+        _ = Task.Run(() =>
+        {
+            if (ToggleAppMute(app) is null)
+                Failed($"No app called \"{app}\" is playing sound, so there's nothing to mute.");
+        });
+        return null;
+    }
+
+    /// <summary>
+    /// Sets an app's volume in the background. While one is being set, only the latest asked for waits, so dragging a
+    /// slider sets the volume as fast as Windows takes it and ends where the slider did.
+    /// </summary>
+    private string? SetVolume(string app, string volume)
+    {
+        if (!double.TryParse(volume, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var level))
+            return null;
+        lock (_volumes)
+        {
+            _volumes[app] = Math.Clamp(level, 0, 1);
+            if (!_settingVolume.Add(app))
+                return null;
+        }
+        _ = Task.Run(() =>
+        {
+            while (true)
+            {
+                double next;
+                lock (_volumes)
+                {
+                    if (!_volumes.Remove(app, out next))
+                    {
+                        _settingVolume.Remove(app);
+                        return;
+                    }
+                }
+                SetAppVolume(app, next);
+            }
+        });
+        return null;
     }
 
     /// <summary>

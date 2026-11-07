@@ -37,7 +37,7 @@ mean the widget's own.
 - **Games:** [Recent games](#recent-games-games) · [Steam downloads](#steam-downloads-downloads) · [Steam friends](#steam-friends-friends)
 - **Time and calendar:** [Clock](#clock-clock) · [Timer](#timer-timer) · [Agenda](#agenda-agenda) · [Countdowns](#countdowns-countdowns)
 - **Weather, news and Claude:** [Weather](#weather-weather) · [Rain soon](#rain-soon-rain) · [Sun and moon](#sun-and-moon-sun) · [News](#news-news) · [Claude usage](#claude-usage-claude)
-- **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons) · [Discord voice](#discord-voice-voice) · [OBS Studio](#obs-studio-obs)
+- **Media and controls:** [Now playing](#now-playing-media) · [Audio visualiser](#audio-visualiser-visualizer) · [Buttons](#buttons-buttons) · [Volume mixer](#volume-mixer-mixer) · [Discord voice](#discord-voice-voice) · [OBS Studio](#obs-studio-obs)
 - **Pictures and shapes:** [Image](#image-image) · [Shape](#shape-shape) · [Photo frame](#photo-frame-photos)
 
 ## Text (`text`)
@@ -689,13 +689,32 @@ Each entry in `buttons`:
 |---|---|---|---|
 | `label` | text | `Play/pause` | Label. Empty shows just the icon. |
 | `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `record` / `broadcast` / `replay` / `save` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `play-pause` | Icon |
-| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `mic-mute` / `open` / `keys` / `layout` / `web` / `obs-record` / `obs-stream` / `obs-replay` / `obs-save-replay` / `obs-scene` / `obs-mute` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. The obs actions control OBS Studio, once it's connected on the OBS page; record, stream, replay and scene buttons take the on colour while they're on. |
-| `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… · obs-scene: the scene's name, e.g. BRB · obs-mute: the audio source's name, e.g. Mic/Aux |
+| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `mic-mute` / `app-mute` / `open` / `keys` / `layout` / `web` / `obs-record` / `obs-stream` / `obs-replay` / `obs-save-replay` / `obs-scene` / `obs-mute` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. app-mute mutes or unmutes one app, named in the target. The obs actions control OBS Studio, once it's connected on the OBS page; record, stream, replay and scene buttons take the on colour while they're on. |
+| `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… · obs-scene: the scene's name, e.g. BRB · obs-mute: the audio source's name, e.g. Mic/Aux · app-mute: the app, as the volume mixer names it or by its program's name, e.g. Spotify or chrome |
 | `arguments` | text | — | Arguments. open: command-line arguments for a program. |
 | `method` | `GET` / `POST` / `PUT` | `POST` | Method. web: how to send it. Webhooks, Home Assistant's services and ntfy want POST. |
 | `body` | text | — | Body. web: what a POST or PUT sends, e.g. {"entity_id": "script.movie_night"}, or the message for ntfy. |
 | `contentType` | text | — | Content type. web: the body's type. Empty sends application/json for a body in { } or [ ], and text/plain for anything else. |
 | `header` | text | — | Header. web: one header as Name: value, e.g. Authorization: Bearer and a token. Left out when you export the layout. |
+
+## Volume mixer (`mixer`)
+
+Each app's volume, like Windows' Volume mixer: drag an app's bar to set it, or tap its icon to mute it. Your speakers or headphones come first.
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `apps` | `all`, or names in order, separated by commas | `all` | Apps. All the apps with sound, or just the ones chosen, in the order they're listed. |
+| `output` | true/false | `true` | Speakers or headphones. The device Windows plays to, first, with its own volume. |
+| `playingOnly` | true/false | `false` | Only apps playing. Leaves out apps that aren't making a sound now. |
+| `max` | number (1–30) | `6` | Most apps |
+| `percent` | true/false | `true` | Show the volume. Each volume as a number, e.g. 65 %. |
+| `fontSize` | number (6–200) | `20` | Font size |
+| `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
+| `spacing` | number (0–100) | `10` | Spacing |
+| `barHeight` | number (2–60) | `6` | Bar height |
+| `color` | color | `accent` | Bar colour |
+| `trackColor` | color | `track` | Track colour. The bar's empty part. |
+| `mutedColor` | color | `secondary` | Muted colour. A muted app's bar. |
 
 ## Discord voice (`voice`)
 

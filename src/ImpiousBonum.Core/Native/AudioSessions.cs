@@ -178,14 +178,17 @@ internal sealed class AudioSessionReader : IDisposable
 
     // Vtable order matters: IUnknown is implied. Methods never called are declared parameterless purely to reserve their slots.
     [ComImport, Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IDeviceEnumerator
+    internal interface IDeviceEnumerator
     {
         [PreserveSig]
         int EnumAudioEndpoints(int dataFlow, int stateMask, out IDeviceCollection? devices);
+
+        [PreserveSig]
+        int GetDefaultAudioEndpoint(int dataFlow, int role, out Microphone.IMMDevice? device);
     }
 
     [ComImport, Guid("0BD7A1BE-7A1A-44DB-8397-CC5392387B5E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IDeviceCollection
+    internal interface IDeviceCollection
     {
         [PreserveSig]
         int GetCount(out int count);
@@ -195,7 +198,7 @@ internal sealed class AudioSessionReader : IDisposable
     }
 
     [ComImport, Guid("77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IAudioSessionManager2
+    internal interface IAudioSessionManager2
     {
         void GetAudioSessionControl();
         void GetSimpleAudioVolume();
@@ -205,7 +208,7 @@ internal sealed class AudioSessionReader : IDisposable
     }
 
     [ComImport, Guid("E2F5BB11-0570-40CA-ACDD-3AA01277DEE8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IAudioSessionEnumerator
+    internal interface IAudioSessionEnumerator
     {
         [PreserveSig]
         int GetCount(out int count);
@@ -215,7 +218,7 @@ internal sealed class AudioSessionReader : IDisposable
     }
 
     [ComImport, Guid("bfb7ff88-7239-4fc9-8fa2-07c950be9c6d"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IAudioSessionControl2
+    internal interface IAudioSessionControl2
     {
         // IAudioSessionControl
         [PreserveSig]
@@ -236,10 +239,60 @@ internal sealed class AudioSessionReader : IDisposable
 
         [PreserveSig]
         int GetProcessId(out int processId);
+
+        /// <summary>S_OK (0) for the session of Windows' own sounds, S_FALSE (1) for any other.</summary>
+        [PreserveSig]
+        int IsSystemSoundsSession();
+    }
+
+    /// <summary>A session's own volume and mute: the app's slider in Windows' Volume mixer.</summary>
+    [ComImport, Guid("87CE5498-68D6-44E5-9215-6DA47EF883D8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    internal interface ISimpleAudioVolume
+    {
+        [PreserveSig]
+        int SetMasterVolume(float level, nint eventContext);
+
+        [PreserveSig]
+        int GetMasterVolume(out float level);
+
+        [PreserveSig]
+        int SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, nint eventContext);
+
+        [PreserveSig]
+        int GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
+    }
+
+    /// <summary>A device's own volume and mute: the volume in Windows' sound settings and its volume keys.</summary>
+    [ComImport, Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    internal interface IEndpointVolume
+    {
+        void RegisterControlChangeNotify();
+        void UnregisterControlChangeNotify();
+        void GetChannelCount();
+        void SetMasterVolumeLevel();
+
+        [PreserveSig]
+        int SetMasterVolumeLevelScalar(float level, nint eventContext);
+
+        void GetMasterVolumeLevel();
+
+        [PreserveSig]
+        int GetMasterVolumeLevelScalar(out float level);
+
+        void SetChannelVolumeLevel();
+        void SetChannelVolumeLevelScalar();
+        void GetChannelVolumeLevel();
+        void GetChannelVolumeLevelScalar();
+
+        [PreserveSig]
+        int SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, nint eventContext);
+
+        [PreserveSig]
+        int GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
     }
 
     [ComImport, Guid("C02216F6-8C67-4B5B-9D00-D008E73E0064"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IAudioMeterInformation
+    internal interface IAudioMeterInformation
     {
         [PreserveSig]
         int GetPeakValue(out float peak);

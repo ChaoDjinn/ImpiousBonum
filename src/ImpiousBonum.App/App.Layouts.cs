@@ -180,6 +180,7 @@ public partial class App
         WeatherWidget.PlaceNames => WeatherWidget.ShortNames(WeatherPlaceNames()),
         StatusWidget.CheckNames => [.. _settings.StatusChecks.Select(c => c.Name.Trim())],
         BatteriesWidget.DeviceNames => _sampler is null ? [] : BatteryProvider.Names(_sampler.Store),
+        MixerWidget.AppNames => _sampler is null ? [] : SoundProvider.Names(_sampler.Store),
         _ => [],
     };
 
