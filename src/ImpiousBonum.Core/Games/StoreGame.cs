@@ -6,6 +6,7 @@ public enum GameStore
     Steam,
     Epic,
     Gog,
+    BattleNet,
 }
 
 /// <summary>
@@ -37,6 +38,7 @@ public sealed record StoreGame(GameStore Store, string Id, string Name, string F
         GameStore.Steam => "Steam",
         GameStore.Epic => "Epic Games",
         GameStore.Gog => "GOG",
+        GameStore.BattleNet => "Battle.net",
         _ => store.ToString(),
     };
 }

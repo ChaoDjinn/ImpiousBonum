@@ -55,7 +55,11 @@ internal sealed class FakeGameFiles : IGameFiles
 
     public string? EpicDataPath() => Epic;
 
-    public IReadOnlyList<RegistryEntry> LocalMachineEntries(string path) => path == GogLibrary.RegistryPath ? Gog : [];
+    /// <summary>Windows' uninstall entries, where Battle.net's games are.</summary>
+    public List<RegistryEntry> Uninstall { get; } = [];
+
+    public IReadOnlyList<RegistryEntry> LocalMachineEntries(string path) =>
+        path == GogLibrary.RegistryPath ? Gog : path == BattleNetLibrary.RegistryPath ? Uninstall : [];
 
     public string? ReadText(string path)
     {

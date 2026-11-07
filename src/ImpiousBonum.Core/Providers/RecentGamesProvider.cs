@@ -41,6 +41,7 @@ public sealed class RecentGamesProvider : IMetricProvider
     private readonly SteamLibrary _steam;
     private readonly EpicLibrary _epic;
     private readonly GogLibrary _gog;
+    private readonly BattleNetLibrary _battleNet;
     private readonly string? _playedPath;
     private readonly TimeProvider _time;
     private readonly Dictionary<string, PlayedGame> _played;
@@ -54,6 +55,10 @@ public sealed class RecentGamesProvider : IMetricProvider
     private DateTime? _galaxyWritten;
     private DateTimeOffset _galaxyRead = DateTimeOffset.MinValue;
     private string? _galaxyPictures;
+
+    /// <summary>When Battle.net says its games were last played, by its uid, and when it last wrote that down.</summary>
+    private IReadOnlyDictionary<string, DateTimeOffset> _battleNetPlayed = new Dictionary<string, DateTimeOffset>();
+    private DateTime? _battleNetWritten;
 
     /// <summary>
     /// For Steam games: the minutes the app has seen each in front that Steam hasn't yet added to its record, and when it
@@ -70,12 +75,14 @@ public sealed class RecentGamesProvider : IMetricProvider
 
     /// <param name="playedPath">Where the app's own record is kept between runs; null keeps it only while it runs.</param>
     /// <param name="files">The launchers' files; the real ones unless a test swaps them.</param>
-    public RecentGamesProvider(string? playedPath = null, IGameFiles? files = null, TimeProvider? time = null)
+    /// <param name="battleNetConfig">Battle.net's settings, for when its games were last played; the usual place unless a test gives another.</param>
+    public RecentGamesProvider(string? playedPath = null, IGameFiles? files = null, TimeProvider? time = null, string? battleNetConfig = null)
     {
         _files = files ?? new GameFiles();
         _steam = new SteamLibrary(_files);
         _epic = new EpicLibrary(_files);
         _gog = new GogLibrary(_files);
+        _battleNet = new BattleNetLibrary(_files, battleNetConfig);
         _playedPath = playedPath;
         _time = time ?? TimeProvider.System;
         _played = playedPath is null ? new Dictionary<string, PlayedGame>(StringComparer.OrdinalIgnoreCase) : PlayedGames.Read(playedPath);
@@ -127,7 +134,7 @@ public sealed class RecentGamesProvider : IMetricProvider
             return key == _counting && since > TimeSpan.Zero && since <= Interval * 4 ? since.TotalMinutes : 0;
         }
 
-        if (inFront is { Store: { } launcher, StoreId: { } id } && launcher is GameStore.Epic or GameStore.Gog)
+        if (inFront is { Store: { } launcher, StoreId: { } id } && launcher is GameStore.Epic or GameStore.Gog or GameStore.BattleNet)
         {
             key = StoreGame.KeyOf(launcher, id);
             var minutes = Minutes();
@@ -154,7 +161,7 @@ public sealed class RecentGamesProvider : IMetricProvider
     {
         if (now - _installedRead >= GameFinder.LibraryLifetime)
         {
-            _installed = [.. _steam.Apps().Select(SteamLibrary.ToStoreGame), .. _epic.Games(), .. _gog.Games()];
+            _installed = [.. _steam.Apps().Select(SteamLibrary.ToStoreGame), .. _epic.Games(), .. _gog.Games(), .. _battleNet.Games()];
             _installedRead = now;
             // Steam may have pictures of more games since, and Galaxy may know more of them.
             _art.Clear();
@@ -163,6 +170,12 @@ public sealed class RecentGamesProvider : IMetricProvider
             _galaxyRead = DateTimeOffset.MinValue;
         }
         RefreshGalaxy(now);
+        // Battle.net's record of when its games were last played, whenever it's rewritten.
+        if (_battleNet.Written() is var written && written != _battleNetWritten)
+        {
+            _battleNetWritten = written;
+            _battleNetPlayed = written is null ? new Dictionary<string, DateTimeOffset>() : _battleNet.LastPlayed();
+        }
 
         var config = _steam.LocalConfig();
         if (!config.Equals(_localConfig))
@@ -303,6 +316,12 @@ public sealed class RecentGamesProvider : IMetricProvider
     private (DateTimeOffset? Last, double Minutes)? StorePlayed(GameStore store, string id)
     {
         var own = _played.GetValueOrDefault(StoreGame.KeyOf(store, id));
+        if (store == GameStore.BattleNet)
+        {
+            // Battle.net says when, but not for how long: the minutes are the app's own.
+            var last = Later(own?.Last, _battleNetPlayed.TryGetValue(id, out var played) ? played : null);
+            return own is null && last is null ? null : (last, own?.Total ?? 0);
+        }
         var galaxy = _galaxy.GetValueOrDefault(GogGalaxy.KeyOf(store, id));
         if (own is null && galaxy is null)
             return null;
@@ -324,7 +343,7 @@ public sealed class RecentGamesProvider : IMetricProvider
     {
         if (game is { Store: GameStore.Steam, AppId: { } appId })
             return SteamMinutes(appId) is > 0 and var minutes ? minutes / 60.0 : null;
-        if (game is { Store: { } launcher, StoreId: { } id } && launcher is GameStore.Epic or GameStore.Gog)
+        if (game is { Store: { } launcher, StoreId: { } id } && launcher is GameStore.Epic or GameStore.Gog or GameStore.BattleNet)
             return StorePlayed(launcher, id) is { } play ? play.Minutes / 60.0 : null;
         return null;
     }

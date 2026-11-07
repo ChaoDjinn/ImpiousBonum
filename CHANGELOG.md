@@ -6,6 +6,7 @@ the app; changes since the last release go under *Unreleased*, renamed to the ve
 ## Unreleased
 
 - *Top apps* can show each app's share of the graphics card, like Task Manager's GPU column: turn on *GPU column*, with headings over the numbers, or sort by `gpu` to see what's using the GPU besides your game. New readings `top.gpu.1` to `top.gpu.5` (with `.name`) are the busiest apps on the GPU. They come from the same readings as the GPU's load, so they cost nothing more.
+- Battle.net's games count as games, like Steam's, Epic's and GOG's: Diablo, StarCraft, World of Warcraft, Overwatch and the rest get their names in `game.name`, `game.store` says *Battle.net*, and they're in *Recent games* by when Battle.net says you last played them. A tap starts one through Battle.net, which signs in and updates it first. Battle.net doesn't keep how long you've played, so their hours are counted from when the app sees them in front. They're found from Windows' list of installed apps, with nothing to link.
 
 ## 0.21.0
 

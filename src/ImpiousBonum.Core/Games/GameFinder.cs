@@ -4,7 +4,7 @@ namespace ImpiousBonum.Core.Games;
 
 /// <summary>
 /// Works out which game an exe belongs to, with its name and pictures: a Steam game by the folder it's installed in,
-/// with Steam's name for it, its app id and Steam's pictures; an Epic Games or GOG game by its folder too, with that
+/// with Steam's name for it, its app id and Steam's pictures; an Epic Games, GOG or Battle.net game by its folder too, with that
 /// launcher's name for it and the exe's icon; any other game by the exe's own description and icon. The launchers'
 /// lists of games are read when first needed and again at most every ten minutes, for games installed since; each
 /// exe's answer is kept, so going back to a game reads nothing. Not thread-safe: use it from one loop.
@@ -23,6 +23,7 @@ public sealed class GameFinder(IGameFiles files, TimeProvider? time = null)
     private readonly SteamLibrary _steam = new(files);
     private readonly EpicLibrary _epic = new(files);
     private readonly GogLibrary _gog = new(files);
+    private readonly BattleNetLibrary _battleNet = new(files);
     private readonly TimeProvider _time = time ?? TimeProvider.System;
     private readonly Dictionary<string, SteamApp?> _installed = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, StoreGame?> _othersInstalled = new(StringComparer.OrdinalIgnoreCase);
@@ -38,7 +39,7 @@ public sealed class GameFinder(IGameFiles files, TimeProvider? time = null)
         return Remember(_installed, exe, () => SteamLibrary.Match(_apps, exe));
     }
 
-    /// <summary>The Epic Games or GOG game <paramref name="exe"/> belongs to, or null if neither installed it.</summary>
+    /// <summary>The Epic Games, GOG or Battle.net game <paramref name="exe"/> belongs to, or null if none of them installed it.</summary>
     public StoreGame? OtherGame(string exe)
     {
         Refresh();
@@ -52,7 +53,7 @@ public sealed class GameFinder(IGameFiles files, TimeProvider? time = null)
         if (now - _appsRead < LibraryLifetime)
             return;
         _apps = _steam.Apps();
-        _others = [.. _epic.Games(), .. _gog.Games()];
+        _others = [.. _epic.Games(), .. _gog.Games(), .. _battleNet.Games()];
         _appsRead = now;
         // Steam may have fetched pictures since, too.
         _installed.Clear();
@@ -73,7 +74,7 @@ public sealed class GameFinder(IGameFiles files, TimeProvider? time = null)
     }
 
     /// <summary>
-    /// The game <paramref name="exe"/> belongs to: a Steam, Epic Games or GOG game; or, with <paramref name="anyApp"/>,
+    /// The game <paramref name="exe"/> belongs to: a Steam, Epic Games, GOG or Battle.net game; or, with <paramref name="anyApp"/>,
     /// whatever it is, named by its description and pictured by its icon. Null when none of those launchers installed it
     /// and <paramref name="anyApp"/> is false.
     /// </summary>

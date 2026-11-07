@@ -373,15 +373,15 @@ Each entry in `thresholds`:
 
 ## Recent games (`games`)
 
-The games you've played lately, newest first, as Steam's or GOG Galaxy's art or the game's icon. Tap one to start it through its launcher. Games from Steam, the Epic Games launcher and GOG, read from their own records on this PC and GOG Galaxy's.
+The games you've played lately, newest first, as Steam's or GOG Galaxy's art or the game's icon. Tap one to start it through its launcher. Games from Steam, the Epic Games launcher, GOG and Battle.net, read from their own records on this PC and GOG Galaxy's.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `count` | number (1–8) | `4` | Games |
 | `rows` | number (1–4) | `1` | Rows. The games are spread over this many rows, newest first along each. |
 | `art` | `cover` / `header` | `cover` | Picture. For a Steam game: cover is the tall box art, header the wide banner. An Epic Games or GOG game with GOG Galaxy installed has Galaxy's cover, and its background for header. Other games show their icon. |
-| `launchers` | `all`, or some of `steam` / `epic` / `gog` in order, separated by commas | `all` | Launchers. Games from all of them, or just the ones chosen: steam, epic (the Epic Games launcher) or gog. |
-| `launch` | true/false | `true` | Tap to play. A tap starts the game through its launcher, as its desktop shortcut does: a GOG game through GOG Galaxy if Galaxy installed it, else by its own exe. |
+| `launchers` | `all`, or some of `steam` / `epic` / `gog` / `battlenet` in order, separated by commas | `all` | Launchers. Games from all of them, or just the ones chosen: steam, epic (the Epic Games launcher), gog or battlenet. |
+| `launch` | true/false | `true` | Tap to play. A tap starts the game through its launcher, as its desktop shortcut does: a GOG game through GOG Galaxy if Galaxy installed it, else by its own exe, and a Battle.net game through Battle.net. |
 | `fontSize` | number (6–200) | `18` | Font size |
 | `showNames` | true/false | `false` | Show names. Each game's name under its picture. A game with only its icon always shows its name. |
 | `showPlayed` | true/false | `false` | Show when played. How long ago it was played, and the hours altogether where known, e.g. 2d 3h ago · 41 h. |
