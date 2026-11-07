@@ -1,0 +1,23 @@
+// Raid Night: for a Lenovo Tab P11 or M10 Plus (2000 × 1200) through the tablet view, or a 2000 × 1200 screen, while
+// you play with friends on Discord. Who's talking, the game's cover, your frame rate and GPU, the game's and Discord's
+// volume, your Steam friends, what's using the graphics card, and the GPU's temperature over the last hour. Needs the
+// sensor service for FPS and temperatures.
+{
+  "width": 2000,
+  "height": 1200,
+  "theme": "Dracula",
+  "widgets": [
+    { "type": "voice", "x": 30, "y": 30, "width": 940, "height": 120, "fontSize": 52 },
+    { "type": "clock", "x": 1000, "y": 24, "width": 970, "height": 136, "timeSize": 72, "dateSize": 20, "align": "right" },
+    { "type": "image", "x": 30, "y": 180, "width": 440, "height": 660, "source": "game", "art": "cover", "fit": "fill", "cornerRadius": 18, "hideNoGame": true },
+    { "type": "stat", "x": 500, "y": 180, "width": 470, "height": 320, "label": "FPS", "metric": "fps", "text": "{fps:0 nounit}", "fontSize": 96,
+      "labelSize": 28, "thresholds": [{ "below": 50, "color": "warning" }, { "below": 30, "color": "critical" }] },
+    { "type": "stat", "x": 500, "y": 520, "width": 470, "height": 320, "label": "GPU", "metric": "gpu.load", "fontSize": 86, "labelSize": 28,
+      "thresholds": [{ "above": 95, "color": "warning" }] },
+    { "type": "mixer", "x": 1000, "y": 180, "width": 970, "height": 420, "fontSize": 32, "max": 4, "spacing": 18, "barHeight": 10 },
+    { "type": "friends", "x": 1000, "y": 630, "width": 970, "height": 210, "fontSize": 30, "spacing": 8 },
+    { "type": "processes", "x": 30, "y": 870, "width": 940, "height": 300, "sort": "gpu", "count": 4, "fontSize": 30, "spacing": 6 },
+    { "type": "graph", "x": 1000, "y": 870, "width": 970, "height": 300, "label": "GPU temperature · last hour", "metric": "gpu.temp",
+      "span": "1 hour", "style": "area", "min": 30, "max": 90, "fontSize": 30 }
+  ]
+}

@@ -132,13 +132,18 @@ public static class DemoReadings
         new ProcessProvider(() => []).Initialize(store);
         store.SetAttachment(ProcessProvider.Apps, (IReadOnlyList<AppUsage>)
         [
-            new("Starfall Odyssey", 3, 21.4, (long)(6.8 * GiB)),
-            new("Firefox", 14, 3.1, (long)(2.1 * GiB)),
-            new("Discord", 6, 1.2, 640L << 20),
+            new("Starfall Odyssey", 3, 21.4, (long)(6.8 * GiB), Gpu: 86.2),
+            new("Firefox", 14, 3.1, (long)(2.1 * GiB), Gpu: 2.4),
+            new("Discord", 6, 1.2, 640L << 20, Gpu: 0.9),
             new("Music", 2, 0.6, 310L << 20),
-            new("Impious Bonum", 2, 0.3, 74L << 20),
-            new("Windows Explorer", 1, 0.2, 180L << 20),
+            new("Impious Bonum", 2, 0.3, 74L << 20, Gpu: 0.4),
+            new("Windows Explorer", 1, 0.2, 180L << 20, Gpu: 0.1),
         ]);
+        foreach (var (rank, name, gpu) in new[] { (1, "Starfall Odyssey", 86.2), (2, "Firefox", 2.4), (3, "Discord", 0.9), (4, "Impious Bonum", 0.4), (5, "Windows Explorer", 0.1) })
+        {
+            store.Set(ProcessProvider.Gpu(rank), gpu);
+            store.SetText(ProcessProvider.GpuName(rank), name);
+        }
 
         // What's playing.
         foreach (var (id, name, unit) in new[]
@@ -435,6 +440,40 @@ public static class DemoReadings
         store.SetAttachment(RecentGamesProvider.Recent, games);
         store.SetText(RecentGamesProvider.Last, games[0].Game.Name);
         store.Set(RecentGamesProvider.Hours, games[0].Hours);
+
+        // Graphs that look further back: quiet through the day, then a game since seven in the evening.
+        foreach (var (id, idle, playing, wobble, top) in new[]
+        {
+            (CpuProvider.Load, 7.0, 36.0, 7.0, 100.0), (GpuProvider.Load, 3.0, 91.0, 6.0, 100.0),
+            (SensorAliases.CpuTemperature, 41.0, 67.0, 4.0, 110.0), (SensorAliases.GpuTemperature, 37.0, 70.0, 3.0, 110.0),
+        })
+        {
+            foreach (var span in new[] { LongSpan.Hour, LongSpan.SixHours, LongSpan.Day })
+                store.SeedHistory(id, span, Evening(now, span, idle, playing, wobble, top, random));
+        }
+    }
+
+    /// <summary>
+    /// A metric's averaged history over a span ending at <paramref name="now"/>: around <paramref name="idle"/> until
+    /// seven in the evening and around <paramref name="playing"/> after, each step with its lowest and highest, and the
+    /// odd short spike.
+    /// </summary>
+    private static List<(double Average, double Low, double High)> Evening(DateTime now, LongSpan span, double idle, double playing, double wobble, double top, Random random)
+    {
+        var (size, points) = AveragedTier.Of(span);
+        var step = AveragedTier.Sizes[size].Step;
+        var steps = new List<(double, double, double)>(points);
+        var drift = 0.0;
+        for (var i = points; i > 0; i--)
+        {
+            var at = now - step * i;
+            var level = at.Hour >= 19 || at.Hour < 1 ? playing : idle;
+            drift = drift * 0.8 + (random.NextDouble() - 0.5) * wobble * 0.6;
+            var average = Math.Clamp(level + drift + (random.NextDouble() - 0.5) * wobble, 0, top);
+            var spike = random.NextDouble() < 0.05 ? wobble * 4 : 0;
+            steps.Add((average, Math.Clamp(average - wobble * random.NextDouble(), 0, top), Math.Clamp(average + wobble * (0.5 + random.NextDouble()) + spike, 0, top)));
+        }
+        return steps;
     }
 
     /// <summary>

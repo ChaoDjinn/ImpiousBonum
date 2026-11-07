@@ -1,0 +1,16 @@
+// On Air: for a 1920 × 480 strip under the monitor you stream from. OBS's record, stream and replay buttons and two
+// scenes, red while they're on, with how long you've been live; Discord's voice lights; every app's volume; your frame
+// rate; and your upload. Connect OBS on the OBS Studio page, and rename the scenes to yours. Needs the sensor service for FPS.
+{
+  "width": 1920,
+  "height": 480,
+  "theme": "Outrun",
+  "widgets": [
+    { "type": "obs", "x": 20, "y": 20, "width": 900, "height": 300, "fontSize": 26, "iconSize": 44, "spacing": 10, "scenes": "Gaming, BRB" },
+    { "type": "voice", "x": 20, "y": 340, "width": 900, "height": 120, "fontSize": 42 },
+    { "type": "mixer", "x": 940, "y": 20, "width": 600, "height": 440, "fontSize": 24, "max": 5, "spacing": 14, "barHeight": 8 },
+    { "type": "stat", "x": 1560, "y": 20, "width": 340, "height": 210, "label": "FPS", "metric": "fps", "text": "{fps:0 nounit}", "fontSize": 64,
+      "labelSize": 20, "thresholds": [{ "below": 50, "color": "warning" }, { "below": 30, "color": "critical" }] },
+    { "type": "stat", "x": 1560, "y": 250, "width": 340, "height": 210, "label": "Upload", "metric": "net.up", "fontSize": 52, "labelSize": 20 }
+  ]
+}

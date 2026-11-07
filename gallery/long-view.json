@@ -1,0 +1,24 @@
+// Long View: for a 1920 × 480 strip, looking further back than the usual few minutes. The CPU's and GPU's load over
+// the last hour, both temperatures over six hours, each one's lowest and highest today, and what's using the graphics
+// card now. The longer history fills from when the layout is first on screen. Needs the sensor service for temperatures.
+{
+  "width": 1920,
+  "height": 480,
+  "theme": "Blueprint",
+  "widgets": [
+    { "type": "graph", "x": 20, "y": 20, "width": 540, "height": 210, "label": "CPU · last hour", "metric": "cpu.load", "span": "1 hour",
+      "style": "area", "fontSize": 22 },
+    { "type": "graph", "x": 20, "y": 250, "width": 540, "height": 210, "label": "GPU · last hour", "metric": "gpu.load", "span": "1 hour",
+      "style": "area", "fontSize": 22 },
+    { "type": "lines", "x": 580, "y": 20, "width": 540, "height": 440, "span": "6 hours", "min": 30, "max": 90, "fontSize": 20,
+      "lines": [
+        { "label": "CPU", "metric": "cpu.temp", "color": "accent" },
+        { "label": "GPU", "metric": "gpu.temp", "color": "warning" }
+      ] },
+    { "type": "stat", "x": 1140, "y": 20, "width": 280, "height": 210, "label": "CPU today", "metric": "cpu.temp", "span": "24 hours", "fontSize": 48,
+      "labelSize": 18 },
+    { "type": "stat", "x": 1140, "y": 250, "width": 280, "height": 210, "label": "GPU today", "metric": "gpu.temp", "span": "24 hours", "fontSize": 48,
+      "labelSize": 18 },
+    { "type": "processes", "x": 1440, "y": 20, "width": 460, "height": 440, "sort": "gpu", "columns": "cpu", "count": 6, "fontSize": 20, "spacing": 8 }
+  ]
+}

@@ -1,0 +1,17 @@
+// Game Library: for an iPad or iPad Air (2360 × 1640) through the tablet view, or any screen that shape. The games
+// you've played lately from every launcher (Steam, Epic, GOG, Battle.net, EA, Ubisoft, Xbox and Amazon), a tap away
+// with Let tablets press buttons on; what Steam is downloading; your Steam friends online; the banner of the game in
+// front; and what's using the graphics card. Friends need your Steam key on the Steam page.
+{
+  "width": 2360,
+  "height": 1640,
+  "theme": "Catppuccin",
+  "widgets": [
+    { "type": "games", "x": 40, "y": 40, "width": 2280, "height": 780, "count": 4, "art": "cover", "showNames": true, "showPlayed": true,
+      "fontSize": 30, "spacing": 32, "cornerRadius": 16 },
+    { "type": "downloads", "x": 40, "y": 860, "width": 1120, "height": 320, "fontSize": 40, "barHeight": 10, "spacing": 22 },
+    { "type": "friends", "x": 1200, "y": 860, "width": 1120, "height": 320, "fontSize": 40, "spacing": 12 },
+    { "type": "image", "x": 40, "y": 1220, "width": 1120, "height": 380, "source": "game", "art": "header", "fit": "fill", "cornerRadius": 20, "hideNoGame": true },
+    { "type": "processes", "x": 1200, "y": 1220, "width": 1120, "height": 380, "sort": "gpu", "count": 4, "fontSize": 40, "spacing": 10 }
+  ]
+}

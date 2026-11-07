@@ -191,11 +191,13 @@ a file: you're asked before a layout with the same name is replaced, and before 
 or send web requests. Pictures and fonts inside a shared layout show once it's added. In the editor, *Layouts ▾* →
 *Get one from the gallery…* opens it for the screen you're editing.
 
-So far it has twenty-one, made along with the app, for screens from a 3.5" USB screen (480 × 320), a 7" panel
+So far it has twenty-nine, made along with the app, for screens from a 3.5" USB screen (480 × 320), a 7" panel
 (1024 × 600) and a 1280 × 800 tablet through 1920 × 480 and 1920 × 720 bars to 1080p, 1440p and 4K monitors, a TV
-across the room, a monitor turned on its side and a tall strip inside a PC case. Some are for one thing: music with an
-audio visualiser, the weather in detail, the news, your network, streaming, or counting down to Christmas or
-Halloween. Yours could be next.
+across the room, a monitor turned on its side and a tall strip inside a PC case. Six are made for popular tablets'
+screens, to show through the [tablet view](#tablet-view): a Fire HD 8, a Fire HD 10 or Galaxy Tab A8, a Lenovo Tab P11,
+an iPad mini, an iPad and a Galaxy Tab S9 or Pixel Tablet. Some are for one thing: music with an audio visualiser, the
+weather in detail, the news, your network, streaming with OBS and Discord, your games and friends, the sofa, or
+counting down to Christmas or Halloween. Yours could be next.
 
 The gallery has themes too: pick *Themes* at the top of the page to see each one on the default layout, drawn live
 with your own readings. *Add to my themes* keeps it with your saved themes, for any layout to use: click empty canvas
@@ -839,6 +841,8 @@ why it isn't connected, with the scene on air on the right; and under it, button
 `Gaming, BRB`. Turn off *Stream button* if you only record, as it goes live straight away. With *Let tablets press
 buttons* on, the [tablet](#tablet-view) can press them too.
 
+<p align="center"><img src="images/widgets/streaming.png" width="600" alt="The OBS Studio widget: REC 12:05 in red with the Gaming scene on the right, over buttons for Record and Replay lit red, Stream, Save replay, and the scenes Gaming, lit red, and BRB; under it, Discord's voice lights, Talking lit and You dark"></p>
+
 ```json
 { "type": "obs", "x": 30, "y": 30, "width": 520, "height": 150, "scenes": "Gaming, BRB" }
 ```
@@ -870,7 +874,7 @@ icons are made for them:
 
 ### Top apps
 
-The `processes` widget is a small Task Manager: the apps using the most CPU or memory, one row each with both numbers.
+The `processes` widget is a small Task Manager: the apps using the most CPU, memory or graphics card, one row each with its numbers.
 An app's processes count together, so a browser with thirty tabs is one row (with the count in brackets). Sort it by CPU
 or memory, choose how many rows and whether to show both numbers, and give the CPU figure warning colours the same way
 as other widgets. For a single figure elsewhere, use the metrics: `{top.cpu.1.name}` at `{top.cpu.1}` in a `text` widget
@@ -1054,6 +1058,8 @@ each app with sound, with its icon, its name, a bar and its volume, and your spe
   just some, in an order of your own, from the apps seen since Impious Bonum started, and *Most apps* caps the rows.
 - **The device** is the one Windows plays to (*Speakers or headphones* leaves it out); its volume is the same one as the
   volume keys and the sound settings.
+
+<p align="center"><img src="images/widgets/sound.png" width="600" alt="The Volume mixer: the headphones at 45 %, Discord at 80 %, Google Chrome muted and faded, Spotify at 30 %, Starfall Odyssey at 100 % and System sounds at 60 %; under it, the Sound output widget with Headphones lit, Speakers and LG TV"></p>
 
 The apps are only looked at while a volume mixer is on screen, so it costs nothing without one. The device's volume is
 a reading for any widget too:

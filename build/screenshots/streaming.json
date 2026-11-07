@@ -1,0 +1,11 @@
+// OBS's buttons and scenes over Discord's voice lights, for the README and the guide (build/screenshots.ps1).
+{
+  "width": 800,
+  "height": 400,
+  "theme": "Orange",
+  "widgets": [
+    { "type": "obs", "x": 30, "y": 20, "width": 740, "height": 240, "fontSize": 22, "iconSize": 40, "spacing": 10, "replay": true,
+      "scenes": "Gaming, BRB" },
+    { "type": "voice", "x": 30, "y": 280, "width": 740, "height": 100, "fontSize": 40 }
+  ]
+}

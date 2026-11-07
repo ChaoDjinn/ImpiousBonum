@@ -6,8 +6,8 @@
 
 <p align="center">
   <em>Dog-Latin for "wicked good".</em><br>
-  A lightweight system dashboard for a spare screen, like the little touchscreen strip under your main monitor.<br>
-  A native replacement for Rainmeter + HWiNFO setups, with no other monitoring software to run alongside it.
+  A lightweight system dashboard for a spare screen, like the little touchscreen strip under your main monitor or a tablet beside it.<br>
+  Your PC, your games, your music and your stream at a glance, with nothing else to run alongside it.
 </p>
 
 <p align="center">
@@ -33,25 +33,44 @@
 ## What it is
 
 Impious Bonum turns a spare screen into a live view of your PC: CPU, GPU, memory, temperatures, FPS, drives and
-network, alongside a clock, the weather, your calendar, what's playing and buttons to control it all. Lay it out how
-you like in a visual editor, pick from 56 themes, and it runs quietly in the tray using about 50 MB of memory. No
-spare screen? It works as a window too, or on a tablet over Wi-Fi.
+network, alongside a clock, the weather, your calendar, your games and Steam friends, what's playing, every app's
+volume, Discord's voice lights, OBS's record and stream buttons, and buttons to control it all. Lay it out how you like
+in a visual editor or start from a ready-made layout, pick from 56 themes, and it runs quietly in the tray using about
+50 MB of memory. No spare screen? It works as a window too, or on a tablet over Wi-Fi.
 
 ## Features
 
 **Your PC at a glance**
 - CPU, memory, GPU, drives and network out of the box, down to each network adapter's speeds, the Wi-Fi signal and a laptop's battery time left; add the optional sensor service for temperatures, fans, clocks, power and per-app FPS with frame times and 1% lows, about 280 metrics on a typical PC. [More](<docs/guide.md#what-it-shows>)
-- Graphs, multi-line graphs, gauges, stat tiles, every CPU thread as a heatmap, drives, and the apps using the most CPU or memory. [More](<docs/guide.md#widgets-in-depth>)
+- Graphs and multi-line graphs from the last two minutes to the last 24 hours, gauges, stat tiles with the day's lowest and highest, every CPU thread as a heatmap, drives, and the apps using the most CPU, memory or graphics card. [More](<docs/guide.md#widgets-in-depth>)
 - The PC's power use and what it costs, and how clean Great Britain's electricity is right now. [More](<docs/guide.md#energy-use>)
 - A status board for your own servers and services (a NAS, Pi-hole, Plex, a website), whether your microphone is muted or in use, and the batteries of your Bluetooth headset, mouse and controller. [More](<docs/guide.md#status-checks>)
 - Session recaps when you finish playing a game you've linked to a layout: average, lowest and highest FPS, loads and temperatures. [More](<docs/guide.md#session-recaps>)
-- Alerts when a reading stays out of bounds: a notification, a banner on the dashboard, a sound, a switch to another layout, a script to run, or a message to Home Assistant or your phone (via ntfy). [More](<docs/guide.md#alerts>)
+- Alerts when a reading stays out of bounds: a notification, a banner on the dashboard, a sound, a switch to another layout, a script to run, or a message to Home Assistant, a Discord channel or your phone (via ntfy). [More](<docs/guide.md#alerts>)
 - Logging to CSV files for a spreadsheet. [More](<docs/guide.md#logging>)
 
 <table>
   <tr>
     <td width="50%"><img src="docs/images/widgets/frame-times.png" alt="Stat tiles of the frame rate at 145 and the 1% and 0.1% lows, each with a trend line and its range, and a graph of the average and slowest frame times"><br><b>Frame rate</b>: FPS, 1% and 0.1% lows, and frame times</td>
     <td width="50%"><img src="docs/images/widgets/gauges.png" alt="Three gauges: a 270° dial of the CPU temperature at 65, a half dial of GPU load at 90.4 % and a ring of memory use at 55 %"><br><b>Gauges</b>: a dial, a half dial or a ring</td>
+  </tr>
+</table>
+
+**Games, chat and streaming**
+- The games you've played lately, from Steam, the Epic Games launcher, GOG, Battle.net, the EA app, Ubisoft Connect, the Xbox app and Amazon Games, as tiles of their covers: tap one to start it, from the dashboard or a tablet. [More](<docs/guide.md#recent-games>)
+- What Steam is downloading, your Steam friends online and what they're playing, and your achievements in the game in front. [More](<docs/guide.md#steam-downloads>)
+- Discord's voice lights: one while someone's talking, one while your microphone hears you, read from Windows' sound meters without listening in. [More](<docs/guide.md#discord-voice>)
+- OBS Studio's record, stream and replay buttons and your scenes, lit while they're on, with how long you've been live. [More](<docs/guide.md#obs-studio>)
+- Every app's volume to drag or mute, as in Windows' Volume mixer, and a tap to switch between your speakers, headphones and TV. [More](<docs/guide.md#volume-mixer>)
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/widgets/recent-games.png" alt="Four recent games as tiles: Starfall Odyssey's cover, now and 42 h; Lumen Drift's icon, 1d 2h ago and 3 h; Ember Hollow's cover, 2d 3h ago and 120 h; and Tidewater's icon, 7d 2h ago and under an hour"><br><b>Recent games</b>: from every launcher, a tap to play</td>
+    <td width="50%"><img src="docs/images/widgets/steam-friends.png" alt="Three Steam friends online: Sam playing Ember Hollow, Priya online and Alex away, faded; beside them, the game in front with 34 / 50 achievements"><br><b>Steam friends</b>, and your achievements</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/widgets/streaming.png" alt="The OBS Studio widget: REC 12:05 with the Gaming scene, buttons to record, stream, replay and switch scenes, the ones on lit red; under it, Discord's voice lights"><br><b>OBS Studio</b> and <b>Discord voice</b></td>
+    <td width="50%"><img src="docs/images/widgets/sound.png" alt="The Volume mixer with the headphones, Discord, Chrome (muted), Spotify, a game and System sounds, each with a slider; under it, buttons for Headphones, lit, Speakers and LG TV"><br><b>Volume mixer</b> and <b>Sound output</b></td>
   </tr>
 </table>
 
@@ -74,14 +93,14 @@ spare screen? It works as a window too, or on a tablet over Wi-Fi.
 </table>
 
 **Make it yours**
-- A layout editor with live preview, drag and resize with snapping and alignment, a searchable picker for every metric, fonts you can see before you pick, and text that shrinks to fit, plus touch editing on the dashboard itself. [More](<docs/guide.md#layout-editor>)
+- A layout editor with live preview, a picture of every widget to add, drag and resize with snapping and alignment, a searchable picker for every metric, fonts you can see before you pick, and text that shrinks to fit, plus touch editing on the dashboard itself. [More](<docs/guide.md#layout-editor>)
 - 56 built-in themes, from clean to retro to neon to the holidays (Halloween, Christmas, Diwali and more), with gradients, glow, falling snow or leaves, and picture, GIF or video backgrounds; or make one from your wallpaper, any picture or Windows' accent colour. Warning symbols and the Clear Sight theme help with colour blindness. [More](<docs/guide.md#layout-editor>)
-- A gallery of ready-made layouts and themes to try with your own readings and import, and export to share yours. [More](<docs/guide.md#layout-gallery>)
+- A gallery of 29 ready-made layouts, six of them sized for popular tablets, and themes to try with your own readings and import, and export to share yours. [More](<docs/guide.md#layout-gallery>)
 
 **It fits around you**
 - Different layouts for different games, a schedule for times of day, sunset, dates or dark mode, holiday themes that come on by themselves, pages to swipe between, and global hotkeys. [More](<docs/guide.md#automatic-behaviour>)
 - Dims or blacks out when you're away. [More](<docs/guide.md#dimming>)
-- On a spare monitor (or several, each with its own layout), as a window, or on a tablet or phone in its browser, each tablet with a layout of its own. Other apps such as Home Assistant can read its readings as JSON. Support for small 3.5" USB screens is there too, but hasn't been tried on a real one yet. [More](<docs/guide.md#more-screens>)
+- On a spare monitor (or several, each with its own layout), as a window, or on a tablet or phone in its browser, each tablet with a layout of its own, planned in the editor at the tablet's own size. Other apps such as Home Assistant can read its readings as JSON. Support for small 3.5" USB screens is there too, but hasn't been tried on a real one yet. [More](<docs/guide.md#more-screens>)
 - Light: about 50 MB of memory and a fraction of a percent of the CPU. A per-user installer with no admin prompt, small automatic updates, and a backup of your whole setup in one file.
 
 ## A look for every desk
@@ -101,6 +120,10 @@ Or start from a layout in the [gallery](gallery):
     <td width="50%"><img src="gallery/images/desk-companion.png" alt="Desk Companion: the time here and in two other places, the day's calendar, the weather and what's playing"><br><b>Desk Companion</b>: world clocks, calendar, weather and music</td>
     <td width="50%"><img src="gallery/images/focus.png" alt="Focus: a 25-minute focus timer, the next event, the time and what's playing"><br><b>Focus</b>: a focus timer, your next event and your music</td>
   </tr>
+  <tr>
+    <td width="50%"><img src="gallery/images/broadcast-desk.png" alt="Broadcast Desk: OBS's record, stream and replay buttons and three scenes, Discord's voice lights, the time, every app's volume, the sound outputs, FPS, upload and what's playing"><br><b>Broadcast Desk</b>: for a Galaxy Tab S9 or Pixel Tablet beside your stream</td>
+    <td width="50%"><img src="gallery/images/raid-night.png" alt="Raid Night: Discord's voice lights, the time, the game's cover, FPS and GPU load, the game's and Discord's volume, Steam friends, the GPU's busiest apps and its temperature over the last hour"><br><b>Raid Night</b>: for a Lenovo Tab P11 while you play with friends</td>
+  </tr>
 </table>
 
 Lay out your own in the editor, with a live preview, a searchable list of every reading and the same changes on the dashboard as you make them:
@@ -114,7 +137,7 @@ Lay out your own in the editor, with a live preview, a searchable list of every 
 1. Download and run [`ImpiousBonum-win-Setup.exe`](https://github.com/ChaoDjinn/ImpiousBonum/releases/latest/download/ImpiousBonum-win-Setup.exe) (Windows 10 or 11). It installs for your user only and adds the .NET runtime if needed. SmartScreen may warn the first time, since the installer isn't code-signed yet: choose *More info → Run anyway*.
 2. The dashboard opens on your smallest secondary monitor, or as a window on your main screen if that's the only one. Double-click the tray icon (or start Impious Bonum again) for its window, where *Screens* moves it or makes it a window and *General* has *Start with Windows*.
 3. For temperatures and FPS, *Sensors* → *Install…* in the window (one admin prompt). CPU temperatures also need the free [PawnIO](https://pawnio.eu) driver (`winget install namazso.PawnIO`; HWiNFO and FanControl install it too). GPU temperatures and FPS work without it.
-4. *Layouts* is the layout editor, and *Gallery* has ready-made layouts for screens from 3.5" to 4K, filtered to suit yours.
+4. *Layouts* is the layout editor, and *Gallery* has ready-made layouts for screens from 3.5" to 4K and popular tablets, filtered to suit yours.
 
 The [user guide](<docs/guide.md>) covers everything else, and the [widget reference](docs/widgets.md) lists every widget's settings.
 
@@ -171,7 +194,7 @@ Impious Bonum is young: it's at version 0.22, first released at the end of Septe
 - [x] More widget types: 35 so far
 - [x] Themes: 56 built in, holidays too, with gradients, glow, moving backgrounds and falling snow, plus themes made from a picture
 - [x] Screenshots of the real dashboard, the editor and the widgets, here and in the guide
-- [x] A window with a page for every setting, and a gallery of 21 ready-made layouts for screens from 3.5" to 4K, and themes
+- [x] A window with a page for every setting, and a gallery of 29 ready-made layouts for screens from 3.5" to 4K and tablets, and themes
 - [x] Weather: longer forecasts, more readings, more places, air quality and pollen, severe weather warnings, rain in the next two hours, and the sun and moon
 - [x] Alerts that play a sound, switch layout, run a program or send a web request
 - [x] Network adapters, Wi-Fi signal and battery time left
@@ -179,6 +202,9 @@ Impious Bonum is young: it's at version 0.22, first released at the end of Septe
 - [x] Status checks for your own servers, energy use and cost, the microphone and camera, and wireless devices' batteries
 - [x] Snapping and alignment in the editor, warning symbols for colour blindness, and backing up your settings
 - [x] A layout per tablet, and readings as JSON for other apps
+- [x] Recent games from every launcher to start with a tap, and Steam downloads, friends and achievements
+- [x] Discord voice lights and alerts, OBS Studio controls, an app volume mixer and switching sound output
+- [x] Graphs up to 24 hours back, each app's share of the GPU, and tablet screens to plan a layout at a tablet's size
 
 </details>
 

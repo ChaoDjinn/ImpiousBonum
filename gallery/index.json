@@ -50,6 +50,15 @@
       "widgets": 6
     },
     {
+      "name": "Couch Remote",
+      "file": "couch-remote.json",
+      "author": "Impious Bonum",
+      "description": "For an Amazon Fire HD 8 (1280 × 800) on the sofa, through the tablet view: tap a recent game to start it, play or skip the music, switch the sound between the TV and your headphones, and mute an app.",
+      "width": 1280,
+      "height": 800,
+      "widgets": 5
+    },
+    {
       "name": "Gaming HUD",
       "file": "gaming-hud.json",
       "author": "Impious Bonum",
@@ -113,6 +122,24 @@
       "widgets": 5
     },
     {
+      "name": "Long View",
+      "file": "long-view.json",
+      "author": "Impious Bonum",
+      "description": "Looking further back: the CPU's and GPU's load over the last hour, both temperatures over six hours and today's lowest and highest, and what's using the graphics card.",
+      "width": 1920,
+      "height": 480,
+      "widgets": 6
+    },
+    {
+      "name": "On Air",
+      "file": "on-air.json",
+      "author": "Impious Bonum",
+      "description": "While you stream: OBS's record, stream and replay buttons and two scenes, lit while they're on, Discord's voice lights, every app's volume, your frame rate and your upload.",
+      "width": 1920,
+      "height": 480,
+      "widgets": 5
+    },
+    {
       "name": "Sim Rig",
       "file": "sim-rig.json",
       "author": "Impious Bonum",
@@ -158,6 +185,42 @@
       "widgets": 5
     },
     {
+      "name": "Sound Board",
+      "file": "sound-board.json",
+      "author": "Impious Bonum",
+      "description": "For an Amazon Fire HD 10 or a Samsung Galaxy Tab A8 or A9+ (1920 × 1200): what's playing over a visualiser, every app's volume, your speakers, headphones and TV to switch between, and the volume keys.",
+      "width": 1920,
+      "height": 1200,
+      "widgets": 6
+    },
+    {
+      "name": "Raid Night",
+      "file": "raid-night.json",
+      "author": "Impious Bonum",
+      "description": "For a Lenovo Tab P11 or M10 Plus (2000 × 1200) while you play with friends: who's talking in Discord, the game's cover, FPS and GPU, the game's and Discord's volume, your Steam friends, the GPU's busiest apps and its temperature over the last hour.",
+      "width": 2000,
+      "height": 1200,
+      "widgets": 8
+    },
+    {
+      "name": "Mini Hub",
+      "file": "mini-hub.json",
+      "author": "Impious Bonum",
+      "description": "For an iPad mini (2266 × 1488): the time and the weather, your recent games to start with a tap, every app's volume, your outputs, what's playing and Discord's voice lights.",
+      "width": 2266,
+      "height": 1488,
+      "widgets": 7
+    },
+    {
+      "name": "Game Library",
+      "file": "game-library.json",
+      "author": "Impious Bonum",
+      "description": "For an iPad or iPad Air (2360 × 1640): the games you've played lately from every launcher to start with a tap, what Steam is downloading, your Steam friends, the game's banner and what's using the graphics card.",
+      "width": 2360,
+      "height": 1640,
+      "widgets": 4
+    },
+    {
       "name": "Workstation",
       "file": "workstation.json",
       "author": "Impious Bonum",
@@ -165,6 +228,15 @@
       "width": 2560,
       "height": 1440,
       "widgets": 13
+    },
+    {
+      "name": "Broadcast Desk",
+      "file": "broadcast-desk.json",
+      "author": "Impious Bonum",
+      "description": "For a Samsung Galaxy Tab S7, S8 or S9 or a Google Pixel Tablet (2560 × 1600) beside your stream: OBS's buttons and scenes, Discord's voice lights, every app's volume, your outputs, FPS, upload and what's playing.",
+      "width": 2560,
+      "height": 1600,
+      "widgets": 8
     },
     {
       "name": "Big Picture",
