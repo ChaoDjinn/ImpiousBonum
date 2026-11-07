@@ -29,7 +29,7 @@ internal sealed class TabletAndUsbPage(ISettingsHost host) : CardPage("Tablet an
             })));
 
         var buttons = Add(Ui.Card("", "Let tablets press buttons",
-            "Taps on the tablet press the layout's buttons and media controls. Anyone with the link could press them.",
+            "Taps on the tablet press the layout's buttons and media controls, and start Recent games' games. Anyone with the link could press them.",
             Ui.Switch(Settings.TabletButtons, "Let tablets press buttons", host.SetTabletButtons)));
         buttons.IsEnabled = on;
 

@@ -151,6 +151,8 @@ public sealed class MediaWidget : Widget
         return target;
     }
 
+    public override bool PressableFromTablet => true;
+
     public override void Refresh(MetricStore store, DateTime now)
     {
         var playing = Has(store, MediaProvider.Title) || Has(store, MediaProvider.Artist);

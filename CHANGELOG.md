@@ -3,6 +3,10 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+- With *Let tablets press buttons* on, a tap on a *Recent games* tile on the tablet starts the game on the PC, as a tap on the dashboard does. Before, the tablet could press only *Buttons* widgets and the media controls, so game tiles did nothing.
+
 ## 0.20.0
 
 Control OBS Studio from the dashboard, graphs that look back up to 24 hours, and a screen at your tablet's size to plan layouts on.

@@ -36,8 +36,8 @@ public sealed class TabletView : IDisposable
     public event EventHandler<WidgetAction>? ActionRequested;
 
     /// <summary>
-    /// Let tablets press the layout's buttons and media controls. Off by default: anyone with the link could then
-    /// press them. Nothing else on the dashboard can be pressed from a tablet.
+    /// Let tablets press the layout's buttons, media controls and game tiles. Off by default: anyone with the link could
+    /// then press them. Nothing else on the dashboard can be pressed from a tablet.
     /// </summary>
     public bool AllowTaps
     {
@@ -104,7 +104,8 @@ public sealed class TabletView : IDisposable
 
     /// <summary>
     /// Presses the button at a point of a layout's picture (0–1 across and down), if there's one there: a button in a
-    /// buttons widget, or a media control. The layout is the saved one a link names, or null for the main dashboard.
+    /// buttons widget, a media control, or a game tile (see <see cref="Widget.PressableFromTablet"/>). The layout is the
+    /// saved one a link names, or null for the main dashboard.
     /// Returns whether one was pressed.
     /// </summary>
     internal bool PressAt(string? layout, double x, double y)
@@ -276,7 +277,7 @@ public sealed class TabletView : IDisposable
                     target = tap;
                 if (node is Widget widget)
                 {
-                    if (target is null || widget is not (ButtonsWidget or MediaWidget))
+                    if (target is null || !widget.PressableFromTablet)
                         return false;
                     target.Tap();
                     return true;
