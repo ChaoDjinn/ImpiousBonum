@@ -16,6 +16,7 @@
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4" alt="Windows 10 | 11">
   <img src="https://img.shields.io/badge/.NET-10-512BD4" alt=".NET 10">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/ChaoDjinn/ImpiousBonum" alt="MIT license"></a>
+  <a href="https://buymeacoffee.com/chaodjinn"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy me a coffee"></a>
 </p>
 
 <p align="center"><img src="docs/images/dashboard.png" alt="The default dashboard on a 1920×480 screen: CPU, GPU and memory graphs, CPU and GPU temperatures, 145 FPS, the time, three drives, and download, upload and ping"></p>
@@ -155,6 +156,8 @@ The [user guide](<docs/guide.md>) covers everything else, and the [widget refere
 Something not working, or an idea for a widget or a feature? [Open an issue](https://github.com/ChaoDjinn/ImpiousBonum/issues/new/choose),
 or from the app: *About and updates* → *Report a problem*. Please report security problems privately, as
 [SECURITY.md](SECURITY.md) explains.
+
+Impious Bonum is free. If it's earned a place on your desk, you can [buy me a coffee](https://buymeacoffee.com/chaodjinn).
 
 ## Good to know
 
