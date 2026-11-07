@@ -307,13 +307,14 @@ Each entry in `thresholds`:
 
 ## Top apps (`processes`)
 
-The apps using the most CPU or memory, like a small Task Manager. An app's processes count together, so all of a browser's tabs are one row.
+The apps using the most CPU, memory or graphics card, like a small Task Manager. An app's processes count together, so all of a browser's tabs are one row.
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `sort` | `cpu` / `memory` | `cpu` | Sort by |
+| `sort` | `cpu` / `memory` / `gpu` | `cpu` | Sort by. gpu ranks the apps by their share of the graphics card, like Task Manager's GPU column, and leaves out apps not using it. |
 | `count` | number (1–30) | `5` | Rows |
 | `columns` | `both` / `cpu` / `memory` | `both` | Show. Which numbers each row shows after the app's name. |
+| `gpu` | true/false | `false` | GPU column. Each app's share of the graphics card too, between CPU and memory. Always shown when sorted by GPU. |
 | `fontSize` | number (6–200) | `20` | Font size |
 | `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
 | `spacing` | number (0–200) | `4` | Row spacing |

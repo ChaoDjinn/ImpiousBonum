@@ -21,6 +21,12 @@ public sealed class GpuProvider : IMetricProvider
     public const string LoadEncode = "gpu.load.encode";
     public const string LoadCompute = "gpu.load.compute";
 
+    /// <summary>
+    /// Each process's share of the GPU, by process id, as Task Manager's GPU column has it, as an
+    /// <c>IReadOnlyDictionary&lt;int, double&gt;</c> attachment: for <see cref="ProcessProvider"/>'s apps.
+    /// </summary>
+    public const string Processes = "gpu.processes";
+
     private PdhQuery? _query;
     private int _engineCounter;
     private int _memoryCounter;
@@ -68,15 +74,14 @@ public sealed class GpuProvider : IMetricProvider
 
         // Instances look like "pid_1234_luid_0x00000000_0x0000D1B5_phys_0_eng_3_engtype_3D".
         // Task Manager sums per engine type across processes and reports the busiest engine type.
+        var engines = _query.Read(_engineCounter).Where(e => e.Instance.Contains(_luid, StringComparison.OrdinalIgnoreCase)).ToList();
         var perEngineType = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-        foreach (var (instance, value) in _query.Read(_engineCounter))
+        foreach (var (instance, value) in engines)
         {
-            if (!instance.Contains(_luid, StringComparison.OrdinalIgnoreCase))
-                continue;
-            var typeIndex = instance.LastIndexOf("engtype_", StringComparison.OrdinalIgnoreCase);
-            var engineType = typeIndex < 0 ? string.Empty : instance[(typeIndex + "engtype_".Length)..];
+            var engineType = EngineType(instance);
             perEngineType[engineType] = perEngineType.GetValueOrDefault(engineType) + value;
         }
+        store.SetAttachment(Processes, PerProcess(engines));
         store.Set(Load, perEngineType.Count == 0 ? 0 : Math.Clamp(perEngineType.Values.Max(), 0, 100));
         foreach (var (id, group) in new[] { (Load3D, EngineGroup.ThreeD), (LoadDecode, EngineGroup.Decode), (LoadEncode, EngineGroup.Encode), (LoadCompute, EngineGroup.Compute) })
         {
@@ -103,6 +108,43 @@ public sealed class GpuProvider : IMetricProvider
                 sum = (sum ?? 0) + value;
         }
         return sum;
+    }
+
+    /// <summary>"…_eng_3_engtype_3D" → "3D"; empty when the instance doesn't say.</summary>
+    private static string EngineType(string instance)
+    {
+        var typeIndex = instance.LastIndexOf("engtype_", StringComparison.OrdinalIgnoreCase);
+        return typeIndex < 0 ? string.Empty : instance[(typeIndex + "engtype_".Length)..];
+    }
+
+    /// <summary>
+    /// Each process's GPU share from its engines' utilisation, as Task Manager works out its GPU column: the process's
+    /// busiest engine type, adding up its engines of that type. Processes using none are left out.
+    /// </summary>
+    internal static IReadOnlyDictionary<int, double> PerProcess(IEnumerable<(string Instance, double Value)> engines)
+    {
+        var loads = new Dictionary<(int Process, string Type), double>();
+        foreach (var (instance, value) in engines)
+        {
+            if (ProcessOf(instance) is not { } process || !(value > 0))
+                continue;
+            var key = (process, EngineType(instance).ToUpperInvariant());
+            loads[key] = loads.GetValueOrDefault(key) + value;
+        }
+        return loads
+            .GroupBy(l => l.Key.Process)
+            .ToDictionary(g => g.Key, g => Math.Clamp(g.Max(l => l.Value), 0, 100));
+    }
+
+    /// <summary>"pid_1234_luid_…" → 1234; null for an instance without one.</summary>
+    internal static int? ProcessOf(string instance)
+    {
+        if (!instance.StartsWith("pid_", StringComparison.OrdinalIgnoreCase))
+            return null;
+        var end = instance.IndexOf('_', 4);
+        return end > 4 && int.TryParse(instance.AsSpan(4, end - 4), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var id) && id > 0
+            ? id
+            : null;
     }
 
     public enum EngineGroup

@@ -3,6 +3,10 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
+## Unreleased
+
+- *Top apps* can show each app's share of the graphics card, like Task Manager's GPU column: turn on *GPU column*, with headings over the numbers, or sort by `gpu` to see what's using the GPU besides your game. New readings `top.gpu.1` to `top.gpu.5` (with `.name`) are the busiest apps on the GPU. They come from the same readings as the GPU's load, so they cost nothing more.
+
 ## 0.21.0
 
 Sound from the dashboard: each app's volume in a mixer, a tap to switch between your speakers, headphones and TV, and OBS Studio in a widget of its own.

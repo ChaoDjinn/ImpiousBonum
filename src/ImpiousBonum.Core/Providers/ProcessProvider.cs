@@ -6,12 +6,13 @@ namespace ImpiousBonum.Core.Providers;
 /// <summary>One app's share: all its processes together (Chrome's thirty count as one).</summary>
 /// <param name="Cpu">Percent of the whole CPU, like Task Manager's CPU column.</param>
 /// <param name="Memory">Private working set in bytes, like Task Manager's Memory column.</param>
-public sealed record AppUsage(string Name, int Processes, double Cpu, long Memory);
+/// <param name="Gpu">Percent of the graphics card, like Task Manager's GPU column, its processes added up.</param>
+public sealed record AppUsage(string Name, int Processes, double Cpu, long Memory, double Gpu = 0);
 
 /// <summary>
-/// What's using the CPU and memory, by app, every two seconds: the five busiest by each as metrics
-/// (<c>top.cpu.1</c> with <c>top.cpu.1.name</c>, … <c>top.memory.5</c>), and the whole list as an attachment for the
-/// processes widget.
+/// What's using the CPU, memory and graphics card, by app, every two seconds: the five busiest by each as metrics
+/// (<c>top.cpu.1</c> with <c>top.cpu.1.name</c>, … <c>top.memory.5</c>, <c>top.gpu.5</c>), and the whole list as an
+/// attachment for the processes widget. The GPU shares come from <see cref="GpuProvider"/>'s latest reading.
 /// </summary>
 /// <param name="read">Reads every process; <see cref="ProcessList"/> unless a test swaps it.</param>
 public sealed class ProcessProvider(Func<IReadOnlyList<ProcessReading>>? read = null, TimeProvider? time = null) : IMetricProvider
@@ -29,6 +30,10 @@ public sealed class ProcessProvider(Func<IReadOnlyList<ProcessReading>>? read = 
 
     public static string MemoryName(int rank) => $"top.memory.{rank}.name";
 
+    public static string Gpu(int rank) => $"top.gpu.{rank}";
+
+    public static string GpuName(int rank) => $"top.gpu.{rank}.name";
+
     private readonly Func<IReadOnlyList<ProcessReading>> _read = read ?? ProcessList.Read;
     private readonly TimeProvider _time = time ?? TimeProvider.System;
     private IReadOnlyList<ProcessReading>? _before;
@@ -44,6 +49,8 @@ public sealed class ProcessProvider(Func<IReadOnlyList<ProcessReading>>? read = 
             store.Register(new MetricDefinition(CpuName(rank), $"Busiest app #{rank}: name", "Processes", MetricUnit.Text));
             store.Register(new MetricDefinition(Memory(rank), $"Biggest app #{rank}: memory", "Processes", MetricUnit.Bytes));
             store.Register(new MetricDefinition(MemoryName(rank), $"Biggest app #{rank}: name", "Processes", MetricUnit.Text));
+            store.Register(new MetricDefinition(Gpu(rank), $"Busiest app on the GPU #{rank}: GPU", "Processes", MetricUnit.Percent, 100));
+            store.Register(new MetricDefinition(GpuName(rank), $"Busiest app on the GPU #{rank}: name", "Processes", MetricUnit.Text));
         }
     }
 
@@ -53,18 +60,24 @@ public sealed class ProcessProvider(Func<IReadOnlyList<ProcessReading>>? read = 
         var readings = _read();
         if (_before is not null)
         {
-            var apps = Usage(_before, readings, now - _beforeAt, Environment.ProcessorCount);
+            var gpu = store.GetAttachment(GpuProvider.Processes) as IReadOnlyDictionary<int, double>;
+            var apps = Usage(_before, readings, now - _beforeAt, Environment.ProcessorCount, gpu);
             store.SetAttachment(Apps, apps);
             var byCpu = apps.OrderByDescending(a => a.Cpu).ToList();
             var byMemory = apps.OrderByDescending(a => a.Memory).ToList();
+            // Only apps using the GPU at all: the rest would be ranked by nothing.
+            var byGpu = apps.Where(a => a.Gpu > 0).OrderByDescending(a => a.Gpu).ToList();
             for (var rank = 1; rank <= Ranked; rank++)
             {
                 var busy = rank <= byCpu.Count ? byCpu[rank - 1] : null;
                 var big = rank <= byMemory.Count ? byMemory[rank - 1] : null;
+                var drawing = rank <= byGpu.Count ? byGpu[rank - 1] : null;
                 store.Set(Cpu(rank), busy?.Cpu);
                 store.SetText(CpuName(rank), busy?.Name);
                 store.Set(Memory(rank), big?.Memory);
                 store.SetText(MemoryName(rank), big?.Name);
+                store.Set(Gpu(rank), drawing?.Gpu);
+                store.SetText(GpuName(rank), drawing?.Name);
             }
         }
         _before = readings;
@@ -73,10 +86,11 @@ public sealed class ProcessProvider(Func<IReadOnlyList<ProcessReading>>? read = 
     }
 
     /// <summary>
-    /// Each app's CPU over the time between two readings, and its memory now, grouped by program name. A process that
-    /// started in between counts from the next reading.
+    /// Each app's CPU over the time between two readings, and its memory and GPU share now (from <paramref name="gpu"/>,
+    /// by process id), grouped by program name. A process that started in between counts from the next reading.
     /// </summary>
-    internal static IReadOnlyList<AppUsage> Usage(IReadOnlyList<ProcessReading> before, IReadOnlyList<ProcessReading> now, TimeSpan elapsed, int cores)
+    internal static IReadOnlyList<AppUsage> Usage(IReadOnlyList<ProcessReading> before, IReadOnlyList<ProcessReading> now, TimeSpan elapsed, int cores,
+        IReadOnlyDictionary<int, double>? gpu = null)
     {
         var earlier = new Dictionary<int, ProcessReading>();
         foreach (var reading in before)
@@ -88,10 +102,12 @@ public sealed class ProcessProvider(Func<IReadOnlyList<ProcessReading>>? read = 
             {
                 // The same id with a different name is a new process that reused it.
                 var used = earlier.TryGetValue(p.ProcessId, out var was) && was.Name == p.Name ? Math.Max(0, p.CpuTime - was.CpuTime) : 0;
-                return (Name: DisplayName(p.Name), Cpu: available > 0 ? used / available * 100 : 0, p.PrivateWorkingSet);
+                return (Name: DisplayName(p.Name), Cpu: available > 0 ? used / available * 100 : 0, p.PrivateWorkingSet,
+                    Gpu: gpu?.GetValueOrDefault(p.ProcessId) ?? 0);
             })
             .GroupBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(g => new AppUsage(g.First().Name, g.Count(), Math.Min(100, g.Sum(p => p.Cpu)), g.Sum(p => p.PrivateWorkingSet)))
+            .Select(g => new AppUsage(g.First().Name, g.Count(), Math.Min(100, g.Sum(p => p.Cpu)), g.Sum(p => p.PrivateWorkingSet),
+                Math.Min(100, g.Sum(p => p.Gpu))))
             .OrderByDescending(a => a.Cpu)
             .ThenByDescending(a => a.Memory)
             .ToList();
