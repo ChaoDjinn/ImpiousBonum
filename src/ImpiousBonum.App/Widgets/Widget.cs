@@ -46,6 +46,12 @@ public abstract class Widget : Grid
     /// <summary>Called roughly once a second on the UI thread.</summary>
     public abstract void Refresh(MetricStore store, DateTime now);
 
+    /// <summary>
+    /// Whether a tablet with <i>Let tablets press buttons</i> on can tap this widget's buttons: true for widgets whose taps
+    /// are things you'd expect to press from across the room, such as buttons, media controls and game tiles.
+    /// </summary>
+    public virtual bool PressableFromTablet => false;
+
     /// <summary>Raised (bubbling) when a tap on a widget asks the app to do something; see <see cref="WidgetAction"/>.</summary>
     public static readonly RoutedEvent ActionEvent = EventManager.RegisterRoutedEvent(
         "Action", RoutingStrategy.Bubble, typeof(EventHandler<WidgetActionEventArgs>), typeof(Widget));

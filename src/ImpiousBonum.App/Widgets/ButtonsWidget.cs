@@ -154,6 +154,8 @@ public sealed class ButtonsWidget : Widget
         Children.Add(grid);
     }
 
+    public override bool PressableFromTablet => true;
+
     public override void Refresh(MetricStore store, DateTime now)
     {
         foreach (var button in _onButtons)

@@ -2,7 +2,9 @@ using System.Text.Json.Nodes;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.App.Shell;
 using ImpiousBonum.App.Widgets;
+using ImpiousBonum.Core.Games;
 using ImpiousBonum.Core.Metrics;
+using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
 
 namespace ImpiousBonum.App.Tests;
@@ -45,6 +47,35 @@ public sealed class TabletButtonsTests
             // The timer can be tapped on the PC, but it isn't a button: tablets can't.
             Assert.False(tablet.PressAt(0.75, 0.4));
             Assert.Single(actions);
+        });
+    }
+
+    [Fact]
+    public void A_tap_on_a_recent_game_starts_it_from_the_tablet_too()
+    {
+        Sta.Run(() =>
+        {
+            var layout = new LayoutDocument
+            {
+                Width = 400,
+                Height = 200,
+                Widgets = [new JsonObject { ["type"] = "games", ["x"] = 0, ["y"] = 0, ["width"] = 400, ["height"] = 200, ["count"] = 1 }],
+            };
+            var store = new MetricStore();
+            store.SetAttachment(RecentGamesProvider.Recent, new List<RecentGame>
+            {
+                new(new StoreGame(GameStore.Steam, "367520", "Hollow Knight", @"D:\Steam\steamapps\common\Hollow Knight", "steam://rungameid/367520"),
+                    DateTimeOffset.Now.AddHours(-3), 12, new GameArt(null, null, null, null)),
+            });
+            using var tablet = new TabletView { AllowTaps = true };
+            var actions = new List<WidgetAction>();
+            tablet.ActionRequested += (_, action) => actions.Add(action);
+            tablet.Build(layout, new ThemeSettings());
+            tablet.Draw(store, DateTime.Now);
+
+            Assert.True(tablet.PressAt(0.5, 0.5));
+            var action = Assert.Single(actions);
+            Assert.Equal((WidgetAction.Open, "steam://rungameid/367520"), (action.Kind, action.Target));
         });
     }
 

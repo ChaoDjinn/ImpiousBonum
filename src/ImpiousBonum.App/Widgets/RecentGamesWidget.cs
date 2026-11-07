@@ -89,6 +89,9 @@ public sealed class RecentGamesWidget : Widget
         Children.Add(_grid);
     }
 
+    /// <summary>A tap on a tile starts the game on the PC, from a tablet too.</summary>
+    public override bool PressableFromTablet => true;
+
     public override void Refresh(MetricStore store, DateTime now)
     {
         var list = store.GetAttachment(RecentGamesProvider.Recent);
