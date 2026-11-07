@@ -17,11 +17,11 @@ namespace ImpiousBonum.App.Widgets;
 /// </summary>
 public sealed class RecentGamesWidget : Widget
 {
-    public static readonly IReadOnlyList<string> Launchers = ["steam", "epic", "gog"];
+    public static readonly IReadOnlyList<string> Launchers = ["steam", "epic", "gog", "battlenet", "ea", "ubisoft", "xbox", "amazon"];
 
     public static WidgetDescriptor Descriptor { get; } = new(
         "games", "Recent games",
-        "The games you've played lately, newest first, as Steam's or GOG Galaxy's art or the game's icon. Tap one to start it through its launcher. Games from Steam, the Epic Games launcher and GOG, read from their own records on this PC and GOG Galaxy's.",
+        "The games you've played lately, newest first, as Steam's or GOG Galaxy's art or the game's icon. Tap one to start it through its launcher. Games from Steam, Epic Games, GOG, Battle.net, EA, Ubisoft, Xbox and Amazon, read from their own records on this PC and GOG Galaxy's.",
         600, 300,
         [
             Setting.Number("count", "Games", 4, 1, RecentGamesProvider.Kept, group: Setting.Content),
@@ -29,9 +29,9 @@ public sealed class RecentGamesWidget : Widget
             Setting.Choice("art", "Picture", GameArt.CoverKind, [GameArt.CoverKind, GameArt.HeaderKind], group: Setting.Content,
                 help: "For a Steam game: cover is the tall box art, header the wide banner. An Epic Games or GOG game with GOG Galaxy installed has Galaxy's cover, and its background for header. Other games show their icon."),
             Setting.Picks("launchers", "Launchers", PickList.AllValue, choices: Launchers, all: "All launchers",
-                help: "Games from all of them, or just the ones chosen: steam, epic (the Epic Games launcher) or gog."),
+                help: "Games from all of them, or just the ones chosen: steam, epic (the Epic Games launcher), gog, battlenet, ea, ubisoft, xbox (the Xbox app and Game Pass) or amazon."),
             Setting.Toggle("launch", "Tap to play", true, group: Setting.Content,
-                help: "A tap starts the game through its launcher, as its desktop shortcut does: a GOG game through GOG Galaxy if Galaxy installed it, else by its own exe."),
+                help: "A tap starts the game through its launcher, as its desktop shortcut does: a GOG game through GOG Galaxy if Galaxy installed it, else by its own exe, a Battle.net, Ubisoft, Xbox or Amazon game through its launcher, and an EA game by its own exe, which brings up the EA app."),
             Setting.Number("fontSize", "Font size", 18, 6, 200),
             Setting.Toggle("showNames", "Show names", false, help: "Each game's name under its picture. A game with only its icon always shows its name."),
             Setting.Toggle("showPlayed", "Show when played", false,
