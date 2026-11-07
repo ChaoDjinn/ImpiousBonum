@@ -325,6 +325,13 @@ public static class DemoReadings
             new AppVolume("starfall", "Starfall Odyssey", null, 1, Muted: false, Playing: true),
             new AppVolume(AppVolume.SystemSounds, "System sounds", null, 0.6, Muted: false, Playing: false),
         ]);
+        // Playing through the headphones, with the speakers and the TV to switch to.
+        sound.PublishOutputs(store,
+        [
+            new SoundOutput("headphones", "Headphones", "Arctis Nova 7", OutputKind.Headphones, Default: true),
+            new SoundOutput("speakers", "Speakers", "Realtek(R) Audio", OutputKind.Speakers, Default: false),
+            new SoundOutput("tv", "LG TV", "NVIDIA High Definition Audio", OutputKind.Display, Default: false),
+        ]);
 
         // In a Discord call, with a friend talking and you listening.
         using var voice = new VoiceChatProvider(_ => []);
