@@ -8,7 +8,7 @@ namespace ImpiousBonum.App.Widgets;
 /// view and the editor's preview don't listen, so nothing happens there.
 /// </summary>
 /// <param name="Kind">One of the constants below.</param>
-/// <param name="Target">For <see cref="Open"/>: a program, file, folder or web address. For <see cref="Keys"/>: a shortcut such as <c>Ctrl+Shift+M</c>. For <see cref="Layout"/>: a layout's name. For <see cref="Web"/>: the http or https address.</param>
+/// <param name="Target">For <see cref="Open"/>: a program, file, folder or web address. For <see cref="Keys"/>: a shortcut such as <c>Ctrl+Shift+M</c>. For <see cref="Layout"/>: a layout's name. For <see cref="Web"/>: the http or https address. For <see cref="ObsScene"/> and <see cref="ObsMute"/>: the scene's or audio source's name in OBS.</param>
 /// <param name="Arguments">For <see cref="Open"/>: the program's command-line arguments.</param>
 public sealed record WidgetAction(string Kind, string Target = "", string Arguments = "")
 {
@@ -29,8 +29,29 @@ public sealed record WidgetAction(string Kind, string Target = "", string Argume
     /// <summary>A Windows notification with <see cref="Target"/> as its message, for widgets with news to give (a finished timer). Not a button action.</summary>
     public const string Notify = "notify";
 
+    /// <summary>Starts OBS recording, or stops it.</summary>
+    public const string ObsRecord = "obs-record";
+
+    /// <summary>Starts OBS streaming, or stops it.</summary>
+    public const string ObsStream = "obs-stream";
+
+    /// <summary>Turns OBS's replay buffer on or off.</summary>
+    public const string ObsReplay = "obs-replay";
+
+    /// <summary>Saves OBS's replay buffer: the last few seconds or minutes, as OBS is set to keep.</summary>
+    public const string ObsSaveReplay = "obs-save-replay";
+
+    /// <summary>Puts <see cref="Target"/>, an OBS scene's name, on air.</summary>
+    public const string ObsScene = "obs-scene";
+
+    /// <summary>Mutes or unmutes <see cref="Target"/>, an OBS audio source's name such as Mic/Aux.</summary>
+    public const string ObsMute = "obs-mute";
+
+    /// <summary>The OBS kinds, which go to OBS's WebSocket server.</summary>
+    public static readonly IReadOnlyList<string> ObsKinds = [ObsRecord, ObsStream, ObsReplay, ObsSaveReplay, ObsScene, ObsMute];
+
     /// <summary>Every kind, in the order the editor offers them.</summary>
-    public static readonly IReadOnlyList<string> Kinds = [PlayPause, Next, Previous, Stop, VolumeUp, VolumeDown, Mute, MicMute, Open, Keys, Layout, Web];
+    public static readonly IReadOnlyList<string> Kinds = [PlayPause, Next, Previous, Stop, VolumeUp, VolumeDown, Mute, MicMute, Open, Keys, Layout, Web, .. ObsKinds];
 
     /// <summary>The media and volume kinds, which act like the keyboard's media keys.</summary>
     public static readonly IReadOnlyList<string> MediaKinds = [PlayPause, Next, Previous, Stop, VolumeUp, VolumeDown, Mute];

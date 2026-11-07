@@ -2,6 +2,7 @@ using System.Diagnostics;
 using ImpiousBonum.Core.CustomData;
 using ImpiousBonum.Core.Energy;
 using ImpiousBonum.Core.Metrics;
+using ImpiousBonum.Core.Obs;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Sessions;
 using ImpiousBonum.Core.StatusChecks;
@@ -56,6 +57,7 @@ public sealed class Sampler : IAsyncDisposable
     /// The app in front when it's linked to a layout or theme as a game, for its pictures; null counts only the launchers' games.
     /// </param>
     /// <param name="steamAccount">Whose Steam friends and achievements to fetch, with your own key; null, or returning null, fetches nothing from Steam.</param>
+    /// <param name="obs">The connection to OBS Studio, shared with the OBS buttons; null asks OBS nothing.</param>
     /// <param name="playedPath">
     /// Where the app's own record of when Epic Games and GOG games were played is kept between runs; null keeps it only
     /// while it runs.
@@ -67,7 +69,7 @@ public sealed class Sampler : IAsyncDisposable
         Func<AirQualityRequest?>? airQuality = null, Func<WarningsRequest?>? warnings = null, Func<IReadOnlyList<WeatherRequest>>? weatherPlaces = null,
         Func<EnergySettings>? energy = null, string? energyTotalsPath = null, Func<GridCarbonRequest?>? gridCarbon = null,
         Func<IReadOnlyList<StatusCheck>>? statusChecks = null, Func<string?>? linkedGame = null, string? playedPath = null,
-        Func<SteamAccount?>? steamAccount = null) =>
+        Func<SteamAccount?>? steamAccount = null, ObsConnection? obs = null) =>
     [
         new CpuProvider(),
         new MemoryProvider(),
@@ -99,6 +101,7 @@ public sealed class Sampler : IAsyncDisposable
         new SteamFriendsProvider(steamAccount ?? (() => null)),
         new GalaxyAchievementsProvider(),
         new VoiceChatProvider(),
+        new ObsProvider(obs),
     ];
 
     public void Start()

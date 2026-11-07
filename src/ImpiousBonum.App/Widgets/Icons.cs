@@ -58,6 +58,11 @@ public static class Icons
         ["star"] = Parse("M12,3 L14.7,8.8 L21,9.5 L16.3,13.8 L17.6,20 L12,16.8 L6.4,20 L7.7,13.8 L3,9.5 L9.3,8.8 Z"),
         ["lock"] = Parse("M5.5,11 H18.5 V20.5 H5.5 Z M8,11 V8 A4,4 0 0 1 16,8 V11"),
         ["power"] = Parse("M12,3 V11 M7,5.8 A8,8 0 1 0 17,5.8"),
+        // For OBS buttons: a record dot in a ring, a broadcast's waves, and a replay's arrow round a play triangle.
+        ["record"] = Parse("M12,3 A9,9 0 1 1 11.99,3 Z M12,9.5 A2.5,2.5 0 1 1 11.99,9.5 Z"),
+        ["broadcast"] = Parse("M12,10.5 A1.5,1.5 0 1 1 11.99,10.5 Z M8.5,8.5 A5,5 0 0 0 8.5,15.5 M15.5,8.5 A5,5 0 0 1 15.5,15.5 " +
+                              "M5.5,5.5 A9,9 0 0 0 5.5,18.5 M18.5,5.5 A9,9 0 0 1 18.5,18.5"),
+        ["replay"] = Parse("M4,12 A8,8 0 1 0 6.34,6.34 M6.34,2.5 V6.34 H10.2 M10.5,9 L15,12 L10.5,15 Z"),
         ["moon"] = Parse("M20,14.5 A8.5,8.5 0 1 1 9.5,4 A6.5,6.5 0 0 0 20,14.5 Z"),
         ["link"] = Parse("M10,14 L14,10 M8.5,11 L6.5,13 A3.5,3.5 0 0 0 11,17.5 L13,15.5 M15.5,13 L17.5,11 A3.5,3.5 0 0 0 13,6.5 L11,8.5"),
 

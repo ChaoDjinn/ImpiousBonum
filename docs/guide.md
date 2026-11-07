@@ -6,7 +6,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
-- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [Discord voice](#discord-voice), [device batteries](#device-batteries), [Steam downloads](#steam-downloads), [Steam friends and achievements](#steam-friends-and-achievements), [GOG Galaxy](#gog-galaxy)
+- [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [Discord voice](#discord-voice), [device batteries](#device-batteries), [Steam downloads](#steam-downloads), [Steam friends and achievements](#steam-friends-and-achievements), [GOG Galaxy](#gog-galaxy), [OBS Studio](#obs-studio)
 - [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [longer history](#longer-history), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [recent games](#recent-games), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
@@ -807,6 +807,53 @@ Galaxy's database is read when it changes, at most once a minute, and only for t
 doesn't document it, so an update to Galaxy could change it: anything the app can't read counts as not known, and its
 own record carries on.
 
+### OBS Studio
+
+Buttons that control OBS Studio, and readings for what it's doing, through the WebSocket server built into OBS since
+version 28. To set it up:
+
+1. In OBS, open *Tools → WebSocket Server Settings*, tick *Enable WebSocket server*, and click *Show Connect Info*.
+2. In Impious Bonum, on the *OBS Studio* page, turn on *Connect to OBS* and paste the *Server Password*. Leave
+   *Address* empty for OBS on the same PC; for OBS on a streaming PC, give the address *Show Connect Info* shows, e.g.
+   `192.168.1.20:4455`. *Now* says *Connected* once it is, or why not.
+
+The password is kept in `settings.json`, and so in backups, and is only sent to OBS, hashed as OBS asks. While OBS on
+this PC is closed, the app just looks for it every few seconds; it doesn't keep trying to connect.
+
+| Reading | |
+|---|---|
+| `obs.recording`, `obs.streaming`, `obs.replay` | 1 while OBS is recording, streaming or keeping a replay buffer, 0 while it isn't |
+| `obs.recording.time`, `obs.streaming.time` | How long it's been going, e.g. *12:05* or *1:30:00*, with *(paused)* after a paused recording. No reading while it isn't |
+| `obs.scene` | The scene on air |
+| `obs.fps` | The frames a second OBS is rendering |
+| `obs.dropped` | The share of the stream's frames dropped, while streaming |
+| `obs.bitrate` | The stream's bitrate, e.g. *6000 kbps*, while streaming |
+| `obs.status` | How connecting is going: *Connected*, *OBS isn't running*, a wrong password, or OBS out of reach |
+
+The readings appear once *Connect to OBS* is on, and have no reading while OBS can't be reached. On a
+[Buttons widget](#now-playing-and-buttons), the `obs-` actions do the rest: `obs-record`, `obs-stream` and
+`obs-replay` start or stop recording, streaming and the replay buffer; `obs-save-replay` saves the replay buffer;
+`obs-scene` puts the scene named in *target* on air; and `obs-mute` mutes or unmutes the audio source named in
+*target*, such as `Mic/Aux`. The record, stream, replay and scene buttons take the widget's *On colour* (the theme's
+critical colour, red like an on-air light) while what they control is on. The `record`, `broadcast` and `replay`
+icons are made for them:
+
+```json
+{ "type": "buttons", "x": 30, "y": 30, "width": 600, "height": 130,
+  "buttons": [
+    { "label": "Record", "icon": "record", "action": "obs-record" },
+    { "label": "Go live", "icon": "broadcast", "action": "obs-stream" },
+    { "label": "Clip it", "icon": "replay", "action": "obs-save-replay" },
+    { "label": "BRB", "icon": "layout", "action": "obs-scene", "target": "BRB" }
+  ] }
+```
+
+- **A black recording** means the scene has nothing in it: in OBS's *Sources*, add a *Game Capture* (a game) or a
+  *Display Capture* (a whole monitor).
+- **The replay buffer** has to be turned on in OBS first (*Settings → Output → Replay Buffer*); until it is,
+  `obs.replay` stays at 0 and the replay buttons do nothing.
+- A tap while OBS is closed, or can't be reached, says why in a notification.
+
 ## Widgets in depth
 
 ### Top apps
@@ -923,6 +970,7 @@ The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a
 | `keys` | Sends a shortcut such as `Ctrl+Shift+M`, `Win+D` or `F13` to the app you're using. Names are like `A`, `5`, `F1`–`F24`, `Enter`, `Space`, `Esc`, `Tab`, `Home`, `PgUp`, `Up`, `Delete`, `VolumeUp`, `MediaPlayPause` |
 | `layout` | Switches to the layout named in *target* |
 | `web` | Sends a web request to the *target* address, for Home Assistant, smart lights, Node-RED or ntfy (see [Web request buttons](#web-request-buttons)) |
+| `obs-record`, `obs-stream`, `obs-replay`, `obs-save-replay`, `obs-scene`, `obs-mute` | Control OBS Studio: start or stop recording, streaming or the replay buffer, save a replay, put the scene named in *target* on air, or mute the audio source named in *target* (see [OBS Studio](#obs-studio)) |
 
 Taps never take focus from the app you're using, which is what makes `keys` useful: a button for a game's or a call app's shortcut works without leaving it. Shortcuts can't reach apps running as administrator (Windows doesn't allow it). Buttons don't do anything while you edit the layout, or in the tablet view unless you [let tablets press them](#tablet-view). If a button can't do its job (a program that isn't there, a misspelt key), a notification says why.
 

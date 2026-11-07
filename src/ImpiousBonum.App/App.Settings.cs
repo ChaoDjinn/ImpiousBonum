@@ -371,6 +371,18 @@ public partial class App : ISettingsHost
         AppLog.Info(_settings.SteamRequest() is null ? "Steam friends and achievements off" : "Steam friends and achievements on");
     }
 
+    void ISettingsHost.SetObs(bool on, string? address, string? password)
+    {
+        var was = _settings.Obs;
+        _settings.Obs = on;
+        _settings.ObsAddress = address;
+        _settings.ObsPassword = password;
+        _settings.Save();
+        // Not the password, nor where OBS is: the log goes with bug reports.
+        if (on != was)
+            AppLog.Info(on ? "OBS connection on" : "OBS connection off");
+    }
+
     void ISettingsHost.SetCalendars(IReadOnlyList<CalendarLink> calendars) => SetCalendars(calendars);
 
     void ISettingsHost.SetNewsFeeds(IReadOnlyList<NewsFeed> feeds) => SetNewsFeeds(feeds);
