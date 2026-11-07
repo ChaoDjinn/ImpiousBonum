@@ -74,6 +74,18 @@ public interface IGameFiles
 
     /// <summary>GOG Galaxy's program, <c>GalaxyClient.exe</c>, where the registry says it's installed; null if it isn't.</summary>
     string? GalaxyClient();
+
+    /// <summary>
+    /// The Amazon Games app's installed games and when each was last played, from its databases on this PC; empty without
+    /// the app, and null if they can't be read just now.
+    /// </summary>
+    AmazonData? Amazon();
+
+    /// <summary>
+    /// The folders the Xbox app installs games in, one per drive at most (<c>D:\XboxGames</c>), as each drive's
+    /// <c>.GamingRoot</c> file names them; none without the Xbox app.
+    /// </summary>
+    IReadOnlyList<string> GamingRoots();
 }
 
 /// <summary>A registry key's name and its text values, matched ignoring case as Windows does.</summary>
@@ -215,6 +227,39 @@ public sealed class GameFiles : IGameFiles
         {
             return null;
         }
+    }
+
+    public AmazonData? Amazon()
+    {
+        try
+        {
+            return Directory.Exists(AmazonLibrary.DataPath) ? AmazonLibrary.Read(AmazonLibrary.DataPath) : new AmazonData([], new Dictionary<string, DateTimeOffset>());
+        }
+        // Busy, laid out differently since an update, or no SQLite on this Windows.
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DllNotFoundException or EntryPointNotFoundException)
+        {
+            return null;
+        }
+    }
+
+    public IReadOnlyList<string> GamingRoots()
+    {
+        var roots = new List<string>();
+        foreach (var drive in DriveInfo.GetDrives())
+        {
+            try
+            {
+                if (drive.DriveType != DriveType.Fixed || !drive.IsReady)
+                    continue;
+                var marker = Path.Combine(drive.RootDirectory.FullName, ".GamingRoot");
+                if (File.Exists(marker) && new FileInfo(marker).Length < 4096)
+                    roots.AddRange(XboxLibrary.GamingRoot(drive.RootDirectory.FullName, File.ReadAllBytes(marker)));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+            {
+            }
+        }
+        return roots;
     }
 
     public IReadOnlyDictionary<string, GalaxyGame>? GalaxyGames(IReadOnlyCollection<string> keys)

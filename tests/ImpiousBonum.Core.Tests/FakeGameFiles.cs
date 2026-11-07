@@ -59,7 +59,7 @@ internal sealed class FakeGameFiles : IGameFiles
     public List<RegistryEntry> Uninstall { get; } = [];
 
     public IReadOnlyList<RegistryEntry> LocalMachineEntries(string path) =>
-        path == GogLibrary.RegistryPath ? Gog : path == BattleNetLibrary.RegistryPath ? Uninstall : [];
+        path == GogLibrary.RegistryPath ? Gog : path == BattleNetLibrary.RegistryPath ? Uninstall : Registry.GetValueOrDefault(path) ?? [];
 
     public string? ReadText(string path)
     {
@@ -101,6 +101,19 @@ internal sealed class FakeGameFiles : IGameFiles
     }
 
     public string? GalaxyClient() => GalaxyExe;
+
+    /// <summary>The Amazon Games app's games and when they were played; null for no app.</summary>
+    public AmazonData? AmazonGames { get; set; }
+
+    public AmazonData? Amazon() => AmazonGames ?? new AmazonData([], new Dictionary<string, DateTimeOffset>());
+
+    /// <summary>The folders the Xbox app installs games in.</summary>
+    public List<string> XboxRoots { get; } = [];
+
+    public IReadOnlyList<string> GamingRoots() => XboxRoots;
+
+    /// <summary>Other registry keys' entries, by path, such as Ubisoft Connect's.</summary>
+    public Dictionary<string, List<RegistryEntry>> Registry { get; } = new(StringComparer.OrdinalIgnoreCase);
 
     public byte[]? Icon(string exe)
     {

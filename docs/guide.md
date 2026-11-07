@@ -258,10 +258,10 @@ Turning a page is the same as picking that layout from the tray, so it's remembe
 | `weather.warnings` (how many), `weather.warning` (the most serious one's headline), `weather.warning.level` (e.g. *Yellow* or *Severe*) | Warnings of severe weather for the same place, from the Met Office in the UK or the National Weather Service in the US, every 10 minutes, once *Weather* → *Severe weather warnings* is on (see [Severe weather warnings](#severe-weather-warnings)) |
 | `calendar.next.title`, `calendar.next.time`, `calendar.next.location`, `calendar.next.minutes`, `calendar.now.title`, `calendar.today`, `calendar.status` | Your calendars' iCal links, set on the *Calendars* page, every 15 minutes (see [Calendar](#calendar)) |
 | `calendar.<name>.next.title`, `calendar.<name>.next.time`, `calendar.<name>.next.location`, `calendar.<name>.next.minutes`, `calendar.<name>.now.title`, `calendar.<name>.today` | The same for one calendar, e.g. `calendar.work.next.title` for a calendar called *Work* |
-| `game.name`, `game.appid`, `game.store` | The game you're playing: its name in Steam, the Epic Games launcher, GOG Galaxy or Battle.net, or the name in its exe for a game linked under *Game layouts*; its Steam app id; and which of those launchers it's from (*Steam*, *Epic Games*, *GOG* or *Battle.net*). No reading while no game is in front (see [Game cover art](#game-cover-art)) |
+| `game.name`, `game.appid`, `game.store` | The game you're playing: its name in Steam, the Epic Games launcher, GOG Galaxy, Battle.net, the EA app, Ubisoft Connect, the Xbox app or Amazon Games, or the name in its exe for a game linked under *Game layouts*; its Steam app id; and which of those launchers it's from (*Steam*, *Epic Games*, *GOG*, *Battle.net*, *EA*, *Ubisoft*, *Xbox* or *Amazon Games*). No reading while no game is in front (see [Game cover art](#game-cover-art)) |
 | `steam.downloads` (how many), `steam.download.game`, `steam.download.state`, `steam.download.progress`, `steam.download.done`, `steam.download.size`, `steam.download.speed`, `steam.download.left` | What Steam is downloading, updating or installing, from its own files, every 5 seconds. No reading while nothing is (see [Steam downloads](#steam-downloads)) |
 | `steam.friends.online`, `steam.friends.playing`, `steam.status`, `game.achievements` (e.g. *34 / 50*), `game.achievements.percent` | Your Steam friends online and how many are playing, how fetching them is going, and your achievements in the Steam game in front, from Steam's Web API once you've given your own key on the *Steam* page (see [Steam friends and achievements](#steam-friends-and-achievements)) |
-| `game.hours`, `games.last` | How many hours the game in front has been played (Steam's count for a Steam game, plus the time it's been in front that Steam hasn't counted yet; for an Epic Games or GOG game, [GOG Galaxy](#gog-galaxy)'s count where there is one, else the app's own, with its time on top; for a Battle.net game, the app's own), and the name of the game played most recently (see [Recent games](#recent-games)) |
+| `game.hours`, `games.last` | How many hours the game in front has been played (Steam's count for a Steam game, plus the time it's been in front that Steam hasn't counted yet; for an Epic Games or GOG game, [GOG Galaxy](#gog-galaxy)'s count where there is one, else the app's own, with its time on top; for any other launcher's game, the app's own), and the name of the game played most recently (see [Recent games](#recent-games)) |
 | `session.game`, `session.minutes`, `session.playing`, `session.<x>.avg/min/max` for `fps`, `low1` (1% low FPS), `cpu`, `gpu` (loads), `cputemp`, `gputemp` | The game session going on now, or the last one, for a game linked under *Game layouts* (see [Session recaps](#session-recaps)) |
 | `news.title`, `news.source`, `news.age`, `news.status` | The newest headline from your news feeds, set on the *News feeds* page, every 15 minutes (see [News](#news)) |
 | `custom.<source>.<field>`, `custom.<source>.status` | Your own: web addresses and commands set up on the *Custom data* page (see [Custom data](#custom-data)) |
@@ -1119,7 +1119,7 @@ The pictures come from Steam's own cache on your PC, so nothing is downloaded; S
 
 A game is the app in front, as for the FPS reading and [game layouts](#game-layouts), when Steam, the Epic Games launcher or GOG Galaxy installed it, or when it's linked to a layout or theme on the *Game layouts* page. The app knows a launcher's games by the folders the launcher installed them in, from the launcher's own records on your PC (Steam's library files, Epic's manifests, GOG's registry entries), so no account is needed and nothing is fetched. For a game from anywhere else, link it to get its icon. The picture stays for a few seconds when you alt-tab away, and goes once no game is in front, leaving the widget empty; turn on *Hide when there's no game* to hide it instead (it shows faded while you edit the layout). The *Gaming HUD* in the [gallery](#layout-gallery) has the game's banner beside the session so far.
 
-The game's name, Steam app id and launcher are readings too: `game.name` is the launcher's name for it, or else the description in its exe; `game.appid` is empty for a game Steam didn't install; and `game.store` is *Steam*, *Epic Games*, *GOG* or *Battle.net*, or empty for a linked game from anywhere else. A text widget of `{game.name}` shows what you're playing.
+The game's name, Steam app id and launcher are readings too: `game.name` is the launcher's name for it, or else the description in its exe; `game.appid` is empty for a game Steam didn't install; and `game.store` is the launcher (*Steam*, *Epic Games*, *GOG*, *Battle.net*, *EA*, *Ubisoft*, *Xbox* or *Amazon Games*), or empty for a linked game from anywhere else. A text widget of `{game.name}` shows what you're playing.
 
 It costs next to nothing: the game is looked up only when a different app comes to the front, and remembered, the launchers' lists of installed games are read again at most every ten minutes, and each picture is decoded at the size it's shown. In the layout file:
 
@@ -1133,8 +1133,8 @@ The *Recent games* widget shows the games you've played lately, newest first, as
 *cover* or the wide *header*), [GOG Galaxy](#gog-galaxy)'s cover of an Epic Games or GOG game, or else the game's icon
 with its name under it. Tap a tile to start the game through its launcher, as its desktop shortcut does: Steam and the
 Epic Games launcher start theirs (opening if they need to), a GOG game starts through GOG Galaxy if Galaxy
-installed it, or else by its own exe, and a Battle.net game starts through Battle.net, which signs in and updates it
-first. Turn *Tap to play* off for tiles that only show.
+installed it, or else by its own exe, Battle.net, Ubisoft Connect, the Xbox app and Amazon Games start theirs, and an
+EA game starts by its own exe, which brings up the EA app to sign in. Turn *Tap to play* off for tiles that only show.
 
 <p align="center"><img src="images/widgets/recent-games.png" width="600" alt="Four recent games as tiles: Starfall Odyssey's cover, now and 42 h; Lumen Drift's icon, 1d 2h ago and 3 h; Ember Hollow's cover, 2d 3h ago and 120 h; and Tidewater's icon, 7d 2h ago and under an hour; under them, Last played: Starfall Odyssey"></p>
 
@@ -1153,6 +1153,12 @@ Only installed games are listed, as they're the ones a tap can start. Where the 
   reads whenever Battle.net rewrites it, but not for how long, so a Battle.net game's hours are the time the app has
   seen it in front. Its games are the ones Battle.net has installed, as listed in Windows' installed apps; an old beta
   whose folder has gone is left out.
+- **Amazon Games** keeps when each game was last played in its own database, which the widget reads with its list of
+  games, every ten minutes; their hours are the time the app has seen.
+- **The EA app, Ubisoft Connect and the Xbox app** keep no record of when you played on your PC, so their games show
+  once you've played them with Impious Bonum running, and their hours are the time it has seen. Their games are found
+  without anything to link: EA's and Ubisoft's from Windows' installed apps and Ubisoft's registry entries, and the
+  Xbox app's (Game Pass and the Microsoft Store) from the `XboxGames` folders it installs them in.
 
 *Games* sets how many tiles there are (up to 8) and *Rows* how many rows they're spread over; the tiles stay the same
 size however many games there are, so a new one doesn't rearrange the others. *Launchers* picks Steam's, Epic's or

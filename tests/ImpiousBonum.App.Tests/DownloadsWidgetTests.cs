@@ -166,5 +166,9 @@ public sealed class DownloadsWidgetTests
         public IReadOnlyDictionary<string, GalaxyGame>? GalaxyGames(IReadOnlyCollection<string> keys) => new Dictionary<string, GalaxyGame>();
 
         public string? GalaxyClient() => null;
+
+        public AmazonData? Amazon() => new([], new Dictionary<string, DateTimeOffset>());
+
+        public IReadOnlyList<string> GamingRoots() => [];
     }
 }

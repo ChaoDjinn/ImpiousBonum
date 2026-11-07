@@ -7,6 +7,10 @@ public enum GameStore
     Epic,
     Gog,
     BattleNet,
+    Ea,
+    Ubisoft,
+    Xbox,
+    Amazon,
 }
 
 /// <summary>
@@ -39,6 +43,10 @@ public sealed record StoreGame(GameStore Store, string Id, string Name, string F
         GameStore.Epic => "Epic Games",
         GameStore.Gog => "GOG",
         GameStore.BattleNet => "Battle.net",
+        GameStore.Ea => "EA",
+        GameStore.Ubisoft => "Ubisoft",
+        GameStore.Xbox => "Xbox",
+        GameStore.Amazon => "Amazon Games",
         _ => store.ToString(),
     };
 }
