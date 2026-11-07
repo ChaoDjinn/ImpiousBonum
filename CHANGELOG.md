@@ -3,7 +3,9 @@
 What's new in each release. Each version's section becomes its release notes on GitHub, so write for people using
 the app; changes since the last release go under *Unreleased*, renamed to the version when it's released. The [user guide](docs/guide.md) has the details.
 
-## Unreleased
+## 0.20.0
+
+Control OBS Studio from the dashboard, graphs that look back up to 24 hours, and a screen at your tablet's size to plan layouts on.
 
 - Plan a layout at your tablet's size: *Screens* → *Add a tablet screen…* (under the map), then pick your tablet from the list or type its resolution, landscape or portrait. It gets an empty layout of its own at that size and the editor opens on it. The editor's *Screen* list has the tablet screen in it after your monitors, so its preview is the tablet's shape and *Match dashboard screen* gives a layout its size; the *Gallery* can pick it too. The tablet screen has a tablet link of its own (*Show QR code…* on the *Screens* page, or *Layout for the link* on the *Tablet and USB screen* page) that shows whichever layout you give it, so changing its layout on the PC changes the tablet without a new link. Nothing changes until you add one.
 - Graphs, multi-line graphs and stat tiles can look further back than four minutes: a new *Time span* setting goes to 15 minutes, an hour, 6 hours or 24 hours, with a point every 10 seconds up to every 5 minutes. Each point is an average, and a pale band behind a graph's line runs from the lowest reading to the highest, so a spike shorter than a point still shows; a stat tile's lowest and highest are the readings' own. The longer history fills from when the graph is first on screen and starts again when the app does, and is kept only for the readings a graph shows that way, so nothing else costs more memory.
