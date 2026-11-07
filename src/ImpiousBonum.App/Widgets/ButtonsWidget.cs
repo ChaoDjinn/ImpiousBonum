@@ -30,12 +30,14 @@ public sealed class ButtonsWidget : Widget
                 Setting.Choice("action", "Action", WidgetAction.PlayPause, WidgetAction.Kinds, group: Setting.Content,
                     help: "Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. "
                         + "mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. "
+                        + "app-mute mutes or unmutes one app, named in the target. "
                         + "The obs actions control OBS Studio, once it's connected on the OBS page; record, stream, replay and scene buttons take the on colour while they're on."),
                 Setting.PlainText("target", "Target", null,
                     help: "open: a program, file, folder or web address, e.g. calc.exe, C:\\Games or https://… · "
                         + "keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · "
                         + "web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… · "
-                        + "obs-scene: the scene's name, e.g. BRB · obs-mute: the audio source's name, e.g. Mic/Aux"),
+                        + "obs-scene: the scene's name, e.g. BRB · obs-mute: the audio source's name, e.g. Mic/Aux · "
+                        + "app-mute: the app, as the volume mixer names it or by its program's name, e.g. Spotify or chrome"),
                 Setting.PlainText("arguments", "Arguments", null, help: "open: command-line arguments for a program."),
                 Setting.Choice("method", "Method", "POST", WidgetAction.WebMethods, group: Setting.Content,
                     help: "web: how to send it. Webhooks, Home Assistant's services and ntfy want POST."),
@@ -222,6 +224,7 @@ public sealed class ButtonsWidget : Widget
         WidgetAction.ObsSaveReplay => "Save OBS's replay buffer",
         WidgetAction.ObsScene => action.Target.Length == 0 ? "Shows no OBS scene yet: set a target" : $"Shows the \"{action.Target}\" scene in OBS",
         WidgetAction.ObsMute => action.Target.Length == 0 ? "Mutes no OBS source yet: set a target" : $"Mutes or unmutes \"{action.Target}\" in OBS",
+        WidgetAction.AppMute => action.Target.Length == 0 ? "Mutes no app yet: set a target" : $"Mutes or unmutes {action.Target}",
         _ => char.ToUpperInvariant(action.Kind[0]) + action.Kind[1..],
     };
 

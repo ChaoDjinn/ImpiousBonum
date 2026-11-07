@@ -315,6 +315,17 @@ public static class DemoReadings
             new(true, new JsonObject { ["activeFps"] = 60.0 }),
         ]);
 
+        // Headphones at 45%, the game and the music playing, a friend in Discord, and a browser muted.
+        using var sound = new SoundProvider(_ => [], () => null);
+        sound.Publish(store, new OutputVolume("Headphones (Arctis Nova 7)", 0.45, Muted: false),
+        [
+            new AppVolume("discord", "Discord", null, 0.8, Muted: false, Playing: true),
+            new AppVolume("chrome", "Google Chrome", null, 0.4, Muted: true, Playing: false),
+            new AppVolume("spotify", "Spotify", null, 0.3, Muted: false, Playing: true),
+            new AppVolume("starfall", "Starfall Odyssey", null, 1, Muted: false, Playing: true),
+            new AppVolume(AppVolume.SystemSounds, "System sounds", null, 0.6, Muted: false, Playing: false),
+        ]);
+
         // In a Discord call, with a friend talking and you listening.
         using var voice = new VoiceChatProvider(_ => []);
         voice.Publish(store, [new AppSound(1, "Discord", SoundFlow.Out, true, 0.32), new AppSound(1, "Discord", SoundFlow.In, true, 0.004)], new DateTimeOffset(now));

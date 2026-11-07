@@ -47,11 +47,23 @@ public sealed record WidgetAction(string Kind, string Target = "", string Argume
     /// <summary>Mutes or unmutes <see cref="Target"/>, an OBS audio source's name such as Mic/Aux.</summary>
     public const string ObsMute = "obs-mute";
 
+    /// <summary>
+    /// Mutes or unmutes <see cref="Target"/>, an app by its program's name or the name the volume mixer shows (Spotify,
+    /// chrome, Google Chrome), or the speakers or headphones Windows plays to for <see cref="Core.Native.AppVolumeControl.Output"/>.
+    /// </summary>
+    public const string AppMute = "app-mute";
+
+    /// <summary>
+    /// Sets <see cref="Target"/>'s volume (named as for <see cref="AppMute"/>) to <see cref="Arguments"/>, from 0 to 1. The
+    /// volume mixer's sliders ask for it; it isn't a button action.
+    /// </summary>
+    public const string AppVolume = "app-volume";
+
     /// <summary>The OBS kinds, which go to OBS's WebSocket server.</summary>
     public static readonly IReadOnlyList<string> ObsKinds = [ObsRecord, ObsStream, ObsReplay, ObsSaveReplay, ObsScene, ObsMute];
 
     /// <summary>Every kind, in the order the editor offers them.</summary>
-    public static readonly IReadOnlyList<string> Kinds = [PlayPause, Next, Previous, Stop, VolumeUp, VolumeDown, Mute, MicMute, Open, Keys, Layout, Web, .. ObsKinds];
+    public static readonly IReadOnlyList<string> Kinds = [PlayPause, Next, Previous, Stop, VolumeUp, VolumeDown, Mute, MicMute, AppMute, Open, Keys, Layout, Web, .. ObsKinds];
 
     /// <summary>The media and volume kinds, which act like the keyboard's media keys.</summary>
     public static readonly IReadOnlyList<string> MediaKinds = [PlayPause, Next, Previous, Stop, VolumeUp, VolumeDown, Mute];
