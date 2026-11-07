@@ -7,7 +7,7 @@ Everything Impious Bonum does and how to set it up. New here? Start with [Gettin
 - [Getting started](#getting-started): [installing](#installing), [the window and the tray](#the-window-and-the-tray-menu), [windowed mode](#windowed-mode), [backing up your settings](#backing-up-your-settings)
 - [Layouts and the editor](#layouts-and-the-editor): [the default layout](#the-default-layout), [the editor](#layout-editor), [editing by hand](#editing-layouts-by-hand), [warning symbols](#warning-symbols), [sharing](#sharing-layouts), [the gallery](#layout-gallery), [pages](#pages)
 - [What it shows](#what-it-shows): [metrics](#metrics), [the sensor service](#sensor-service-temperatures-fans-power-fps), [energy use](#energy-use), [weather](#weather), [sun and moon](#sun-and-moon), [calendar](#calendar), [news](#news), [custom data](#custom-data), [status checks](#status-checks), [Claude usage](#claude-usage), [microphone and camera](#microphone-and-camera), [Discord voice](#discord-voice), [device batteries](#device-batteries), [Steam downloads](#steam-downloads), [Steam friends and achievements](#steam-friends-and-achievements), [GOG Galaxy](#gog-galaxy), [OBS Studio](#obs-studio)
-- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [longer history](#longer-history), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [volume mixer](#volume-mixer), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [recent games](#recent-games), [photo frame](#photo-frame)
+- [Widgets in depth](#widgets-in-depth): [top apps](#top-apps), [multi-line graphs](#multi-line-graphs), [longer history](#longer-history), [world clocks](#world-clocks), [timers](#timers), [countdowns](#countdowns), [now playing and buttons](#now-playing-and-buttons), [audio visualiser](#audio-visualiser), [volume mixer](#volume-mixer), [sound output](#sound-output), [images and shapes](#images-and-shapes), [game cover art](#game-cover-art), [recent games](#recent-games), [photo frame](#photo-frame)
 - [Automatic behaviour](#automatic-behaviour): [alerts](#alerts), [hotkeys](#hotkeys), [game layouts](#game-layouts), [session recaps](#session-recaps), [schedule](#schedule), [holiday themes](#holiday-themes), [dimming](#dimming), [logging](#logging)
 - [More screens](#more-screens): [more dashboards](#more-dashboards), [tablet view](#tablet-view), [readings for other apps](#readings-for-other-apps), [USB screens](#usb-screens)
 - [Command line](#command-line)
@@ -97,7 +97,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="images/default-layout.svg" alt="Map of the default layout: CPU, GPU and memory graphs, CPU and GPU temperatures and the frame rate, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Thirty-four widget types are available: `text`, `graph` (line or area history with a header, up to 24 hours back: [Longer history](#longer-history)), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `countdowns` ([Countdowns](#countdowns)), `drives`, `batteries` ([Device batteries](#device-batteries)), `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `mixer` ([Volume mixer](#volume-mixer)), `voice` ([Discord voice](#discord-voice)), `obs` ([OBS Studio](#obs-studio)), `games` ([Recent games](#recent-games)), `downloads` ([Steam downloads](#steam-downloads)), `friends` ([Steam friends and achievements](#steam-friends-and-achievements)), `weather` ([Weather](#weather)), `rain` ([Rain soon](#rain-soon)), `sun` ([Sun and moon](#sun-and-moon)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)), `photos` ([Photo frame](#photo-frame)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Thirty-five widget types are available: `text`, `graph` (line or area history with a header, up to 24 hours back: [Longer history](#longer-history)), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `countdowns` ([Countdowns](#countdowns)), `drives`, `batteries` ([Device batteries](#device-batteries)), `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `mixer` ([Volume mixer](#volume-mixer)), `outputs` ([Sound output](#sound-output)), `voice` ([Discord voice](#discord-voice)), `obs` ([OBS Studio](#obs-studio)), `games` ([Recent games](#recent-games)), `downloads` ([Steam downloads](#steam-downloads)), `friends` ([Steam friends and achievements](#steam-friends-and-achievements)), `weather` ([Weather](#weather)), `rain` ([Rain soon](#rain-soon)), `sun` ([Sun and moon](#sun-and-moon)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)), `photos` ([Photo frame](#photo-frame)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
 
 <table>
   <tr>
@@ -979,6 +979,7 @@ The *Buttons* widget (`buttons`) is a row or grid of buttons to tap, each with a
 | `volume-up`, `volume-down`, `mute` | Like the keyboard's volume keys |
 | `mic-mute` | Mutes the microphone Windows uses for calls, or unmutes it (see [Microphone and camera](#microphone-and-camera)). With the `mic` icon, the button shows `mic-off` while it's muted, whatever muted it |
 | `app-mute` | Mutes or unmutes the app named in *target*, as the [volume mixer](#volume-mixer) names it (`Spotify`, `Google Chrome`) or by its program (`chrome`) |
+| `sound-output` | Plays sound through the output named in *target*, such as `Headphones`, lit while it is; with names separated by commas, the next of them in turn; empty, the next of all of them (see [Sound output](#sound-output)) |
 | `open` | Opens the *target*: a program (`calc.exe`), a file or folder (`C:\Games`), a web address, or a Windows link such as `ms-settings:sound`. *Arguments* are passed to a program |
 | `keys` | Sends a shortcut such as `Ctrl+Shift+M`, `Win+D` or `F13` to the app you're using. Names are like `A`, `5`, `F1`–`F24`, `Enter`, `Space`, `Esc`, `Tab`, `Home`, `PgUp`, `Up`, `Delete`, `VolumeUp`, `MediaPlayPause` |
 | `layout` | Switches to the layout named in *target* |
@@ -1062,6 +1063,30 @@ A *Buttons* widget's `app-mute` action mutes one app with a tap, e.g. Discord wh
 ```json
 { "type": "buttons", "x": 30, "y": 30, "width": 200, "height": 110,
   "buttons": [{ "label": "Discord", "icon": "mute", "action": "app-mute", "target": "Discord" }] }
+```
+
+### Sound output
+
+The *Sound output* widget (`outputs`, under *Media and controls*) has a button for each of your speakers, headphones
+and TVs, the one sound is playing through lit in the accent colour. Tap another to play through it instead, for
+games, music and calls alike, as picking it in the volume flyout does.
+
+- **Which outputs:** all the ones that are on, in the sound settings' order, or just the ones you switch between:
+  *Outputs* picks from the outputs seen since Impious Bonum started, in an order of your own. An output that's off or
+  unplugged is left out until it's back. With sound software such as SteelSeries Sonar, or Steam's and VR headsets'
+  virtual devices, the list gets long, so picking a few is worth it.
+- **Names:** each output's own name, as the sound settings show it (you can rename them there), without the number
+  Windows puts in front of a TV's (*4 - Beyond TV* is *Beyond TV*). Outputs with the same name, such as two *Speakers*,
+  go by their hardware's instead (*Realtek(R) Audio*). The icon is headphones, a speaker or a TV, as the driver says.
+- **On a Buttons widget**, `sound-output` does the same from a button of your own, lit while its output is playing:
+  `Headphones`, or `Headphones, Speakers` to swap between the two with one button.
+
+Windows has no published way for an app to change the output, so this uses the one the sound control panel itself
+uses, as other sound switchers do. The outputs are only looked at while one of these widgets or buttons is on screen.
+
+```json
+{ "type": "outputs", "x": 30, "y": 30, "width": 420, "height": 110,
+  "outputs": "Headphones (Arctis Nova 7X), Speakers (Realtek(R) Audio), Beyond TV (AMD High Definition Audio Device)" }
 ```
 
 ### Images and shapes

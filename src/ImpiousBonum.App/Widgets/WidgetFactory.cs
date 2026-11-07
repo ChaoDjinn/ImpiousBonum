@@ -27,7 +27,7 @@ public static class WidgetFactory
         .. In(Games, RecentGamesWidget.Descriptor, DownloadsWidget.Descriptor, FriendsWidget.Descriptor),
         .. In(Time, ClockWidget.Descriptor, TimerWidget.Descriptor, AgendaWidget.Descriptor, CountdownsWidget.Descriptor),
         .. In(Online, WeatherWidget.Descriptor, RainWidget.Descriptor, SunMoonWidget.Descriptor, NewsWidget.Descriptor, BarsWidget.ClaudeDescriptor),
-        .. In(Media, MediaWidget.Descriptor, VisualizerWidget.Descriptor, ButtonsWidget.Descriptor, MixerWidget.Descriptor, VoiceWidget.Descriptor, ObsWidget.Descriptor),
+        .. In(Media, MediaWidget.Descriptor, VisualizerWidget.Descriptor, ButtonsWidget.Descriptor, MixerWidget.Descriptor, OutputsWidget.Descriptor, VoiceWidget.Descriptor, ObsWidget.Descriptor),
         .. In(Decoration, ImageWidget.Descriptor, ShapeWidget.Descriptor, PhotoFrameWidget.Descriptor),
     ]);
 

@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using ImpiousBonum.App.Layout;
 using ImpiousBonum.Core.Metrics;
+using ImpiousBonum.Core.Native;
 using ImpiousBonum.Core.Providers;
 
 namespace ImpiousBonum.App.Widgets;
@@ -31,13 +32,15 @@ public sealed class ButtonsWidget : Widget
                     help: "Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. "
                         + "mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. "
                         + "app-mute mutes or unmutes one app, named in the target. "
+                        + "sound-output plays sound through the output in the target, lit while it is. "
                         + "The obs actions control OBS Studio, once it's connected on the OBS page; record, stream, replay and scene buttons take the on colour while they're on."),
                 Setting.PlainText("target", "Target", null,
                     help: "open: a program, file, folder or web address, e.g. calc.exe, C:\\Games or https://… · "
                         + "keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · "
                         + "web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… · "
                         + "obs-scene: the scene's name, e.g. BRB · obs-mute: the audio source's name, e.g. Mic/Aux · "
-                        + "app-mute: the app, as the volume mixer names it or by its program's name, e.g. Spotify or chrome"),
+                        + "app-mute: the app, as the volume mixer names it or by its program's name, e.g. Spotify or chrome · "
+                        + "sound-output: the output's name, e.g. Headphones; several with commas between take turns, and empty takes turns with them all"),
                 Setting.PlainText("arguments", "Arguments", null, help: "open: command-line arguments for a program."),
                 Setting.Choice("method", "Method", "POST", WidgetAction.WebMethods, group: Setting.Content,
                     help: "web: how to send it. Webhooks, Home Assistant's services and ntfy want POST."),
@@ -82,6 +85,11 @@ public sealed class ButtonsWidget : Widget
     private Brush? _iconBrush;
     private Brush? _labelBrush;
     private Brush? _activeBrush;
+    private bool _switchesOutput;
+    private readonly List<TapTarget> _taps = [];
+
+    /// <summary>The buttons, in the order they're set up.</summary>
+    internal IReadOnlyList<TapTarget> Taps => _taps;
 
     /// <summary>A button that shows whether it's on: when, its icon (and whether that's filled) and its label.</summary>
     private sealed record OnButton(Func<MetricStore, bool> IsOn, Path? Icon, bool Filled, TextBlock? Label)
@@ -136,6 +144,7 @@ public sealed class ButtonsWidget : Widget
             }
             if (IsOn(action) is { } isOn)
                 _onButtons.Add(new OnButton(isOn, iconPath, filled, text));
+            _switchesOutput |= action.Kind == WidgetAction.SoundOutput;
 
             var target = new TapTarget
             {
@@ -152,6 +161,7 @@ public sealed class ButtonsWidget : Widget
             else
                 target.Tapped += (_, _) => RequestAction(action);
             grid.Children.Add(target);
+            _taps.Add(target);
         }
         Children.Add(grid);
     }
@@ -160,6 +170,9 @@ public sealed class ButtonsWidget : Widget
 
     public override void Refresh(MetricStore store, DateTime now)
     {
+        // Output buttons need the outputs read, which happens only while something asks.
+        if (_switchesOutput)
+            SoundProvider.WantOutputs(store, DateTimeOffset.UtcNow);
         foreach (var button in _onButtons)
         {
             var on = button.IsOn(store);
@@ -198,6 +211,9 @@ public sealed class ButtonsWidget : Widget
             WidgetAction.ObsReplay => store => Is(store, ObsProvider.Replay),
             WidgetAction.ObsScene when action.Target.Length > 0 => store =>
                 store.TryGet(ObsProvider.Scene, out var scene) && string.Equals(scene.Text, action.Target, StringComparison.OrdinalIgnoreCase),
+            // One output, not one that takes turns, is on while Windows plays through it.
+            WidgetAction.SoundOutput when action.Target.Length > 0 && !action.Target.Contains(',') => store =>
+                store.GetAttachment(SoundProvider.Outputs) is IReadOnlyList<SoundOutput> outputs && SoundOutputs.Find(outputs, action.Target)?.Default == true,
             _ => null,
         };
     }
@@ -225,6 +241,8 @@ public sealed class ButtonsWidget : Widget
         WidgetAction.ObsScene => action.Target.Length == 0 ? "Shows no OBS scene yet: set a target" : $"Shows the \"{action.Target}\" scene in OBS",
         WidgetAction.ObsMute => action.Target.Length == 0 ? "Mutes no OBS source yet: set a target" : $"Mutes or unmutes \"{action.Target}\" in OBS",
         WidgetAction.AppMute => action.Target.Length == 0 ? "Mutes no app yet: set a target" : $"Mutes or unmutes {action.Target}",
+        WidgetAction.SoundOutput => action.Target.Length == 0 ? "Plays sound through the next output"
+            : action.Target.Contains(',') ? $"Plays sound through the next of {action.Target}" : $"Plays sound through {action.Target}",
         _ => char.ToUpperInvariant(action.Kind[0]) + action.Kind[1..],
     };
 

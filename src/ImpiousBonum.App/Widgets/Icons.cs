@@ -63,6 +63,9 @@ public static class Icons
         ["broadcast"] = Parse("M12,10.5 A1.5,1.5 0 1 1 11.99,10.5 Z M8.5,8.5 A5,5 0 0 0 8.5,15.5 M15.5,8.5 A5,5 0 0 1 15.5,15.5 " +
                               "M5.5,5.5 A9,9 0 0 0 5.5,18.5 M18.5,5.5 A9,9 0 0 1 18.5,18.5"),
         ["replay"] = Parse("M4,12 A8,8 0 1 0 6.34,6.34 M6.34,2.5 V6.34 H10.2 M10.5,9 L15,12 L10.5,15 Z"),
+        // Sound outputs: headphones on a headband, and a TV on its stand.
+        ["headphones"] = Parse("M4,15 V12 A8,8 0 0 1 20,12 V15 M4,15 H7.5 V20 H5.5 A1.5,1.5 0 0 1 4,18.5 Z M20,15 H16.5 V20 H18.5 A1.5,1.5 0 0 0 20,18.5 Z"),
+        ["tv"] = Parse("M3,5 H21 V16 H3 Z M9,20 H15 M12,16 V20"),
         // A floppy disk, for saving: OBS's replay.
         ["save"] = Parse("M4,4 H16.5 L20,7.5 V20 H4 Z M8,4 V9 H15 V4 M7.5,20 V14 H16.5 V20"),
         ["moon"] = Parse("M20,14.5 A8.5,8.5 0 1 1 9.5,4 A6.5,6.5 0 0 0 20,14.5 Z"),

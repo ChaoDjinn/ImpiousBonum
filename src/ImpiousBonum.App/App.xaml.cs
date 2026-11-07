@@ -362,8 +362,10 @@ public partial class App : Application
         var now = DateTime.Now;
         if (sampler is not null)
         {
-            // A volume mixer asks for the apps when it's refreshed, which a snapshot does only once, after warming up.
+            // A volume mixer asks for the apps, and a sound output widget for the outputs, when they're refreshed, which a
+            // snapshot does only once, after warming up.
             SoundProvider.Want(store, DateTimeOffset.UtcNow + warmup);
+            SoundProvider.WantOutputs(store, DateTimeOffset.UtcNow + warmup);
             sampler.Start();
             await Task.Delay(warmup);
         }

@@ -43,6 +43,9 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
     /// <summary>Mutes or unmutes an app (see <see cref="WidgetAction.AppMute"/>); Windows' unless a test swaps it.</summary>
     public Func<string, bool?> ToggleAppMute { get; init; } = AppVolumeControl.ToggleMute;
 
+    /// <summary>Plays sound through another output (see <see cref="WidgetAction.SoundOutput"/>), saying why it couldn't; Windows' unless a test swaps it.</summary>
+    public Func<string, string?> SwitchOutput { get; init; } = SoundOutputs.Switch;
+
     /// <summary>The latest volume asked for each app, sent one at a time so a dragged slider doesn't queue up.</summary>
     private readonly Dictionary<string, double> _volumes = [];
     private readonly HashSet<string> _settingVolume = [];
@@ -69,6 +72,14 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
                 return MuteApp(action.Target);
             case WidgetAction.AppVolume:
                 return SetVolume(action.Target, action.Arguments);
+            case WidgetAction.SoundOutput:
+                // In the background, as it means asking every sound device; the button lights up once Windows has switched.
+                _ = Task.Run(() =>
+                {
+                    if (SwitchOutput(action.Target) is { } problem)
+                        Failed(problem);
+                });
+                return null;
             case WidgetAction.ObsRecord:
             case WidgetAction.ObsStream:
             case WidgetAction.ObsReplay:

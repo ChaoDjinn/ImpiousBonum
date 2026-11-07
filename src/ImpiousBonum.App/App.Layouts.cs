@@ -181,6 +181,7 @@ public partial class App
         StatusWidget.CheckNames => [.. _settings.StatusChecks.Select(c => c.Name.Trim())],
         BatteriesWidget.DeviceNames => _sampler is null ? [] : BatteryProvider.Names(_sampler.Store),
         MixerWidget.AppNames => _sampler is null ? [] : SoundProvider.Names(_sampler.Store),
+        OutputsWidget.OutputNames => _sampler is null ? [] : SoundProvider.OutputNames(_sampler.Store),
         _ => [],
     };
 
