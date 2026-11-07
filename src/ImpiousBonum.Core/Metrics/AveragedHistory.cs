@@ -77,6 +77,19 @@ internal sealed class AveragedTier(TimeSpan step, int capacity)
         _count++;
     }
 
+    /// <summary>For made-up readings: these steps as the ones closed up to now, oldest first, with none under way.</summary>
+    public void Seed(DateTimeOffset now, IEnumerable<(double Average, double Low, double High)> steps)
+    {
+        foreach (var (average, low, high) in steps)
+        {
+            _average.Add(average);
+            _low.Add(low);
+            _high.Add(high);
+        }
+        _current = now.UtcTicks / step.Ticks;
+        _count = 0;
+    }
+
     /// <summary>The latest <paramref name="points"/> steps, oldest first, ending with the one under way if it has readings.</summary>
     public AveragedHistory Latest(DateTimeOffset now, int points)
     {

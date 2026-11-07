@@ -1,0 +1,18 @@
+// Mini Hub: for an iPad mini (2266 × 1488) through the tablet view, or a screen that shape. The time and the weather,
+// the games you've played lately to start with a tap, every app's volume, a tap to switch speakers or headphones,
+// what's playing, and Discord's voice lights while you're in a call.
+{
+  "width": 2266,
+  "height": 1488,
+  "theme": "Rose Pine",
+  "widgets": [
+    { "type": "clock", "x": 40, "y": 40, "width": 700, "height": 300, "timeSize": 150, "dateSize": 30 },
+    { "type": "weather", "x": 780, "y": 40, "width": 1446, "height": 300, "fontSize": 90, "forecastSize": 26, "count": 5 },
+    { "type": "games", "x": 40, "y": 380, "width": 1100, "height": 470, "count": 4, "art": "cover", "showNames": true, "fontSize": 24,
+      "spacing": 24, "cornerRadius": 14 },
+    { "type": "mixer", "x": 1180, "y": 380, "width": 1046, "height": 470, "fontSize": 34, "max": 5, "spacing": 22, "barHeight": 10 },
+    { "type": "outputs", "x": 40, "y": 890, "width": 700, "height": 360, "fontSize": 26, "iconSize": 64, "spacing": 16 },
+    { "type": "media", "x": 780, "y": 890, "width": 1446, "height": 360, "fontSize": 44, "controlSize": 64 },
+    { "type": "voice", "x": 40, "y": 1290, "width": 2186, "height": 158, "fontSize": 48 }
+  ]
+}

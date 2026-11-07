@@ -115,6 +115,24 @@ public sealed class MetricStore
     }
 
     /// <summary>
+    /// For made-up readings, such as the screenshots': the metric's averaged history over <paramref name="span"/> as
+    /// <paramref name="steps"/>, oldest first, ending now.
+    /// </summary>
+    internal void SeedHistory(string id, LongSpan span, IEnumerable<(double Average, double Low, double High)> steps)
+    {
+        var (size, _) = AveragedTier.Of(span);
+        var (step, capacity) = AveragedTier.Sizes[size];
+        lock (_gate)
+        {
+            if (!_entries.TryGetValue(id, out var entry))
+                return;
+            entry.Tiers ??= new AveragedTier?[AveragedTier.Sizes.Length];
+            var tier = entry.Tiers[size] = new AveragedTier(step, capacity);
+            tier.Seed(_time.GetUtcNow(), steps);
+        }
+    }
+
+    /// <summary>
     /// The metric's averaged history over <paramref name="span"/>. The first time a metric is asked for a span, it starts
     /// keeping that history, so it fills from then on, and keeps it while the app runs.
     /// </summary>

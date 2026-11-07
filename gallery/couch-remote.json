@@ -1,0 +1,22 @@
+// Couch Remote: for an Amazon Fire HD 8 (1280 × 800) on the sofa, when the PC plays to the TV. Through the tablet view
+// with Let tablets press buttons on: tap a recent game to start it, play or skip the music, switch the sound between
+// the TV and your headphones, mute an app, and turn the volume up or down.
+{
+  "width": 1280,
+  "height": 800,
+  "theme": "Nord",
+  "widgets": [
+    { "type": "games", "x": 20, "y": 20, "width": 1240, "height": 168, "count": 4, "art": "header", "showNames": true, "fontSize": 18,
+      "spacing": 14, "cornerRadius": 10 },
+    { "type": "media", "x": 20, "y": 208, "width": 800, "height": 262, "fontSize": 30, "controlSize": 46 },
+    { "type": "outputs", "x": 840, "y": 208, "width": 420, "height": 262, "fontSize": 17, "iconSize": 44, "spacing": 8 },
+    { "type": "mixer", "x": 20, "y": 490, "width": 800, "height": 290, "fontSize": 24, "max": 4, "spacing": 14, "barHeight": 8 },
+    { "type": "buttons", "x": 840, "y": 490, "width": 420, "height": 290, "columns": 2, "iconSize": 52, "spacing": 10,
+      "buttons": [
+        { "label": "", "icon": "volume-down", "action": "volume-down" },
+        { "label": "", "icon": "volume-up", "action": "volume-up" },
+        { "label": "", "icon": "mute", "action": "mute" },
+        { "label": "", "icon": "play-pause", "action": "play-pause" }
+      ] }
+  ]
+}

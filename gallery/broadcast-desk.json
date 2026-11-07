@@ -1,0 +1,21 @@
+// Broadcast Desk: for a Samsung Galaxy Tab S7, S8 or S9 or a Google Pixel Tablet (2560 × 1600) beside your stream,
+// through the tablet view. OBS's record, stream and replay buttons and three scenes, lit while they're on, with whether
+// you're live and for how long; Discord's voice lights; every app's volume and a tap to switch speakers or headphones;
+// your frame rate and upload; and what's playing. Connect OBS on the OBS Studio page, and rename the scenes to yours.
+{
+  "width": 2560,
+  "height": 1600,
+  "theme": "Tokyo Night",
+  "widgets": [
+    { "type": "obs", "x": 40, "y": 40, "width": 1600, "height": 420, "fontSize": 48, "iconSize": 76, "spacing": 18, "replay": true,
+      "scenes": "Gaming, Chatting, BRB" },
+    { "type": "voice", "x": 1680, "y": 40, "width": 840, "height": 160, "fontSize": 56 },
+    { "type": "clock", "x": 1680, "y": 220, "width": 840, "height": 240, "timeSize": 130, "dateSize": 32 },
+    { "type": "mixer", "x": 40, "y": 500, "width": 1200, "height": 680, "fontSize": 42, "barHeight": 12, "spacing": 26 },
+    { "type": "outputs", "x": 1280, "y": 500, "width": 1240, "height": 300, "fontSize": 34, "iconSize": 80, "spacing": 18 },
+    { "type": "stat", "x": 1280, "y": 840, "width": 600, "height": 340, "label": "FPS", "metric": "fps", "text": "{fps:0 nounit}", "fontSize": 110,
+      "labelSize": 34, "thresholds": [{ "below": 50, "color": "warning" }, { "below": 30, "color": "critical" }] },
+    { "type": "stat", "x": 1920, "y": 840, "width": 600, "height": 340, "label": "Upload", "metric": "net.up", "fontSize": 90, "labelSize": 34 },
+    { "type": "media", "x": 40, "y": 1220, "width": 2480, "height": 340, "fontSize": 56, "controlSize": 84 }
+  ]
+}

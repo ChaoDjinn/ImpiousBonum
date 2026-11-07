@@ -2,7 +2,7 @@
 
 Ready-made layouts and [themes](#themes) to start from, and a place to share yours. Browse them on the *Gallery* page
 of the Impious Bonum window: pick one of your screens to see the layouts that suit its shape, and choose simple or busy ones. Each is drawn
-live with your own readings, and *Show on* puts it on that screen. The twenty-one so far were made along with the app; a
+live with your own readings, and *Show on* puts it on that screen. The twenty-nine so far were made along with the app; a
 layout of yours would be the first from someone else. See [Layout gallery](../docs/guide.md#layout-gallery) in the user guide.
 
 | Layout | Screen | Widgets | What's on it |
@@ -12,6 +12,7 @@ layout of yours would be the first from someone else. See [Layout gallery](../do
 | Pocket | 1024 × 600 | 5 | The time, the weather, and CPU, GPU and memory dials |
 | Streamer | 1024 × 600 | 6 | Touch buttons for scenes and your mic, an on-air stopwatch, FPS, upload, CPU and GPU |
 | Trick or Treat | 1280 × 800 | 6 | Halloween: the time, a countdown to trick-or-treating, tonight's weather and your playlist |
+| Couch Remote | 1280 × 800 | 5 | On the sofa: recent games to start with a tap, the music, your speakers or TV, and every app's volume |
 | Gaming HUD | 1920 × 480 | 11 | Frame rate, frame times, 1% lows, temperatures, the game's banner and the session so far |
 | Desk Companion | 1920 × 480 | 4 | World clocks, today's calendar, the weather and what's playing |
 | System Monitor | 1920 × 480 | 8 | Load and network lines, every CPU thread, the busiest apps, drives and memory |
@@ -19,12 +20,19 @@ layout of yours would be the first from someone else. See [Layout gallery](../do
 | Listening Room | 1920 × 480 | 4 | What's playing, volume buttons, the time and an audio visualiser across the screen |
 | Network | 1920 × 480 | 6 | Download and upload, the Wi-Fi signal, the ping, the IP address and the day's traffic |
 | Festive | 1920 × 480 | 5 | Christmas: the days to go (every year), the time, the weather and your music |
+| Long View | 1920 × 480 | 6 | The last hour's loads, six hours of temperatures, today's lowest and highest, and the GPU's busiest apps |
+| On Air | 1920 × 480 | 5 | OBS's buttons and scenes, Discord's voice lights, every app's volume, FPS and upload |
 | Sim Rig | 1920 × 720 | 9 | The frame rate and how smooth it is, loads, temperatures and the time |
 | Living Room | 1920 × 1080 | 5 | For a TV across the room: the time, the weather, today's calendar and what's playing |
 | Command Centre | 1920 × 1080 | 12 | Loads, network, every CPU thread, temperatures, frame rates, apps, drives and memory |
 | Weather Station | 1920 × 1080 | 9 | The weather in detail, the hours and days ahead, and UV, humidity, air quality and wind dials |
 | News Desk | 1920 × 1080 | 5 | A ticker for each news feed, world clocks, the weather and your calendar |
+| Sound Board | 1920 × 1200 | 6 | What's playing over a visualiser, every app's volume, your outputs and the volume keys |
+| Raid Night | 2000 × 1200 | 8 | Playing with friends: Discord's voice lights, the game's cover, FPS, volumes, friends and the GPU |
+| Mini Hub | 2266 × 1488 | 7 | The time, the weather, recent games, every app's volume, your outputs and the music |
+| Game Library | 2360 × 1640 | 4 | Recent games from every launcher, Steam's downloads and friends, and the GPU's busiest apps |
 | Workstation | 2560 × 1440 | 13 | Your day, a focus timer, weather, news, music, loads and Claude usage |
+| Broadcast Desk | 2560 × 1600 | 8 | Streaming: OBS's buttons and scenes, Discord's voice lights, every app's volume, your outputs and FPS |
 | Big Picture | 3840 × 2160 | 17 | World clocks, weather, calendar and news beside everything about your PC |
 | Tower | 1080 × 1920 | 9 | Portrait: the time, the weather, loads, temperatures, apps and drives |
 | Case Strip | 480 × 1920 | 10 | For a tall screen in a PC case: temperatures, FPS, dials, every thread and a visualiser |
@@ -50,6 +58,12 @@ layout of yours would be the first from someone else. See [Layout gallery](../do
 ### Festive
 ![Festive](images/festive.png)
 
+### Long View
+![Long View](images/long-view.png)
+
+### On Air
+![On Air](images/on-air.png)
+
 ### Small Screen
 <img src="images/small-screen.png" width="400" alt="Small Screen">
 
@@ -64,6 +78,9 @@ layout of yours would be the first from someone else. See [Layout gallery](../do
 
 ### Trick or Treat
 <img src="images/trick-or-treat.png" width="560" alt="Trick or Treat">
+
+### Couch Remote
+<img src="images/couch-remote.png" width="560" alt="Couch Remote">
 
 ### Sim Rig
 ![Sim Rig](images/sim-rig.png)
@@ -80,8 +97,23 @@ layout of yours would be the first from someone else. See [Layout gallery](../do
 ### News Desk
 ![News Desk](images/news-desk.png)
 
+### Sound Board
+<img src="images/sound-board.png" width="600" alt="Sound Board">
+
+### Raid Night
+<img src="images/raid-night.png" width="600" alt="Raid Night">
+
+### Mini Hub
+<img src="images/mini-hub.png" width="600" alt="Mini Hub">
+
+### Game Library
+<img src="images/game-library.png" width="600" alt="Game Library">
+
 ### Workstation
 ![Workstation](images/workstation.png)
+
+### Broadcast Desk
+<img src="images/broadcast-desk.png" width="600" alt="Broadcast Desk">
 
 ### Big Picture
 ![Big Picture](images/big-picture.png)

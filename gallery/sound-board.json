@@ -1,0 +1,22 @@
+// Sound Board: for an Amazon Fire HD 10 or a Samsung Galaxy Tab A8 or A9+ (1920 × 1200) through the tablet view, or
+// a 1920 × 1200 screen. What's playing over bars that move with it; every app's volume, to drag; your speakers,
+// headphones and TV, to switch between with a tap; and the volume keys.
+{
+  "width": 1920,
+  "height": 1200,
+  "theme": "Aurora",
+  "widgets": [
+    { "type": "media", "x": 30, "y": 30, "width": 1240, "height": 300, "fontSize": 46, "controlSize": 66 },
+    { "type": "clock", "x": 1300, "y": 30, "width": 590, "height": 300, "timeSize": 120, "dateSize": 26 },
+    { "type": "visualizer", "x": 30, "y": 360, "width": 1860, "height": 180, "bands": 48, "style": "mirror", "gap": 6, "cornerRadius": 4 },
+    { "type": "mixer", "x": 30, "y": 570, "width": 1100, "height": 600, "fontSize": 36, "barHeight": 10, "spacing": 24 },
+    { "type": "outputs", "x": 1160, "y": 570, "width": 730, "height": 290, "fontSize": 28, "iconSize": 64, "spacing": 14 },
+    { "type": "buttons", "x": 1160, "y": 880, "width": 730, "height": 290, "iconSize": 64, "spacing": 14,
+      "buttons": [
+        { "label": "", "icon": "volume-down", "action": "volume-down" },
+        { "label": "", "icon": "mute", "action": "mute" },
+        { "label": "", "icon": "volume-up", "action": "volume-up" },
+        { "label": "", "icon": "play-pause", "action": "play-pause" }
+      ] }
+  ]
+}
