@@ -126,7 +126,7 @@ An accent-coloured line icon followed by a live value, e.g. a chip and the CPU t
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `cpu` | Icon |
+| `icon` | `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `record` / `broadcast` / `replay` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `cpu` | Icon |
 | `text` | template | `{cpu.temp:nounit} °C` | Text |
 | `fontSize` | number (6–400) | `64` | Font size |
 | `shrinkToFit` | true/false | `true` | Shrink to fit. Text too wide or too tall for the widget, say in a bigger font, gets smaller to fit instead of being cut off. |
@@ -681,15 +681,16 @@ Buttons to tap: play/pause, skip and volume, open a program, file or web address
 | `color` | color | `accent` | Icon colour |
 | `tileColor` | color | `track` | Tile colour. Each button's background, with the tile style. track is the theme's bar track. |
 | `labelColor` | color | `foreground` | Label colour |
+| `activeColor` | color | `critical` | On colour. An OBS button's icon and label while it's on: recording, streaming, the replay buffer on, or its scene on air. |
 
 Each entry in `buttons`:
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
 | `label` | text | `Play/pause` | Label. Empty shows just the icon. |
-| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `play-pause` | Icon |
-| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `mic-mute` / `open` / `keys` / `layout` / `web` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. |
-| `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… |
+| `icon` | `none` / `cpu` / `gpu` / `ram` / `disk` / `network` / `fps` / `play` / `pause` / `play-pause` / `next` / `previous` / `stop` / `volume-down` / `volume-up` / `mute` / `music` / `folder` / `globe` / `layout` / `keyboard` / `terminal` / `gamepad` / `sliders` / `chat` / `camera` / `home` / `star` / `lock` / `power` / `record` / `broadcast` / `replay` / `moon` / `link` / `clear-day` / `clear-night` / `partly-day` / `partly-night` / `cloud` / `fog` / `drizzle` / `rain` / `sleet` / `snow` / `storm` / `drop` / `wind` / `warning` / `mic` / `mic-off` | `play-pause` | Icon |
+| `action` | `play-pause` / `next` / `previous` / `stop` / `volume-up` / `volume-down` / `mute` / `mic-mute` / `open` / `keys` / `layout` / `web` / `obs-record` / `obs-stream` / `obs-replay` / `obs-save-replay` / `obs-scene` / `obs-mute` | `play-pause` | Action. Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. The obs actions control OBS Studio, once it's connected on the OBS page; record, stream, replay and scene buttons take the on colour while they're on. |
+| `target` | text | — | Target. open: a program, file, folder or web address, e.g. calc.exe, C:\Games or https://… · keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… · obs-scene: the scene's name, e.g. BRB · obs-mute: the audio source's name, e.g. Mic/Aux |
 | `arguments` | text | — | Arguments. open: command-line arguments for a program. |
 | `method` | `GET` / `POST` / `PUT` | `POST` | Method. web: how to send it. Webhooks, Home Assistant's services and ntfy want POST. |
 | `body` | text | — | Body. web: what a POST or PUT sends, e.g. {"entity_id": "script.movie_night"}, or the message for ntfy. |

@@ -13,6 +13,7 @@ using ImpiousBonum.Core;
 using ImpiousBonum.Core.Demo;
 using ImpiousBonum.Core.Logging;
 using ImpiousBonum.Core.Metrics;
+using ImpiousBonum.Core.Obs;
 using ImpiousBonum.Core.Providers;
 using Microsoft.Win32;
 
@@ -38,6 +39,9 @@ public partial class App : Application
     private LayoutStore? _layouts;
     private TrayIcon? _tray;
     private ActionRunner? _actions;
+
+    /// <summary>The connection to OBS that its readings and buttons share; it connects only once OBS is turned on in settings.</summary>
+    private ObsConnection? _obs;
     private DashboardWindow? _window;
     // One window for each of _settings.ExtraDashboards, in the same order.
     private readonly List<DashboardWindow> _extras = [];
@@ -136,6 +140,7 @@ public partial class App : Application
         if (!_settings.HardwareRendering)
             RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         _frameRateTarget = new FrameRateTarget(() => _settings.FpsMonitorId);
+        _obs = _demo ? null : new ObsConnection(() => _settings.ObsTarget());
         _sampler = _demo
             ? DemoSampler()
             : new Sampler(new MetricStore(), Sampler.CreateDefaultProviders(_settings.PingHost, _frameRateTarget.Get, AppPaths.ClaudeUsageFile, () => _settings.WeatherRequest(), () => _settings.CustomData, () => _settings.Calendars,
@@ -144,7 +149,7 @@ public partial class App : Application
                 airQuality: () => _settings.AirQualityRequest(), warnings: () => _settings.WeatherWarningsRequest(), weatherPlaces: () => _settings.WeatherPlaceRequests(),
                 energy: () => _settings.EnergySettings(), energyTotalsPath: AppPaths.EnergyFile, gridCarbon: () => _settings.GridCarbonRequest(),
                 statusChecks: () => _settings.StatusChecks, linkedGame: () => _linkedGame, playedPath: AppPaths.PlayedFile,
-                steamAccount: () => _settings.SteamRequest()));
+                steamAccount: () => _settings.SteamRequest(), obs: _obs));
         _sampler.Start();
 
         _window = new DashboardWindow();
@@ -157,7 +162,7 @@ public partial class App : Application
             _peekUntil = DateTime.UtcNow + Dimming.PeekFor;
             UpdateDimming();
         };
-        _actions = new ActionRunner(SwitchLayoutFromButton, muted => _sampler?.Store.Set(PrivacyProvider.MicMuted, muted ? 1 : 0));
+        _actions = new ActionRunner(SwitchLayoutFromButton, muted => _sampler?.Store.Set(PrivacyProvider.MicMuted, muted ? 1 : 0)) { Obs = _obs };
         _window.ActionRequested += (_, action) => RunAction(action);
         _window.PlacementChanged += (_, rect) => OnWindowMoved(rect);
         _tray = new TrayIcon();
@@ -311,6 +316,8 @@ public partial class App : Application
         _window?.Close();
         if (_sampler is not null)
             await _sampler.DisposeAsync();
+        if (_obs is not null)
+            await _obs.DisposeAsync();
         _openWait?.Unregister(null);
         _openSignal?.Dispose();
         _singleInstance?.ReleaseMutex();

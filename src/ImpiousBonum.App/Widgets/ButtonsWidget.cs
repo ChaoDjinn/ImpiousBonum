@@ -29,11 +29,13 @@ public sealed class ButtonsWidget : Widget
                 Setting.Icon("icon", "Icon", "play-pause", allowNone: true),
                 Setting.Choice("action", "Action", WidgetAction.PlayPause, WidgetAction.Kinds, group: Setting.Content,
                     help: "Media and volume actions work like the keyboard's media keys. open, keys, layout and web use the target below. "
-                        + "mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted."),
+                        + "mic-mute mutes or unmutes your microphone; with the mic icon, the button shows mic-off while it's muted. "
+                        + "The obs actions control OBS Studio, once it's connected on the OBS page; record, stream, replay and scene buttons take the on colour while they're on."),
                 Setting.PlainText("target", "Target", null,
                     help: "open: a program, file, folder or web address, e.g. calc.exe, C:\\Games or https://… · "
                         + "keys: a shortcut, e.g. Ctrl+Shift+M or F13 · layout: the layout's name · "
-                        + "web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/…"),
+                        + "web: the address to send to, e.g. http://homeassistant.local:8123/api/webhook/… · "
+                        + "obs-scene: the scene's name, e.g. BRB · obs-mute: the audio source's name, e.g. Mic/Aux"),
                 Setting.PlainText("arguments", "Arguments", null, help: "open: command-line arguments for a program."),
                 Setting.Choice("method", "Method", "POST", WidgetAction.WebMethods, group: Setting.Content,
                     help: "web: how to send it. Webhooks, Home Assistant's services and ntfy want POST."),
@@ -61,6 +63,8 @@ public sealed class ButtonsWidget : Widget
             Setting.Color("color", "Icon colour", "accent"),
             Setting.Color("tileColor", "Tile colour", "track", help: "Each button's background, with the tile style. track is the theme's bar track."),
             Setting.Color("labelColor", "Label colour", "foreground"),
+            Setting.Color("activeColor", "On colour", "critical",
+                help: "An OBS button's icon and label while it's on: recording, streaming, the replay buffer on, or its scene on air."),
         ],
         (settings, theme) => new ButtonsWidget(settings, theme));
 
@@ -69,6 +73,19 @@ public sealed class ButtonsWidget : Widget
 
     /// <summary>The icons of mic-mute buttons that follow the microphone's mute.</summary>
     private readonly List<Path> _micIcons = [];
+
+    /// <summary>OBS buttons that take the on colour while what they control is on.</summary>
+    private readonly List<OnButton> _onButtons = [];
+
+    private Brush? _iconBrush;
+    private Brush? _labelBrush;
+    private Brush? _activeBrush;
+
+    /// <summary>A button that shows whether it's on: when, its icon (and whether that's filled) and its label.</summary>
+    private sealed record OnButton(Func<MetricStore, bool> IsOn, Path? Icon, bool Filled, TextBlock? Label)
+    {
+        public bool? Shown { get; set; }
+    }
 
     public ButtonsWidget(WidgetSettings settings, Theme theme) : base(settings, theme)
     {
@@ -82,6 +99,9 @@ public sealed class ButtonsWidget : Widget
         var iconBrush = theme.Resolve(settings.String("color"), theme.Accent);
         var tileBrush = theme.Resolve(settings.String("tileColor"), theme.Track);
         var labelBrush = theme.Resolve(settings.String("labelColor"), theme.Foreground);
+        _iconBrush = iconBrush;
+        _labelBrush = labelBrush;
+        _activeBrush = theme.Resolve(settings.String("activeColor"), theme.Critical);
 
         var grid = new UniformGrid
         {
@@ -92,22 +112,28 @@ public sealed class ButtonsWidget : Widget
         {
             var action = new WidgetAction(button.String("action"), button.String("target").Trim(), button.String("arguments").Trim());
             var content = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+            var filled = WidgetAction.MediaKinds.Contains(action.Kind);
+            Path? iconPath = null;
+            TextBlock? text = null;
             if (iconSize > 0 && Icons.Get(button.String("icon")) is not null)
             {
-                var icon = Icons.Create(button.String("icon"), iconBrush, iconSize, filled: WidgetAction.MediaKinds.Contains(action.Kind));
+                var icon = Icons.Create(button.String("icon"), iconBrush, iconSize, filled: filled);
                 content.Children.Add(icon);
-                if (action.Kind == WidgetAction.MicMute && IsMicIcon(button.String("icon")) && icon is Viewbox { Child: Path path })
-                    _micIcons.Add(path);
+                iconPath = (icon as Viewbox)?.Child as Path;
+                if (action.Kind == WidgetAction.MicMute && IsMicIcon(button.String("icon")) && iconPath is not null)
+                    _micIcons.Add(iconPath);
             }
             if (button.String("label") is { Length: > 0 } label)
             {
-                var text = CreateText(fontSize, labelBrush, HorizontalAlignment.Center);
+                text = CreateText(fontSize, labelBrush, HorizontalAlignment.Center);
                 text.Text = label;
                 text.TextTrimming = TextTrimming.CharacterEllipsis;
                 if (content.Children.Count > 0)
                     text.Margin = new Thickness(0, fontSize * 0.2, 0, 0);
                 content.Children.Add(text);
             }
+            if (IsOn(action) is { } isOn)
+                _onButtons.Add(new OnButton(isOn, iconPath, filled, text));
 
             var target = new TapTarget
             {
@@ -130,12 +156,46 @@ public sealed class ButtonsWidget : Widget
 
     public override void Refresh(MetricStore store, DateTime now)
     {
+        foreach (var button in _onButtons)
+        {
+            var on = button.IsOn(store);
+            if (button.Shown == on)
+                continue;
+            button.Shown = on;
+            var iconBrush = on ? _activeBrush : _iconBrush;
+            if (button.Icon is { } path)
+            {
+                path.Stroke = iconBrush;
+                path.Fill = button.Filled ? iconBrush : null;
+            }
+            if (button.Label is { } label)
+                label.Foreground = on ? _activeBrush : _labelBrush;
+        }
+
         // Mic-mute buttons with a mic icon show whether the microphone is muted.
         if (_micIcons.Count == 0 || !store.TryGet(PrivacyProvider.MicMuted, out var sample) || sample.Value is not { } muted)
             return;
         var icon = Icons.Get(muted > 0 ? MicOffIcon : MicIcon);
         foreach (var path in _micIcons)
             path.Data = icon;
+    }
+
+    /// <summary>
+    /// When an OBS button is on, from OBS's readings: recording, streaming, the replay buffer on, or its scene on air.
+    /// Null for buttons that don't show it.
+    /// </summary>
+    internal static Func<MetricStore, bool>? IsOn(WidgetAction action)
+    {
+        static bool Is(MetricStore store, string id) => store.TryGet(id, out var sample) && sample.Value > 0;
+        return action.Kind.ToLowerInvariant() switch
+        {
+            WidgetAction.ObsRecord => store => Is(store, ObsProvider.Recording),
+            WidgetAction.ObsStream => store => Is(store, ObsProvider.Streaming),
+            WidgetAction.ObsReplay => store => Is(store, ObsProvider.Replay),
+            WidgetAction.ObsScene when action.Target.Length > 0 => store =>
+                store.TryGet(ObsProvider.Scene, out var scene) && string.Equals(scene.Text, action.Target, StringComparison.OrdinalIgnoreCase),
+            _ => null,
+        };
     }
 
     private const string MicIcon = "mic", MicOffIcon = "mic-off";
@@ -154,6 +214,12 @@ public sealed class ButtonsWidget : Widget
         WidgetAction.VolumeUp => "Volume up",
         WidgetAction.VolumeDown => "Volume down",
         WidgetAction.MicMute => "Mute or unmute the microphone",
+        WidgetAction.ObsRecord => "Start or stop recording in OBS",
+        WidgetAction.ObsStream => "Start or stop streaming in OBS",
+        WidgetAction.ObsReplay => "Turn OBS's replay buffer on or off",
+        WidgetAction.ObsSaveReplay => "Save OBS's replay buffer",
+        WidgetAction.ObsScene => action.Target.Length == 0 ? "Shows no OBS scene yet: set a target" : $"Shows the \"{action.Target}\" scene in OBS",
+        WidgetAction.ObsMute => action.Target.Length == 0 ? "Mutes no OBS source yet: set a target" : $"Mutes or unmutes \"{action.Target}\" in OBS",
         _ => char.ToUpperInvariant(action.Kind[0]) + action.Kind[1..],
     };
 

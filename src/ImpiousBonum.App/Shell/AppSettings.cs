@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using ImpiousBonum.Core.Alerts;
 using ImpiousBonum.Core.CustomData;
 using ImpiousBonum.Core.Energy;
+using ImpiousBonum.Core.Obs;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Remote;
 using ImpiousBonum.Core.StatusChecks;
@@ -406,6 +407,19 @@ public sealed class AppSettings
 
     /// <summary>Whose Steam friends and achievements to fetch, or null without both a key and a profile.</summary>
     public SteamAccount? SteamRequest() => SteamWeb.Account(SteamApiKey, SteamProfile);
+
+    /// <summary>Whether to connect to OBS Studio's WebSocket server (the OBS page), for its readings and buttons. Off by default.</summary>
+    public bool Obs { get; set; }
+
+    /// <summary>Where OBS's WebSocket server is, as typed: empty is OBS on this PC, at its usual port (4455).</summary>
+    public string? ObsAddress { get; set; }
+
+    /// <summary>The password OBS's WebSocket server shows under Show Connect Info. It's only ever sent to OBS, as a hash.</summary>
+    public string? ObsPassword { get; set; }
+
+    /// <summary>Where to connect to OBS, or null while it's off or the address can't be one.</summary>
+    public ObsRequest? ObsTarget() =>
+        Obs && ObsRequest.AddressOf(ObsAddress) is { } address ? new ObsRequest(address, string.IsNullOrEmpty(ObsPassword) ? null : ObsPassword) : null;
 
     /// <summary>
     /// Your own servers and services to check (the Status checks page). None by default: nothing is checked until one is

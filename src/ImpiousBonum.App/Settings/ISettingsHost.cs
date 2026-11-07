@@ -189,6 +189,9 @@ internal interface ISettingsHost
     /// <summary>Your own Steam Web API key and your profile, as typed; either null turns fetching from Steam off.</summary>
     void SetSteamAccount(string? key, string? profile);
 
+    /// <summary>Whether to connect to OBS, and where it is and its password as typed (null for this PC, or no password).</summary>
+    void SetObs(bool on, string? address, string? password);
+
     void SetCalendars(IReadOnlyList<CalendarLink> calendars);
 
     void SetNewsFeeds(IReadOnlyList<NewsFeed> feeds);

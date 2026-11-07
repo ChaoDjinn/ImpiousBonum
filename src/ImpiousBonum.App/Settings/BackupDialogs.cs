@@ -11,7 +11,7 @@ internal sealed class BackupDialogs(ISettingsHost host)
 
     /// <summary>What a backup has in it that's worth keeping to yourself, said on the page and after saving one.</summary>
     public const string PrivateNote =
-        "A backup has private things in it: your calendar links, the tablet link, your Steam Web API key, and the web addresses and commands you've set up, for alerts and custom data among others. Keep it somewhere only you can open.";
+        "A backup has private things in it: your calendar links, the tablet link, your Steam Web API key, your OBS password, and the web addresses and commands you've set up, for alerts and custom data among others. Keep it somewhere only you can open.";
 
     /// <summary>Asks where to save a backup (true) or which one to restore (false); null if cancelled. Replaced in tests.</summary>
     internal Func<Window?, bool, string?> AskFile { get; set; } = AskFileWithDialog;

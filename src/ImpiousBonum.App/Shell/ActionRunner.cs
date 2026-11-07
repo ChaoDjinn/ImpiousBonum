@@ -3,8 +3,11 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
 using ImpiousBonum.App.Widgets;
 using ImpiousBonum.Core.Native;
+using ImpiousBonum.Core.Obs;
+using ImpiousBonum.Core.Providers;
 
 namespace ImpiousBonum.App.Shell;
 
@@ -31,6 +34,9 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
     /// <summary>Told why a web button's request didn't work, for the log.</summary>
     public Action<string> Failed { get; init; } = AppLog.Warning;
 
+    /// <summary>The connection to OBS that OBS buttons send to; null when there's none, as in the demo.</summary>
+    public ObsConnection? Obs { get; init; }
+
     public string? Run(WidgetAction action)
     {
         switch (action.Kind.ToLowerInvariant())
@@ -49,10 +55,51 @@ public sealed class ActionRunner(Func<string, string?> switchLayout, Action<bool
             case WidgetAction.Keys:
                 return KeyChord.Parse(action.Target, out var problem) is { } chord ? Send(chord) : $"This button's keys can't be sent. {problem}";
             case WidgetAction.Web: return SendWebRequest(action);
+            case WidgetAction.ObsRecord:
+            case WidgetAction.ObsStream:
+            case WidgetAction.ObsReplay:
+            case WidgetAction.ObsSaveReplay:
+            case WidgetAction.ObsScene:
+            case WidgetAction.ObsMute:
+                return SendToObs(action);
             default:
                 return $"Buttons can't \"{action.Kind}\". Pick an action in the editor.";
         }
     }
+
+    /// <summary>
+    /// Sends an OBS button's request in the background. Says straight away when OBS can't take it (off in settings, not
+    /// running, the wrong password), as the button would otherwise seem to do nothing.
+    /// </summary>
+    private string? SendToObs(WidgetAction action)
+    {
+        if (ObsCallFor(action) is not { } call)
+            return action.Kind == WidgetAction.ObsScene
+                ? "This button has no OBS scene to show. Set its target in the editor to the scene's name."
+                : "This button has no OBS audio source to mute. Set its target in the editor to the source's name, such as Mic/Aux.";
+        if (Obs is not { } obs)
+            return null;
+        if (obs.State is ObsState.Off or ObsState.NotRunning or ObsState.WrongPassword or ObsState.Unreachable)
+            return obs.State == ObsState.Off ? "OBS buttons need OBS turned on, on the OBS page in settings." : ObsProvider.StatusText(obs.State) + ".";
+        _ = Task.Run(async () =>
+        {
+            if (!await obs.SendAsync(call.Type, call.Data))
+                Failed($"OBS didn't do {call.Type}{(action.Target.Length > 0 ? $" for \"{action.Target}\"" : "")}: {ObsProvider.StatusText(obs.State)}");
+        });
+        return null;
+    }
+
+    /// <summary>What an OBS button asks OBS to do; null for one that needs a target and has none.</summary>
+    internal static ObsCall? ObsCallFor(WidgetAction action) => action.Kind.ToLowerInvariant() switch
+    {
+        WidgetAction.ObsRecord => new ObsCall("ToggleRecord"),
+        WidgetAction.ObsStream => new ObsCall("ToggleStream"),
+        WidgetAction.ObsReplay => new ObsCall("ToggleReplayBuffer"),
+        WidgetAction.ObsSaveReplay => new ObsCall("SaveReplayBuffer"),
+        WidgetAction.ObsScene when action.Target.Length > 0 => new ObsCall("SetCurrentProgramScene", new JsonObject { ["sceneName"] = action.Target }),
+        WidgetAction.ObsMute when action.Target.Length > 0 => new ObsCall("ToggleInputMute", new JsonObject { ["inputName"] = action.Target }),
+        _ => null,
+    };
 
     private static string? Open(string target, string arguments, string workingDirectory)
     {
