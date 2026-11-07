@@ -1,9 +1,11 @@
+using System.Text.Json.Nodes;
 using ImpiousBonum.Core.Calendar;
 using ImpiousBonum.Core.Energy;
 using ImpiousBonum.Core.Games;
 using ImpiousBonum.Core.Metrics;
 using ImpiousBonum.Core.Native;
 using ImpiousBonum.Core.News;
+using ImpiousBonum.Core.Obs;
 using ImpiousBonum.Core.Providers;
 using ImpiousBonum.Core.Sensors;
 using ImpiousBonum.Core.Steam;
@@ -302,6 +304,16 @@ public static class DemoReadings
         privacy.Publish(store, new MicrophoneState("Headset microphone", Muted: false),
             [new AppSound(1, "Discord", SoundFlow.In, Active: true, Peak: 0.004)],
             [new ConsentEntry("Microsoft.WindowsCamera_8wekyb3d8bbwe", Packaged: true, Start: 1, Stop: 2)]);
+
+        // OBS recording the game, twelve minutes in, at 60 frames a second, and not live.
+        new ObsProvider(null).Publish(store, ObsState.Connected,
+        [
+            new(true, new JsonObject { ["outputActive"] = true, ["outputPaused"] = false, ["outputTimecode"] = "00:12:05.000" }),
+            new(true, new JsonObject { ["outputActive"] = false, ["outputTimecode"] = "00:00:00.000" }),
+            new(true, new JsonObject { ["outputActive"] = true }),
+            new(true, new JsonObject { ["currentProgramSceneName"] = "Gaming" }),
+            new(true, new JsonObject { ["activeFps"] = 60.0 }),
+        ]);
 
         // In a Discord call, with a friend talking and you listening.
         using var voice = new VoiceChatProvider(_ => []);

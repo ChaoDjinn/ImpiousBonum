@@ -97,7 +97,7 @@ Out of the box it fills a 1920×480 screen like this (any size works: the canvas
 
 <p align="center"><img src="images/default-layout.svg" alt="Map of the default layout: CPU, GPU and memory graphs, CPU and GPU temperatures and the frame rate, a clock, drives, and network download, upload and ping"></p>
 
-Every box is a widget you can move, resize, restyle or replace. Thirty-two widget types are available: `text`, `graph` (line or area history with a header, up to 24 hours back: [Longer history](#longer-history)), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `countdowns` ([Countdowns](#countdowns)), `drives`, `batteries` ([Device batteries](#device-batteries)), `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `voice` ([Discord voice](#discord-voice)), `games` ([Recent games](#recent-games)), `downloads` ([Steam downloads](#steam-downloads)), `friends` ([Steam friends and achievements](#steam-friends-and-achievements)), `weather` ([Weather](#weather)), `rain` ([Rain soon](#rain-soon)), `sun` ([Sun and moon](#sun-and-moon)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)), `photos` ([Photo frame](#photo-frame)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
+Every box is a widget you can move, resize, restyle or replace. Thirty-three widget types are available: `text`, `graph` (line or area history with a header, up to 24 hours back: [Longer history](#longer-history)), `lines` ([Multi-line graphs](#multi-line-graphs)), `stat` (a big value with a trend line and its lowest and highest), `gauge` (a dial: 270° arc, semicircle or ring), `cores` (every CPU thread's load as bars or a heatmap), `icon` (accent icon + value), `clock` (with other time zones too: [World clocks](#world-clocks)), `timer` ([Timers](#timers)), `countdowns` ([Countdowns](#countdowns)), `drives`, `batteries` ([Device batteries](#device-batteries)), `processes` (the apps using the most CPU or memory, like a small Task Manager), `rows`, `bars` (labelled progress bars), `media` and `buttons` ([Now playing and buttons](#now-playing-and-buttons)), `visualizer` ([Audio visualiser](#audio-visualiser)), `voice` ([Discord voice](#discord-voice)), `obs` ([OBS Studio](#obs-studio)), `games` ([Recent games](#recent-games)), `downloads` ([Steam downloads](#steam-downloads)), `friends` ([Steam friends and achievements](#steam-friends-and-achievements)), `weather` ([Weather](#weather)), `rain` ([Rain soon](#rain-soon)), `sun` ([Sun and moon](#sun-and-moon)), `agenda` ([Calendar](#calendar)), `news` ([News](#news)), `status` ([Status checks](#status-checks)), `image` and `shape` ([Images and shapes](#images-and-shapes)), `photos` ([Photo frame](#photo-frame)) and `claude` ([Claude usage](#claude-usage)). Every setting, its default and its range is in the [widget reference](widgets.md).
 
 <table>
   <tr>
@@ -830,8 +830,20 @@ this PC is closed, the app just looks for it every few seconds; it doesn't keep 
 | `obs.bitrate` | The stream's bitrate, e.g. *6000 kbps*, while streaming |
 | `obs.status` | How connecting is going: *Connected*, *OBS isn't running*, a wrong password, or OBS out of reach |
 
-The readings appear once *Connect to OBS* is on, and have no reading while OBS can't be reached. On a
-[Buttons widget](#now-playing-and-buttons), the `obs-` actions do the rest: `obs-record`, `obs-stream` and
+The readings appear once *Connect to OBS* is on, and have no reading while OBS can't be reached.
+
+The **OBS Studio** widget (`obs`, under *Media and controls*) puts it together: a status line saying *● REC 12:05* or
+*● LIVE 1:30:00* in the on colour while OBS is recording or live, *Ready* while it's connected and doing neither, or
+why it isn't connected, with the scene on air on the right; and under it, buttons to record, stream and save a replay
+(and, with *Replay buffer button* ticked, to turn the replay buffer on and off), and one for each scene named in *Scene buttons*, such as
+`Gaming, BRB`. Turn off *Stream button* if you only record, as it goes live straight away. With *Let tablets press
+buttons* on, the [tablet](#tablet-view) can press them too.
+
+```json
+{ "type": "obs", "x": 30, "y": 30, "width": 520, "height": 150, "scenes": "Gaming, BRB" }
+```
+
+For buttons of your own, on a [Buttons widget](#now-playing-and-buttons), the `obs-` actions do the rest: `obs-record`, `obs-stream` and
 `obs-replay` start or stop recording, streaming and the replay buffer; `obs-save-replay` saves the replay buffer;
 `obs-scene` puts the scene named in *target* on air; and `obs-mute` mutes or unmutes the audio source named in
 *target*, such as `Mic/Aux`. The record, stream, replay and scene buttons take the widget's *On colour* (the theme's
